@@ -159,17 +159,28 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **themes/list-themes**, **get-active-theme** — R · wrapper `/wp/v2/themes` GET · T1. Cap: `switch_themes` (read also via `edit_theme_options`).
 - **themes/switch-theme** — W · D! · net-new (`switch_theme()`) · T2. Cap: `switch_themes`. Changes whole front-end; flag confirmation. In: stylesheet. Out: success, active_theme.
 - **themes/install-theme**, **delete-theme** — W · D! · net-new · **T3 (dangerous)**. Caps `install_themes` / `delete_themes`. install takes a wp.org directory slug only (`SourceValidator::slug()`, `^[a-z0-9-]+$` — no ZIP/URL/path); writes code to disk via `FilesystemGuard::ensureDirect()` + `UpgraderLock`. delete removes the theme directory.
+- **themes/search-directory** (L7) — R · net-new (`themes_api()` `query_themes`) · **outbound WordPress.org HTTP call** · T1. Cap: `install_themes` (gated on the capability needed to act on a result; pairs with install-theme). Returns shaped matches (slug, name, version, rating, preview_url, author). Reads remote data; changes nothing.
 
 ## Appearance: Site editor data — namespace `templates`  (cap `edit_theme_options`, object-level via post-type cap maps)
 - **templates/list-templates**, **get-template**, **update-template** — `wp_template` + `wp_template_part` (`post_type` param). Wrappers of `/wp/v2/templates` + `/wp/v2/template-parts`. update creates a DB override (D! — changes layout, high blast radius; flag confirmation). Tiers: reads T1, update T2.
+- **templates/create-template** (L7) — W · wrapper `/wp/v2/templates` + `/wp/v2/template-parts` POST (`post_type` param) · T2. Cap: `edit_theme_options`. Non-destructive (adds a new record); returns the `theme//slug` id, status, and the Site Editor `edit_link`. Content field expects Gutenberg block markup.
+- **templates/delete-template** (L7) — W · D! · wrapper DELETE (`force=true`, `post_type` param) · T2. Cap: `edit_theme_options`. Reverts a customized theme template to its theme default, or removes a user-created custom template; templates that exist only as theme files cannot be deleted (REST `source==='custom'` rule). Permanent.
+- **templates/lookup-template** (L7) — R · **pure core** (`get_template_hierarchy()` + `get_block_templates()`) · T1. Cap: `edit_theme_options`. Resolves which template renders a given slug: returns the template hierarchy and the first existing template's `theme//slug` id + title. No network.
 - **templates/list-patterns** — R · wrapper `/wp/v2/block-patterns/patterns` GET · T1. Cap: `edit_posts`. Registered patterns (read-only registry).
+- **templates/list-block-pattern-categories** (L7) — R · wrapper `/wp/v2/block-patterns/categories` GET · T1. Cap: `edit_posts`. The categories that group block patterns.
+- **templates/list-block-types** (L7) — R · wrapper `/wp/v2/block-types` GET · T1. Cap: `edit_posts`. Registered block types, shaped to name/title/category/is_dynamic — the blocks an agent can compose into block markup.
+- **templates/list-synced-patterns** (L7) — R · wrapper `/wp/v2/blocks` GET (shaped + paginated) · T1. Cap: `wp_block` `edit_posts`. The user synced-pattern library (`wp_block` posts), distinct from the read-only `list-patterns` registry.
 - **templates/get-pattern**, **create-pattern** — user patterns = `wp_block` (`/wp/v2/blocks`). get T1 (`read_post`). create T2 (`edit_posts` + `wp_block` publish cap — exact cap NEEDS VERIFICATION). Lower risk (creates a post).
-- **templates/get-global-styles**, **update-global-styles** — `wp_global_styles` for active theme. Wrapper `/wp/v2/global-styles/<id>`. get T1 (`read_post`); update T2 (`edit_theme_options`, plus `edit_css` if custom CSS). D! (site-wide appearance). In: id, settings, styles, title.
+- **templates/get-global-styles**, **update-global-styles** — `wp_global_styles` for active theme (user overrides). Wrapper `/wp/v2/global-styles/<id>`. get T1 (`read_post`); update T2 (`edit_theme_options`, plus `edit_css` if custom CSS). D! (site-wide appearance). In: id, settings, styles, title.
+- **templates/get-theme-styles** (L7) — R · wrapper `/wp/v2/global-styles/themes/<stylesheet>` GET · T1. Cap: `edit_theme_options`. The theme's baseline global styles from `theme.json` (design tokens), distinct from `get-global-styles` (user overrides). `stylesheet` defaults to the active theme.
+- **templates/list-global-style-variations** (L7) — R · wrapper `/wp/v2/global-styles/themes/<stylesheet>/variations` GET · T1. Cap: `edit_theme_options`. The theme's style variations (alternate palettes/type sets). `stylesheet` defaults to the active theme.
 
 ## Appearance: Navigation menus — namespace `menus`  (cap `edit_theme_options`)
 - **Block** (`wp_navigation`): **list-navigation**, **get-navigation**, **create-navigation**, **update-navigation** — wrappers of `/wp/v2/navigation[/ <id>]`; items are serialized blocks inside `content`. Reads T1, create/update T2.
 - **Classic** (`nav_menu` terms): **list-classic-menus**, **get-classic-menu**, **create-classic-menu**, **update-classic-menu**, **assign-menu-location** — wrappers of `/wp/v2/menus[/ <id>]` (`/wp/v2/menu-locations` GET-only). Reads T1, writes T2.
 - **Classic items**: **list-menu-items**, **create-menu-item**, **update-menu-item**, **delete-menu-item** — wrappers of `/wp/v2/menu-items[/ <id>]`. Fields: title, url, object, object_id, type, parent, menu_order. Reads T1, writes T2. **delete-menu-item is D! (destructive):** menu items have **no Trash** — the REST controller returns HTTP 501 on `force=false`, so delete is always permanent (`force=true`). Cap: object-level `delete_post`.
+- **menus/delete-classic-menu** (L7) — W · D! · wrapper `/wp/v2/menus/<id>` DELETE (`force=true`) · T2. Cap: object-level `delete_term` (→ `edit_theme_options` for `nav_menu`). Deletes a whole classic menu (the `nav_menu` term) and all its items; classic menus have **no Trash**, so permanent.
+- **menus/delete-navigation** (L7) — W · D! · wrapper `/wp/v2/navigation/<id>` DELETE · T2. Cap: object-level `delete_post` (→ `edit_theme_options` for `wp_navigation`). Deletes a block navigation menu; `wp_navigation` **supports Trash**, so `force` is optional (default = trash, recoverable). Site-wide blast radius.
 
 ## Appearance: Fonts — namespace `fonts`  (cap `edit_theme_options`)
 - **fonts/list-font-families**, **get-font-family** — R · wrappers of `/wp/v2/font-families[/ <id>]` GET · T1.
@@ -181,6 +192,7 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **plugins/list-plugins**, **get-plugin** — R · wrappers of `/wp/v2/plugins[/ <plugin>]` GET · T1. Cap: `activate_plugins`. `plugin` = relative file path without `.php`.
 - **plugins/activate-plugin**, **deactivate-plugin** — W · D! · wrappers of `/wp/v2/plugins/<plugin>` POST status · T2. Cap: `activate_plugins` + object-level `activate_plugin`/`deactivate_plugin`. Activate runs plugin code (flag confirmation).
 - **plugins/install-plugin**, **update-plugin**, **delete-plugin** — W · D! · **T3 (dangerous)**. Caps `install_plugins`/`update_plugins`/`delete_plugins`. install takes a wp.org directory slug only (`SourceValidator::slug()` — no ZIP/URL/path); update wraps Plugin_Upgrader; delete removes the plugin (must be inactive). All write/run code on disk via `FilesystemGuard::ensureDirect()` + `UpgraderLock`/`UpgradeRunner`. Updates still run plugin-author upgrade code (DB migrations etc.) by design.
+- **plugins/search-directory** (L7) — R · net-new (`plugins_api()` `query_plugins`) · **outbound WordPress.org HTTP call** · T1. Cap: `install_plugins` (gated on the capability needed to act on a result; pairs with install-plugin). Returns shaped matches (slug, name, version, rating, active_installs, short_description, author). Reads remote data; changes nothing.
 
 ## Updates — namespace `updates`
 - **updates/list-available-updates** — R · **net-new** (`get_core_updates()`, `get_plugin_updates()`, `get_theme_updates()`, `wp_get_translation_updates()`) · T1. Cap: `update_core` (union with `update_plugins`/`update_themes`). In: type[core|plugins|themes|translations|all]. Out: core/plugins/themes/translations arrays.
@@ -209,14 +221,25 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **dashboard/get-activity** — R · net-new · T1. Cap: `edit_posts` (+ moderation for pending). In: number. Composed of content + comments.
 - **dashboard/get-drafts** — R · net-new · T1. Cap: `edit_posts`. ≈ `content/list-posts?status=draft&author=current`.
 
+## Search — namespace `search`  (L7)
+- **search/search-content** (L7) — R · wrapper `/wp/v2/search` GET (shaped) · T1. Cap: `edit_posts` (the core route is public; this catalog ability hardens it to an authenticated authoring tool). WordPress's unified search across object types (posts/pages, terms, post formats); returns shaped matches (id, title, url, type, subtype). Use it to find content when the id is unknown.
+
 ---
 
 # Coverage & deferrals
 
-**Covered (12 domains):** Content (posts/pages/CPT/revisions), Taxonomies, Media, Comments,
+**Covered (13 domains):** Content (posts/pages/CPT/revisions), Taxonomies, Media, Comments,
 Users (+ app passwords), Settings (all 7 screens + generic option), Connectors, Appearance
 (themes, site-editor data, menus, fonts), Plugins, Updates, Tools (import/export, site
-health, privacy), Dashboard.
+health, privacy), Dashboard, Search (L7).
+
+**Authoring-context + completeness gaps closed (loop L7, 13 abilities):** six authoring-context
+reads (`templates/list-block-types`, `list-block-pattern-categories`, `list-synced-patterns`,
+`get-theme-styles`, `list-global-style-variations`, and the new `search/search-content`),
+four write/destructive completeness gaps (`templates/create-template`, `templates/delete-template`,
+`menus/delete-classic-menu`, `menus/delete-navigation`), and three discovery abilities
+(`templates/lookup-template` plus `plugins/search-directory` and `themes/search-directory`, which
+make an outbound WordPress.org call and are gated on `install_plugins`/`install_themes`).
 
 **Built behind the dangerous-tier pipeline (loop L5):** the T3 dangerous tier — plugin/theme
 install·update·delete, `updates/run-update` (plugin/theme/translation only), `settings/update-option`
