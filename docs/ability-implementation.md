@@ -7,7 +7,10 @@ reads the registered abilities separately and is not required for this plugin to
 
 The first build (loop L2) implemented every **T1 read** ability from the catalog
 (62 abilities across 17 domains). Later loops added T1 safe writes (L3), T2 standard writes
-(L4), and the **T3 dangerous tier** (L5, 8 abilities — see below).
+(L4), and the **T3 dangerous tier** (L5, 8 abilities — see below). Loop **L6** closed five
+catalog-planned-but-unbuilt gaps: `content/create-cpt-item`, `content/update-cpt-item`,
+`menus/delete-menu-item` (permanent — menu items have no Trash), `fonts/delete-font-family`,
+and `settings/get-option` (read-gated by `Support/ReadableOptionAllowList`).
 
 ## Structure
 
@@ -56,8 +59,7 @@ An ability can register and list yet still **fail when executed**, because the i
 output are validated against the declared JSON Schema and the runtime marshals the arguments.
 A strict validator (such as a browser consumer's AJV) is less forgiving than `wp eval`, so a
 schema that passes server-side can still fail for a consumer.
-Full detail and the debugging method are in
-[`.hyper/memory/webmcp-ability-schema-constraints.md`](../.hyper/memory/webmcp-ability-schema-constraints.md).
+Full detail and the debugging method are in [schema-constraints.md](schema-constraints.md).
 The short rules:
 
 - **No-input ability:** declare `'input_schema' => array()` (empty) and make the callbacks

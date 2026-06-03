@@ -104,7 +104,7 @@ All write entries must be consumer-gated; capability is the hard guard.
 
 ### Custom post types  (generic family, `post_type` param)
 - **content/list-post-types** — R · wrapper `/wp/v2/types` GET · T1. Discovery of `show_in_rest` post types. Cap: `edit_posts` for edit-context. Out: items[], slug, name, hierarchical, rest_base, supports, taxonomies.
-- **content/list-cpt-items**, **get-cpt-item**, **create-cpt-item**, **update-cpt-item**, **delete-cpt-item** — generic CRUD keyed by `post_type`; wrappers of `/wp/v2/<rest_base>[/ <id>]`. Caps resolved per type object (`$type->cap->...`, object-level `read_post`/`edit_post`/`delete_post`). delete collapses trash/permanent into a `force` param (D! when force=true). Tiers: reads + create/update = T1, delete = T2.
+- **content/list-cpt-items**, **get-cpt-item**, **create-cpt-item**, **update-cpt-item**, **delete-cpt-item** — generic CRUD keyed by `post_type`; wrappers of `/wp/v2/<rest_base>[/ <id>]`. Caps resolved per type object (`$type->cap->create_posts`/`publish_posts`/`edit_others_posts`, object-level `edit_post`/`delete_post`). create/update forward only type-agnostic fields (title, content, excerpt, status, slug, date, author). delete collapses trash/permanent into a `force` param (D! when force=true). Tiers: reads + create/update = T1, delete = T2. create/update-cpt-item **built (L6)**.
 
 ## Taxonomies — namespace `terms`
 - **terms/list-categories**, **get-category**, **create-category**, **update-category**, **delete-category** — taxonomy `category` (hierarchical). Caps: `manage_categories`/`edit_categories`/`delete_categories`/`assign_categories`; object-level `edit_term`/`delete_term`. Wrappers of `/wp/v2/categories[/ <id>]`. Terms have NO trash → delete force=true, always D! (high-sensitivity). Fields: name, slug, description, parent. Tiers: reads + create/update = T1, delete = T2.
@@ -147,12 +147,12 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **settings/get-media**, **update-media** — image size dims, thumbnail_crop, uploads_use_yearmonth_folders. **net-new**. get T1, update T2.
 - **settings/get-permalinks**, **update-permalinks** — permalink_structure, category_base, tag_base. **net-new**. update MUST `flush_rewrite_rules()`. get T1, update T2.
 - **settings/get-privacy**, **update-privacy** — page_for_privacy_policy. Cap `manage_privacy_options`. **net-new**. get T1, update T2.
-- **settings/get-option** — R · **net-new** (`get_option`) · T1 but **gate exposure** (can leak secrets stored in options; recommend allow-list). In: option. Out: option, value.
+- **settings/get-option** — R · **net-new** (`get_option`) · T1, **built (L6)**. Gated by a deny-by-default read allow-list (`Support/ReadableOptionAllowList`, scalar safe-to-read names only; secret-bearing options such as `mailserver_pass` are excluded and the `name` enum refuses anything off-list at input validation). In: name (allow-listed). Out: name, value.
 - **settings/update-option** — W · D! · **net-new** (`update_option`) · **T3 (dangerous)**. Deny-by-default allow-list (`OptionAllowList`): blogname, blogdescription, timezone_string, gmt_offset, date_format, time_format, start_of_week, blog_public, posts_per_page. Refuses everything else — siteurl/home/active_plugins/template/stylesheet/role maps/db_version/etc. — so it cannot break or hijack the site. In: option, value. Out: option, value, updated.
 
 ## Connectors — namespace `connectors`  (WP 7.0 AI providers; cap `manage_options` — no dedicated cap; see Open decisions)
 - **connectors/list-connectors**, **get-connector** — R · net-new (wrap `WP_Connector_Registry`) · T1. Output must NOT include API keys — only a `configured` flag.
-- **connectors/register-connector** — W · net-new · T2 (high-sensitivity, high-sensitivity). Carries a live `api_key` — never log/echo/trace. Not idempotent. In: id, name, type, api_key. Out: id, registered.
+- **connectors/register-connector** — W · net-new · T2 (high-sensitivity). Carries a live `api_key` — never log/echo/trace. Not idempotent. In: id, name, type, api_key. Out: id, registered.
 - **connectors/unregister-connector** — W · D! · net-new · T2 (high-sensitivity). Breaks features relying on the provider. In: id. Out: id, unregistered.
 
 ## Appearance: Themes — namespace `themes`
@@ -169,13 +169,13 @@ All write entries must be consumer-gated; capability is the hard guard.
 ## Appearance: Navigation menus — namespace `menus`  (cap `edit_theme_options`)
 - **Block** (`wp_navigation`): **list-navigation**, **get-navigation**, **create-navigation**, **update-navigation** — wrappers of `/wp/v2/navigation[/ <id>]`; items are serialized blocks inside `content`. Reads T1, create/update T2.
 - **Classic** (`nav_menu` terms): **list-classic-menus**, **get-classic-menu**, **create-classic-menu**, **update-classic-menu**, **assign-menu-location** — wrappers of `/wp/v2/menus[/ <id>]` (`/wp/v2/menu-locations` GET-only). Reads T1, writes T2.
-- **Classic items**: **list-menu-items**, **create-menu-item**, **update-menu-item**, **delete-menu-item** — wrappers of `/wp/v2/menu-items[/ <id>]`. Fields: title, url, object, object_id, type, parent, menu_order. Reads T1, writes T2.
+- **Classic items**: **list-menu-items**, **create-menu-item**, **update-menu-item**, **delete-menu-item** — wrappers of `/wp/v2/menu-items[/ <id>]`. Fields: title, url, object, object_id, type, parent, menu_order. Reads T1, writes T2. **delete-menu-item is D! (destructive):** menu items have **no Trash** — the REST controller returns HTTP 501 on `force=false`, so delete is always permanent (`force=true`). Cap: object-level `delete_post`.
 
 ## Appearance: Fonts — namespace `fonts`  (cap `edit_theme_options`)
 - **fonts/list-font-families**, **get-font-family** — R · wrappers of `/wp/v2/font-families[/ <id>]` GET · T1.
 - **fonts/list-font-collections** — R · wrapper `/wp/v2/font-collections[/ <slug>]` GET · T1. Remote installable-font catalogs.
 - **fonts/install-font-family** — W · wrapper `/wp/v2/font-families` POST · T2. Creates a `wp_font_family` post (+ font-face files; same file-transport open question as media). Lower risk (not code).
-- **fonts/remove-font-family** — W · D! · wrapper `/wp/v2/font-families/<id>` DELETE · T2. Deletes post + asset files.
+- **fonts/delete-font-family** — W · D! · wrapper `/wp/v2/font-families/<id>` DELETE (`force=true`) · T2. Cap `edit_theme_options`. Deletes the `wp_font_family` post + its font-face asset files; may break typography that references it. (Named `delete-` to match the catalog's other delete abilities, not `remove-`.)
 
 ## Plugins — namespace `plugins`
 - **plugins/list-plugins**, **get-plugin** — R · wrappers of `/wp/v2/plugins[/ <plugin>]` GET · T1. Cap: `activate_plugins`. `plugin` = relative file path without `.php`.
@@ -247,7 +247,7 @@ settings.
    per-call confirmation is the consumer's concern (for the in-browser adapter, see its docs).
 2. **File-upload transport** (cross-cutting: media upload, font faces, run-import) — base64 inline vs `source_url` sideload vs attachment-id. Decide once.
 3. **Large-output transport** — `media/get-media-file` (base64) and `tools/export-content` (WXR) can be large; need a size cap or file-URL convention.
-4. **Generic option abilities** — `settings/get-option` exposure gating (secret leakage); `settings/update-option` needs an option-name allow-list + the strictest consumer gate (dangerous tier).
+4. **Generic option abilities** — RESOLVED (L6). `settings/get-option` exposure gating uses a deny-by-default read allow-list (`Support/ReadableOptionAllowList`, scalar safe-to-read names only); `settings/update-option` uses the write allow-list (`Support/OptionAllowList`) + the strictest consumer gate (dangerous tier).
 5. **Connectors capability** — no dedicated cap exists; registry methods are unguarded PHP; only the admin screen checks `manage_options`. Decide: keep `manage_options` or register `manage_connectors` (these handle provider API keys).
 6. **Privacy confirm/cancel caps** — no dedicated cap; verify against the requests list-table handler before locking `manage_options`.
 7. **`wp_block` (pattern) caps** — `capability_type => 'block'`; confirm resolved create/publish cap names at implementation.
