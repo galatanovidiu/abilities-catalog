@@ -4,8 +4,9 @@ A WordPress plugin that registers wp-admin features as abilities through the
 [Abilities API](https://developer.wordpress.org/) (WordPress 7.0+).
 
 The plugin is platform-agnostic. It only registers abilities. It does not talk to
-any browser bridge or transport. A separate consumer — for example a WebMCP
-adapter, or any code that reads the Abilities API — decides how to expose them.
+any browser bridge or transport. A separate consumer — for example the
+[WebMCP adapter](https://github.com/galatanovidiu/webmcp-adapter), or any code
+that reads the Abilities API — decides how to expose them.
 
 ## Requirements
 
