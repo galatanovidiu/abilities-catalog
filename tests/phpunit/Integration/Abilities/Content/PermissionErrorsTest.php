@@ -138,6 +138,19 @@ final class PermissionErrorsTest extends TestCase {
 		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
 	}
 
+	public function test_delete_post_negative_id_fails_validation_without_deleting(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+
+		// A negative id must be rejected by input validation (minimum: 1), never
+		// mapped to a positive post by absint() and permanently deleted.
+		$result = wp_get_ability( 'content/delete-post' )->execute( array( 'id' => -$post_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+		$this->assertInstanceOf( \WP_Post::class, get_post( $post_id ) );
+	}
+
 	public function test_delete_page_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
