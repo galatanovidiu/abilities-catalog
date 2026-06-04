@@ -47,7 +47,7 @@ final class GetPostRevision implements Ability {
 					),
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The revision ID.', 'abilities-catalog' ),
+						'description' => __( 'The revision ID. Use content/list-post-revisions to list revisions for the parent post.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -61,7 +61,7 @@ final class GetPostRevision implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'parent' ),
+				'required'             => array( 'id', 'parent', 'title', 'content', 'excerpt', 'date', 'modified' ),
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
@@ -112,9 +112,11 @@ final class GetPostRevision implements Ability {
 	 *
 	 * Reads through `GET /wp/v2/posts/<parent>/revisions/<id>`, whose permission
 	 * check enforces `edit_post` on the parent post. Deferring to the route lets
-	 * `execute()` surface its specific error (`rest_post_invalid_parent` 404,
-	 * `rest_cannot_read` 403) instead of masking a missing parent or revision as a
-	 * permission failure.
+	 * `execute()` surface its specific error (`rest_post_invalid_parent` 404 for a
+	 * missing parent, `rest_post_invalid_id` 404 for an invalid or non-revision id,
+	 * `rest_revision_parent_id_mismatch` 404 when the revision is not under that
+	 * parent, `rest_cannot_read` 403 on denial) instead of masking a missing parent
+	 * or revision as a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool Always true; the wrapped route is the server-side guard.
