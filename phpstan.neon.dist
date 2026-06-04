@@ -37,3 +37,20 @@ parameters:
 	ignoreErrors:
 		- # TODO: These are too noisy, we'll restore them in the future.
 			identifier: missingType.iterableValue
+
+		# `wp_get_connector()` / `wp_get_connectors()` are WP 7.0 core Connectors API
+		# functions. They exist at runtime (verified in wp-env WP 7.0) but are absent
+		# from php-stubs/wordpress-stubs ^6.9, so PHPStan cannot see them.
+		-
+			identifier: function.notFound
+			message: '#Function wp_get_connectors? not found\.#'
+			path: includes/Abilities/Connectors
+
+		# export_wp() stubs type $args['author'] and $args['category'] as string, but
+		# the catalog passes integer IDs. export_wp() resolves the category via
+		# term_exists( $args['category'], 'category' ), which needs the term ID (a
+		# numeric string is looked up as a slug instead), and the author via a %d
+		# prepared statement. Integers are correct at runtime; the stub is too narrow.
+		-
+			identifier: argument.type
+			path: includes/Abilities/Tools/ExportContent.php

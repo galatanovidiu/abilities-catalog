@@ -148,7 +148,6 @@ final class ExportContent implements Ability {
 
 		$args = array(
 			'content'    => isset( $input['content'] ) ? (string) $input['content'] : 'all',
-			'post_type'  => isset( $input['post_type'] ) ? (string) $input['post_type'] : '',
 			'start_date' => isset( $input['start_date'] ) ? (string) $input['start_date'] : '',
 			'end_date'   => isset( $input['end_date'] ) ? (string) $input['end_date'] : '',
 			'author'     => isset( $input['author'] ) ? (int) $input['author'] : 0,
