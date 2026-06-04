@@ -190,6 +190,23 @@ final class WriteLinksTest extends TestCase {
 		$this->assertArrayNotHasKey( 'edit_link', $result );
 	}
 
+	public function test_delete_page_echoes_title_without_edit_link(): void {
+		$this->actingAs( 'administrator' );
+		$page_id = self::factory()->post->create(
+			array(
+				'post_type'  => 'page',
+				'post_title' => 'Doomed Page',
+			)
+		);
+
+		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => $page_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertTrue( $result['deleted'] );
+		$this->assertSame( 'Doomed Page', $result['title'] );
+		$this->assertArrayNotHasKey( 'edit_link', $result );
+	}
+
 	public function test_restore_post_revision_returns_edit_link(): void {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create(

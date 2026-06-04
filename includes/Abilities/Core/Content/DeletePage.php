@@ -41,7 +41,7 @@ final class DeletePage implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Page', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a page by ID, bypassing the Trash. This cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a page by ID, bypassing the Trash. This cannot be undone. Side effects: deleting a page set as the front page or posts page resets the site reading settings (show_on_front, page_on_front, page_for_posts); deleting a page with child pages reparents those children to the deleted page\'s parent.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -111,7 +111,7 @@ final class DeletePage implements Ability {
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
+		$id      = absint( $input['id'] ?? 0 );
 		$request = new WP_REST_Request( 'DELETE', '/wp/v2/pages/' . $id );
 		$request->set_param( 'force', true );
 

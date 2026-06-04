@@ -138,6 +138,14 @@ final class PermissionErrorsTest extends TestCase {
 		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
 	}
 
+	public function test_delete_page_missing_id_returns_404_not_permission(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => self::MISSING_ID ) );
+
+		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
+	}
+
 	public function test_get_cpt_item_unknown_post_type_returns_400_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
