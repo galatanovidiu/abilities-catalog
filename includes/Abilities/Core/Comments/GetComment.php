@@ -43,7 +43,8 @@ final class GetComment implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The comment ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The comment ID. Discover valid IDs with comments/list-comments.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
