@@ -39,6 +39,46 @@ final class WriteLinksTest extends TestCase {
 		$this->assertStringContainsString( (string) $result['id'], $result['edit_link'] );
 	}
 
+	public function test_create_post_returns_slug_featured_media_and_terms(): void {
+		$this->actingAs( 'administrator' );
+
+		$category_id = self::factory()->category->create();
+		$tag_id      = self::factory()->tag->create();
+		$media_id    = self::factory()->attachment->create_upload_object(
+			DIR_TESTDATA . '/images/canola.jpg'
+		);
+
+		$result = wp_get_ability( 'content/create-post' )->execute(
+			array(
+				'title'          => 'Tagged draft',
+				'content'        => '<!-- wp:paragraph --><p>Body.</p><!-- /wp:paragraph -->',
+				'slug'           => 'tagged-draft',
+				'categories'     => array( $category_id ),
+				'tags'           => array( $tag_id ),
+				'featured_media' => $media_id,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'tagged-draft', $result['slug'] );
+		$this->assertSame( $media_id, $result['featured_media'] );
+		$this->assertSame( array( $category_id ), $result['categories'] );
+		$this->assertSame( array( $tag_id ), $result['tags'] );
+	}
+
+	public function test_create_post_returns_empty_terms_when_none_assigned(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/create-post' )->execute(
+			array( 'title' => 'Plain draft' )
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 0, $result['featured_media'] );
+		$this->assertSame( array(), $result['tags'] );
+		$this->assertIsArray( $result['categories'] );
+	}
+
 	public function test_create_page_returns_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
