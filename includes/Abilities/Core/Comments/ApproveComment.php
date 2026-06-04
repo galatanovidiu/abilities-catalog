@@ -37,7 +37,7 @@ final class ApproveComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Approve Comment', 'abilities-catalog' ),
-			'description'         => __( 'Approves a comment, setting its status to "approved". Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Approves a held or unapproved comment, setting its status to "approved". May trigger the post-author notification email. Re-approving an already-approved comment is a no-op that reports the existing "approved" status. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
