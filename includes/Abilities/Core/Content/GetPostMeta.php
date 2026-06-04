@@ -39,7 +39,7 @@ final class GetPostMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Post Meta', 'abilities-catalog' ),
-			'description'         => __( 'Returns a post\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the post type. Use content/list-post-meta-keys to discover supported keys.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a post\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the post type. Requires edit access to the post (editor-only). Use content/list-post-meta-keys to discover supported keys.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -51,7 +51,7 @@ final class GetPostMeta implements Ability {
 					'keys' => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Optional list of meta keys to return. When omitted, all registered show_in_rest keys are returned.', 'abilities-catalog' ),
+						'description' => __( 'Optional list of meta keys to return. When omitted or empty, all registered show_in_rest keys are returned. Requested keys that are not registered for the post type are silently skipped.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -67,7 +67,7 @@ final class GetPostMeta implements Ability {
 					),
 					'meta' => array(
 						'type'        => 'object',
-						'description' => __( 'Map of meta key to value. Single-value keys return a scalar; multi-value keys return an array.', 'abilities-catalog' ),
+						'description' => __( 'Map of meta key to value. Single-value keys return one value (a scalar, array, or object, depending on the registered meta type); multi-value keys return an array of values.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

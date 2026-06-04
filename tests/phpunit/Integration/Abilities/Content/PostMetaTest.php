@@ -96,6 +96,62 @@ final class PostMetaTest extends TestCase {
 		$this->assertSame( 'Hello world', ( (array) $got['meta'] )['subtitle'] );
 	}
 
+	public function test_get_returns_meta_object_with_requested_keys(): void {
+		$this->actingAs( 'administrator' );
+		update_post_meta( $this->post_id, 'subtitle', 'A subtitle' );
+
+		$got = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
+
+		$this->assertIsArray( $got );
+		$this->assertSame( $this->post_id, $got['id'] );
+		$this->assertIsObject( $got['meta'] );
+		$meta = (array) $got['meta'];
+		$this->assertArrayHasKey( 'subtitle', $meta );
+		$this->assertSame( 'A subtitle', $meta['subtitle'] );
+	}
+
+	public function test_get_missing_post_returns_invalid_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_get_keys_filter_returns_subset(): void {
+		$this->actingAs( 'administrator' );
+		update_post_meta( $this->post_id, 'subtitle', 'Only me' );
+
+		$got = wp_get_ability( 'content/get-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'keys' => array( 'subtitle' ),
+			)
+		);
+
+		$this->assertIsArray( $got );
+		$this->assertSame( array( 'subtitle' ), array_keys( (array) $got['meta'] ) );
+	}
+
+	public function test_get_off_list_requested_key_is_dropped(): void {
+		$this->actingAs( 'administrator' );
+
+		$got = wp_get_ability( 'content/get-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'keys' => array( 'subtitle', 'internal_flag', 'does_not_exist' ),
+			)
+		);
+
+		$this->assertIsArray( $got );
+		$meta = (array) $got['meta'];
+		$this->assertArrayNotHasKey( 'internal_flag', $meta );
+		$this->assertArrayNotHasKey( 'does_not_exist', $meta );
+		$this->assertArrayHasKey( 'subtitle', $meta );
+	}
+
 	public function test_update_rejects_unregistered_key(): void {
 		$this->actingAs( 'administrator' );
 
