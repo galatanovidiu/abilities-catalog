@@ -203,7 +203,11 @@ final class ListAvailableUpdates implements Ability {
 
 		$list = array();
 		foreach ( $updates as $stylesheet => $theme ) {
-			$update = isset( $theme->update ) && is_array( $theme->update ) ? $theme->update : array();
+			// `get_theme_updates()` assigns the update-data array to a dynamic
+			// `$theme->update` property, which the WP_Theme stub types as bool
+			// (default false). Read it via get_object_vars() to get the real value.
+			$vars   = get_object_vars( $theme );
+			$update = isset( $vars['update'] ) && is_array( $vars['update'] ) ? $vars['update'] : array();
 
 			$list[] = array(
 				'theme'       => (string) $stylesheet,

@@ -148,7 +148,7 @@ final class LookupTemplate implements Ability {
 		// Map existing block templates by slug for the active theme.
 		$existing = array();
 		foreach ( get_block_templates( array(), 'wp_template' ) as $template ) {
-			if ( ! isset( $template->slug ) ) {
+			if ( '' === $template->slug ) {
 				continue;
 			}
 
@@ -162,8 +162,8 @@ final class LookupTemplate implements Ability {
 			if ( isset( $existing[ $candidate ] ) ) {
 				$template       = $existing[ $candidate ];
 				$resolved       = $candidate;
-				$resolved_id    = (string) ( $template->id ?? '' );
-				$resolved_title = (string) ( $template->title ?? '' );
+				$resolved_id    = (string) $template->id;
+				$resolved_title = (string) $template->title;
 				break;
 			}
 		}

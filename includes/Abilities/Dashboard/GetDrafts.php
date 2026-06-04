@@ -119,7 +119,7 @@ final class GetDrafts implements Ability {
 			$items[]   = array(
 				'id'        => (int) $draft->ID,
 				'title'     => (string) get_the_title( $draft->ID ),
-				'modified'  => (string) ( $draft->post_modified ?? '' ),
+				'modified'  => (string) $draft->post_modified,
 				'edit_link' => null !== $edit_link ? (string) $edit_link : (int) $draft->ID,
 			);
 		}

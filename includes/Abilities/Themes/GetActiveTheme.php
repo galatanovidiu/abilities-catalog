@@ -120,8 +120,8 @@ final class GetActiveTheme implements Ability {
 			return RestError::from( $response );
 		}
 
-		$items = rest_get_server()->response_to_data( $response, false );
-		$item  = is_array( $items ) && isset( $items[0] ) && is_array( $items[0] ) ? $items[0] : null;
+		$items = $response->get_data();
+		$item  = isset( $items[0] ) && is_array( $items[0] ) ? $items[0] : null;
 
 		if ( null === $item ) {
 			return $this->fromCore();

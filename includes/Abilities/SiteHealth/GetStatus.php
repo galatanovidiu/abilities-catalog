@@ -153,7 +153,14 @@ final class GetStatus implements Ability {
 		}
 
 		$site_health = WP_Site_Health::get_instance();
-		$tests       = $site_health->get_tests();
+		if ( ! $site_health instanceof WP_Site_Health ) {
+			return new WP_Error(
+				'site_health_unavailable',
+				__( 'Site Health is not available on this installation.', 'abilities-catalog' )
+			);
+		}
+
+		$tests = $site_health->get_tests();
 
 		$direct  = array();
 		$summary = array(

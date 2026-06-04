@@ -180,7 +180,7 @@ final class InstallTheme implements Ability {
 		return array(
 			'installed'  => true,
 			'stylesheet' => $slug,
-			'name'       => (string) $api->name,
+			'name'       => isset( $api->name ) ? (string) $api->name : '',
 		);
 	}
 }

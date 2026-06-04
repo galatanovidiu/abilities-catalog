@@ -125,7 +125,7 @@ final class GetActivity implements Ability {
 			$published[] = array(
 				'id'    => (int) $post->ID,
 				'title' => (string) get_the_title( $post->ID ),
-				'date'  => (string) ( $post->post_date ?? '' ),
+				'date'  => (string) $post->post_date,
 			);
 		}
 
@@ -135,15 +135,19 @@ final class GetActivity implements Ability {
 				'status' => 'approve',
 			)
 		);
+		$recent_comments = is_array( $recent_comments ) ? $recent_comments : array();
 
 		$comments = array();
 		foreach ( $recent_comments as $comment ) {
+			if ( ! $comment instanceof \WP_Comment ) {
+				continue;
+			}
 			$comments[] = array(
 				'id'      => (int) $comment->comment_ID,
 				'post'    => (int) $comment->comment_post_ID,
-				'author'  => (string) ( $comment->comment_author ?? '' ),
-				'date'    => (string) ( $comment->comment_date ?? '' ),
-				'excerpt' => (string) wp_trim_words( (string) ( $comment->comment_content ?? '' ) ),
+				'author'  => (string) $comment->comment_author,
+				'date'    => (string) $comment->comment_date,
+				'excerpt' => (string) wp_trim_words( (string) $comment->comment_content ),
 			);
 		}
 

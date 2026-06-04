@@ -57,6 +57,10 @@ trait QueriesUserRequests {
 		$items = array();
 
 		foreach ( $query->posts as $post ) {
+			if ( ! $post instanceof \WP_Post ) {
+				continue;
+			}
+
 			$request = wp_get_user_request( $post->ID );
 			if ( ! $request ) {
 				continue;
@@ -66,7 +70,7 @@ trait QueriesUserRequests {
 				'id'          => (int) $request->ID,
 				'email'       => (string) $request->email,
 				'status'      => (string) $request->status,
-				'created'     => (string) get_post_field( 'post_date', $post->ID ),
+				'created'     => (string) $post->post_date,
 				'action_name' => (string) $request->action_name,
 			);
 		}

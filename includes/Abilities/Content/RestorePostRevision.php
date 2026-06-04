@@ -6,6 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
+use WP_Post;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -121,7 +122,7 @@ final class RestorePostRevision implements Ability {
 		}
 
 		$revision = wp_get_post_revision( $revision_id );
-		if ( null === $revision || (int) $revision->post_parent !== $parent ) {
+		if ( ! $revision instanceof WP_Post || (int) $revision->post_parent !== $parent ) {
 			return false;
 		}
 
@@ -154,7 +155,7 @@ final class RestorePostRevision implements Ability {
 		}
 
 		$revision = wp_get_post_revision( $revision_id );
-		if ( null === $revision || (int) $revision->post_parent !== $parent ) {
+		if ( ! $revision instanceof WP_Post || (int) $revision->post_parent !== $parent ) {
 			return new WP_Error(
 				'webmcp_revision_mismatch',
 				__( 'The revision does not exist or does not belong to the given parent post.', 'abilities-catalog' ),
