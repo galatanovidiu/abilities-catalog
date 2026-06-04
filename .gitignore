@@ -7,3 +7,10 @@ Thumbs.db
 # Local wp-env config (machine-specific plugin paths)
 /.wp-env.json
 /.wp-env.override.json
+
+# Test output (keep the directory, ignore generated reports/caches)
+/tests/_output/*
+!/tests/_output/.gitkeep
+
+# Composer lock is not committed for this plugin (dev-only dependencies)
+/composer.lock

@@ -1,0 +1,42 @@
+{
+	"name": "automattic/abilities-catalog",
+	"description": "Registers a coherent catalog of WordPress wp-admin features as Abilities API abilities.",
+	"license": "GPL-2.0-or-later",
+	"type": "wordpress-plugin",
+	"keywords": [
+		"wordpress",
+		"abilities-api",
+		"ai"
+	],
+	"homepage": "https://github.com/galatanovidiu/abilities-catalog",
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"config": {
+		"platform": {
+			"php": "8.1"
+		},
+		"sort-packages": true,
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true,
+			"phpstan/extension-installer": true
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Automattic\\AbilitiesCatalog\\Tests\\": "tests/phpunit/"
+		}
+	},
+	"require": {
+		"php": "^8.1"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^4.0"
+	},
+	"scripts": {
+		"test": "phpunit"
+	},
+	"scripts-descriptions": {
+		"test": "Run PHPUnit tests"
+	}
+}
