@@ -33,18 +33,6 @@ final class ListPostTypes implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'content',
-			'label'       => __('Content', 'abilities-catalog'),
-			'description' => __('Abilities that read posts, pages, and other content.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

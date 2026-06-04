@@ -36,18 +36,6 @@ final class SearchContent implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'search',
-			'label'       => __('Search', 'abilities-catalog'),
-			'description' => __('Abilities that search across site content (posts, pages, terms) using WordPress\'s unified search.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

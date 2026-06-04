@@ -39,18 +39,6 @@ final class ActivatePlugin implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'plugins',
-			'label'       => __('Plugins', 'abilities-catalog'),
-			'description' => __('Abilities that read installed plugins.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

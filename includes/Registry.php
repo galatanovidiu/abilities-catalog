@@ -132,24 +132,17 @@ final class Registry
 	}
 
 	/**
-	 * Registers each unique ability category.
+	 * Registers each ability category from the central {@see Categories} catalog.
+	 *
+	 * Categories are defined centrally, not per ability, so this registers the
+	 * full catalog regardless of which ability files are present. Every ability's
+	 * `args()['category']` slug must exist in {@see Categories::all()}.
 	 *
 	 * @return void
 	 */
 	public function registerCategories(): void
 	{
-		$seen = array();
-
-		foreach ($this->abilities as $ability) {
-			$category = $ability->category();
-			$slug     = $category['slug'] ?? '';
-
-			if ('' === $slug || isset($seen[$slug])) {
-				continue;
-			}
-
-			$seen[$slug] = true;
-
+		foreach (Categories::all() as $slug => $category) {
 			wp_register_ability_category(
 				$slug,
 				array(

@@ -34,18 +34,6 @@ final class GetUser implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'users',
-			'label'       => __('Users', 'abilities-catalog'),
-			'description' => __('Abilities that read user accounts and profiles.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

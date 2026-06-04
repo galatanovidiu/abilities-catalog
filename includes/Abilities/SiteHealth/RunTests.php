@@ -51,18 +51,6 @@ final class RunTests implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'site-health',
-			'label'       => __('Site Health', 'abilities-catalog'),
-			'description' => __('Abilities that read Site Health status, tests, and debug information.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

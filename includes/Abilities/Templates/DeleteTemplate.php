@@ -48,18 +48,6 @@ final class DeleteTemplate implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'templates',
-			'label'       => __('Templates', 'abilities-catalog'),
-			'description' => __('Abilities that read site-editor data: templates, template parts, patterns, and global styles.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

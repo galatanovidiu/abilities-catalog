@@ -33,18 +33,6 @@ final class GetTerm implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'terms',
-			'label'       => __('Terms', 'abilities-catalog'),
-			'description' => __('Abilities that read taxonomy terms (categories, tags, and custom taxonomies).', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

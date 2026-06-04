@@ -39,18 +39,6 @@ final class GetConnector implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'connectors',
-			'label'       => __('Connectors', 'abilities-catalog'),
-			'description' => __('Abilities that read configured AI provider connectors (never exposing API keys).', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(
