@@ -57,7 +57,7 @@ final class CreatePage implements Ability {
 					),
 					'content'        => array(
 						'type'        => 'string',
-						'description' => __( 'The page content (HTML allowed; sanitized by WordPress).', 'abilities-catalog' ),
+						'description' => __( 'The page content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'        => array(
 						'type'        => 'string',
