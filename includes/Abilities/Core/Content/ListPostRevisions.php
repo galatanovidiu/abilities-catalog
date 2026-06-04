@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ContentListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -60,11 +61,8 @@ final class ListPostRevisions implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of revisions.', 'abilities-catalog' ),
+						'items'       => ContentListShaper::revisionItemSchema(),
+						'description' => __( 'The list of revisions as flat summary rows. Use content/get-post-revision for a single revision body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -126,9 +124,10 @@ final class ListPostRevisions implements Ability {
 
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
+		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'revisionSummary' ), $items ) : array();
 
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ContentListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_Error;
 use WP_REST_Request;
@@ -92,11 +93,8 @@ final class ListCptItems implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of items.', 'abilities-catalog' ),
+						'items'       => ContentListShaper::postItemSchema(),
+						'description' => __( 'The list of items as flat summary rows. Use content/get-cpt-item for a single item body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -124,7 +122,11 @@ final class ListCptItems implements Ability {
 
 	/**
 	 * Permission check: `edit_posts` cap of the type for edit-context; otherwise
-	 * any logged-in user. Rejects unknown or non-REST post types.
+	 * any logged-in user.
+	 *
+	 * For an unknown or non-REST post type it returns true so `execute()` can
+	 * surface the specific `invalid_post_type` (400) error instead of masking it as
+	 * a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may list the type's items.
@@ -133,13 +135,9 @@ final class ListCptItems implements Ability {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : '';
 
-		if ( '' === $post_type ) {
-			return false;
-		}
-
 		$obj = get_post_type_object( $post_type );
 		if ( ! $obj || empty( $obj->show_in_rest ) ) {
-			return false;
+			return true;
 		}
 
 		$context = $input['context'] ?? 'view';
@@ -200,9 +198,10 @@ final class ListCptItems implements Ability {
 
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
+		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'postSummary' ), $items ) : array();
 
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
