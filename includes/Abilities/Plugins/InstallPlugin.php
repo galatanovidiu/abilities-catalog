@@ -6,6 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\FilesystemGuard;
+use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use GalatanOvidiu\AbilitiesCatalog\Support\SourceValidator;
 use WP_REST_Request;
 
@@ -140,7 +141,7 @@ final class InstallPlugin implements Ability {
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
-			return $response->as_error();
+			return RestError::from( $response );
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -170,7 +171,7 @@ final class UpdateReading implements Ability {
 		if ( $has_rest ) {
 			$response = rest_do_request( $request );
 			if ( $response->is_error() ) {
-				return $response->as_error();
+				return RestError::from( $response );
 			}
 		}
 

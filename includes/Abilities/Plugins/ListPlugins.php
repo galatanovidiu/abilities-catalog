@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -119,7 +120,7 @@ final class ListPlugins implements Ability {
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
-			return $response->as_error();
+			return RestError::from( $response );
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );

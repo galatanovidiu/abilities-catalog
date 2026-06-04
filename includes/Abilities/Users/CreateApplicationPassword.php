@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Users;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use GalatanOvidiu\AbilitiesCatalog\Support\SecretSafeError;
 use WP_REST_Request;
 
@@ -146,7 +147,7 @@ final class CreateApplicationPassword implements Ability {
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
-			return SecretSafeError::redact( $response->as_error() );
+			return SecretSafeError::redact( RestError::from( $response ) );
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );

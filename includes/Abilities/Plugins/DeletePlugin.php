@@ -7,6 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use GalatanOvidiu\AbilitiesCatalog\Support\FilesystemGuard;
+use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_Error;
 use WP_REST_Request;
 
@@ -175,7 +176,7 @@ final class DeletePlugin implements Ability {
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
-			return $response->as_error();
+			return RestError::from( $response );
 		}
 
 		return array(

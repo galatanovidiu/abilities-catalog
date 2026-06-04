@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Users;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_Error;
 use WP_REST_Request;
 
@@ -135,7 +136,7 @@ final class DeleteApplicationPassword implements Ability {
 		$request  = new WP_REST_Request( 'DELETE', '/wp/v2/users/' . $user_id . '/application-passwords/' . $uuid );
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
-			return $response->as_error();
+			return RestError::from( $response );
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );
