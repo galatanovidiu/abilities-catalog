@@ -83,7 +83,7 @@ final class CreatePage implements Ability {
 					),
 					'parent'         => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent page ID.', 'abilities-catalog' ),
+						'description' => __( 'The parent post/page ID. Core only requires it to resolve to an existing post.', 'abilities-catalog' ),
 					),
 					'menu_order'     => array(
 						'type'        => 'integer',
@@ -91,7 +91,7 @@ final class CreatePage implements Ability {
 					),
 					'template'       => array(
 						'type'        => 'string',
-						'description' => __( 'The page template file name.', 'abilities-catalog' ),
+						'description' => __( 'A page-template slug registered by the active theme (not an arbitrary file name). Unknown values are rejected.', 'abilities-catalog' ),
 					),
 					'featured_media' => array(
 						'type'        => 'integer',
@@ -104,23 +104,35 @@ final class CreatePage implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'        => array(
+					'id'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The new page ID.', 'abilities-catalog' ),
 					),
-					'title'     => array(
+					'title'          => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
 					),
-					'link'      => array(
+					'link'           => array(
 						'type'        => 'string',
 						'description' => __( 'The page permalink.', 'abilities-catalog' ),
 					),
-					'status'    => array(
+					'status'         => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting page status.', 'abilities-catalog' ),
 					),
-					'edit_link' => array(
+					'slug'           => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting page slug. Core may dedupe the requested slug, so this can differ from the input.', 'abilities-catalog' ),
+					),
+					'date'           => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting publish date in site time (ISO 8601).', 'abilities-catalog' ),
+					),
+					'featured_media' => array(
+						'type'        => 'integer',
+						'description' => __( 'The applied featured image attachment ID. Returns 0 when none was applied, which signals a requested image that core could not attach.', 'abilities-catalog' ),
+					),
+					'edit_link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The wp-admin URL to edit the page. Surface this so a human can review the draft.', 'abilities-catalog' ),
 					),
@@ -205,7 +217,8 @@ final class CreatePage implements Ability {
 		}
 
 		if ( isset( $input['menu_order'] ) ) {
-			$request->set_param( 'menu_order', absint( $input['menu_order'] ) );
+			// Core treats menu_order as a signed integer; preserve negatives.
+			$request->set_param( 'menu_order', (int) $input['menu_order'] );
 		}
 
 		if ( ! empty( $input['featured_media'] ) ) {
@@ -221,11 +234,14 @@ final class CreatePage implements Ability {
 		$page_id = (int) ( $data['id'] ?? 0 );
 
 		return array(
-			'id'        => $page_id,
-			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
-			'link'      => (string) ( $data['link'] ?? '' ),
-			'status'    => (string) ( $data['status'] ?? '' ),
-			'edit_link' => (string) get_edit_post_link( $page_id, 'raw' ),
+			'id'             => $page_id,
+			'title'          => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'           => (string) ( $data['link'] ?? '' ),
+			'status'         => (string) ( $data['status'] ?? '' ),
+			'slug'           => (string) ( $data['slug'] ?? '' ),
+			'date'           => (string) ( $data['date'] ?? '' ),
+			'featured_media' => (int) ( $data['featured_media'] ?? 0 ),
+			'edit_link'      => (string) get_edit_post_link( $page_id, 'raw' ),
 		);
 	}
 }
