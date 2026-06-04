@@ -16,9 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `content/get-cpt-item`.
  *
- * Generic single-item reader keyed by `post_type`. Resolves the type's REST base
- * and wraps `GET /wp/v2/<rest_base>/<id>` via `rest_do_request()`. The capability
- * is object-level `read_post`.
+ * Generic single-item reader keyed by `post_type`. Resolves the type's REST item
+ * route via `rest_get_route_for_post_type_items()` (honoring a custom
+ * `rest_namespace`) and wraps `GET <route>/<id>` via `rest_do_request()`. The
+ * capability is object-level `read_post`.
  *
  * @since 0.1.0
  */
@@ -48,6 +49,7 @@ final class GetCptItem implements Ability {
 					),
 					'id'        => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The item ID.', 'abilities-catalog' ),
 					),
 					'context'   => array(
@@ -55,6 +57,10 @@ final class GetCptItem implements Ability {
 						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
 						'description' => __( 'Scope of the request: "view" or "edit".', 'abilities-catalog' ),
+					),
+					'password'  => array(
+						'type'        => 'string',
+						'description' => __( 'Password for a password-protected item.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'post_type', 'id' ),
@@ -158,10 +164,20 @@ final class GetCptItem implements Ability {
 			);
 		}
 
-		$rest_base = $obj->rest_base ?: $post_type;
+		$items_route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $items_route ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist or is not available in REST.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
-		$request = new WP_REST_Request( 'GET', '/wp/v2/' . $rest_base . '/' . $id );
+		$request = new WP_REST_Request( 'GET', $items_route . '/' . $id );
 		$request->set_param( 'context', $context );
+		if ( ! empty( $input['password'] ) ) {
+			$request->set_param( 'password', $input['password'] );
+		}
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
