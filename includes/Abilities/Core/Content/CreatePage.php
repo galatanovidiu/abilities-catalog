@@ -102,19 +102,27 @@ final class CreatePage implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status', 'link' ),
+				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new page ID.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
+					),
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The page permalink.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting page status.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the page. Surface this so a human can review the draft.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -209,12 +217,15 @@ final class CreatePage implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$page_id = (int) ( $data['id'] ?? 0 );
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'link'   => (string) ( $data['link'] ?? '' ),
-			'status' => (string) ( $data['status'] ?? '' ),
+			'id'        => $page_id,
+			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'edit_link' => (string) get_edit_post_link( $page_id, 'raw' ),
 		);
 	}
 }

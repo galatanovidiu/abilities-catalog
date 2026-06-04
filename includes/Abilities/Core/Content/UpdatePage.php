@@ -107,23 +107,31 @@ final class UpdatePage implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status', 'link' ),
+				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
-					'link'     => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
+					),
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The page permalink.', 'abilities-catalog' ),
 					),
-					'status'   => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting page status.', 'abilities-catalog' ),
 					),
-					'modified' => array(
+					'modified'  => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the page. Surface this so a human can review the change.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -226,13 +234,16 @@ final class UpdatePage implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$page_id = (int) ( $data['id'] ?? $id );
 
 		return array(
-			'id'       => (int) ( $data['id'] ?? $id ),
-			'link'     => (string) ( $data['link'] ?? '' ),
-			'status'   => (string) ( $data['status'] ?? '' ),
-			'modified' => (string) ( $data['modified'] ?? '' ),
+			'id'        => $page_id,
+			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'modified'  => (string) ( $data['modified'] ?? '' ),
+			'edit_link' => (string) get_edit_post_link( $page_id, 'raw' ),
 		);
 	}
 }

@@ -95,23 +95,31 @@ final class CreateCptItem implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status' ),
+				'required'             => array( 'id', 'status', 'edit_link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new item ID.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered item title.', 'abilities-catalog' ),
+					),
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The item permalink.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting item status.', 'abilities-catalog' ),
 					),
-					'type'   => array(
+					'type'      => array(
 						'type'        => 'string',
 						'description' => __( 'The post type slug.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the item. Surface this so a human can review the draft.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -215,13 +223,16 @@ final class CreateCptItem implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$item_id = (int) ( $data['id'] ?? 0 );
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'link'   => (string) ( $data['link'] ?? '' ),
-			'status' => (string) ( $data['status'] ?? '' ),
-			'type'   => (string) ( $data['type'] ?? $post_type ),
+			'id'        => $item_id,
+			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'type'      => (string) ( $data['type'] ?? $post_type ),
+			'edit_link' => (string) get_edit_post_link( $item_id, 'raw' ),
 		);
 	}
 }

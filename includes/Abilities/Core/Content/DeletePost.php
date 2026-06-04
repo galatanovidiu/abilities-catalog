@@ -66,6 +66,10 @@ final class DeletePost implements Ability {
 						'type'        => 'integer',
 						'description' => __( 'The deleted post ID.', 'abilities-catalog' ),
 					),
+					'title'   => array(
+						'type'        => 'string',
+						'description' => __( 'The title of the deleted post, so a human can confirm what was removed. No edit_link is returned because the post no longer exists.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -121,6 +125,7 @@ final class DeletePost implements Ability {
 		return array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
+			'title'   => (string) ( $data['previous']['title']['rendered'] ?? '' ),
 		);
 	}
 }

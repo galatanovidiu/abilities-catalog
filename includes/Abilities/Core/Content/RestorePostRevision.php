@@ -68,7 +68,7 @@ final class RestorePostRevision implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'restored', 'post_id', 'revision_id' ),
+				'required'             => array( 'restored', 'post_id', 'revision_id', 'edit_link' ),
 				'properties'           => array(
 					'restored'    => array(
 						'type'        => 'boolean',
@@ -81,6 +81,10 @@ final class RestorePostRevision implements Ability {
 					'revision_id' => array(
 						'type'        => 'integer',
 						'description' => __( 'The revision ID that was restored from.', 'abilities-catalog' ),
+					),
+					'edit_link'   => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the restored post. Surface this so a human can review the result.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -176,6 +180,7 @@ final class RestorePostRevision implements Ability {
 			'restored'    => true,
 			'post_id'     => $parent,
 			'revision_id' => $revision_id,
+			'edit_link'   => (string) get_edit_post_link( $parent, 'raw' ),
 		);
 	}
 }

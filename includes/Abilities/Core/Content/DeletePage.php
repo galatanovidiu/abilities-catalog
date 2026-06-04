@@ -66,6 +66,10 @@ final class DeletePage implements Ability {
 						'type'        => 'integer',
 						'description' => __( 'The deleted page ID.', 'abilities-catalog' ),
 					),
+					'title'   => array(
+						'type'        => 'string',
+						'description' => __( 'The title of the deleted page, so a human can confirm what was removed. No edit_link is returned because the page no longer exists.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -121,6 +125,7 @@ final class DeletePage implements Ability {
 		return array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
+			'title'   => (string) ( $data['previous']['title']['rendered'] ?? '' ),
 		);
 	}
 }

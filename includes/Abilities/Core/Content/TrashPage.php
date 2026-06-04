@@ -54,15 +54,23 @@ final class TrashPage implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status' ),
+				'required'             => array( 'id', 'status', 'edit_link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
+					),
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting page status (trash).', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the trashed page (e.g. to restore it). Surface this so a human can review or undo.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -117,11 +125,14 @@ final class TrashPage implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$page_id = (int) ( $data['id'] ?? $id );
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? $id ),
-			'status' => (string) ( $data['status'] ?? 'trash' ),
+			'id'        => $page_id,
+			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
+			'status'    => (string) ( $data['status'] ?? 'trash' ),
+			'edit_link' => (string) get_edit_post_link( $page_id, 'raw' ),
 		);
 	}
 }

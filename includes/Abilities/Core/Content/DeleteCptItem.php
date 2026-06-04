@@ -73,6 +73,10 @@ final class DeleteCptItem implements Ability {
 						'type'        => 'integer',
 						'description' => __( 'The deleted item ID.', 'abilities-catalog' ),
 					),
+					'title'   => array(
+						'type'        => 'string',
+						'description' => __( 'The title of the deleted item, so a human can confirm what was removed. No edit_link is returned because the item no longer exists.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -150,6 +154,7 @@ final class DeleteCptItem implements Ability {
 		return array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
+			'title'   => (string) ( $data['previous']['title']['rendered'] ?? '' ),
 		);
 	}
 }
