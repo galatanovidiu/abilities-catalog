@@ -10,6 +10,7 @@
 		"node": ">=22"
 	},
 	"scripts": {
+		"plugin-zip": "wp-scripts plugin-zip",
 		"format": "wp-scripts format",
 		"lint:php": "composer lint",
 		"lint:php:fix": "composer format",
