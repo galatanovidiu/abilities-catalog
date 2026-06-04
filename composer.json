@@ -1,5 +1,5 @@
 {
-	"name": "automattic/abilities-catalog",
+	"name": "galatanovidiu/abilities-catalog",
 	"description": "Registers a coherent catalog of WordPress wp-admin features as Abilities API abilities.",
 	"license": "GPL-2.0-or-later",
 	"type": "wordpress-plugin",
@@ -23,7 +23,7 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Automattic\\AbilitiesCatalog\\Tests\\": "tests/phpunit/"
+			"GalatanOvidiu\\AbilitiesCatalog\\Tests\\": "tests/phpunit/"
 		}
 	},
 	"require": {

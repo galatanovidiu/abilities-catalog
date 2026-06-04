@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests;
 
 use WP_UnitTestCase;
 

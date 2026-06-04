@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Unit\Support;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Unit\Support;
 
-use Automattic\AbilitiesCatalog\Support\SourceValidator;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Support\SourceValidator;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**

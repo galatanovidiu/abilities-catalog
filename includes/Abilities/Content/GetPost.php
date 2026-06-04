@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Content;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Content;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
 if (!defined('ABSPATH')) {

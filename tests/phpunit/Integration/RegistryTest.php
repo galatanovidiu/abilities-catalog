@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Integration;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * Verifies that every ability class on disk actually registers with the
@@ -34,7 +34,7 @@ final class RegistryTest extends TestCase {
 		$abilities = array();
 		foreach (glob($pattern) as $file) {
 			$relative = substr($file, strlen($base), -strlen('.php'));
-			$class    = 'Automattic\\AbilitiesCatalog\\Abilities\\' . str_replace('/', '\\', $relative);
+			$class    = 'GalatanOvidiu\\AbilitiesCatalog\\Abilities\\' . str_replace('/', '\\', $relative);
 
 			if (!class_exists($class) || !is_subclass_of($class, Ability::class)) {
 				continue;

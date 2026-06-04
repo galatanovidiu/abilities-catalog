@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Support;
+namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
 use WP_Error;
 

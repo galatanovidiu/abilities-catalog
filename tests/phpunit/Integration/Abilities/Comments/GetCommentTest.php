@@ -7,9 +7,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Integration\Abilities\Comments;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Comments;
 
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**

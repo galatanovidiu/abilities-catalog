@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Settings;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Support\ReadableOptionAllowList;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ReadableOptionAllowList;
 use WP_Error;
 
 if (!defined('ABSPATH')) {

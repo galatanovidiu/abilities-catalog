@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Users;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Users;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Support\SecretSafeError;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\SecretSafeError;
 use WP_REST_Request;
 
 if (!defined('ABSPATH')) {

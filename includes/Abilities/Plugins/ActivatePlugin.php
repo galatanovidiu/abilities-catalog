@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Plugins;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 use WP_Error;
 

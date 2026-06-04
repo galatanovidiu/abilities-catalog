@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Integration\Support;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Support;
 
-use Automattic\AbilitiesCatalog\Support\UpgraderLock;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Support\UpgraderLock;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**

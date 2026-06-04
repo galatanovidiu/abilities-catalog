@@ -7,9 +7,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Fixtures;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Fixtures;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
 /**
  * A write (readonly = false) that does NOT declare a boolean annotations.destructive.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\SiteHealth;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\SiteHealth;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Support\AdminIncludes;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use WP_Debug_Data;
 use WP_Error;
 

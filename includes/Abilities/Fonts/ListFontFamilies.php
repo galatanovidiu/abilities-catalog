@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Fonts;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Fonts;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
 if (!defined('ABSPATH')) {

@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Unit;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Unit;
 
-use Automattic\AbilitiesCatalog\Registry;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Registry;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use ReflectionMethod;
 use stdClass;
 
