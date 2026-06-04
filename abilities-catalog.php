@@ -35,19 +35,20 @@ define( 'ABILITIES_CATALOG_DIR', plugin_dir_path( __FILE__ ) );
  * so the Registry and ability classes load on demand.
  */
 spl_autoload_register(
-	static function ( string $class ): void {
+	static function ( string $class_name ): void {
 		$prefix = __NAMESPACE__ . '\\';
-		if ( 0 !== strpos( $class, $prefix ) ) {
+		if ( 0 !== strpos( $class_name, $prefix ) ) {
 			return;
 		}
 
-		$relative = substr( $class, strlen( $prefix ) );
+		$relative = substr( $class_name, strlen( $prefix ) );
 		$path     = ABILITIES_CATALOG_DIR . 'includes/' . str_replace( '\\', '/', $relative ) . '.php';
 
 		if ( ! is_readable( $path ) ) {
 			return;
 		}
 
+		// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- PSR-4 path built from a plugin constant and an internal class name, not user input.
 		require_once $path;
 	}
 );

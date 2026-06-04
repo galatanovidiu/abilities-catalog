@@ -36,6 +36,7 @@ final class AdminIncludes {
 				continue;
 			}
 
+			// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path built from ABSPATH and an internal literal file name, not user input.
 			require_once $path;
 		}
 	}

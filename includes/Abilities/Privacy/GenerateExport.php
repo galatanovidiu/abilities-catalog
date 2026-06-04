@@ -175,6 +175,7 @@ final class GenerateExport implements Ability {
 			);
 		}
 
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Reading WordPress core's own privacy-exporters filter, not defining a plugin hook.
 		$exporters = apply_filters( 'wp_privacy_personal_data_exporters', array() );
 		if ( ! is_array( $exporters ) ) {
 			return new WP_Error(

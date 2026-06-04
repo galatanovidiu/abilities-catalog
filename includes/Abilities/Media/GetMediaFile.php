@@ -158,6 +158,7 @@ final class GetMediaFile implements Ability {
 			);
 		}
 
+		// phpcs:ignore WordPressVIPMinimum.Performance.FetchingRemoteData.FileGetContentsUnknown -- $path is a local attachment file on disk, not a remote URL; caching does not apply.
 		$contents = file_get_contents( $path );
 		if ( false === $contents ) {
 			return new WP_Error(
@@ -233,7 +234,9 @@ final class GetMediaFile implements Ability {
 		}
 
 		if ( function_exists( 'getimagesize' ) ) {
-			$info = @getimagesize( $path );
+			// wp_getimagesize() wraps getimagesize() and suppresses its warnings
+			// safely, so no error-silencing operator is needed here.
+			$info = wp_getimagesize( $path );
 			if ( is_array( $info ) && isset( $info[0], $info[1] ) ) {
 				return array(
 					'width'  => (int) $info[0],

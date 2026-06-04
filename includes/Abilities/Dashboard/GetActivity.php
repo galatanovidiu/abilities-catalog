@@ -109,12 +109,14 @@ final class GetActivity implements Ability {
 		$number = isset( $input['number'] ) ? (int) $input['number'] : 5;
 		$number = max( 1, min( 20, $number ) );
 
+		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.get_posts_get_posts -- 'suppress_filters' => false keeps the query cacheable, which the sniff documents as safe.
 		$recent_published = get_posts(
 			array(
-				'post_status' => 'publish',
-				'numberposts' => $number,
-				'orderby'     => 'date',
-				'order'       => 'DESC',
+				'post_status'      => 'publish',
+				'numberposts'      => $number,
+				'orderby'          => 'date',
+				'order'            => 'DESC',
+				'suppress_filters' => false,
 			)
 		);
 

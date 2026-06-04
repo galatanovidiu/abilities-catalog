@@ -265,8 +265,9 @@ final class UploadMedia implements Ability {
 		if ( function_exists( 'finfo_open' ) ) {
 			$finfo = finfo_open( FILEINFO_MIME_TYPE );
 			if ( false !== $finfo ) {
+				// No finfo_close(): deprecated since PHP 8.5; the finfo object is
+				// freed automatically when it goes out of scope (PHP 8.1+).
 				$detected = finfo_buffer( $finfo, $bytes );
-				finfo_close( $finfo );
 				if ( is_string( $detected ) && '' !== $detected ) {
 					return $detected;
 				}

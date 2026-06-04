@@ -101,13 +101,15 @@ final class GetDrafts implements Ability {
 		$number = isset( $input['number'] ) ? (int) $input['number'] : 5;
 		$number = max( 1, min( 20, $number ) );
 
+		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.get_posts_get_posts -- 'suppress_filters' => false keeps the query cacheable, which the sniff documents as safe.
 		$drafts = get_posts(
 			array(
-				'post_status' => 'draft',
-				'author'      => get_current_user_id(),
-				'numberposts' => $number,
-				'orderby'     => 'modified',
-				'order'       => 'DESC',
+				'post_status'      => 'draft',
+				'author'           => get_current_user_id(),
+				'numberposts'      => $number,
+				'orderby'          => 'modified',
+				'order'            => 'DESC',
+				'suppress_filters' => false,
 			)
 		);
 

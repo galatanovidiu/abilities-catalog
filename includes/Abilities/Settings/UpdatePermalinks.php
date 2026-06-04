@@ -187,6 +187,7 @@ final class UpdatePermalinks implements Ability {
 		if ( $wp_rewrite instanceof \WP_Rewrite ) {
 			$wp_rewrite->init();
 		}
+		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.flush_rewrite_rules_flush_rewrite_rules -- Rebuilding rewrite rules is the explicit purpose of this admin-triggered permalink update, not a per-request call.
 		flush_rewrite_rules( true );
 
 		return array(

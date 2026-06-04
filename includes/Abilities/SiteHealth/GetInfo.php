@@ -102,7 +102,8 @@ final class GetInfo implements Ability {
 			try {
 				WP_Debug_Data::check_for_updates();
 			} catch ( \Throwable $e ) {
-				// Ignore: update checks are not required to read debug data.
+				// Best-effort refresh; update checks are not required to read debug data.
+				unset( $e );
 			}
 		}
 
