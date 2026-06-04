@@ -36,18 +36,6 @@ final class SwitchTheme implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'themes',
-			'label'       => __('Themes', 'abilities-catalog'),
-			'description' => __('Abilities that read installed themes.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

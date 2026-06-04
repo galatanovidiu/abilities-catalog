@@ -36,18 +36,6 @@ final class ListImporters implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'tools',
-			'label'       => __('Tools', 'abilities-catalog'),
-			'description' => __('Abilities that read importer availability and export site content.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

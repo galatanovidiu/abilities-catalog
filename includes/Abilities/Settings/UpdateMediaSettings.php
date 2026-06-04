@@ -57,18 +57,6 @@ final class UpdateMediaSettings implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'settings',
-			'label'       => __('Settings', 'abilities-catalog'),
-			'description' => __('Abilities that read site settings.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

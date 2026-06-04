@@ -35,10 +35,13 @@ their risk classification. It does not surface them to any agent or UI — that 
   (`templates/lookup-template` (pure core); `plugins/search-directory` and
   `themes/search-directory` — outbound wp.org call, `readonly`, gated on
   `install_plugins`/`install_themes`).
-- One PHP class per ability under `includes/Abilities/<Domain>/`. The `Registry` scans them,
-  registers each category once on `wp_abilities_api_categories_init` and each ability on
-  `wp_abilities_api_init`. No Composer step, no shared manifest — adding a domain edits only its
-  own folder.
+- One PHP class per ability under `includes/Abilities/<Domain>/`. The `Registry` scans them
+  and registers each ability on `wp_abilities_api_init`. Categories live centrally in
+  `includes/Categories.php` (one entry per domain) and register on
+  `wp_abilities_api_categories_init`; each ability links to its category by slug via
+  `args()['category']`. No Composer step, no shared manifest. Adding a domain edits its own
+  folder plus one entry in `Categories.php`; adding an ability to an existing domain edits
+  only that domain's folder.
 - **T3 dangerous tier** runs behind the server-side safety pipeline in `includes/Support/`:
   `FilesystemGuard` (direct-or-fail), `SourceValidator` (wp.org-slug-only source), `OptionAllowList`
   (deny-by-default for `settings/update-option`), `UpgraderLock`, `UpgradeRunner`. Scope: plugin/theme

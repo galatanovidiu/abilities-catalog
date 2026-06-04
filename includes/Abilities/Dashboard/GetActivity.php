@@ -33,18 +33,6 @@ final class GetActivity implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'dashboard',
-			'label'       => __('Dashboard', 'abilities-catalog'),
-			'description' => __('Composed read-only dashboard summaries (counts, recent activity, drafts).', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

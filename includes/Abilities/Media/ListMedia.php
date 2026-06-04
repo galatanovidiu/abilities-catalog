@@ -32,18 +32,6 @@ final class ListMedia implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'media',
-			'label'       => __('Media', 'abilities-catalog'),
-			'description' => __('Abilities that read media library items.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

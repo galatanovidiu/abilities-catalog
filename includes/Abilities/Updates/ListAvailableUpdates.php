@@ -39,18 +39,6 @@ final class ListAvailableUpdates implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'updates',
-			'label'       => __('Updates', 'abilities-catalog'),
-			'description' => __('Abilities that read available core, plugin, theme, and translation updates.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		$update_set = array(

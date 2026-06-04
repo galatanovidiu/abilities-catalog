@@ -48,18 +48,6 @@ final class CreateEraseRequest implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'privacy',
-			'label'       => __('Privacy', 'abilities-catalog'),
-			'description' => __('Abilities that read personal-data export and erasure requests.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

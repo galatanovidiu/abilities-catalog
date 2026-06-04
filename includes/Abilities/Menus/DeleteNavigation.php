@@ -42,18 +42,6 @@ final class DeleteNavigation implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'menus',
-			'label'       => __('Menus', 'abilities-catalog'),
-			'description' => __('Abilities that read navigation (block) and classic menus.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

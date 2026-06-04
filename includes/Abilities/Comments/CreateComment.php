@@ -44,18 +44,6 @@ final class CreateComment implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function category(): array
-	{
-		return array(
-			'slug'        => 'comments',
-			'label'       => __('Comments', 'abilities-catalog'),
-			'description' => __('Abilities that read comments.', 'abilities-catalog'),
-		);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function args(): array
 	{
 		return array(

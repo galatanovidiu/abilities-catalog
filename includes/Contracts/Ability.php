@@ -13,8 +13,10 @@ if (!defined('ABSPATH')) {
  *
  * One class per ability, one file per class, discovered by {@see \Automattic\AbilitiesCatalog\Registry}
  * via a directory scan of `includes/Abilities/<Domain>/`. Implementations declare
- * their category and the full `wp_register_ability()` argument array; the Registry
- * registers the category (deduplicated) and the ability on the correct hooks.
+ * the full `wp_register_ability()` argument array; the Registry registers the
+ * ability on `wp_abilities_api_init`. Categories live centrally in
+ * {@see \Automattic\AbilitiesCatalog\Categories}; an ability references its
+ * category by slug through `args()['category']`.
  *
  * @since 0.1.0
  */
@@ -28,16 +30,6 @@ interface Ability
 	 * @return string
 	 */
 	public function name(): string;
-
-	/**
-	 * The ability category descriptor.
-	 *
-	 * The `slug` MUST equal `args()['category']`. The Registry registers each
-	 * unique slug once on `wp_abilities_api_categories_init`.
-	 *
-	 * @return array{slug:string,label:string,description:string}
-	 */
-	public function category(): array;
 
 	/**
 	 * The second argument to `wp_register_ability()`.
