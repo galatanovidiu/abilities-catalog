@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\BooleanInput;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -120,7 +121,7 @@ final class UpdateWriting implements Ability {
 		}
 
 		if ( array_key_exists( 'use_smilies', $input ) ) {
-			$request->set_param( 'use_smilies', rest_sanitize_boolean( $input['use_smilies'] ) );
+			$request->set_param( 'use_smilies', BooleanInput::sanitize( $input['use_smilies'] ) );
 		}
 
 		$response = rest_do_request( $request );

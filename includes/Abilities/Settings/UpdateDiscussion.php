@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\BooleanInput;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -295,7 +296,7 @@ final class UpdateDiscussion implements Ability {
 				continue;
 			}
 
-			update_option( $option, rest_sanitize_boolean( $input[ $option ] ) ? 1 : 0 );
+			update_option( $option, BooleanInput::sanitize( $input[ $option ] ) ? 1 : 0 );
 		}
 
 		return array(

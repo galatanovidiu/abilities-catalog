@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\BooleanInput;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -181,7 +182,7 @@ final class UpdateReading implements Ability {
 		}
 
 		if ( array_key_exists( 'blog_public', $input ) ) {
-			update_option( 'blog_public', rest_sanitize_boolean( $input['blog_public'] ) ? 1 : 0 );
+			update_option( 'blog_public', BooleanInput::sanitize( $input['blog_public'] ) ? 1 : 0 );
 		}
 
 		return array(
