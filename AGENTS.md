@@ -37,7 +37,13 @@ their risk classification. It does not surface them to any agent or UI — that 
   `menus/delete-navigation` (`destructive`)), and three discovery abilities
   (`templates/lookup-template` (pure core); `plugins/search-directory` and
   `themes/search-directory` — outbound wp.org call, `readonly`, gated on
-  `install_plugins`/`install_themes`).
+  `install_plugins`/`install_themes`), and the **L8 per-object completeness abilities** (9):
+  post-meta CRUD (`content/get-post-meta`, `content/update-post-meta`,
+  `content/delete-post-meta` (`destructive`), `content/list-post-meta-keys`) — all gated to
+  registered `show_in_rest` meta keys via `Support/PostMetaKeys`; post↔term assignment
+  (`terms/attach-post-terms`, `terms/detach-post-terms`) — resolve existing terms via
+  `Support/TermResolver`, never create; the `menus/list-menu-locations` read; and the media
+  size abilities (`media/list-image-sizes` read, `media/regenerate-thumbnails` write).
 - Abilities are organized into top-level **groups** under `includes/Abilities/<Group>/`. The
   core WP catalog lives in `includes/Abilities/Core/<Domain>/`; non-core add-ons get their own
   sibling group (e.g. `includes/Abilities/Woo/`). One PHP class per ability. The `Registry`

@@ -16,7 +16,12 @@ categories, synced patterns, theme styles, style variations, and a new **Search*
 four writes (`templates/create-template`/`delete-template`, `menus/delete-classic-menu`,
 `menus/delete-navigation`), and three discovery abilities (`templates/lookup-template` plus
 `plugins/`/`themes/search-directory`, which make an outbound wp.org call and gate on the
-install capability).
+install capability). Loop **L8** added nine per-object completeness abilities: post-meta CRUD
+(`content/get-post-meta`/`update-post-meta`/`delete-post-meta`/`list-post-meta-keys`, gated to
+registered `show_in_rest` keys via `Support/PostMetaKeys`), post-term assignment
+(`terms/attach-post-terms`/`detach-post-terms`, resolving existing terms via
+`Support/TermResolver`), `menus/list-menu-locations`, and the image-size abilities
+(`media/list-image-sizes`, `media/regenerate-thumbnails`).
 
 ## Structure
 

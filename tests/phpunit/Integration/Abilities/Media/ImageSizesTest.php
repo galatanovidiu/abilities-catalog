@@ -1,0 +1,80 @@
+<?php
+/**
+ * Integration tests for the image-size abilities.
+ *
+ * @package AbilitiesCatalog\Tests
+ */
+
+declare(strict_types=1);
+
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Media;
+
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
+use WP_Error;
+
+/**
+ * Exercises media/list-image-sizes (no-input read) and
+ * media/regenerate-thumbnails (write over a real uploaded image), plus the
+ * not-an-image guard and the permission gate.
+ */
+final class ImageSizesTest extends TestCase {
+
+	public function test_abilities_are_registered(): void {
+		$this->assertNotNull( wp_get_ability( 'media/list-image-sizes' ) );
+		$this->assertNotNull( wp_get_ability( 'media/regenerate-thumbnails' ) );
+	}
+
+	public function test_list_image_sizes_includes_core_sizes(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'media/list-image-sizes' )->execute();
+
+		$this->assertIsArray( $result );
+		$names = wp_list_pluck( $result['sizes'], 'name' );
+		$this->assertContains( 'thumbnail', $names );
+
+		foreach ( $result['sizes'] as $size ) {
+			if ( 'thumbnail' !== $size['name'] ) {
+				continue;
+			}
+
+			$this->assertGreaterThan( 0, $size['width'] );
+			$this->assertIsBool( $size['crop'] );
+		}
+	}
+
+	public function test_regenerate_thumbnails_rebuilds_sizes(): void {
+		$this->actingAs( 'administrator' );
+
+		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $attachment_id );
+
+		$result = wp_get_ability( 'media/regenerate-thumbnails' )->execute( array( 'id' => $attachment_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( $attachment_id, $result['id'] );
+		$this->assertNotEmpty( $result['sizes'] );
+		$this->assertContains( 'thumbnail', wp_list_pluck( $result['sizes'], 'name' ) );
+		$this->assertNotEmpty( $result['edit_link'] );
+	}
+
+	public function test_regenerate_rejects_non_image(): void {
+		$this->actingAs( 'administrator' );
+
+		$attachment_id = self::factory()->attachment->create( array( 'post_mime_type' => 'application/pdf' ) );
+
+		$result = wp_get_ability( 'media/regenerate-thumbnails' )->execute( array( 'id' => $attachment_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_not_an_image', $result->get_error_code() );
+	}
+
+	public function test_logged_out_user_is_denied(): void {
+		wp_set_current_user( 0 );
+
+		$result = wp_get_ability( 'media/list-image-sizes' )->execute();
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+	}
+}

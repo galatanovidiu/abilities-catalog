@@ -100,6 +100,12 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **content/get-post-revision** — R · wrapper `/wp/v2/posts/<parent>/revisions/<id>` GET · T1. Cap: `edit_post` on parent. In: parent, id, context. Out: id, parent, content, title, excerpt, date.
 - **content/restore-post-revision** — W · **net-new** (wraps `wp_restore_post_revision()`; core fn does no cap check — integration must enforce) · T2. Cap: `edit_post` on parent. In: parent, revision_id. Out: restored, post_id, revision_id.
 
+### Post meta  (L8 — registered `show_in_rest` keys only, via `Support/PostMetaKeys`)
+- **content/list-post-meta-keys** (L8) — R · **net-new** (`get_registered_meta_keys('post', <post_type>)`) · T1. Cap: the post type's `edit_posts`. Lists the registered `show_in_rest` meta keys for a post type (key, type, single, description) so an agent knows what the post-meta abilities can touch. In: post_type (default `post`). Out: post_type, keys[].
+- **content/get-post-meta** (L8) — R · **net-new** (`get_post_meta`, gated to registered `show_in_rest` keys) · T1. Cap: `edit_post` (object). In: id, keys[] (optional). Out: id, meta{}.
+- **content/update-post-meta** (L8) — W · **net-new** (`update_post_meta`) · T2. Cap: `edit_post` (object) + per-key `edit_post_meta`. Writes only registered `show_in_rest` keys; rejects unknown keys; validates all keys before writing. In: id, meta{}. Out: id, meta{} (applied), edit_link.
+- **content/delete-post-meta** (L8) — W · D! · **net-new** (`delete_post_meta`) · T2. Cap: `edit_post` (object) + per-key `edit_post_meta`. Removes all values for each named registered key; rejects unknown keys. In: id, keys[]. Out: id, deleted[], edit_link.
+
 ### Pages  (post type `page`, hierarchical)
 - **content/list-pages**, **get-page**, **create-page**, **update-page**, **trash-page**, **delete-page** — same shapes as posts; wrappers of `/wp/v2/pages[/ <id>]`; extra fields `parent`, `menu_order`, `template`. Caps resolve to page caps (`edit_pages`, `edit_others_pages`, `publish_pages`, `delete_pages`) via `map_meta_cap`. Tiers: list/get/create/update/trash = T1, delete-page = T2 (D!, high-sensitivity).
 
@@ -112,6 +118,8 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **terms/list-tags**, **get-tag**, **create-tag**, **update-tag**, **delete-tag** — taxonomy `post_tag` (non-hierarchical, no parent). Caps: `manage_post_tags` etc. NOTE: non-hierarchical create checks `assign_terms`, not `edit_terms`. Wrappers of `/wp/v2/tags[/ <id>]`. Tiers as categories.
 - **terms/list-taxonomies** — R · wrapper `/wp/v2/taxonomies` GET · T1. Discovery of `show_in_rest` taxonomies.
 - **terms/list-terms**, **get-term**, **create-term**, **update-term**, **delete-term** — generic family keyed by `taxonomy` (covers any `show_in_rest` taxonomy incl. `link_category`). Caps per taxonomy object. `parent` only for hierarchical. Wrappers of `/wp/v2/<rest_base>[/ <id>]`. Tiers: reads + create/update = T1, delete = T2.
+- **terms/attach-post-terms** (L8) — W · **net-new** (`wp_set_object_terms`, append by default) · T2. Cap: taxonomy `assign_terms` + `edit_post` (object). Assigns existing terms (IDs, slugs, or names) to a post; resolves via `Support/TermResolver` and errors on a missing term — never creates terms. In: post_id, taxonomy, terms[], append (default true). Out: post_id, taxonomy, term_ids[] (resulting), edit_link.
+- **terms/detach-post-terms** (L8) — W · **net-new** (`wp_remove_object_terms`) · T2. Cap: taxonomy `assign_terms` + `edit_post` (object). Removes the named terms from a post's assignments (terms themselves are not deleted; reversible). In: post_id, taxonomy, terms[]. Out: post_id, taxonomy, term_ids[] (remaining), edit_link.
 
 ## Media — namespace `media`
 - **media/list-media** — R · wrapper `/wp/v2/media` GET · T1. Cap: view public; `edit_post` per attachment for edit-context. In: search, media_type, mime_type, parent[], author[], status, page, per_page, orderby, order. Out: items[], total, total_pages.
@@ -121,6 +129,8 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **media/update-media** — W · wrapper `/wp/v2/media/<id>` POST/PATCH · T2. Cap: `edit_post` on attachment. In: id, title, alt_text, caption, description, post. Out: id, title, alt_text, caption, description.
 - **media/delete-media** — W · D! · wrapper `/wp/v2/media/<id>` DELETE · T2 (high-sensitivity). Cap: `delete_post` on attachment. Core requires force=true (no trash for media). In: id, force. Out: deleted, previous.
 - **media/edit-media-image** — W · wrapper `/wp/v2/media/<id>/edit` POST · T2 (low priority). Cap: `upload_files` + `edit_post`. Image MIME only; creates a NEW attachment. In: id, src, modifiers[], rotation, x, y, width, height. Out: id, source_url.
+- **media/list-image-sizes** (L8) — R · **net-new** (`wp_get_registered_image_subsizes()`) · T1. Cap: `upload_files`. Lists the configured image sub-sizes (core + theme/plugin) with width, height, crop. Reports configured sizes, not files present for an attachment. No input. Out: sizes[].
+- **media/regenerate-thumbnails** (L8) — W · **net-new** (`wp_generate_attachment_metadata` + `wp_update_attachment_metadata`; loads admin includes) · T2. Cap: `upload_files` + `edit_post` (object). Rebuilds an image attachment's sub-size files from the original; non-destructive (original preserved); image MIME only. In: id. Out: id, sizes[] (regenerated), edit_link.
 
 ## Comments — namespace `comments`
 - **comments/list-comments** — R · wrapper `/wp/v2/comments` GET · T1. Cap: `moderate_comments` (unrestricted/non-default status/edit-context), `edit_post` (by post), `edit_posts` (baseline). In: post[], status, type, author[], author_email, search, parent[], page, per_page, orderby, order. Out: items[], total, total_pages.
@@ -240,6 +250,14 @@ four write/destructive completeness gaps (`templates/create-template`, `template
 `menus/delete-classic-menu`, `menus/delete-navigation`), and three discovery abilities
 (`templates/lookup-template` plus `plugins/search-directory` and `themes/search-directory`, which
 make an outbound WordPress.org call and are gated on `install_plugins`/`install_themes`).
+
+**Per-object completeness gaps closed (loop L8, 9 abilities):** post-meta CRUD
+(`content/get-post-meta`, `content/update-post-meta`, `content/delete-post-meta`,
+`content/list-post-meta-keys`) — all gated to registered `show_in_rest` keys via
+`Support/PostMetaKeys`; post↔term assignment (`terms/attach-post-terms`,
+`terms/detach-post-terms`) — resolve existing terms via `Support/TermResolver`, never create; the
+`menus/list-menu-locations` read (companion to `assign-menu-location`); and the image-size
+abilities (`media/list-image-sizes`, `media/regenerate-thumbnails`).
 
 **Built behind the dangerous-tier pipeline (loop L5):** the T3 dangerous tier — plugin/theme
 install·update·delete, `updates/run-update` (plugin/theme/translation only), `settings/update-option`
