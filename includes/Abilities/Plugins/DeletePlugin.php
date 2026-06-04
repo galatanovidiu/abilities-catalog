@@ -154,7 +154,7 @@ final class DeletePlugin implements Ability {
 		// Directory slug; '.' for single-file plugins.
 		$slug = dirname( plugin_basename( $plugin . '.php' ) );
 
-		if ( class_exists( '\WP_Plugin_Dependencies' ) && method_exists( '\WP_Plugin_Dependencies', 'get_dependents' ) ) {
+		if ( class_exists( '\WP_Plugin_Dependencies' ) ) {
 			\WP_Plugin_Dependencies::initialize();
 			$dependents = \WP_Plugin_Dependencies::get_dependents( $slug );
 

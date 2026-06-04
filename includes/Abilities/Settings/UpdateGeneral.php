@@ -32,24 +32,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class UpdateGeneral implements Ability {
 
 	/**
-	 * REST settings parameters this ability is allowed to write.
-	 *
-	 * Keys are the REST setting names; values are the underlying option keys
-	 * (for documentation only — the REST route maps them).
-	 *
-	 * @var array<string,string>
-	 */
-	private const ALLOWED_PARAMS = array(
-		'title'         => 'blogname',
-		'description'   => 'blogdescription',
-		'timezone'      => 'timezone_string',
-		'date_format'   => 'date_format',
-		'time_format'   => 'time_format',
-		'start_of_week' => 'start_of_week',
-		'language'      => 'WPLANG',
-	);
-
-	/**
 	 * Input keys that are never allowed; their presence rejects the whole call.
 	 *
 	 * Covers the REST names and the raw option names for the site URL and the

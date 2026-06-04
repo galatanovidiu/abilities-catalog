@@ -96,10 +96,7 @@ final class GetGlobalStyles implements Ability {
 	 * @return array<string,mixed>|\WP_Error The shaped global styles, or an error.
 	 */
 	public function execute( $input = null ) {
-		if (
-			! class_exists( 'WP_Theme_JSON_Resolver' )
-			|| ! method_exists( 'WP_Theme_JSON_Resolver', 'get_user_global_styles_post_id' )
-		) {
+		if ( ! class_exists( 'WP_Theme_JSON_Resolver' ) ) {
 			return new WP_Error(
 				'global_styles_unavailable',
 				__( 'Global styles are not available on this site.', 'abilities-catalog' ),

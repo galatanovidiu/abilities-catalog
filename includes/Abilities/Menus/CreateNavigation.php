@@ -29,13 +29,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class CreateNavigation implements Ability {
 
 	/**
-	 * Post statuses that require the publish capability.
-	 *
-	 * @var string[]
-	 */
-	private const PUBLISH_STATUSES = array( 'publish', 'future', 'private' );
-
-	/**
 	 * {@inheritDoc}
 	 */
 	public function name(): string {

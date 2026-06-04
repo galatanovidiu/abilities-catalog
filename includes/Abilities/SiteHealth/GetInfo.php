@@ -96,15 +96,13 @@ final class GetInfo implements Ability {
 			);
 		}
 
-		// Some versions refresh update transients before building the data.
-		// This is best-effort and must not abort the ability if it fails.
-		if ( method_exists( 'WP_Debug_Data', 'check_for_updates' ) ) {
-			try {
-				WP_Debug_Data::check_for_updates();
-			} catch ( \Throwable $e ) {
-				// Best-effort refresh; update checks are not required to read debug data.
-				unset( $e );
-			}
+		// Refresh update transients before building the data. This is best-effort
+		// and must not abort the ability if it fails.
+		try {
+			WP_Debug_Data::check_for_updates();
+		} catch ( \Throwable $e ) {
+			// Best-effort refresh; update checks are not required to read debug data.
+			unset( $e );
 		}
 
 		try {

@@ -185,8 +185,8 @@ final class ListUsers implements Ability {
 		$headers = $response->get_headers();
 
 		return array(
-			'items'       => is_array( $data ) ? array_values( $data ) : array(),
-			'total'       => (int) ( $headers['X-WP-Total'] ?? count( is_array( $data ) ? $data : array() ) ),
+			'items'       => array_values( $data ),
+			'total'       => (int) ( $headers['X-WP-Total'] ?? count( $data ) ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
 	}
