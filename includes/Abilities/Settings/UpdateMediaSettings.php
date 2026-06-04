@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,8 +23,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class UpdateMediaSettings implements Ability
-{
+final class UpdateMediaSettings implements Ability {
+
 	/**
 	 * Allow-listed integer options written via `update_option()`.
 	 *
@@ -44,104 +44,102 @@ final class UpdateMediaSettings implements Ability
 	 *
 	 * @var string[]
 	 */
-	private const BOOL_OPTIONS = array('thumbnail_crop', 'uploads_use_yearmonth_folders');
+	private const BOOL_OPTIONS = array( 'thumbnail_crop', 'uploads_use_yearmonth_folders' );
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'settings/update-media';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update Media Settings', 'abilities-catalog'),
-			'description'         => __('Updates Media Settings: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag.', 'abilities-catalog'),
+			'label'               => __( 'Update Media Settings', 'abilities-catalog' ),
+			'description'         => __( 'Updates Media Settings: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'thumbnail_size_w'              => array(
 						'type'        => 'integer',
-						'description' => __('Thumbnail image width in pixels.', 'abilities-catalog'),
+						'description' => __( 'Thumbnail image width in pixels.', 'abilities-catalog' ),
 					),
 					'thumbnail_size_h'              => array(
 						'type'        => 'integer',
-						'description' => __('Thumbnail image height in pixels.', 'abilities-catalog'),
+						'description' => __( 'Thumbnail image height in pixels.', 'abilities-catalog' ),
 					),
 					'thumbnail_crop'                => array(
 						'type'        => 'boolean',
-						'description' => __('Whether thumbnails are cropped to exact dimensions.', 'abilities-catalog'),
+						'description' => __( 'Whether thumbnails are cropped to exact dimensions.', 'abilities-catalog' ),
 					),
 					'medium_size_w'                 => array(
 						'type'        => 'integer',
-						'description' => __('Medium image maximum width in pixels.', 'abilities-catalog'),
+						'description' => __( 'Medium image maximum width in pixels.', 'abilities-catalog' ),
 					),
 					'medium_size_h'                 => array(
 						'type'        => 'integer',
-						'description' => __('Medium image maximum height in pixels.', 'abilities-catalog'),
+						'description' => __( 'Medium image maximum height in pixels.', 'abilities-catalog' ),
 					),
 					'large_size_w'                  => array(
 						'type'        => 'integer',
-						'description' => __('Large image maximum width in pixels.', 'abilities-catalog'),
+						'description' => __( 'Large image maximum width in pixels.', 'abilities-catalog' ),
 					),
 					'large_size_h'                  => array(
 						'type'        => 'integer',
-						'description' => __('Large image maximum height in pixels.', 'abilities-catalog'),
+						'description' => __( 'Large image maximum height in pixels.', 'abilities-catalog' ),
 					),
 					'uploads_use_yearmonth_folders' => array(
 						'type'        => 'boolean',
-						'description' => __('Whether uploads are organized into year- and month-based folders.', 'abilities-catalog'),
+						'description' => __( 'Whether uploads are organized into year- and month-based folders.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('thumbnail_size_w'),
+				'required'             => array( 'thumbnail_size_w' ),
 				'properties'           => array(
 					'thumbnail_size_w'              => array(
 						'type'        => 'integer',
-						'description' => __('The resulting thumbnail width.', 'abilities-catalog'),
+						'description' => __( 'The resulting thumbnail width.', 'abilities-catalog' ),
 					),
 					'thumbnail_size_h'              => array(
 						'type'        => 'integer',
-						'description' => __('The resulting thumbnail height.', 'abilities-catalog'),
+						'description' => __( 'The resulting thumbnail height.', 'abilities-catalog' ),
 					),
 					'thumbnail_crop'                => array(
 						'type'        => 'boolean',
-						'description' => __('The resulting thumbnail crop flag.', 'abilities-catalog'),
+						'description' => __( 'The resulting thumbnail crop flag.', 'abilities-catalog' ),
 					),
 					'medium_size_w'                 => array(
 						'type'        => 'integer',
-						'description' => __('The resulting medium width.', 'abilities-catalog'),
+						'description' => __( 'The resulting medium width.', 'abilities-catalog' ),
 					),
 					'medium_size_h'                 => array(
 						'type'        => 'integer',
-						'description' => __('The resulting medium height.', 'abilities-catalog'),
+						'description' => __( 'The resulting medium height.', 'abilities-catalog' ),
 					),
 					'large_size_w'                  => array(
 						'type'        => 'integer',
-						'description' => __('The resulting large width.', 'abilities-catalog'),
+						'description' => __( 'The resulting large width.', 'abilities-catalog' ),
 					),
 					'large_size_h'                  => array(
 						'type'        => 'integer',
-						'description' => __('The resulting large height.', 'abilities-catalog'),
+						'description' => __( 'The resulting large height.', 'abilities-catalog' ),
 					),
 					'uploads_use_yearmonth_folders' => array(
 						'type'        => 'boolean',
-						'description' => __('The resulting year/month folder flag.', 'abilities-catalog'),
+						'description' => __( 'The resulting year/month folder flag.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -160,9 +158,8 @@ final class UpdateMediaSettings implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user can manage options.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('manage_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -171,40 +168,43 @@ final class UpdateMediaSettings implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The resulting media settings, or a WP_Error.
 	 */
-	public function execute($input = null)
-	{
-		$input = is_array($input) ? $input : array();
+	public function execute( $input = null ) {
+		$input = is_array( $input ) ? $input : array();
 
 		// Defense in depth: update_option() does not re-check the capability.
-		if (!current_user_can('manage_options')) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error(
 				'webmcp_forbidden',
-				__('You are not allowed to update media settings.', 'abilities-catalog'),
-				array('status' => 403)
+				__( 'You are not allowed to update media settings.', 'abilities-catalog' ),
+				array( 'status' => 403 )
 			);
 		}
 
-		foreach (self::INT_OPTIONS as $option) {
-			if (array_key_exists($option, $input)) {
-				update_option($option, absint($input[$option]));
+		foreach ( self::INT_OPTIONS as $option ) {
+			if ( ! array_key_exists( $option, $input ) ) {
+				continue;
 			}
+
+			update_option( $option, absint( $input[ $option ] ) );
 		}
 
-		foreach (self::BOOL_OPTIONS as $option) {
-			if (array_key_exists($option, $input)) {
-				update_option($option, rest_sanitize_boolean($input[$option]) ? 1 : 0);
+		foreach ( self::BOOL_OPTIONS as $option ) {
+			if ( ! array_key_exists( $option, $input ) ) {
+				continue;
 			}
+
+			update_option( $option, rest_sanitize_boolean( $input[ $option ] ) ? 1 : 0 );
 		}
 
 		return array(
-			'thumbnail_size_w'              => absint(get_option('thumbnail_size_w')),
-			'thumbnail_size_h'              => absint(get_option('thumbnail_size_h')),
-			'thumbnail_crop'                => (bool) get_option('thumbnail_crop'),
-			'medium_size_w'                 => absint(get_option('medium_size_w')),
-			'medium_size_h'                 => absint(get_option('medium_size_h')),
-			'large_size_w'                  => absint(get_option('large_size_w')),
-			'large_size_h'                  => absint(get_option('large_size_h')),
-			'uploads_use_yearmonth_folders' => (bool) get_option('uploads_use_yearmonth_folders'),
+			'thumbnail_size_w'              => absint( get_option( 'thumbnail_size_w' ) ),
+			'thumbnail_size_h'              => absint( get_option( 'thumbnail_size_h' ) ),
+			'thumbnail_crop'                => (bool) get_option( 'thumbnail_crop' ),
+			'medium_size_w'                 => absint( get_option( 'medium_size_w' ) ),
+			'medium_size_h'                 => absint( get_option( 'medium_size_h' ) ),
+			'large_size_w'                  => absint( get_option( 'large_size_w' ) ),
+			'large_size_h'                  => absint( get_option( 'large_size_h' ) ),
+			'uploads_use_yearmonth_folders' => (bool) get_option( 'uploads_use_yearmonth_folders' ),
 		);
 	}
 }

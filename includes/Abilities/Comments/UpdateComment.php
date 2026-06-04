@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Comments;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -21,73 +21,71 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.2.0
  */
-final class UpdateComment implements Ability
-{
+final class UpdateComment implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'comments/update-comment';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update Comment', 'abilities-catalog'),
-			'description'         => __('Updates an existing comment\'s content, author name, author email, or date. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog'),
+			'label'               => __( 'Update Comment', 'abilities-catalog' ),
+			'description'         => __( 'Updates an existing comment\'s content, author name, author email, or date. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'           => array(
 						'type'        => 'integer',
-						'description' => __('The comment ID to update.', 'abilities-catalog'),
+						'description' => __( 'The comment ID to update.', 'abilities-catalog' ),
 					),
 					'content'      => array(
 						'type'        => 'string',
-						'description' => __('The new comment content (HTML allowed; sanitized by WordPress).', 'abilities-catalog'),
+						'description' => __( 'The new comment content (HTML allowed; sanitized by WordPress).', 'abilities-catalog' ),
 					),
 					'author_name'  => array(
 						'type'        => 'string',
-						'description' => __('The new author display name.', 'abilities-catalog'),
+						'description' => __( 'The new author display name.', 'abilities-catalog' ),
 					),
 					'author_email' => array(
 						'type'        => 'string',
-						'description' => __('The new author email address.', 'abilities-catalog'),
+						'description' => __( 'The new author email address.', 'abilities-catalog' ),
 					),
 					'date'         => array(
 						'type'        => 'string',
-						'description' => __('The new comment date in site time (ISO 8601).', 'abilities-catalog'),
+						'description' => __( 'The new comment date in site time (ISO 8601).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'status'),
+				'required'             => array( 'id', 'status' ),
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __('The comment ID.', 'abilities-catalog'),
+						'description' => __( 'The comment ID.', 'abilities-catalog' ),
 					),
 					'content' => array(
 						'type'        => 'string',
-						'description' => __('The rendered comment content.', 'abilities-catalog'),
+						'description' => __( 'The rendered comment content.', 'abilities-catalog' ),
 					),
 					'status'  => array(
 						'type'        => 'string',
-						'description' => __('The resulting comment status.', 'abilities-catalog'),
+						'description' => __( 'The resulting comment status.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -106,11 +104,10 @@ final class UpdateComment implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update the comment.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		return $this->canModerate(absint($input['id'] ?? 0));
+		return $this->canModerate( absint( $input['id'] ?? 0 ) );
 	}
 
 	/**
@@ -119,9 +116,8 @@ final class UpdateComment implements Ability
 	 * @param int $id The comment ID.
 	 * @return bool True if the user has moderate_comments or edit_comment on it.
 	 */
-	private function canModerate(int $id): bool
-	{
-		return current_user_can('moderate_comments') || current_user_can('edit_comment', $id);
+	private function canModerate( int $id ): bool {
+		return current_user_can( 'moderate_comments' ) || current_user_can( 'edit_comment', $id );
 	}
 
 	/**
@@ -130,37 +126,36 @@ final class UpdateComment implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The comment's id, content, status, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id'] ?? 0);
-		$request = new WP_REST_Request('POST', '/wp/v2/comments/' . $id);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] ?? 0 );
+		$request = new WP_REST_Request( 'POST', '/wp/v2/comments/' . $id );
 
 		// Content passes through to the REST route, which sanitizes it.
-		if (isset($input['content']) && '' !== $input['content']) {
-			$request->set_param('content', (string) $input['content']);
+		if ( isset( $input['content'] ) && '' !== $input['content'] ) {
+			$request->set_param( 'content', (string) $input['content'] );
 		}
-		if (isset($input['author_name']) && '' !== $input['author_name']) {
-			$request->set_param('author_name', sanitize_text_field((string) $input['author_name']));
+		if ( isset( $input['author_name'] ) && '' !== $input['author_name'] ) {
+			$request->set_param( 'author_name', sanitize_text_field( (string) $input['author_name'] ) );
 		}
-		if (isset($input['author_email']) && '' !== $input['author_email']) {
-			$request->set_param('author_email', sanitize_email((string) $input['author_email']));
+		if ( isset( $input['author_email'] ) && '' !== $input['author_email'] ) {
+			$request->set_param( 'author_email', sanitize_email( (string) $input['author_email'] ) );
 		}
-		if (isset($input['date']) && '' !== $input['date']) {
-			$request->set_param('date', (string) $input['date']);
+		if ( isset( $input['date'] ) && '' !== $input['date'] ) {
+			$request->set_param( 'date', (string) $input['date'] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'      => (int) ($data['id'] ?? $id),
-			'content' => (string) ($data['content']['rendered'] ?? ''),
-			'status'  => (string) ($data['status'] ?? ''),
+			'id'      => (int) ( $data['id'] ?? $id ),
+			'content' => (string) ( $data['content']['rendered'] ?? '' ),
+			'status'  => (string) ( $data['status'] ?? '' ),
 		);
 	}
 }

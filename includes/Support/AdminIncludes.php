@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -18,8 +18,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class AdminIncludes
-{
+final class AdminIncludes {
+
 	/**
 	 * Requires one or more `wp-admin/includes/<file>.php` files once.
 	 *
@@ -27,15 +27,16 @@ final class AdminIncludes
 	 *                         (with or without the `.php` extension).
 	 * @return void
 	 */
-	public static function load(string ...$files): void
-	{
-		foreach ($files as $file) {
-			$file = preg_replace('/\.php$/', '', $file);
+	public static function load( string ...$files ): void {
+		foreach ( $files as $file ) {
+			$file = preg_replace( '/\.php$/', '', $file );
 			$path = ABSPATH . 'wp-admin/includes/' . $file . '.php';
 
-			if (is_readable($path)) {
-				require_once $path;
+			if ( ! is_readable( $path ) ) {
+				continue;
 			}
+
+			require_once $path;
 		}
 	}
 }

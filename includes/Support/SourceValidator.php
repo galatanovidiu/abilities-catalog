@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,8 +23,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class SourceValidator
-{
+final class SourceValidator {
+
 	/**
 	 * Normalizes and validates a wordpress.org directory slug.
 	 *
@@ -34,15 +34,14 @@ final class SourceValidator
 	 * @param string $raw The submitted source value.
 	 * @return string|\WP_Error The cleaned slug, or a 400 error when invalid.
 	 */
-	public static function slug(string $raw)
-	{
-		$slug = strtolower(trim($raw));
+	public static function slug( string $raw ) {
+		$slug = strtolower( trim( $raw ) );
 
-		if ('' === $slug || 1 !== preg_match('/^[a-z0-9-]+$/', $slug)) {
+		if ( '' === $slug || 1 !== preg_match( '/^[a-z0-9-]+$/', $slug ) ) {
 			return new \WP_Error(
 				'webmcp_invalid_slug',
-				__('Only a wordpress.org directory slug is accepted (lowercase letters, numbers, hyphens). URLs, ZIP files, and file paths are not allowed.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'Only a wordpress.org directory slug is accepted (lowercase letters, numbers, hyphens). URLs, ZIP files, and file paths are not allowed.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 

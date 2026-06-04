@@ -101,7 +101,13 @@
 	<rule ref="SlevomatCodingStandard.Classes.ClassConstantVisibility" />
 	<rule ref="SlevomatCodingStandard.Classes.DisallowConstructorPropertyPromotion" />
 	<rule ref="SlevomatCodingStandard.Classes.DisallowLateStaticBindingForConstants" />
-	<rule ref="SlevomatCodingStandard.Classes.DisallowMultiConstantDefinition" />
+	<!--
+		SlevomatCodingStandard.Classes.DisallowMultiConstantDefinition is intentionally NOT enabled.
+		With phpcsutils 1.2.2 (latest stable) its PHPCSUtils\Utils\Constants::getProperties() helper
+		misparses `const NAME = array( ... )` single-constant declarations: it reports a false
+		"multi constant definition" error and, worse, corrupts the file when run through phpcbf.
+		Re-enable once a phpcsutils release fixes the helper.
+	-->
 	<rule ref="SlevomatCodingStandard.Classes.DisallowMultiPropertyDefinition" />
 	<rule ref="SlevomatCodingStandard.Classes.DisallowStringExpressionPropertyFetch" />
 	<rule ref="SlevomatCodingStandard.Classes.ModernClassNameReference">

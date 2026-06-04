@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Connectors;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -25,52 +25,50 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ListConnectors implements Ability
-{
+final class ListConnectors implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'connectors/list-connectors';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('List Connectors', 'abilities-catalog'),
-			'description'         => __('Lists registered AI provider connectors with non-secret metadata. API keys are never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog'),
+			'label'               => __( 'List Connectors', 'abilities-catalog' ),
+			'description'         => __( 'Lists registered AI provider connectors with non-secret metadata. API keys are never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
 			'category'            => 'connectors',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
-						'description' => __('The registered connectors.', 'abilities-catalog'),
+						'description' => __( 'The registered connectors.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => false,
 							'properties'           => array(
 								'id'         => array(
 									'type'        => 'string',
-									'description' => __('The connector identifier.', 'abilities-catalog'),
+									'description' => __( 'The connector identifier.', 'abilities-catalog' ),
 								),
 								'name'       => array(
 									'type'        => 'string',
-									'description' => __('The connector display name.', 'abilities-catalog'),
+									'description' => __( 'The connector display name.', 'abilities-catalog' ),
 								),
 								'type'       => array(
 									'type'        => 'string',
-									'description' => __('The connector type, e.g. "ai_provider".', 'abilities-catalog'),
+									'description' => __( 'The connector type, e.g. "ai_provider".', 'abilities-catalog' ),
 								),
 								'configured' => array(
 									'type'        => 'boolean',
-									'description' => __('Whether an API key is configured for this connector. The key value itself is never returned.', 'abilities-catalog'),
+									'description' => __( 'Whether an API key is configured for this connector. The key value itself is never returned.', 'abilities-catalog' ),
 								),
 							),
 						),
@@ -78,8 +76,8 @@ final class ListConnectors implements Ability
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -100,9 +98,8 @@ final class ListConnectors implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may manage options.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('manage_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -111,16 +108,15 @@ final class ListConnectors implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array{items:array<int,array{id:string,name:string,type:string,configured:bool}>} The connector list.
 	 */
-	public function execute($input = null)
-	{
+	public function execute( $input = null ) {
 		$items = array();
 
-		foreach (wp_get_connectors() as $id => $connector) {
+		foreach ( wp_get_connectors() as $id => $connector ) {
 			$items[] = array(
 				'id'         => (string) $id,
-				'name'       => (string) ($connector['name'] ?? ''),
-				'type'       => (string) ($connector['type'] ?? ''),
-				'configured' => self::isConfigured($connector),
+				'name'       => (string) ( $connector['name'] ?? '' ),
+				'type'       => (string) ( $connector['type'] ?? '' ),
+				'configured' => self::isConfigured( $connector ),
 			);
 		}
 
@@ -142,39 +138,38 @@ final class ListConnectors implements Ability
 	 * @param array<string,mixed> $connector The connector record from `wp_get_connectors()`.
 	 * @return bool True if a key is set (or none is required).
 	 */
-	private static function isConfigured(array $connector): bool
-	{
-		$auth = isset($connector['authentication']) && is_array($connector['authentication'])
+	private static function isConfigured( array $connector ): bool {
+		$auth = isset( $connector['authentication'] ) && is_array( $connector['authentication'] )
 			? $connector['authentication']
 			: array();
 
-		if (($auth['method'] ?? '') !== 'api_key') {
+		if ( ( $auth['method'] ?? '' ) !== 'api_key' ) {
 			return true;
 		}
 
-		$setting_name  = (string) ($auth['setting_name'] ?? '');
-		$env_var_name  = (string) ($auth['env_var_name'] ?? '');
-		$constant_name = (string) ($auth['constant_name'] ?? '');
+		$setting_name  = (string) ( $auth['setting_name'] ?? '' );
+		$env_var_name  = (string) ( $auth['env_var_name'] ?? '' );
+		$constant_name = (string) ( $auth['constant_name'] ?? '' );
 
-		if (function_exists('_wp_connectors_get_api_key_source')) {
-			return 'none' !== _wp_connectors_get_api_key_source($setting_name, $env_var_name, $constant_name);
+		if ( function_exists( '_wp_connectors_get_api_key_source' ) ) {
+			return 'none' !== _wp_connectors_get_api_key_source( $setting_name, $env_var_name, $constant_name );
 		}
 
 		// Fallback: detect presence only, never read the value into output.
-		if ('' !== $env_var_name) {
-			$env_value = getenv($env_var_name);
-			if (false !== $env_value && '' !== $env_value) {
+		if ( '' !== $env_var_name ) {
+			$env_value = getenv( $env_var_name );
+			if ( false !== $env_value && '' !== $env_value ) {
 				return true;
 			}
 		}
 
-		if ('' !== $constant_name && defined($constant_name)) {
-			$const_value = constant($constant_name);
-			if (is_string($const_value) && '' !== $const_value) {
+		if ( '' !== $constant_name && defined( $constant_name ) ) {
+			$const_value = constant( $constant_name );
+			if ( is_string( $const_value ) && '' !== $const_value ) {
 				return true;
 			}
 		}
 
-		return '' !== $setting_name && '' !== (string) get_option($setting_name, '');
+		return '' !== $setting_name && '' !== (string) get_option( $setting_name, '' );
 	}
 }

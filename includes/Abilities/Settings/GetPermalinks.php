@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -18,47 +18,45 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetPermalinks implements Ability
-{
+final class GetPermalinks implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'settings/get-permalinks';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Permalink Settings', 'abilities-catalog'),
-			'description'         => __('Returns the Permalink Settings screen values: the permalink structure and the category and tag base prefixes.', 'abilities-catalog'),
+			'label'               => __( 'Get Permalink Settings', 'abilities-catalog' ),
+			'description'         => __( 'Returns the Permalink Settings screen values: the permalink structure and the category and tag base prefixes.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('permalink_structure'),
+				'required'             => array( 'permalink_structure' ),
 				'properties'           => array(
 					'permalink_structure' => array(
 						'type'        => 'string',
-						'description' => __('The permalink structure tag string; empty means plain permalinks.', 'abilities-catalog'),
+						'description' => __( 'The permalink structure tag string; empty means plain permalinks.', 'abilities-catalog' ),
 					),
 					'category_base'       => array(
 						'type'        => 'string',
-						'description' => __('The base prefix for category URLs; empty means the default.', 'abilities-catalog'),
+						'description' => __( 'The base prefix for category URLs; empty means the default.', 'abilities-catalog' ),
 					),
 					'tag_base'            => array(
 						'type'        => 'string',
-						'description' => __('The base prefix for tag URLs; empty means the default.', 'abilities-catalog'),
+						'description' => __( 'The base prefix for tag URLs; empty means the default.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -76,9 +74,8 @@ final class GetPermalinks implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user can manage options.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('manage_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -87,12 +84,11 @@ final class GetPermalinks implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed> The permalink settings fields.
 	 */
-	public function execute($input = null)
-	{
+	public function execute( $input = null ) {
 		return array(
-			'permalink_structure' => (string) (get_option('permalink_structure') ?? ''),
-			'category_base'       => (string) (get_option('category_base') ?? ''),
-			'tag_base'            => (string) (get_option('tag_base') ?? ''),
+			'permalink_structure' => (string) ( get_option( 'permalink_structure' ) ?? '' ),
+			'category_base'       => (string) ( get_option( 'category_base' ) ?? '' ),
+			'tag_base'            => (string) ( get_option( 'tag_base' ) ?? '' ),
 		);
 	}
 }

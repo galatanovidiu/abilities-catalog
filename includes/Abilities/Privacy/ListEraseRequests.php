@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Privacy;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -24,47 +24,45 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ListEraseRequests implements Ability
-{
+final class ListEraseRequests implements Ability {
+
 	use QueriesUserRequests;
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'privacy/list-erase-requests';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('List Erase Requests', 'abilities-catalog'),
-			'description'         => __('Lists personal-data erasure requests with their status and metadata. Does not expose erased data.', 'abilities-catalog'),
+			'label'               => __( 'List Erase Requests', 'abilities-catalog' ),
+			'description'         => __( 'Lists personal-data erasure requests with their status and metadata. Does not expose erased data.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'status'   => array(
 						'type'        => 'string',
-						'enum'        => array('request-pending', 'request-confirmed', 'request-completed', 'request-failed'),
-						'description' => __('Filter by request status.', 'abilities-catalog'),
+						'enum'        => array( 'request-pending', 'request-confirmed', 'request-completed', 'request-failed' ),
+						'description' => __( 'Filter by request status.', 'abilities-catalog' ),
 					),
 					'page'     => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'default'     => 1,
-						'description' => __('The page number to return.', 'abilities-catalog'),
+						'description' => __( 'The page number to return.', 'abilities-catalog' ),
 					),
 					'per_page' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'maximum'     => 100,
 						'default'     => 20,
-						'description' => __('The number of requests to return per page.', 'abilities-catalog'),
+						'description' => __( 'The number of requests to return per page.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array(),
@@ -72,11 +70,11 @@ final class ListEraseRequests implements Ability
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
-						'description' => __('The erase request records.', 'abilities-catalog'),
+						'description' => __( 'The erase request records.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => true,
@@ -84,13 +82,13 @@ final class ListEraseRequests implements Ability
 					),
 					'total' => array(
 						'type'        => 'integer',
-						'description' => __('The total number of matching requests.', 'abilities-catalog'),
+						'description' => __( 'The total number of matching requests.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -111,9 +109,8 @@ final class ListEraseRequests implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read erase requests.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('erase_others_personal_data') && current_user_can('delete_users');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'erase_others_personal_data' ) && current_user_can( 'delete_users' );
 	}
 
 	/**
@@ -122,8 +119,7 @@ final class ListEraseRequests implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array{items:array<int,array<string,mixed>>,total:int}
 	 */
-	public function execute($input)
-	{
-		return $this->queryUserRequests('remove_personal_data', $input);
+	public function execute( $input ) {
+		return $this->queryUserRequests( 'remove_personal_data', $input );
 	}
 }

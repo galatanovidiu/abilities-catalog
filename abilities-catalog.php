@@ -19,13 +19,13 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define('ABILITIES_CATALOG_VERSION', '0.1.0');
-define('ABILITIES_CATALOG_FILE', __FILE__);
-define('ABILITIES_CATALOG_DIR', plugin_dir_path(__FILE__));
+define( 'ABILITIES_CATALOG_VERSION', '0.1.0' );
+define( 'ABILITIES_CATALOG_FILE', __FILE__ );
+define( 'ABILITIES_CATALOG_DIR', plugin_dir_path( __FILE__ ) );
 
 /**
  * No-build PSR-4 autoloader for the `GalatanOvidiu\AbilitiesCatalog\` namespace.
@@ -35,24 +35,26 @@ define('ABILITIES_CATALOG_DIR', plugin_dir_path(__FILE__));
  * so the Registry and ability classes load on demand.
  */
 spl_autoload_register(
-	static function (string $class): void {
+	static function ( string $class ): void {
 		$prefix = __NAMESPACE__ . '\\';
-		if (0 !== strpos($class, $prefix)) {
+		if ( 0 !== strpos( $class, $prefix ) ) {
 			return;
 		}
 
-		$relative = substr($class, strlen($prefix));
-		$path     = ABILITIES_CATALOG_DIR . 'includes/' . str_replace('\\', '/', $relative) . '.php';
+		$relative = substr( $class, strlen( $prefix ) );
+		$path     = ABILITIES_CATALOG_DIR . 'includes/' . str_replace( '\\', '/', $relative ) . '.php';
 
-		if (is_readable($path)) {
-			require_once $path;
+		if ( ! is_readable( $path ) ) {
+			return;
 		}
+
+		require_once $path;
 	}
 );
 
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		(new Registry())->register();
+		( new Registry() )->register();
 	}
 );

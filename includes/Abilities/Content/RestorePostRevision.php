@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -33,61 +33,59 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class RestorePostRevision implements Ability
-{
+final class RestorePostRevision implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'content/restore-post-revision';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Restore Post Revision', 'abilities-catalog'),
-			'description'         => __('Restores a post to a saved revision. The current state is first saved as a new revision, so nothing is lost. Requires the revision to belong to the given parent post.', 'abilities-catalog'),
+			'label'               => __( 'Restore Post Revision', 'abilities-catalog' ),
+			'description'         => __( 'Restores a post to a saved revision. The current state is first saved as a new revision, so nothing is lost. Requires the revision to belong to the given parent post.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'parent'      => array(
 						'type'        => 'integer',
-						'description' => __('The parent post ID that the revision belongs to.', 'abilities-catalog'),
+						'description' => __( 'The parent post ID that the revision belongs to.', 'abilities-catalog' ),
 					),
 					'revision_id' => array(
 						'type'        => 'integer',
-						'description' => __('The revision ID to restore.', 'abilities-catalog'),
+						'description' => __( 'The revision ID to restore.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('parent', 'revision_id'),
+				'required'             => array( 'parent', 'revision_id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('restored', 'post_id', 'revision_id'),
+				'required'             => array( 'restored', 'post_id', 'revision_id' ),
 				'properties'           => array(
 					'restored'    => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the revision was restored.', 'abilities-catalog'),
+						'description' => __( 'Whether the revision was restored.', 'abilities-catalog' ),
 					),
 					'post_id'     => array(
 						'type'        => 'integer',
-						'description' => __('The parent post ID that was restored.', 'abilities-catalog'),
+						'description' => __( 'The parent post ID that was restored.', 'abilities-catalog' ),
 					),
 					'revision_id' => array(
 						'type'        => 'integer',
-						'description' => __('The revision ID that was restored from.', 'abilities-catalog'),
+						'description' => __( 'The revision ID that was restored from.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -113,22 +111,21 @@ final class RestorePostRevision implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may restore the revision onto the parent.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input       = is_array($input) ? $input : array();
-		$parent      = isset($input['parent']) ? absint($input['parent']) : 0;
-		$revision_id = isset($input['revision_id']) ? absint($input['revision_id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input       = is_array( $input ) ? $input : array();
+		$parent      = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
+		$revision_id = isset( $input['revision_id'] ) ? absint( $input['revision_id'] ) : 0;
 
-		if ($parent <= 0 || $revision_id <= 0) {
+		if ( $parent <= 0 || $revision_id <= 0 ) {
 			return false;
 		}
 
-		$revision = wp_get_post_revision($revision_id);
-		if (null === $revision || (int) $revision->post_parent !== $parent) {
+		$revision = wp_get_post_revision( $revision_id );
+		if ( null === $revision || (int) $revision->post_parent !== $parent ) {
 			return false;
 		}
 
-		return current_user_can('edit_post', $parent);
+		return current_user_can( 'edit_post', $parent );
 	}
 
 	/**
@@ -141,38 +138,37 @@ final class RestorePostRevision implements Ability
 	 * non-positive result is surfaced as a `WP_Error`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The restore result, or an error if it did not happen.
+	 * @return array<string,mixed>|\WP_Error The restore result, or an error if it did not happen.
 	 */
-	public function execute($input)
-	{
-		$input       = is_array($input) ? $input : array();
-		$parent      = isset($input['parent']) ? absint($input['parent']) : 0;
-		$revision_id = isset($input['revision_id']) ? absint($input['revision_id']) : 0;
+	public function execute( $input ) {
+		$input       = is_array( $input ) ? $input : array();
+		$parent      = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
+		$revision_id = isset( $input['revision_id'] ) ? absint( $input['revision_id'] ) : 0;
 
-		if ($parent <= 0 || $revision_id <= 0) {
+		if ( $parent <= 0 || $revision_id <= 0 ) {
 			return new WP_Error(
 				'webmcp_invalid_input',
-				__('Both parent and revision_id must be positive integers.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'Both parent and revision_id must be positive integers.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		$revision = wp_get_post_revision($revision_id);
-		if (null === $revision || (int) $revision->post_parent !== $parent) {
+		$revision = wp_get_post_revision( $revision_id );
+		if ( null === $revision || (int) $revision->post_parent !== $parent ) {
 			return new WP_Error(
 				'webmcp_revision_mismatch',
-				__('The revision does not exist or does not belong to the given parent post.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'The revision does not exist or does not belong to the given parent post.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		$result = wp_restore_post_revision($revision_id);
+		$result = wp_restore_post_revision( $revision_id );
 
-		if (!is_int($result) || $result <= 0) {
+		if ( ! is_int( $result ) || $result <= 0 ) {
 			return new WP_Error(
 				'webmcp_restore_failed',
-				__('The revision could not be restored. No fields were available to restore, or the restore did not complete.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The revision could not be restored. No fields were available to restore, or the restore did not complete.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 

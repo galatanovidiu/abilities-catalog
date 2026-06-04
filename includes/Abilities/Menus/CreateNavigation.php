@@ -6,9 +6,8 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
-use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -26,74 +25,72 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class CreateNavigation implements Ability
-{
+final class CreateNavigation implements Ability {
+
 	/**
 	 * Post statuses that require the publish capability.
 	 *
 	 * @var string[]
 	 */
-	private const PUBLISH_STATUSES = array('publish', 'future', 'private');
+	private const PUBLISH_STATUSES = array( 'publish', 'future', 'private' );
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'menus/create-navigation';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Navigation Menu', 'abilities-catalog'),
-			'description'         => __('Creates a new block-based navigation menu. The content is serialized block markup. Defaults to published.', 'abilities-catalog'),
+			'label'               => __( 'Create Navigation Menu', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new block-based navigation menu. The content is serialized block markup. Defaults to published.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'title'   => array(
 						'type'        => 'string',
-						'description' => __('The navigation menu title.', 'abilities-catalog'),
+						'description' => __( 'The navigation menu title.', 'abilities-catalog' ),
 					),
 					'content' => array(
 						'type'        => 'string',
-						'description' => __('The serialized block markup for the menu items.', 'abilities-catalog'),
+						'description' => __( 'The serialized block markup for the menu items.', 'abilities-catalog' ),
 					),
 					'status'  => array(
 						'type'        => 'string',
-						'enum'        => array('draft', 'pending', 'private', 'publish', 'future'),
+						'enum'        => array( 'draft', 'pending', 'private', 'publish', 'future' ),
 						'default'     => 'publish',
-						'description' => __('The navigation menu post status. Defaults to "publish".', 'abilities-catalog'),
+						'description' => __( 'The navigation menu post status. Defaults to "publish".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('title'),
+				'required'             => array( 'title' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'status'),
+				'required'             => array( 'id', 'status' ),
 				'properties'           => array(
 					'id'     => array(
 						'type'        => 'integer',
-						'description' => __('The new navigation menu ID.', 'abilities-catalog'),
+						'description' => __( 'The new navigation menu ID.', 'abilities-catalog' ),
 					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __('The resulting navigation menu post status.', 'abilities-catalog'),
+						'description' => __( 'The resulting navigation menu post status.', 'abilities-catalog' ),
 					),
 					'link'   => array(
 						'type'        => 'string',
-						'description' => __('The navigation menu permalink.', 'abilities-catalog'),
+						'description' => __( 'The navigation menu permalink.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -115,43 +112,43 @@ final class CreateNavigation implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create the navigation menu.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The new menu's id, status, link, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new menu's id, status, link, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$request = new WP_REST_Request('POST', '/wp/v2/navigation');
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$request = new WP_REST_Request( 'POST', '/wp/v2/navigation' );
 
-		foreach (array('title', 'content') as $field) {
-			if (isset($input[$field]) && '' !== $input[$field]) {
-				$request->set_param($field, (string) $input[$field]);
+		foreach ( array( 'title', 'content' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+				continue;
 			}
+
+			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if (isset($input['status']) && '' !== $input['status']) {
-			$request->set_param('status', sanitize_key((string) $input['status']));
+		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
+			$request->set_param( 'status', sanitize_key( (string) $input['status'] ) );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'     => (int) ($data['id'] ?? 0),
-			'status' => (string) ($data['status'] ?? ''),
-			'link'   => (string) ($data['link'] ?? ''),
+			'id'     => (int) ( $data['id'] ?? 0 ),
+			'status' => (string) ( $data['status'] ?? '' ),
+			'link'   => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }

@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\SecretSafeError;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -29,95 +29,93 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class UpdateUser implements Ability
-{
+final class UpdateUser implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'users/update-user';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update User', 'abilities-catalog'),
-			'description'         => __('Updates an existing user by ID. Changing roles requires the promote capability.', 'abilities-catalog'),
+			'label'               => __( 'Update User', 'abilities-catalog' ),
+			'description'         => __( 'Updates an existing user by ID. Changing roles requires the promote capability.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'         => array(
 						'type'        => 'integer',
-						'description' => __('The ID of the user to update.', 'abilities-catalog'),
+						'description' => __( 'The ID of the user to update.', 'abilities-catalog' ),
 					),
 					'name'       => array(
 						'type'        => 'string',
-						'description' => __('The display name for the user.', 'abilities-catalog'),
+						'description' => __( 'The display name for the user.', 'abilities-catalog' ),
 					),
 					'first_name' => array(
 						'type'        => 'string',
-						'description' => __('First name for the user.', 'abilities-catalog'),
+						'description' => __( 'First name for the user.', 'abilities-catalog' ),
 					),
 					'last_name'  => array(
 						'type'        => 'string',
-						'description' => __('Last name for the user.', 'abilities-catalog'),
+						'description' => __( 'Last name for the user.', 'abilities-catalog' ),
 					),
 					'email'      => array(
 						'type'        => 'string',
-						'description' => __('The email address for the user.', 'abilities-catalog'),
+						'description' => __( 'The email address for the user.', 'abilities-catalog' ),
 					),
 					'url'        => array(
 						'type'        => 'string',
-						'description' => __('The website URL for the user.', 'abilities-catalog'),
+						'description' => __( 'The website URL for the user.', 'abilities-catalog' ),
 					),
 					'locale'     => array(
 						'type'        => 'string',
-						'description' => __('Locale for the user.', 'abilities-catalog'),
+						'description' => __( 'Locale for the user.', 'abilities-catalog' ),
 					),
 					'password'   => array(
 						'type'        => 'string',
-						'description' => __('A new password for the user (write-only; never returned).', 'abilities-catalog'),
+						'description' => __( 'A new password for the user (write-only; never returned).', 'abilities-catalog' ),
 					),
 					'roles'      => array(
 						'type'        => 'array',
-						'items'       => array('type' => 'string'),
-						'description' => __('Roles to assign to the user (requires the promote capability).', 'abilities-catalog'),
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Roles to assign to the user (requires the promote capability).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id'    => array(
 						'type'        => 'integer',
-						'description' => __('The user ID.', 'abilities-catalog'),
+						'description' => __( 'The user ID.', 'abilities-catalog' ),
 					),
 					'name'  => array(
 						'type'        => 'string',
-						'description' => __('The display name for the user.', 'abilities-catalog'),
+						'description' => __( 'The display name for the user.', 'abilities-catalog' ),
 					),
 					'email' => array(
 						'type'        => 'string',
-						'description' => __('The email address for the user.', 'abilities-catalog'),
+						'description' => __( 'The email address for the user.', 'abilities-catalog' ),
 					),
 					'roles' => array(
 						'type'        => 'array',
-						'items'       => array('type' => 'string'),
-						'description' => __('Roles assigned to the user.', 'abilities-catalog'),
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Roles assigned to the user.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -141,24 +139,19 @@ final class UpdateUser implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update the target user.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['id']) ? absint($input['id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		if (!current_user_can('edit_user', $id)) {
+		if ( ! current_user_can( 'edit_user', $id ) ) {
 			return false;
 		}
 
-		if (isset($input['roles']) && !current_user_can('promote_user', $id)) {
-			return false;
-		}
-
-		return true;
+		return ! isset( $input['roles'] ) || current_user_can( 'promote_user', $id );
 	}
 
 	/**
@@ -170,36 +163,37 @@ final class UpdateUser implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The user's id, name, email, roles, or a redacted error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id']);
-		$request = new WP_REST_Request('POST', '/wp/v2/users/' . $id);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] );
+		$request = new WP_REST_Request( 'POST', '/wp/v2/users/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them.
-		foreach (array('name', 'first_name', 'last_name', 'email', 'url', 'locale', 'password') as $field) {
-			if (isset($input[$field]) && '' !== $input[$field]) {
-				$request->set_param($field, (string) $input[$field]);
+		foreach ( array( 'name', 'first_name', 'last_name', 'email', 'url', 'locale', 'password' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+				continue;
 			}
+
+			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if (isset($input['roles']) && is_array($input['roles'])) {
-			$request->set_param('roles', array_map('strval', $input['roles']));
+		if ( isset( $input['roles'] ) && is_array( $input['roles'] ) ) {
+			$request->set_param( 'roles', array_map( 'strval', $input['roles'] ) );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
-			return SecretSafeError::redact($response->as_error());
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
+			return SecretSafeError::redact( $response->as_error() );
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
-		$data = is_array($data) ? $data : array();
+		$data = rest_get_server()->response_to_data( $response, false );
+		$data = is_array( $data ) ? $data : array();
 
 		return array(
-			'id'    => (int) ($data['id'] ?? $id),
-			'name'  => (string) ($data['name'] ?? ''),
-			'email' => (string) ($data['email'] ?? ''),
-			'roles' => isset($data['roles']) ? array_map('strval', (array) $data['roles']) : array(),
+			'id'    => (int) ( $data['id'] ?? $id ),
+			'name'  => (string) ( $data['name'] ?? '' ),
+			'email' => (string) ( $data['email'] ?? '' ),
+			'roles' => isset( $data['roles'] ) ? array_map( 'strval', (array) $data['roles'] ) : array(),
 		);
 	}
 }

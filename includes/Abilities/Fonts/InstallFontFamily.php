@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Fonts;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -35,65 +35,63 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.2.0
  */
-final class InstallFontFamily implements Ability
-{
+final class InstallFontFamily implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'fonts/install-font-family';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Install Font Family', 'abilities-catalog'),
-			'description'         => __('Installs a new font family (metadata only: name, CSS font-family value, and slug). Does not upload font face files.', 'abilities-catalog'),
+			'label'               => __( 'Install Font Family', 'abilities-catalog' ),
+			'description'         => __( 'Installs a new font family (metadata only: name, CSS font-family value, and slug). Does not upload font face files.', 'abilities-catalog' ),
 			'category'            => 'fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'name'        => array(
 						'type'        => 'string',
-						'description' => __('Display name of the font family preset.', 'abilities-catalog'),
+						'description' => __( 'Display name of the font family preset.', 'abilities-catalog' ),
 					),
 					'font_family' => array(
 						'type'        => 'string',
-						'description' => __('The CSS font-family value (e.g. "Inter", sans-serif).', 'abilities-catalog'),
+						'description' => __( 'The CSS font-family value (e.g. "Inter", sans-serif).', 'abilities-catalog' ),
 					),
 					'slug'        => array(
 						'type'        => 'string',
-						'description' => __('Kebab-case unique identifier for the font family. Defaults to a slug derived from the name.', 'abilities-catalog'),
+						'description' => __( 'Kebab-case unique identifier for the font family. Defaults to a slug derived from the name.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('name', 'font_family'),
+				'required'             => array( 'name', 'font_family' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id'   => array(
 						'type'        => 'integer',
-						'description' => __('The new font family post ID.', 'abilities-catalog'),
+						'description' => __( 'The new font family post ID.', 'abilities-catalog' ),
 					),
 					'slug' => array(
 						'type'        => 'string',
-						'description' => __('The resulting font family slug.', 'abilities-catalog'),
+						'description' => __( 'The resulting font family slug.', 'abilities-catalog' ),
 					),
 					'name' => array(
 						'type'        => 'string',
-						'description' => __('The resulting font family name.', 'abilities-catalog'),
+						'description' => __( 'The resulting font family name.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -116,9 +114,8 @@ final class InstallFontFamily implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may install a font family.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -131,14 +128,13 @@ final class InstallFontFamily implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The new family's id, slug, name, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input       = is_array($input) ? $input : array();
-		$name        = isset($input['name']) ? sanitize_text_field((string) $input['name']) : '';
-		$font_family = isset($input['font_family']) ? (string) $input['font_family'] : '';
-		$slug        = isset($input['slug']) && '' !== $input['slug']
-			? sanitize_title((string) $input['slug'])
-			: sanitize_title($name);
+	public function execute( $input ) {
+		$input       = is_array( $input ) ? $input : array();
+		$name        = isset( $input['name'] ) ? sanitize_text_field( (string) $input['name'] ) : '';
+		$font_family = isset( $input['font_family'] ) ? (string) $input['font_family'] : '';
+		$slug        = isset( $input['slug'] ) && '' !== $input['slug']
+			? sanitize_title( (string) $input['slug'] )
+			: sanitize_title( $name );
 
 		$settings = wp_json_encode(
 			array(
@@ -148,21 +144,21 @@ final class InstallFontFamily implements Ability
 			)
 		);
 
-		$request = new WP_REST_Request('POST', '/wp/v2/font-families');
-		$request->set_param('font_family_settings', $settings);
+		$request = new WP_REST_Request( 'POST', '/wp/v2/font-families' );
+		$request->set_param( 'font_family_settings', $settings );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data     = rest_get_server()->response_to_data($response, false);
-		$out_settings = is_array($data['font_family_settings'] ?? null) ? $data['font_family_settings'] : array();
+		$data         = rest_get_server()->response_to_data( $response, false );
+		$out_settings = is_array( $data['font_family_settings'] ?? null ) ? $data['font_family_settings'] : array();
 
 		return array(
-			'id'   => (int) ($data['id'] ?? 0),
-			'slug' => (string) ($out_settings['slug'] ?? $slug),
-			'name' => (string) ($out_settings['name'] ?? $name),
+			'id'   => (int) ( $data['id'] ?? 0 ),
+			'slug' => (string) ( $out_settings['slug'] ?? $slug ),
+			'name' => (string) ( $out_settings['name'] ?? $name ),
 		);
 	}
 }

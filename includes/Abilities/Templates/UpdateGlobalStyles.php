@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -37,63 +37,61 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class UpdateGlobalStyles implements Ability
-{
+final class UpdateGlobalStyles implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/update-global-styles';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update Global Styles', 'abilities-catalog'),
-			'description'         => __('Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Only the provided fields change.', 'abilities-catalog'),
+			'label'               => __( 'Update Global Styles', 'abilities-catalog' ),
+			'description'         => __( 'Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Only the provided fields change.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __('The global styles post ID for the active theme (from templates/get-global-styles).', 'abilities-catalog'),
+						'description' => __( 'The global styles post ID for the active theme (from templates/get-global-styles).', 'abilities-catalog' ),
 					),
 					'settings' => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The theme.json-shaped settings overrides to store.', 'abilities-catalog'),
+						'description'          => __( 'The theme.json-shaped settings overrides to store.', 'abilities-catalog' ),
 					),
 					'styles'   => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The theme.json-shaped style overrides to store. A "css" key holds custom CSS and requires the edit_css capability.', 'abilities-catalog'),
+						'description'          => __( 'The theme.json-shaped style overrides to store. A "css" key holds custom CSS and requires the edit_css capability.', 'abilities-catalog' ),
 					),
 					'title'    => array(
 						'type'        => 'string',
-						'description' => __('The global styles record title.', 'abilities-catalog'),
+						'description' => __( 'The global styles record title.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __('The global styles post ID.', 'abilities-catalog'),
+						'description' => __( 'The global styles post ID.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -118,24 +116,19 @@ final class UpdateGlobalStyles implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update the global styles.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['id']) ? absint($input['id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		if (!current_user_can('edit_post', $id)) {
+		if ( ! current_user_can( 'edit_post', $id ) ) {
 			return false;
 		}
 
-		if ($this->hasCustomCss($input) && !current_user_can('edit_css')) {
-			return false;
-		}
-
-		return true;
+		return ! $this->hasCustomCss( $input ) || current_user_can( 'edit_css' );
 	}
 
 	/**
@@ -144,33 +137,34 @@ final class UpdateGlobalStyles implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The updated post id, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id'] ?? 0);
-		$request = new WP_REST_Request('POST', '/wp/v2/global-styles/' . $id);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] ?? 0 );
+		$request = new WP_REST_Request( 'POST', '/wp/v2/global-styles/' . $id );
 
 		// Object-typed fields pass through to the REST route, which validates and
 		// re-encodes them via wp_filter_global_styles_post().
-		foreach (array('settings', 'styles') as $field) {
-			if (isset($input[$field]) && is_array($input[$field])) {
-				$request->set_param($field, $input[$field]);
+		foreach ( array( 'settings', 'styles' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || ! is_array( $input[ $field ] ) ) {
+				continue;
 			}
+
+			$request->set_param( $field, $input[ $field ] );
 		}
 
-		if (isset($input['title']) && '' !== $input['title']) {
-			$request->set_param('title', (string) $input['title']);
+		if ( isset( $input['title'] ) && '' !== $input['title'] ) {
+			$request->set_param( 'title', (string) $input['title'] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id' => (int) ($data['id'] ?? $id),
+			'id' => (int) ( $data['id'] ?? $id ),
 		);
 	}
 
@@ -180,11 +174,10 @@ final class UpdateGlobalStyles implements Ability
 	 * @param array<string,mixed> $input The validated input data.
 	 * @return bool True if a non-empty `styles.css` string is present.
 	 */
-	private function hasCustomCss(array $input): bool
-	{
-		return isset($input['styles'])
-			&& is_array($input['styles'])
-			&& isset($input['styles']['css'])
+	private function hasCustomCss( array $input ): bool {
+		return isset( $input['styles'] )
+			&& is_array( $input['styles'] )
+			&& isset( $input['styles']['css'] )
 			&& '' !== $input['styles']['css'];
 	}
 }

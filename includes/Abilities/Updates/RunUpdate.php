@@ -9,7 +9,7 @@ use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use GalatanOvidiu\AbilitiesCatalog\Support\UpgradeRunner;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -38,42 +38,40 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class RunUpdate implements Ability
-{
+final class RunUpdate implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'updates/run-update';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Run Update', 'abilities-catalog'),
-			'description'         => __('Runs plugin, theme, or translation updates synchronously. Core updates are not supported. Running an update executes the updated code.', 'abilities-catalog'),
+			'label'               => __( 'Run Update', 'abilities-catalog' ),
+			'description'         => __( 'Runs plugin, theme, or translation updates synchronously. Core updates are not supported. Running an update executes the updated code.', 'abilities-catalog' ),
 			'category'            => 'updates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'type'  => array(
 						'type'        => 'string',
-						'enum'        => array('plugin', 'theme', 'translation'),
-						'description' => __('Which kind of update to run: "plugin", "theme", or "translation". Core updates are not supported.', 'abilities-catalog'),
+						'enum'        => array( 'plugin', 'theme', 'translation' ),
+						'description' => __( 'Which kind of update to run: "plugin", "theme", or "translation". Core updates are not supported.', 'abilities-catalog' ),
 					),
 					'items' => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type' => 'string',
 						),
-						'description' => __('Optional targets. For "plugin", plugin file paths with the .php extension, for example "akismet/akismet.php". For "theme", stylesheet directory names. Ignored for "translation". When omitted, all available updates of the type are run.', 'abilities-catalog'),
+						'description' => __( 'Optional targets. For "plugin", plugin file paths with the .php extension, for example "akismet/akismet.php". For "theme", stylesheet directory names. Ignored for "translation". When omitted, all available updates of the type are run.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('type'),
+				'required'             => array( 'type' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
@@ -81,22 +79,22 @@ final class RunUpdate implements Ability
 				'properties'           => array(
 					'type'    => array(
 						'type'        => 'string',
-						'description' => __('The kind of update that ran.', 'abilities-catalog'),
+						'description' => __( 'The kind of update that ran.', 'abilities-catalog' ),
 					),
 					'results' => array(
 						'type'        => 'object',
-						'description' => __('Map of each target to true on success or "failed" otherwise. Empty when no updates were available.', 'abilities-catalog'),
+						'description' => __( 'Map of each target to true on success or "failed" otherwise. Empty when no updates were available.', 'abilities-catalog' ),
 					),
 					'message' => array(
 						'type'        => 'string',
-						'description' => __('Optional note, for example when no updates were available.', 'abilities-catalog'),
+						'description' => __( 'Optional note, for example when no updates were available.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('type'),
+				'required'             => array( 'type' ),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -120,18 +118,17 @@ final class RunUpdate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may run the requested update type.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$type  = isset($input['type']) ? (string) $input['type'] : '';
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$type  = isset( $input['type'] ) ? (string) $input['type'] : '';
 
-		switch ($type) {
+		switch ( $type ) {
 			case 'plugin':
-				return current_user_can('update_plugins');
+				return current_user_can( 'update_plugins' );
 			case 'theme':
-				return current_user_can('update_themes');
+				return current_user_can( 'update_themes' );
 			case 'translation':
-				return current_user_can('update_languages');
+				return current_user_can( 'update_languages' );
 			default:
 				return false;
 		}
@@ -150,17 +147,16 @@ final class RunUpdate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The normalized result, or a guard/validation error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
-		$type  = isset($input['type']) ? (string) $input['type'] : '';
-		$items = isset($input['items']) && is_array($input['items']) ? array_values(array_filter(array_map('strval', $input['items']))) : array();
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
+		$type  = isset( $input['type'] ) ? (string) $input['type'] : '';
+		$items = isset( $input['items'] ) && is_array( $input['items'] ) ? array_values( array_filter( array_map( 'strval', $input['items'] ) ) ) : array();
 
-		if (!in_array($type, array('plugin', 'theme', 'translation'), true)) {
+		if ( ! in_array( $type, array( 'plugin', 'theme', 'translation' ), true ) ) {
 			return new WP_Error(
 				'webmcp_unsupported_update_type',
-				__('Only plugin, theme, and translation updates are supported. Core updates are not available over WebMCP.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'Only plugin, theme, and translation updates are supported. Core updates are not available over WebMCP.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
@@ -175,10 +171,10 @@ final class RunUpdate implements Ability
 			'file'
 		);
 
-		if ('plugin' === $type) {
+		if ( 'plugin' === $type ) {
 			wp_update_plugins();
 			$fs_context = WP_PLUGIN_DIR;
-		} elseif ('theme' === $type) {
+		} elseif ( 'theme' === $type ) {
 			wp_update_themes();
 			$fs_context = get_theme_root();
 		} else {
@@ -189,13 +185,13 @@ final class RunUpdate implements Ability
 
 		return UpgradeRunner::withLock(
 			$fs_context,
-			function () use ($type, $items) {
-				if ('plugin' === $type) {
-					return $this->runPlugins($items);
+			function () use ( $type, $items ) {
+				if ( 'plugin' === $type ) {
+					return $this->runPlugins( $items );
 				}
 
-				if ('theme' === $type) {
-					return $this->runThemes($items);
+				if ( 'theme' === $type ) {
+					return $this->runThemes( $items );
 				}
 
 				return $this->runTranslations();
@@ -209,30 +205,29 @@ final class RunUpdate implements Ability
 	 * @param array<int,string> $items Plugin file paths with the .php extension.
 	 * @return array<string,mixed> The normalized plugin update result.
 	 */
-	private function runPlugins(array $items): array
-	{
-		$available = array_keys(get_plugin_updates());
+	private function runPlugins( array $items ): array {
+		$available = array_keys( get_plugin_updates() );
 		// Constrain caller-supplied items to plugins that actually have an available
 		// update (the update source is the refreshed transient, never the input).
 		// Unknown/uninstalled targets are dropped so they cannot reach the upgrader.
-		$plugins = $items ? array_values(array_intersect($items, $available)) : $available;
+		$plugins = $items ? array_values( array_intersect( $items, $available ) ) : $available;
 
-		if (empty($plugins)) {
+		if ( empty( $plugins ) ) {
 			return array(
 				'type'    => 'plugin',
 				'results' => (object) array(),
 				'message' => $items
-					? __('None of the requested plugins have an available update.', 'abilities-catalog')
-					: __('No plugin updates available.', 'abilities-catalog'),
+					? __( 'None of the requested plugins have an available update.', 'abilities-catalog' )
+					: __( 'No plugin updates available.', 'abilities-catalog' ),
 			);
 		}
 
-		$upgrader = new \Plugin_Upgrader(UpgradeRunner::skin());
-		$result   = $upgrader->bulk_upgrade($plugins);
+		$upgrader = new \Plugin_Upgrader( UpgradeRunner::skin() );
+		$result   = $upgrader->bulk_upgrade( $plugins );
 
 		return array(
 			'type'    => 'plugin',
-			'results' => (object) $this->normalizeResults($result),
+			'results' => (object) $this->normalizeResults( $result ),
 		);
 	}
 
@@ -242,29 +237,28 @@ final class RunUpdate implements Ability
 	 * @param array<int,string> $items Theme stylesheet directory names.
 	 * @return array<string,mixed> The normalized theme update result.
 	 */
-	private function runThemes(array $items): array
-	{
-		$available = array_keys(get_theme_updates());
+	private function runThemes( array $items ): array {
+		$available = array_keys( get_theme_updates() );
 		// Constrain caller-supplied items to themes that actually have an available
 		// update; drop unknown/uninstalled stylesheets before the upgrader sees them.
-		$themes = $items ? array_values(array_intersect($items, $available)) : $available;
+		$themes = $items ? array_values( array_intersect( $items, $available ) ) : $available;
 
-		if (empty($themes)) {
+		if ( empty( $themes ) ) {
 			return array(
 				'type'    => 'theme',
 				'results' => (object) array(),
 				'message' => $items
-					? __('None of the requested themes have an available update.', 'abilities-catalog')
-					: __('No theme updates available.', 'abilities-catalog'),
+					? __( 'None of the requested themes have an available update.', 'abilities-catalog' )
+					: __( 'No theme updates available.', 'abilities-catalog' ),
 			);
 		}
 
-		$upgrader = new \Theme_Upgrader(UpgradeRunner::skin());
-		$result   = $upgrader->bulk_upgrade($themes);
+		$upgrader = new \Theme_Upgrader( UpgradeRunner::skin() );
+		$result   = $upgrader->bulk_upgrade( $themes );
 
 		return array(
 			'type'    => 'theme',
-			'results' => (object) $this->normalizeResults($result),
+			'results' => (object) $this->normalizeResults( $result ),
 		);
 	}
 
@@ -273,24 +267,23 @@ final class RunUpdate implements Ability
 	 *
 	 * @return array<string,mixed> The normalized translation update result.
 	 */
-	private function runTranslations(): array
-	{
+	private function runTranslations(): array {
 		$updates = wp_get_translation_updates();
 
-		if (empty($updates)) {
+		if ( empty( $updates ) ) {
 			return array(
 				'type'    => 'translation',
 				'results' => (object) array(),
-				'message' => __('No translation updates available.', 'abilities-catalog'),
+				'message' => __( 'No translation updates available.', 'abilities-catalog' ),
 			);
 		}
 
-		$upgrader = new \Language_Pack_Upgrader(UpgradeRunner::skin());
-		$result   = $upgrader->bulk_upgrade($updates);
+		$upgrader = new \Language_Pack_Upgrader( UpgradeRunner::skin() );
+		$result   = $upgrader->bulk_upgrade( $updates );
 
 		return array(
 			'type'    => 'translation',
-			'results' => (object) $this->normalizeResults($result),
+			'results' => (object) $this->normalizeResults( $result ),
 		);
 	}
 
@@ -307,18 +300,17 @@ final class RunUpdate implements Ability
 	 * @param mixed $result The raw `bulk_upgrade()` return value.
 	 * @return array<string,bool|string> Map of target to true or 'failed'.
 	 */
-	private function normalizeResults($result): array
-	{
-		if (!is_array($result)) {
+	private function normalizeResults( $result ): array {
+		if ( ! is_array( $result ) ) {
 			return array();
 		}
 
 		$normalized = array();
-		foreach ($result as $item => $outcome) {
+		foreach ( $result as $item => $outcome ) {
 			$success = true === $outcome
-				|| (is_array($outcome) && !empty($outcome));
+				|| ( is_array( $outcome ) && ! empty( $outcome ) );
 
-			$normalized[(string) $item] = $success ? true : 'failed';
+			$normalized[ (string) $item ] = $success ? true : 'failed';
 		}
 
 		return $normalized;

@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -19,45 +19,43 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ListPostRevisions implements Ability
-{
+final class ListPostRevisions implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'content/list-post-revisions';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('List Post Revisions', 'abilities-catalog'),
-			'description'         => __('Lists the saved revisions of a post by its parent post ID.', 'abilities-catalog'),
+			'label'               => __( 'List Post Revisions', 'abilities-catalog' ),
+			'description'         => __( 'Lists the saved revisions of a post by its parent post ID.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'parent'  => array(
 						'type'        => 'integer',
-						'description' => __('The parent post ID.', 'abilities-catalog'),
+						'description' => __( 'The parent post ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" or "edit".', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" or "edit".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('parent'),
+				'required'             => array( 'parent' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
@@ -65,21 +63,21 @@ final class ListPostRevisions implements Ability
 							'type'                 => 'object',
 							'additionalProperties' => true,
 						),
-						'description' => __('The list of revisions.', 'abilities-catalog'),
+						'description' => __( 'The list of revisions.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
-						'description' => __('Total number of revisions.', 'abilities-catalog'),
+						'description' => __( 'Total number of revisions.', 'abilities-catalog' ),
 					),
 					'total_pages' => array(
 						'type'        => 'integer',
-						'description' => __('Total number of result pages available.', 'abilities-catalog'),
+						'description' => __( 'Total number of result pages available.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -97,16 +95,15 @@ final class ListPostRevisions implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may edit the parent post.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input  = is_array($input) ? $input : array();
-		$parent = isset($input['parent']) ? absint($input['parent']) : 0;
+	public function hasPermission( $input ): bool {
+		$input  = is_array( $input ) ? $input : array();
+		$parent = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
 
-		if ($parent <= 0) {
+		if ( $parent <= 0 ) {
 			return false;
 		}
 
-		return current_user_can('edit_post', $parent);
+		return current_user_can( 'edit_post', $parent );
 	}
 
 	/**
@@ -115,26 +112,25 @@ final class ListPostRevisions implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The collection and totals, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$parent = absint($input['parent']);
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$parent = absint( $input['parent'] );
 
-		$request = new WP_REST_Request('GET', '/wp/v2/posts/' . $parent . '/revisions');
-		$request->set_param('context', $input['context'] ?? 'view');
+		$request = new WP_REST_Request( 'GET', '/wp/v2/posts/' . $parent . '/revisions' );
+		$request->set_param( 'context', $input['context'] ?? 'view' );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$items   = rest_get_server()->response_to_data($response, false);
+		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
 		return array(
-			'items'       => is_array($items) ? $items : array(),
-			'total'       => (int) ($headers['X-WP-Total'] ?? 0),
-			'total_pages' => (int) ($headers['X-WP-TotalPages'] ?? 0),
+			'items'       => is_array( $items ) ? $items : array(),
+			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
+			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
 	}
 }

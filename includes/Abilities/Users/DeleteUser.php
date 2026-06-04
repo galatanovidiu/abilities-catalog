@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -29,24 +29,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class DeleteUser implements Ability
-{
+final class DeleteUser implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'users/delete-user';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Delete User', 'abilities-catalog'),
-			'description'         => __('Permanently deletes a user by ID and reassigns their content to another existing user. Irreversible: users do not support trashing. The reassign target is required and must be a different, existing user.', 'abilities-catalog'),
+			'label'               => __( 'Delete User', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a user by ID and reassigns their content to another existing user. Irreversible: users do not support trashing. The reassign target is required and must be a different, existing user.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -54,38 +52,38 @@ final class DeleteUser implements Ability
 					'id'       => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __('The user ID to delete permanently.', 'abilities-catalog'),
+						'description' => __( 'The user ID to delete permanently.', 'abilities-catalog' ),
 					),
 					'reassign' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __('Required. The ID of an existing, different user to reassign the deleted user\'s content to. Content is reassigned, never destroyed.', 'abilities-catalog'),
+						'description' => __( 'Required. The ID of an existing, different user to reassign the deleted user\'s content to. Content is reassigned, never destroyed.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id', 'reassign'),
+				'required'             => array( 'id', 'reassign' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('deleted', 'id', 'reassigned_to'),
+				'required'             => array( 'deleted', 'id', 'reassigned_to' ),
 				'properties'           => array(
 					'deleted'       => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the user was deleted.', 'abilities-catalog'),
+						'description' => __( 'Whether the user was deleted.', 'abilities-catalog' ),
 					),
 					'id'            => array(
 						'type'        => 'integer',
-						'description' => __('The ID of the deleted user.', 'abilities-catalog'),
+						'description' => __( 'The ID of the deleted user.', 'abilities-catalog' ),
 					),
 					'reassigned_to' => array(
 						'type'        => 'integer',
-						'description' => __('The ID of the user that received the deleted user\'s content.', 'abilities-catalog'),
+						'description' => __( 'The ID of the user that received the deleted user\'s content.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -109,21 +107,20 @@ final class DeleteUser implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may delete the user and reassign is valid.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input    = is_array($input) ? $input : array();
-		$id       = isset($input['id']) ? absint($input['id']) : 0;
-		$reassign = isset($input['reassign']) ? absint($input['reassign']) : 0;
+	public function hasPermission( $input ): bool {
+		$input    = is_array( $input ) ? $input : array();
+		$id       = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
+		$reassign = isset( $input['reassign'] ) ? absint( $input['reassign'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		if (!$this->isValidReassign($reassign, $id)) {
+		if ( ! $this->isValidReassign( $reassign, $id ) ) {
 			return false;
 		}
 
-		return current_user_can('delete_user', $id);
+		return current_user_can( 'delete_user', $id );
 	}
 
 	/**
@@ -136,41 +133,40 @@ final class DeleteUser implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The deletion result, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input    = is_array($input) ? $input : array();
-		$id       = isset($input['id']) ? absint($input['id']) : 0;
-		$reassign = isset($input['reassign']) ? absint($input['reassign']) : 0;
+	public function execute( $input ) {
+		$input    = is_array( $input ) ? $input : array();
+		$id       = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
+		$reassign = isset( $input['reassign'] ) ? absint( $input['reassign'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return new WP_Error(
 				'webmcp_invalid_user',
-				__('A valid user ID is required.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'A valid user ID is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		if (!$this->isValidReassign($reassign, $id)) {
+		if ( ! $this->isValidReassign( $reassign, $id ) ) {
 			return new WP_Error(
 				'webmcp_invalid_reassign',
-				__('The reassign target must be a positive ID of an existing user different from the user being deleted.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'The reassign target must be a positive ID of an existing user different from the user being deleted.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		$request = new WP_REST_Request('DELETE', '/wp/v2/users/' . $id);
-		$request->set_param('force', true);
-		$request->set_param('reassign', $reassign);
+		$request = new WP_REST_Request( 'DELETE', '/wp/v2/users/' . $id );
+		$request->set_param( 'force', true );
+		$request->set_param( 'reassign', $reassign );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'deleted'       => (bool) ($data['deleted'] ?? false),
+			'deleted'       => (bool) ( $data['deleted'] ?? false ),
 			'id'            => $id,
 			'reassigned_to' => $reassign,
 		);
@@ -183,16 +179,15 @@ final class DeleteUser implements Ability
 	 * @param int $id       The user ID being deleted.
 	 * @return bool True if reassign is a positive, existing, different user.
 	 */
-	private function isValidReassign(int $reassign, int $id): bool
-	{
-		if ($reassign <= 0) {
+	private function isValidReassign( int $reassign, int $id ): bool {
+		if ( $reassign <= 0 ) {
 			return false;
 		}
 
-		if ($reassign === $id) {
+		if ( $reassign === $id ) {
 			return false;
 		}
 
-		return false !== get_userdata($reassign);
+		return false !== get_userdata( $reassign );
 	}
 }

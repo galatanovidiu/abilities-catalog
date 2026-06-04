@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Terms;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -19,83 +19,81 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetTag implements Ability
-{
+final class GetTag implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'terms/get-tag';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Tag', 'abilities-catalog'),
-			'description'         => __('Returns a single post-tag term by ID.', 'abilities-catalog'),
+			'label'               => __( 'Get Tag', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single post-tag term by ID.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __('The tag term ID.', 'abilities-catalog'),
+						'description' => __( 'The tag term ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'name', 'slug'),
+				'required'             => array( 'id', 'name', 'slug' ),
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'integer',
-						'description' => __('The term ID.', 'abilities-catalog'),
+						'description' => __( 'The term ID.', 'abilities-catalog' ),
 					),
 					'name'        => array(
 						'type'        => 'string',
-						'description' => __('The term name.', 'abilities-catalog'),
+						'description' => __( 'The term name.', 'abilities-catalog' ),
 					),
 					'slug'        => array(
 						'type'        => 'string',
-						'description' => __('The term slug.', 'abilities-catalog'),
+						'description' => __( 'The term slug.', 'abilities-catalog' ),
 					),
 					'description' => array(
 						'type'        => 'string',
-						'description' => __('The term description.', 'abilities-catalog'),
+						'description' => __( 'The term description.', 'abilities-catalog' ),
 					),
 					'parent'      => array(
 						'type'        => 'integer',
-						'description' => __('The parent term ID.', 'abilities-catalog'),
+						'description' => __( 'The parent term ID.', 'abilities-catalog' ),
 					),
 					'count'       => array(
 						'type'        => 'integer',
-						'description' => __('Number of objects assigned to the term.', 'abilities-catalog'),
+						'description' => __( 'Number of objects assigned to the term.', 'abilities-catalog' ),
 					),
 					'taxonomy'    => array(
 						'type'        => 'string',
-						'description' => __('The taxonomy the term belongs to.', 'abilities-catalog'),
+						'description' => __( 'The taxonomy the term belongs to.', 'abilities-catalog' ),
 					),
 					'link'        => array(
 						'type'        => 'string',
-						'description' => __('The public term archive URL.', 'abilities-catalog'),
+						'description' => __( 'The public term archive URL.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -115,18 +113,17 @@ final class GetTag implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the tag.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['id']) ? absint($input['id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
 		$context = $input['context'] ?? 'view';
-		if ('edit' === $context) {
-			return current_user_can('manage_post_tags');
+		if ( 'edit' === $context ) {
+			return current_user_can( 'manage_post_tags' );
 		}
 
 		return is_user_logged_in();
@@ -138,31 +135,30 @@ final class GetTag implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Flat term fields, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id']);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] );
 		$context = $input['context'] ?? 'view';
 
-		$request = new WP_REST_Request('GET', '/wp/v2/tags/' . $id);
-		$request->set_param('context', $context);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/tags/' . $id );
+		$request->set_param( 'context', $context );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'          => (int) ($data['id'] ?? $id),
-			'name'        => (string) ($data['name'] ?? ''),
-			'slug'        => (string) ($data['slug'] ?? ''),
-			'description' => (string) ($data['description'] ?? ''),
-			'parent'      => (int) ($data['parent'] ?? 0),
-			'count'       => (int) ($data['count'] ?? 0),
-			'taxonomy'    => (string) ($data['taxonomy'] ?? 'post_tag'),
-			'link'        => (string) ($data['link'] ?? ''),
+			'id'          => (int) ( $data['id'] ?? $id ),
+			'name'        => (string) ( $data['name'] ?? '' ),
+			'slug'        => (string) ( $data['slug'] ?? '' ),
+			'description' => (string) ( $data['description'] ?? '' ),
+			'parent'      => (int) ( $data['parent'] ?? 0 ),
+			'count'       => (int) ( $data['count'] ?? 0 ),
+			'taxonomy'    => (string) ( $data['taxonomy'] ?? 'post_tag' ),
+			'link'        => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }

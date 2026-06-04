@@ -9,7 +9,7 @@ use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use WP_Error;
 use WP_Site_Health;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -29,24 +29,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetStatus implements Ability
-{
+final class GetStatus implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'site-health/get-status';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Site Health Status', 'abilities-catalog'),
-			'description'         => __('Runs the cheap direct Site Health tests and lists the asynchronous tests. Does not run live HTTP, loopback, or cron checks.', 'abilities-catalog'),
+			'label'               => __( 'Get Site Health Status', 'abilities-catalog' ),
+			'description'         => __( 'Runs the cheap direct Site Health tests and lists the asynchronous tests. Does not run live HTTP, loopback, or cron checks.', 'abilities-catalog' ),
 			'category'            => 'site-health',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -55,21 +53,21 @@ final class GetStatus implements Ability
 				'properties'           => array(
 					'direct'  => array(
 						'type'        => 'array',
-						'description' => __('Results of the direct tests that were run.', 'abilities-catalog'),
+						'description' => __( 'Results of the direct tests that were run.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'properties'           => array(
 								'test'   => array(
 									'type'        => 'string',
-									'description' => __('The test identifier.', 'abilities-catalog'),
+									'description' => __( 'The test identifier.', 'abilities-catalog' ),
 								),
 								'label'  => array(
 									'type'        => 'string',
-									'description' => __('The human-readable test label.', 'abilities-catalog'),
+									'description' => __( 'The human-readable test label.', 'abilities-catalog' ),
 								),
 								'status' => array(
 									'type'        => 'string',
-									'description' => __('The test outcome: good, recommended, or critical.', 'abilities-catalog'),
+									'description' => __( 'The test outcome: good, recommended, or critical.', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,
@@ -77,37 +75,37 @@ final class GetStatus implements Ability
 					),
 					'async'   => array(
 						'type'        => 'array',
-						'description' => __('Asynchronous tests that were listed but not run.', 'abilities-catalog'),
+						'description' => __( 'Asynchronous tests that were listed but not run.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'properties'           => array(
 								'test'  => array(
 									'type'        => 'string',
-									'description' => __('The test identifier.', 'abilities-catalog'),
+									'description' => __( 'The test identifier.', 'abilities-catalog' ),
 								),
 								'label' => array(
 									'type'        => 'string',
-									'description' => __('The human-readable test label.', 'abilities-catalog'),
+									'description' => __( 'The human-readable test label.', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,
 						),
 					),
 					'summary' => array(
-						'type'        => 'object',
-						'description' => __('Count of direct results by status.', 'abilities-catalog'),
-						'properties'  => array(
+						'type'                 => 'object',
+						'description'          => __( 'Count of direct results by status.', 'abilities-catalog' ),
+						'properties'           => array(
 							'good'        => array(
 								'type'        => 'integer',
-								'description' => __('Number of direct tests with status "good".', 'abilities-catalog'),
+								'description' => __( 'Number of direct tests with status "good".', 'abilities-catalog' ),
 							),
 							'recommended' => array(
 								'type'        => 'integer',
-								'description' => __('Number of direct tests with status "recommended".', 'abilities-catalog'),
+								'description' => __( 'Number of direct tests with status "recommended".', 'abilities-catalog' ),
 							),
 							'critical'    => array(
 								'type'        => 'integer',
-								'description' => __('Number of direct tests with status "critical".', 'abilities-catalog'),
+								'description' => __( 'Number of direct tests with status "critical".', 'abilities-catalog' ),
 							),
 						),
 						'additionalProperties' => false,
@@ -115,8 +113,8 @@ final class GetStatus implements Ability
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -134,25 +132,23 @@ final class GetStatus implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may view Site Health checks.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('view_site_health_checks');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'view_site_health_checks' );
 	}
 
 	/**
 	 * Executes the ability by running the direct tests and listing the async tests.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The status structure, or an error.
+	 * @return array<string,mixed>|\WP_Error The status structure, or an error.
 	 */
-	public function execute($input = null)
-	{
-		AdminIncludes::load('class-wp-site-health');
+	public function execute( $input = null ) {
+		AdminIncludes::load( 'class-wp-site-health' );
 
-		if (!class_exists('WP_Site_Health')) {
+		if ( ! class_exists( 'WP_Site_Health' ) ) {
 			return new WP_Error(
 				'site_health_unavailable',
-				__('Site Health is not available on this installation.', 'abilities-catalog')
+				__( 'Site Health is not available on this installation.', 'abilities-catalog' )
 			);
 		}
 
@@ -166,32 +162,34 @@ final class GetStatus implements Ability
 			'critical'    => 0,
 		);
 
-		foreach (($tests['direct'] ?? array()) as $key => $test) {
-			$identifier = is_string($test['test'] ?? null) ? $test['test'] : (string) $key;
-			$result     = $this->runDirectTest($site_health, $test);
+		foreach ( ( $tests['direct'] ?? array() ) as $key => $test ) {
+			$identifier = is_string( $test['test'] ?? null ) ? $test['test'] : (string) $key;
+			$result     = $this->runDirectTest( $site_health, $test );
 
-			if (null === $result) {
+			if ( null === $result ) {
 				continue;
 			}
 
-			$status = (string) ($result['status'] ?? '');
+			$status = (string) ( $result['status'] ?? '' );
 
 			$direct[] = array(
-				'test'   => (string) ($result['test'] ?? $identifier),
-				'label'  => (string) ($result['label'] ?? ($test['label'] ?? $identifier)),
+				'test'   => (string) ( $result['test'] ?? $identifier ),
+				'label'  => (string) ( $result['label'] ?? ( $test['label'] ?? $identifier ) ),
 				'status' => $status,
 			);
 
-			if (isset($summary[$status])) {
-				++$summary[$status];
+			if ( ! isset( $summary[ $status ] ) ) {
+				continue;
 			}
+
+			++$summary[ $status ];
 		}
 
 		$async = array();
-		foreach (($tests['async'] ?? array()) as $key => $test) {
+		foreach ( ( $tests['async'] ?? array() ) as $key => $test ) {
 			$async[] = array(
 				'test'  => (string) $key,
-				'label' => (string) ($test['label'] ?? $key),
+				'label' => (string) ( $test['label'] ?? $key ),
 			);
 		}
 
@@ -210,36 +208,35 @@ final class GetStatus implements Ability
 	 * callable. Any throwable from the callback is swallowed so a single broken test
 	 * does not abort the whole ability.
 	 *
-	 * @param WP_Site_Health      $site_health The Site Health instance.
+	 * @param \WP_Site_Health      $site_health The Site Health instance.
 	 * @param array<string,mixed> $test        A single entry from the `direct` test list.
 	 * @return array<string,mixed>|null The test result array, or null when it could not run.
 	 */
-	private function runDirectTest(WP_Site_Health $site_health, array $test): ?array
-	{
+	private function runDirectTest( WP_Site_Health $site_health, array $test ): ?array {
 		$callback = null;
 		$name     = $test['test'] ?? null;
 
-		if (is_string($name)) {
+		if ( is_string( $name ) ) {
 			$method = 'get_test_' . $name;
-			if (method_exists($site_health, $method) && is_callable(array($site_health, $method))) {
-				$callback = array($site_health, $method);
+			if ( method_exists( $site_health, $method ) && is_callable( array( $site_health, $method ) ) ) {
+				$callback = array( $site_health, $method );
 			}
 		}
 
-		if (null === $callback && isset($test['test']) && is_callable($test['test'])) {
+		if ( null === $callback && isset( $test['test'] ) && is_callable( $test['test'] ) ) {
 			$callback = $test['test'];
 		}
 
-		if (null === $callback) {
+		if ( null === $callback ) {
 			return null;
 		}
 
 		try {
-			$result = call_user_func($callback);
-		} catch (\Throwable $e) {
+			$result = call_user_func( $callback );
+		} catch ( \Throwable $e ) {
 			return null;
 		}
 
-		return is_array($result) ? $result : null;
+		return is_array( $result ) ? $result : null;
 	}
 }

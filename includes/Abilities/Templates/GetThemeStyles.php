@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,24 +23,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class GetThemeStyles implements Ability
-{
+final class GetThemeStyles implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/get-theme-styles';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Theme Styles', 'abilities-catalog'),
-			'description'         => __('Returns a theme\'s baseline global styles from its theme.json (color palette, typography, spacing, element styles). Defaults to the active theme. This is the theme default, not the user overrides returned by get-global-styles.', 'abilities-catalog'),
+			'label'               => __( 'Get Theme Styles', 'abilities-catalog' ),
+			'description'         => __( 'Returns a theme\'s baseline global styles from its theme.json (color palette, typography, spacing, element styles). Defaults to the active theme. This is the theme default, not the user overrides returned by get-global-styles.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -48,34 +46,34 @@ final class GetThemeStyles implements Ability
 					'stylesheet' => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __('The theme stylesheet (directory name). Leave empty to use the active theme.', 'abilities-catalog'),
+						'description' => __( 'The theme stylesheet (directory name). Leave empty to use the active theme.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('stylesheet'),
+				'required'             => array( 'stylesheet' ),
 				'properties'           => array(
 					'stylesheet' => array(
 						'type'        => 'string',
-						'description' => __('The theme stylesheet these styles belong to.', 'abilities-catalog'),
+						'description' => __( 'The theme stylesheet these styles belong to.', 'abilities-catalog' ),
 					),
 					'settings'   => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The theme.json-shaped settings (design tokens: palette, typography, spacing).', 'abilities-catalog'),
+						'description'          => __( 'The theme.json-shaped settings (design tokens: palette, typography, spacing).', 'abilities-catalog' ),
 					),
 					'styles'     => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The theme.json-shaped styles (element and block style rules).', 'abilities-catalog'),
+						'description'          => __( 'The theme.json-shaped styles (element and block style rules).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -96,9 +94,8 @@ final class GetThemeStyles implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read theme global styles.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -107,29 +104,28 @@ final class GetThemeStyles implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The shaped theme styles, or the REST error.
 	 */
-	public function execute($input = null)
-	{
-		$input      = is_array($input) ? $input : array();
-		$stylesheet = isset($input['stylesheet']) ? trim((string) $input['stylesheet']) : '';
-		if ('' === $stylesheet) {
+	public function execute( $input = null ) {
+		$input      = is_array( $input ) ? $input : array();
+		$stylesheet = isset( $input['stylesheet'] ) ? trim( (string) $input['stylesheet'] ) : '';
+		if ( '' === $stylesheet ) {
 			$stylesheet = get_stylesheet();
 		}
 
-		$request = new WP_REST_Request('GET', '/wp/v2/global-styles/themes/' . $stylesheet);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/global-styles/themes/' . $stylesheet );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		// Cast to objects so empty results serialize as `{}` (matching the
 		// `type: object` schema); an empty PHP array would serialize as `[]`.
 		return array(
 			'stylesheet' => $stylesheet,
-			'settings'   => (object) (is_array($data['settings'] ?? null) ? $data['settings'] : array()),
-			'styles'     => (object) (is_array($data['styles'] ?? null) ? $data['styles'] : array()),
+			'settings'   => (object) ( is_array( $data['settings'] ?? null ) ? $data['settings'] : array() ),
+			'styles'     => (object) ( is_array( $data['styles'] ?? null ) ? $data['styles'] : array() ),
 		);
 	}
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -25,8 +25,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class FilesystemGuard
-{
+final class FilesystemGuard {
+
 	/**
 	 * Requires direct filesystem access and initializes `WP_Filesystem`.
 	 *
@@ -39,19 +39,18 @@ final class FilesystemGuard
 	 *                        Defaults to the plugins directory when empty.
 	 * @return bool|\WP_Error True on success, or a generic error when not directly writable.
 	 */
-	public static function ensureDirect(string $context = '')
-	{
-		AdminIncludes::load('file');
+	public static function ensureDirect( string $context = '' ) {
+		AdminIncludes::load( 'file' );
 
-		if ('' === $context) {
+		if ( '' === $context ) {
 			$context = WP_PLUGIN_DIR;
 		}
 
-		if ('direct' !== get_filesystem_method(array(), $context, false)) {
+		if ( 'direct' !== get_filesystem_method( array(), $context, false ) ) {
 			return self::error();
 		}
 
-		if (false === WP_Filesystem()) {
+		if ( false === WP_Filesystem() ) {
 			return self::error();
 		}
 
@@ -66,12 +65,11 @@ final class FilesystemGuard
 	 *
 	 * @return \WP_Error The generic not-writable error with a 503 status.
 	 */
-	private static function error(): \WP_Error
-	{
+	private static function error(): \WP_Error {
 		return new \WP_Error(
 			'webmcp_fs_not_writable',
-			__('The filesystem is not directly writable, so this operation cannot run over WebMCP. It requires direct filesystem access (no credential prompt).', 'abilities-catalog'),
-			array('status' => 503)
+			__( 'The filesystem is not directly writable, so this operation cannot run over WebMCP. It requires direct filesystem access (no credential prompt).', 'abilities-catalog' ),
+			array( 'status' => 503 )
 		);
 	}
 }

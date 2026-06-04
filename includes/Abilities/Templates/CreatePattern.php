@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -31,71 +31,69 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.2.0
  */
-final class CreatePattern implements Ability
-{
+final class CreatePattern implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/create-pattern';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Pattern', 'abilities-catalog'),
-			'description'         => __('Creates a new user pattern (reusable block, post type "wp_block"). Publishes by default; set status to "draft" to keep it unpublished. Requires the publish capability.', 'abilities-catalog'),
+			'label'               => __( 'Create Pattern', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new user pattern (reusable block, post type "wp_block"). Publishes by default; set status to "draft" to keep it unpublished. Requires the publish capability.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'title'   => array(
 						'type'        => 'string',
-						'description' => __('The pattern title.', 'abilities-catalog'),
+						'description' => __( 'The pattern title.', 'abilities-catalog' ),
 					),
 					'content' => array(
 						'type'        => 'string',
-						'description' => __('The pattern block markup (serialized blocks; sanitized by WordPress).', 'abilities-catalog'),
+						'description' => __( 'The pattern block markup (serialized blocks; sanitized by WordPress).', 'abilities-catalog' ),
 					),
 					'status'  => array(
 						'type'        => 'string',
-						'enum'        => array('draft', 'publish'),
+						'enum'        => array( 'draft', 'publish' ),
 						'default'     => 'publish',
-						'description' => __('The pattern status. Defaults to "publish".', 'abilities-catalog'),
+						'description' => __( 'The pattern status. Defaults to "publish".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('title', 'content'),
+				'required'             => array( 'title', 'content' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'status', 'link'),
+				'required'             => array( 'id', 'status', 'link' ),
 				'properties'           => array(
 					'id'     => array(
 						'type'        => 'integer',
-						'description' => __('The new pattern (wp_block) post ID.', 'abilities-catalog'),
+						'description' => __( 'The new pattern (wp_block) post ID.', 'abilities-catalog' ),
 					),
 					'title'  => array(
 						'type'        => 'string',
-						'description' => __('The resulting pattern title.', 'abilities-catalog'),
+						'description' => __( 'The resulting pattern title.', 'abilities-catalog' ),
 					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __('The resulting pattern status.', 'abilities-catalog'),
+						'description' => __( 'The resulting pattern status.', 'abilities-catalog' ),
 					),
 					'link'   => array(
 						'type'        => 'string',
-						'description' => __('The pattern permalink.', 'abilities-catalog'),
+						'description' => __( 'The pattern permalink.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -118,14 +116,13 @@ final class CreatePattern implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create the requested pattern.
 	 */
-	public function hasPermission($input): bool
-	{
-		$post_type = get_post_type_object('wp_block');
-		if (null === $post_type) {
+	public function hasPermission( $input ): bool {
+		$post_type = get_post_type_object( 'wp_block' );
+		if ( null === $post_type ) {
 			return false;
 		}
 
-		return current_user_can($post_type->cap->create_posts);
+		return current_user_can( $post_type->cap->create_posts );
 	}
 
 	/**
@@ -134,40 +131,41 @@ final class CreatePattern implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The new pattern's id, title, status, link, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$request = new WP_REST_Request('POST', '/wp/v2/blocks');
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$request = new WP_REST_Request( 'POST', '/wp/v2/blocks' );
 
 		// String fields pass through to the REST route, which sanitizes them
 		// (content via wp_kses_post, etc.).
-		foreach (array('title', 'content') as $field) {
-			if (isset($input[$field]) && '' !== $input[$field]) {
-				$request->set_param($field, (string) $input[$field]);
+		foreach ( array( 'title', 'content' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+				continue;
 			}
+
+			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if (isset($input['status']) && '' !== $input['status']) {
-			$request->set_param('status', sanitize_key((string) $input['status']));
+		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
+			$request->set_param( 'status', sanitize_key( (string) $input['status'] ) );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		$title = $data['title'] ?? '';
-		if (is_array($title)) {
+		if ( is_array( $title ) ) {
 			$title = $title['rendered'] ?? '';
 		}
 
 		return array(
-			'id'     => (int) ($data['id'] ?? 0),
+			'id'     => (int) ( $data['id'] ?? 0 ),
 			'title'  => (string) $title,
-			'status' => (string) ($data['status'] ?? ''),
-			'link'   => (string) ($data['link'] ?? ''),
+			'status' => (string) ( $data['status'] ?? '' ),
+			'link'   => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }

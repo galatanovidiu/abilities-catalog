@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -20,74 +20,72 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ListTerms implements Ability
-{
+final class ListTerms implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'terms/list-terms';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('List Terms', 'abilities-catalog'),
-			'description'         => __('Returns terms for a given taxonomy, optionally filtered and paginated.', 'abilities-catalog'),
+			'label'               => __( 'List Terms', 'abilities-catalog' ),
+			'description'         => __( 'Returns terms for a given taxonomy, optionally filtered and paginated.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'taxonomy' => array(
 						'type'        => 'string',
-						'description' => __('The taxonomy slug (for example "category" or "post_tag").', 'abilities-catalog'),
+						'description' => __( 'The taxonomy slug (for example "category" or "post_tag").', 'abilities-catalog' ),
 					),
 					'search'   => array(
 						'type'        => 'string',
-						'description' => __('Limit results to terms matching a search string.', 'abilities-catalog'),
+						'description' => __( 'Limit results to terms matching a search string.', 'abilities-catalog' ),
 					),
 					'per_page' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'maximum'     => 100,
-						'description' => __('Number of terms to return per page.', 'abilities-catalog'),
+						'description' => __( 'Number of terms to return per page.', 'abilities-catalog' ),
 					),
 					'page'     => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __('Page number of the result set.', 'abilities-catalog'),
+						'description' => __( 'Page number of the result set.', 'abilities-catalog' ),
 					),
 					'orderby'  => array(
 						'type'        => 'string',
-						'enum'        => array('id', 'name', 'slug', 'count', 'term_group', 'include', 'description'),
-						'description' => __('Field to sort the terms by.', 'abilities-catalog'),
+						'enum'        => array( 'id', 'name', 'slug', 'count', 'term_group', 'include', 'description' ),
+						'description' => __( 'Field to sort the terms by.', 'abilities-catalog' ),
 					),
 					'order'    => array(
 						'type'        => 'string',
-						'enum'        => array('asc', 'desc'),
-						'description' => __('Sort direction.', 'abilities-catalog'),
+						'enum'        => array( 'asc', 'desc' ),
+						'description' => __( 'Sort direction.', 'abilities-catalog' ),
 					),
 					'context'  => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('taxonomy'),
+				'required'             => array( 'taxonomy' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'description' => __('The matching terms.', 'abilities-catalog'),
+						'description' => __( 'The matching terms.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => true,
@@ -95,17 +93,17 @@ final class ListTerms implements Ability
 					),
 					'total'       => array(
 						'type'        => 'integer',
-						'description' => __('Total number of matching terms.', 'abilities-catalog'),
+						'description' => __( 'Total number of matching terms.', 'abilities-catalog' ),
 					),
 					'total_pages' => array(
 						'type'        => 'integer',
-						'description' => __('Total number of result pages.', 'abilities-catalog'),
+						'description' => __( 'Total number of result pages.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -125,22 +123,21 @@ final class ListTerms implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may list the taxonomy's terms.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input    = is_array($input) ? $input : array();
-		$taxonomy = isset($input['taxonomy']) ? (string) $input['taxonomy'] : '';
+	public function hasPermission( $input ): bool {
+		$input    = is_array( $input ) ? $input : array();
+		$taxonomy = isset( $input['taxonomy'] ) ? (string) $input['taxonomy'] : '';
 
-		if ('' === $taxonomy) {
+		if ( '' === $taxonomy ) {
 			return false;
 		}
 
 		$context = $input['context'] ?? 'view';
-		if ('edit' === $context) {
-			$tax = get_taxonomy($taxonomy);
-			if (!$tax) {
+		if ( 'edit' === $context ) {
+			$tax = get_taxonomy( $taxonomy );
+			if ( ! $tax ) {
 				return false;
 			}
-			return current_user_can($tax->cap->manage_terms);
+			return current_user_can( $tax->cap->manage_terms );
 		}
 
 		return is_user_logged_in();
@@ -152,42 +149,43 @@ final class ListTerms implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error List of terms with totals, or an error.
 	 */
-	public function execute($input)
-	{
-		$input    = is_array($input) ? $input : array();
-		$taxonomy = isset($input['taxonomy']) ? (string) $input['taxonomy'] : '';
+	public function execute( $input ) {
+		$input    = is_array( $input ) ? $input : array();
+		$taxonomy = isset( $input['taxonomy'] ) ? (string) $input['taxonomy'] : '';
 
-		$tax = get_taxonomy($taxonomy);
-		if (!$tax || !$tax->show_in_rest) {
+		$tax = get_taxonomy( $taxonomy );
+		if ( ! $tax || ! $tax->show_in_rest ) {
 			return new WP_Error(
 				'invalid_taxonomy',
-				__('The requested taxonomy is not available in the REST API.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'The requested taxonomy is not available in the REST API.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
 		$rest_base = $tax->rest_base ?: $taxonomy;
 
-		$request = new WP_REST_Request('GET', '/wp/v2/' . $rest_base);
-		$request->set_param('context', $input['context'] ?? 'view');
-		foreach (array('search', 'per_page', 'page', 'orderby', 'order') as $param) {
-			if (isset($input[$param])) {
-				$request->set_param($param, $input[$param]);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/' . $rest_base );
+		$request->set_param( 'context', $input['context'] ?? 'view' );
+		foreach ( array( 'search', 'per_page', 'page', 'orderby', 'order' ) as $param ) {
+			if ( ! isset( $input[ $param ] ) ) {
+				continue;
 			}
+
+			$request->set_param( $param, $input[ $param ] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data    = rest_get_server()->response_to_data($response, false);
+		$data    = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
 		return array(
-			'items'       => is_array($data) ? array_values($data) : array(),
-			'total'       => (int) ($headers['X-WP-Total'] ?? 0),
-			'total_pages' => (int) ($headers['X-WP-TotalPages'] ?? 0),
+			'items'       => is_array( $data ) ? array_values( $data ) : array(),
+			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
+			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
 	}
 }

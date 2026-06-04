@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,8 +23,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class OptionAllowList
-{
+final class OptionAllowList {
+
 	/**
 	 * The option names a generic option write may target.
 	 *
@@ -48,8 +48,7 @@ final class OptionAllowList
 	 * @param string $name The option name to check.
 	 * @return bool True only when the name is explicitly allowed.
 	 */
-	public static function isAllowed(string $name): bool
-	{
-		return in_array($name, self::ALLOWED, true);
+	public static function isAllowed( string $name ): bool {
+		return in_array( $name, self::ALLOWED, true );
 	}
 }

@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -36,75 +36,73 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class UpdateTemplate implements Ability
-{
+final class UpdateTemplate implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/update-template';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update Template', 'abilities-catalog'),
-			'description'         => __('Updates a site-editor template or template part by its "theme//slug" id. Creates or replaces a database override that changes site-wide layout. Only the provided fields change.', 'abilities-catalog'),
+			'label'               => __( 'Update Template', 'abilities-catalog' ),
+			'description'         => __( 'Updates a site-editor template or template part by its "theme//slug" id. Creates or replaces a database override that changes site-wide layout. Only the provided fields change.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'string',
-						'description' => __('The template id in "theme//slug" form (e.g. "twentytwentyfive//home").', 'abilities-catalog'),
+						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//home").', 'abilities-catalog' ),
 					),
 					'post_type'   => array(
 						'type'        => 'string',
-						'enum'        => array('wp_template', 'wp_template_part'),
+						'enum'        => array( 'wp_template', 'wp_template_part' ),
 						'default'     => 'wp_template',
-						'description' => __('Which collection the id belongs to: "wp_template" or "wp_template_part".', 'abilities-catalog'),
+						'description' => __( 'Which collection the id belongs to: "wp_template" or "wp_template_part".', 'abilities-catalog' ),
 					),
 					'content'     => array(
 						'type'        => 'string',
-						'description' => __('The raw template block markup (HTML allowed; sanitized by WordPress).', 'abilities-catalog'),
+						'description' => __( 'The raw template block markup (HTML allowed; sanitized by WordPress).', 'abilities-catalog' ),
 					),
 					'title'       => array(
 						'type'        => 'string',
-						'description' => __('The template title.', 'abilities-catalog'),
+						'description' => __( 'The template title.', 'abilities-catalog' ),
 					),
 					'description' => array(
 						'type'        => 'string',
-						'description' => __('The template description.', 'abilities-catalog'),
+						'description' => __( 'The template description.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id'     => array(
 						'type'        => 'string',
-						'description' => __('The template id in "theme//slug" form.', 'abilities-catalog'),
+						'description' => __( 'The template id in "theme//slug" form.', 'abilities-catalog' ),
 					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __('The resulting template status.', 'abilities-catalog'),
+						'description' => __( 'The resulting template status.', 'abilities-catalog' ),
 					),
 					'title'  => array(
 						'type'        => 'string',
-						'description' => __('The resulting template title.', 'abilities-catalog'),
+						'description' => __( 'The resulting template title.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -128,9 +126,8 @@ final class UpdateTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update site-editor templates.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -143,39 +140,40 @@ final class UpdateTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The shaped template, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input     = is_array($input) ? $input : array();
-		$id        = (string) ($input['id'] ?? '');
+	public function execute( $input ) {
+		$input     = is_array( $input ) ? $input : array();
+		$id        = (string) ( $input['id'] ?? '' );
 		$post_type = $input['post_type'] ?? 'wp_template';
 		$base      = 'wp_template_part' === $post_type ? 'template-parts' : 'templates';
 
 		// The "theme//slug" id is part of the route path; do not URL-encode the "//".
-		$request = new WP_REST_Request('POST', '/wp/v2/' . $base . '/' . $id);
+		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $base . '/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them
 		// (content via the block-markup pipeline, etc.).
-		foreach (array('content', 'title', 'description') as $field) {
-			if (isset($input[$field]) && '' !== $input[$field]) {
-				$request->set_param($field, (string) $input[$field]);
+		foreach ( array( 'content', 'title', 'description' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+				continue;
 			}
+
+			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		$title = $data['title'] ?? '';
-		if (is_array($title)) {
+		if ( is_array( $title ) ) {
 			$title = $title['rendered'] ?? '';
 		}
 
 		return array(
-			'id'     => (string) ($data['id'] ?? $id),
-			'status' => (string) ($data['status'] ?? ''),
+			'id'     => (string) ( $data['id'] ?? $id ),
+			'status' => (string) ( $data['status'] ?? '' ),
 			'title'  => (string) $title,
 		);
 	}

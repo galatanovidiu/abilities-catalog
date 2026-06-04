@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Themes;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,53 +23,51 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class SwitchTheme implements Ability
-{
+final class SwitchTheme implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'themes/switch-theme';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Switch Theme', 'abilities-catalog'),
-			'description'         => __('Activates an installed theme by its stylesheet (directory name). Switching the theme changes the whole front end.', 'abilities-catalog'),
+			'label'               => __( 'Switch Theme', 'abilities-catalog' ),
+			'description'         => __( 'Activates an installed theme by its stylesheet (directory name). Switching the theme changes the whole front end.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'stylesheet' => array(
 						'type'        => 'string',
-						'description' => __('The theme directory name (stylesheet) to activate, for example "twentytwentyfive".', 'abilities-catalog'),
+						'description' => __( 'The theme directory name (stylesheet) to activate, for example "twentytwentyfive".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('stylesheet'),
+				'required'             => array( 'stylesheet' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('success', 'active_theme'),
+				'required'             => array( 'success', 'active_theme' ),
 				'properties'           => array(
 					'success'      => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the theme was switched.', 'abilities-catalog'),
+						'description' => __( 'Whether the theme was switched.', 'abilities-catalog' ),
 					),
 					'active_theme' => array(
 						'type'        => 'string',
-						'description' => __('The active theme stylesheet after the switch.', 'abilities-catalog'),
+						'description' => __( 'The active theme stylesheet after the switch.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -91,15 +89,14 @@ final class SwitchTheme implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may switch themes.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		if (empty($input['stylesheet'])) {
+		if ( empty( $input['stylesheet'] ) ) {
 			return false;
 		}
 
-		return current_user_can('switch_themes');
+		return current_user_can( 'switch_themes' );
 	}
 
 	/**
@@ -111,29 +108,28 @@ final class SwitchTheme implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Success flag and the active stylesheet, or an error.
 	 */
-	public function execute($input)
-	{
-		$input      = is_array($input) ? $input : array();
-		$stylesheet = isset($input['stylesheet']) ? (string) $input['stylesheet'] : '';
+	public function execute( $input ) {
+		$input      = is_array( $input ) ? $input : array();
+		$stylesheet = isset( $input['stylesheet'] ) ? (string) $input['stylesheet'] : '';
 
-		if ('' === $stylesheet) {
+		if ( '' === $stylesheet ) {
 			return new WP_Error(
 				'webmcp_missing_stylesheet',
-				__('A theme stylesheet is required.', 'abilities-catalog')
+				__( 'A theme stylesheet is required.', 'abilities-catalog' )
 			);
 		}
 
-		$theme = wp_get_theme($stylesheet);
-		if (!$theme->exists()) {
+		$theme = wp_get_theme( $stylesheet );
+		if ( ! $theme->exists() ) {
 			return new WP_Error(
 				'webmcp_theme_not_found',
 				/* translators: %s: theme stylesheet. */
-				sprintf(__('No installed theme found for stylesheet "%s".', 'abilities-catalog'), $stylesheet),
-				array('status' => 404)
+				sprintf( __( 'No installed theme found for stylesheet "%s".', 'abilities-catalog' ), $stylesheet ),
+				array( 'status' => 404 )
 			);
 		}
 
-		switch_theme($stylesheet);
+		switch_theme( $stylesheet );
 
 		return array(
 			'success'      => true,

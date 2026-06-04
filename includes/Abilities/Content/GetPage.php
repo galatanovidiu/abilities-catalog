@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -19,99 +19,97 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetPage implements Ability
-{
+final class GetPage implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'content/get-page';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Page', 'abilities-catalog'),
-			'description'         => __('Returns a single page by ID, including its rendered title, content, and excerpt.', 'abilities-catalog'),
+			'label'               => __( 'Get Page', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single page by ID, including its rendered title, content, and excerpt.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __('The page ID.', 'abilities-catalog'),
+						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
 					'context'  => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
 					),
 					'password' => array(
 						'type'        => 'string',
-						'description' => __('Password for a password-protected page.', 'abilities-catalog'),
+						'description' => __( 'Password for a password-protected page.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'title', 'status', 'link'),
+				'required'             => array( 'id', 'title', 'status', 'link' ),
 				'properties'           => array(
 					'id'         => array(
 						'type'        => 'integer',
-						'description' => __('The page ID.', 'abilities-catalog'),
+						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
 					'title'      => array(
 						'type'        => 'string',
-						'description' => __('The rendered page title.', 'abilities-catalog'),
+						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
 					),
 					'content'    => array(
 						'type'        => 'string',
-						'description' => __('The rendered page content.', 'abilities-catalog'),
+						'description' => __( 'The rendered page content.', 'abilities-catalog' ),
 					),
 					'excerpt'    => array(
 						'type'        => 'string',
-						'description' => __('The rendered page excerpt.', 'abilities-catalog'),
+						'description' => __( 'The rendered page excerpt.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',
-						'description' => __('The page status.', 'abilities-catalog'),
+						'description' => __( 'The page status.', 'abilities-catalog' ),
 					),
 					'author'     => array(
 						'type'        => 'integer',
-						'description' => __('The author user ID.', 'abilities-catalog'),
+						'description' => __( 'The author user ID.', 'abilities-catalog' ),
 					),
 					'link'       => array(
 						'type'        => 'string',
-						'description' => __('The public permalink.', 'abilities-catalog'),
+						'description' => __( 'The public permalink.', 'abilities-catalog' ),
 					),
 					'date'       => array(
 						'type'        => 'string',
-						'description' => __('The publish date in site time.', 'abilities-catalog'),
+						'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
 					),
 					'modified'   => array(
 						'type'        => 'string',
-						'description' => __('The last-modified date in site time.', 'abilities-catalog'),
+						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
 					'parent'     => array(
 						'type'        => 'integer',
-						'description' => __('The parent page ID.', 'abilities-catalog'),
+						'description' => __( 'The parent page ID.', 'abilities-catalog' ),
 					),
 					'menu_order' => array(
 						'type'        => 'integer',
-						'description' => __('The page order value.', 'abilities-catalog'),
+						'description' => __( 'The page order value.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -129,16 +127,15 @@ final class GetPage implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the page.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['id']) ? absint($input['id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		return current_user_can('read_post', $id);
+		return current_user_can( 'read_post', $id );
 	}
 
 	/**
@@ -147,37 +144,36 @@ final class GetPage implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Flat page fields, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id']);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] );
 		$context = $input['context'] ?? 'view';
 
-		$request = new WP_REST_Request('GET', '/wp/v2/pages/' . $id);
-		$request->set_param('context', $context);
-		if (!empty($input['password'])) {
-			$request->set_param('password', $input['password']);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/pages/' . $id );
+		$request->set_param( 'context', $context );
+		if ( ! empty( $input['password'] ) ) {
+			$request->set_param( 'password', $input['password'] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'         => (int) ($data['id'] ?? $id),
-			'title'      => (string) ($data['title']['rendered'] ?? ''),
-			'content'    => (string) ($data['content']['rendered'] ?? ''),
-			'excerpt'    => (string) ($data['excerpt']['rendered'] ?? ''),
-			'status'     => (string) ($data['status'] ?? get_post_status($id)),
-			'author'     => (int) ($data['author'] ?? 0),
-			'link'       => (string) ($data['link'] ?? ''),
-			'date'       => (string) ($data['date'] ?? ''),
-			'modified'   => (string) ($data['modified'] ?? ''),
-			'parent'     => (int) ($data['parent'] ?? 0),
-			'menu_order' => (int) ($data['menu_order'] ?? 0),
+			'id'         => (int) ( $data['id'] ?? $id ),
+			'title'      => (string) ( $data['title']['rendered'] ?? '' ),
+			'content'    => (string) ( $data['content']['rendered'] ?? '' ),
+			'excerpt'    => (string) ( $data['excerpt']['rendered'] ?? '' ),
+			'status'     => (string) ( $data['status'] ?? get_post_status( $id ) ),
+			'author'     => (int) ( $data['author'] ?? 0 ),
+			'link'       => (string) ( $data['link'] ?? '' ),
+			'date'       => (string) ( $data['date'] ?? '' ),
+			'modified'   => (string) ( $data['modified'] ?? '' ),
+			'parent'     => (int) ( $data['parent'] ?? 0 ),
+			'menu_order' => (int) ( $data['menu_order'] ?? 0 ),
 		);
 	}
 }

@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Comments;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -20,91 +20,89 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetComment implements Ability
-{
+final class GetComment implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'comments/get-comment';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Comment', 'abilities-catalog'),
-			'description'         => __('Returns a single comment by ID, including its content, author, status, and link.', 'abilities-catalog'),
+			'label'               => __( 'Get Comment', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single comment by ID, including its content, author, status, and link.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __('The comment ID.', 'abilities-catalog'),
+						'description' => __( 'The comment ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" (public fields) or "edit" (includes author email for moderators).', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (includes author email for moderators).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'post'),
+				'required'             => array( 'id', 'post' ),
 				'properties'           => array(
 					'id'           => array(
 						'type'        => 'integer',
-						'description' => __('The comment ID.', 'abilities-catalog'),
+						'description' => __( 'The comment ID.', 'abilities-catalog' ),
 					),
 					'post'         => array(
 						'type'        => 'integer',
-						'description' => __('The ID of the post the comment is on.', 'abilities-catalog'),
+						'description' => __( 'The ID of the post the comment is on.', 'abilities-catalog' ),
 					),
 					'parent'       => array(
 						'type'        => 'integer',
-						'description' => __('The ID of the parent comment, or 0 for a top-level comment.', 'abilities-catalog'),
+						'description' => __( 'The ID of the parent comment, or 0 for a top-level comment.', 'abilities-catalog' ),
 					),
 					'author_name'  => array(
 						'type'        => 'string',
-						'description' => __('The display name of the comment author.', 'abilities-catalog'),
+						'description' => __( 'The display name of the comment author.', 'abilities-catalog' ),
 					),
 					'author_email' => array(
 						'type'        => 'string',
-						'description' => __('The author email address (edit context, moderators only).', 'abilities-catalog'),
+						'description' => __( 'The author email address (edit context, moderators only).', 'abilities-catalog' ),
 					),
 					'content'      => array(
 						'type'        => 'string',
-						'description' => __('The rendered comment content.', 'abilities-catalog'),
+						'description' => __( 'The rendered comment content.', 'abilities-catalog' ),
 					),
 					'status'       => array(
 						'type'        => 'string',
-						'description' => __('The comment status.', 'abilities-catalog'),
+						'description' => __( 'The comment status.', 'abilities-catalog' ),
 					),
 					'type'         => array(
 						'type'        => 'string',
-						'description' => __('The comment type.', 'abilities-catalog'),
+						'description' => __( 'The comment type.', 'abilities-catalog' ),
 					),
 					'date'         => array(
 						'type'        => 'string',
-						'description' => __('The comment date in site time.', 'abilities-catalog'),
+						'description' => __( 'The comment date in site time.', 'abilities-catalog' ),
 					),
 					'link'         => array(
 						'type'        => 'string',
-						'description' => __('The public permalink to the comment.', 'abilities-catalog'),
+						'description' => __( 'The public permalink to the comment.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -127,11 +125,10 @@ final class GetComment implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the comment.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		return current_user_can('edit_posts');
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
@@ -140,33 +137,32 @@ final class GetComment implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Flat comment fields, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id'] ?? 0);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] ?? 0 );
 		$context = $input['context'] ?? 'view';
 
-		$request = new WP_REST_Request('GET', '/wp/v2/comments/' . $id);
-		$request->set_param('context', $context);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/comments/' . $id );
+		$request->set_param( 'context', $context );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'           => (int) ($data['id'] ?? $id),
-			'post'         => (int) ($data['post'] ?? 0),
-			'parent'       => (int) ($data['parent'] ?? 0),
-			'author_name'  => (string) ($data['author_name'] ?? ''),
-			'author_email' => (string) ($data['author_email'] ?? ''),
-			'content'      => (string) ($data['content']['rendered'] ?? ''),
-			'status'       => (string) ($data['status'] ?? ''),
-			'type'         => (string) ($data['type'] ?? ''),
-			'date'         => (string) ($data['date'] ?? ''),
-			'link'         => (string) ($data['link'] ?? ''),
+			'id'           => (int) ( $data['id'] ?? $id ),
+			'post'         => (int) ( $data['post'] ?? 0 ),
+			'parent'       => (int) ( $data['parent'] ?? 0 ),
+			'author_name'  => (string) ( $data['author_name'] ?? '' ),
+			'author_email' => (string) ( $data['author_email'] ?? '' ),
+			'content'      => (string) ( $data['content']['rendered'] ?? '' ),
+			'status'       => (string) ( $data['status'] ?? '' ),
+			'type'         => (string) ( $data['type'] ?? '' ),
+			'date'         => (string) ( $data['date'] ?? '' ),
+			'link'         => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }

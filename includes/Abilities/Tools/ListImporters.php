@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,33 +23,31 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ListImporters implements Ability
-{
+final class ListImporters implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'tools/list-importers';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('List Importers', 'abilities-catalog'),
-			'description'         => __('Returns the importers registered with the site, each with its id, name, and description.', 'abilities-catalog'),
+			'label'               => __( 'List Importers', 'abilities-catalog' ),
+			'description'         => __( 'Returns the importers registered with the site, each with its id, name, and description.', 'abilities-catalog' ),
 			'category'            => 'tools',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
-						'description' => __('The registered importers.', 'abilities-catalog'),
+						'description' => __( 'The registered importers.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => true,
@@ -58,8 +56,8 @@ final class ListImporters implements Ability
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -77,40 +75,38 @@ final class ListImporters implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user has the `import` capability.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('import');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'import' );
 	}
 
 	/**
 	 * Executes the ability by reading the registered importers.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The shaped importer list.
+	 * @return array<string,mixed>|\WP_Error The shaped importer list.
 	 */
-	public function execute($input = null)
-	{
-		AdminIncludes::load('import');
+	public function execute( $input = null ) {
+		AdminIncludes::load( 'import' );
 
-		if (!function_exists('get_importers')) {
+		if ( ! function_exists( 'get_importers' ) ) {
 			return new WP_Error(
 				'importers_unavailable',
-				__('The importer registry is not available.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The importer registry is not available.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
 		$importers = get_importers();
-		$importers = is_array($importers) ? $importers : array();
+		$importers = is_array( $importers ) ? $importers : array();
 		$items     = array();
 
-		foreach ($importers as $id => $importer) {
-			$importer = is_array($importer) ? $importer : array();
+		foreach ( $importers as $id => $importer ) {
+			$importer = is_array( $importer ) ? $importer : array();
 
 			$items[] = array(
 				'id'          => (string) $id,
-				'name'        => (string) ($importer[0] ?? ''),
-				'description' => (string) ($importer[1] ?? ''),
+				'name'        => (string) ( $importer[0] ?? '' ),
+				'description' => (string) ( $importer[1] ?? '' ),
 			);
 		}
 

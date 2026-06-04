@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -18,59 +18,57 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetReading implements Ability
-{
+final class GetReading implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'settings/get-reading';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Reading Settings', 'abilities-catalog'),
-			'description'         => __('Returns the Reading Settings screen values: front page display, front and posts page IDs, posts per page and per RSS feed, and the search-engine visibility flag.', 'abilities-catalog'),
+			'label'               => __( 'Get Reading Settings', 'abilities-catalog' ),
+			'description'         => __( 'Returns the Reading Settings screen values: front page display, front and posts page IDs, posts per page and per RSS feed, and the search-engine visibility flag.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('show_on_front'),
+				'required'             => array( 'show_on_front' ),
 				'properties'           => array(
 					'show_on_front'  => array(
 						'type'        => 'string',
-						'description' => __('What to show on the front page: "posts" or "page".', 'abilities-catalog'),
+						'description' => __( 'What to show on the front page: "posts" or "page".', 'abilities-catalog' ),
 					),
 					'page_on_front'  => array(
 						'type'        => 'integer',
-						'description' => __('The page ID used as the static front page.', 'abilities-catalog'),
+						'description' => __( 'The page ID used as the static front page.', 'abilities-catalog' ),
 					),
 					'page_for_posts' => array(
 						'type'        => 'integer',
-						'description' => __('The page ID used to display the latest posts.', 'abilities-catalog'),
+						'description' => __( 'The page ID used to display the latest posts.', 'abilities-catalog' ),
 					),
 					'posts_per_page' => array(
 						'type'        => 'integer',
-						'description' => __('The number of blog posts shown per page.', 'abilities-catalog'),
+						'description' => __( 'The number of blog posts shown per page.', 'abilities-catalog' ),
 					),
 					'posts_per_rss'  => array(
 						'type'        => 'integer',
-						'description' => __('The number of most recent items shown in syndication feeds.', 'abilities-catalog'),
+						'description' => __( 'The number of most recent items shown in syndication feeds.', 'abilities-catalog' ),
 					),
 					'blog_public'    => array(
 						'type'        => 'boolean',
-						'description' => __('Whether search engines are allowed to index the site.', 'abilities-catalog'),
+						'description' => __( 'Whether search engines are allowed to index the site.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -88,9 +86,8 @@ final class GetReading implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user can manage options.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('manage_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -99,15 +96,14 @@ final class GetReading implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed> The reading settings fields.
 	 */
-	public function execute($input = null)
-	{
+	public function execute( $input = null ) {
 		return array(
-			'show_on_front'  => (string) (get_option('show_on_front') ?? ''),
-			'page_on_front'  => absint(get_option('page_on_front')),
-			'page_for_posts' => absint(get_option('page_for_posts')),
-			'posts_per_page' => absint(get_option('posts_per_page')),
-			'posts_per_rss'  => absint(get_option('posts_per_rss')),
-			'blog_public'    => (bool) get_option('blog_public'),
+			'show_on_front'  => (string) ( get_option( 'show_on_front' ) ?? '' ),
+			'page_on_front'  => absint( get_option( 'page_on_front' ) ),
+			'page_for_posts' => absint( get_option( 'page_for_posts' ) ),
+			'posts_per_page' => absint( get_option( 'posts_per_page' ) ),
+			'posts_per_rss'  => absint( get_option( 'posts_per_rss' ) ),
+			'blog_public'    => (bool) get_option( 'blog_public' ),
 		);
 	}
 }

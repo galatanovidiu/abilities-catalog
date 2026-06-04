@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Settings;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -38,8 +38,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class UpdatePermalinks implements Ability
-{
+final class UpdatePermalinks implements Ability {
+
 	/**
 	 * Option keys this ability is allowed to write.
 	 *
@@ -48,64 +48,62 @@ final class UpdatePermalinks implements Ability
 	 *
 	 * @var string[]
 	 */
-	private const ALLOWED_OPTIONS = array('permalink_structure', 'category_base', 'tag_base');
+	private const ALLOWED_OPTIONS = array( 'permalink_structure', 'category_base', 'tag_base' );
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'settings/update-permalinks';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update Permalink Settings', 'abilities-catalog'),
-			'description'         => __('Updates the permalink structure and the category and tag base prefixes, then rebuilds the rewrite rules. Provide at least one field. A non-empty permalink structure must contain a %tag% placeholder; an empty structure selects plain permalinks.', 'abilities-catalog'),
+			'label'               => __( 'Update Permalink Settings', 'abilities-catalog' ),
+			'description'         => __( 'Updates the permalink structure and the category and tag base prefixes, then rebuilds the rewrite rules. Provide at least one field. A non-empty permalink structure must contain a %tag% placeholder; an empty structure selects plain permalinks.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'permalink_structure' => array(
 						'type'        => 'string',
-						'description' => __('The permalink structure tag string (e.g. "/%postname%/"); empty string selects plain permalinks.', 'abilities-catalog'),
+						'description' => __( 'The permalink structure tag string (e.g. "/%postname%/"); empty string selects plain permalinks.', 'abilities-catalog' ),
 					),
 					'category_base'       => array(
 						'type'        => 'string',
-						'description' => __('The base prefix for category URLs; empty string restores the default.', 'abilities-catalog'),
+						'description' => __( 'The base prefix for category URLs; empty string restores the default.', 'abilities-catalog' ),
 					),
 					'tag_base'            => array(
 						'type'        => 'string',
-						'description' => __('The base prefix for tag URLs; empty string restores the default.', 'abilities-catalog'),
+						'description' => __( 'The base prefix for tag URLs; empty string restores the default.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('permalink_structure'),
+				'required'             => array( 'permalink_structure' ),
 				'properties'           => array(
 					'permalink_structure' => array(
 						'type'        => 'string',
-						'description' => __('The resulting permalink structure tag string.', 'abilities-catalog'),
+						'description' => __( 'The resulting permalink structure tag string.', 'abilities-catalog' ),
 					),
 					'category_base'       => array(
 						'type'        => 'string',
-						'description' => __('The resulting category base prefix.', 'abilities-catalog'),
+						'description' => __( 'The resulting category base prefix.', 'abilities-catalog' ),
 					),
 					'tag_base'            => array(
 						'type'        => 'string',
-						'description' => __('The resulting tag base prefix.', 'abilities-catalog'),
+						'description' => __( 'The resulting tag base prefix.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -127,9 +125,8 @@ final class UpdatePermalinks implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user can manage options.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('manage_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -144,40 +141,41 @@ final class UpdatePermalinks implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,string>|\WP_Error The resulting permalink values, or a WP_Error.
 	 */
-	public function execute($input = null)
-	{
-		$input = is_array($input) ? $input : array();
+	public function execute( $input = null ) {
+		$input = is_array( $input ) ? $input : array();
 
 		$updates = array();
-		foreach (self::ALLOWED_OPTIONS as $option) {
-			if (array_key_exists($option, $input)) {
-				$updates[$option] = sanitize_option($option, (string) $input[$option]);
+		foreach ( self::ALLOWED_OPTIONS as $option ) {
+			if ( ! array_key_exists( $option, $input ) ) {
+				continue;
 			}
+
+			$updates[ $option ] = sanitize_option( $option, (string) $input[ $option ] );
 		}
 
-		if (array() === $updates) {
+		if ( array() === $updates ) {
 			return new WP_Error(
 				'no_fields',
-				__('Provide at least one of permalink_structure, category_base, or tag_base.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'Provide at least one of permalink_structure, category_base, or tag_base.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
 		// A non-empty permalink structure must contain a %tag% placeholder,
 		// matching core sanitize_option() validation; an empty string is plain.
-		if (isset($updates['permalink_structure'])
+		if ( isset( $updates['permalink_structure'] )
 			&& '' !== $updates['permalink_structure']
-			&& !preg_match('/%[^\/%]+%/', $updates['permalink_structure'])
+			&& ! preg_match( '/%[^\/%]+%/', $updates['permalink_structure'] )
 		) {
 			return new WP_Error(
 				'invalid_permalink_structure',
-				__('A non-empty permalink structure must contain at least one %tag% placeholder.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'A non-empty permalink structure must contain at least one %tag% placeholder.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		foreach ($updates as $option => $value) {
-			update_option($option, $value);
+		foreach ( $updates as $option => $value ) {
+			update_option( $option, $value );
 		}
 
 		// Mandatory: rebuild the stored rewrite rules to match the new structure.
@@ -186,15 +184,15 @@ final class UpdatePermalinks implements Ability
 		// before flushing — otherwise the rules regenerate from the stale structure
 		// and every front-end URL would 404.
 		global $wp_rewrite;
-		if ($wp_rewrite instanceof \WP_Rewrite) {
+		if ( $wp_rewrite instanceof \WP_Rewrite ) {
 			$wp_rewrite->init();
 		}
-		flush_rewrite_rules(true);
+		flush_rewrite_rules( true );
 
 		return array(
-			'permalink_structure' => (string) (get_option('permalink_structure') ?? ''),
-			'category_base'       => (string) (get_option('category_base') ?? ''),
-			'tag_base'            => (string) (get_option('tag_base') ?? ''),
+			'permalink_structure' => (string) ( get_option( 'permalink_structure' ) ?? '' ),
+			'category_base'       => (string) ( get_option( 'category_base' ) ?? '' ),
+			'tag_base'            => (string) ( get_option( 'tag_base' ) ?? '' ),
 		);
 	}
 }

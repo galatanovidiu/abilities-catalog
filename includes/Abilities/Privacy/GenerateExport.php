@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -44,8 +44,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class GenerateExport implements Ability
-{
+final class GenerateExport implements Ability {
+
 	/**
 	 * Hard upper bound on the total number of exporter pages processed in one run.
 	 *
@@ -59,19 +59,17 @@ final class GenerateExport implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'privacy/generate-export';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Generate Export', 'abilities-catalog'),
-			'description'         => __('Runs an existing personal-data export request to completion and produces the export file. Does not return the download URL.', 'abilities-catalog'),
+			'label'               => __( 'Generate Export', 'abilities-catalog' ),
+			'description'         => __( 'Runs an existing personal-data export request to completion and produces the export file. Does not return the download URL.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -79,33 +77,33 @@ final class GenerateExport implements Ability
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __('The ID of an existing personal-data export request.', 'abilities-catalog'),
+						'description' => __( 'The ID of an existing personal-data export request.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('request_id'),
+				'required'             => array( 'request_id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('request_id', 'status', 'generated'),
+				'required'             => array( 'request_id', 'status', 'generated' ),
 				'properties'           => array(
 					'request_id' => array(
 						'type'        => 'integer',
-						'description' => __('The export request ID.', 'abilities-catalog'),
+						'description' => __( 'The export request ID.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',
-						'description' => __('The resulting request status.', 'abilities-catalog'),
+						'description' => __( 'The resulting request status.', 'abilities-catalog' ),
 					),
 					'generated'  => array(
 						'type'        => 'boolean',
-						'description' => __('True when the export file was generated.', 'abilities-catalog'),
+						'description' => __( 'True when the export file was generated.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -129,16 +127,15 @@ final class GenerateExport implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may generate the export.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input      = is_array($input) ? $input : array();
-		$request_id = absint($input['request_id'] ?? 0);
+	public function hasPermission( $input ): bool {
+		$input      = is_array( $input ) ? $input : array();
+		$request_id = absint( $input['request_id'] ?? 0 );
 
-		if ($request_id < 1) {
+		if ( $request_id < 1 ) {
 			return false;
 		}
 
-		return current_user_can('export_others_personal_data');
+		return current_user_can( 'export_others_personal_data' );
 	}
 
 	/**
@@ -154,54 +151,53 @@ final class GenerateExport implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array{request_id:int,status:string,generated:bool}|\WP_Error
 	 */
-	public function execute($input)
-	{
-		$input      = is_array($input) ? $input : array();
-		$request_id = absint($input['request_id'] ?? 0);
+	public function execute( $input ) {
+		$input      = is_array( $input ) ? $input : array();
+		$request_id = absint( $input['request_id'] ?? 0 );
 
-		$request = wp_get_user_request($request_id);
-		if (!$request || 'export_personal_data' !== $request->action_name) {
+		$request = wp_get_user_request( $request_id );
+		if ( ! $request || 'export_personal_data' !== $request->action_name ) {
 			return new WP_Error(
 				'webmcp_invalid_export_request',
-				__('No personal-data export request was found for that ID.', 'abilities-catalog'),
-				array('status' => 404)
+				__( 'No personal-data export request was found for that ID.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
-		AdminIncludes::load('privacy-tools', 'file');
+		AdminIncludes::load( 'privacy-tools', 'file' );
 
 		$email_address = $request->email;
-		if (!is_email($email_address)) {
+		if ( ! is_email( $email_address ) ) {
 			return new WP_Error(
 				'webmcp_export_failed',
-				__('The export request could not be processed.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The export request could not be processed.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
-		$exporters = apply_filters('wp_privacy_personal_data_exporters', array());
-		if (!is_array($exporters)) {
+		$exporters = apply_filters( 'wp_privacy_personal_data_exporters', array() );
+		if ( ! is_array( $exporters ) ) {
 			return new WP_Error(
 				'webmcp_export_failed',
-				__('The export request could not be processed.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The export request could not be processed.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
-		$exporter_keys  = array_keys($exporters);
-		$exporter_count = count($exporters);
+		$exporter_keys  = array_keys( $exporters );
+		$exporter_count = count( $exporters );
 		$pages_total    = 0;
 
 		// Iterate exporters 1-based, mirroring wp_ajax_wp_privacy_export_personal_data().
-		for ($exporter_index = 1; $exporter_index <= $exporter_count; $exporter_index++) {
-			$exporter_key = $exporter_keys[$exporter_index - 1];
-			$exporter     = $exporters[$exporter_key];
+		for ( $exporter_index = 1; $exporter_index <= $exporter_count; $exporter_index++ ) {
+			$exporter_key = $exporter_keys[ $exporter_index - 1 ];
+			$exporter     = $exporters[ $exporter_key ];
 
-			if (!is_array($exporter) || !isset($exporter['callback']) || !is_callable($exporter['callback'])) {
+			if ( ! is_array( $exporter ) || ! isset( $exporter['callback'] ) || ! is_callable( $exporter['callback'] ) ) {
 				return new WP_Error(
 					'webmcp_export_failed',
-					__('The export request could not be processed.', 'abilities-catalog'),
-					array('status' => 500)
+					__( 'The export request could not be processed.', 'abilities-catalog' ),
+					array( 'status' => 500 )
 				);
 			}
 
@@ -209,21 +205,21 @@ final class GenerateExport implements Ability
 			$page     = 1;
 
 			do {
-				if (++$pages_total > self::MAX_PAGES) {
+				if ( ++$pages_total > self::MAX_PAGES ) {
 					return new WP_Error(
 						'webmcp_export_capped',
-						__('The export was stopped because it exceeded the maximum number of pages.', 'abilities-catalog'),
-						array('status' => 500)
+						__( 'The export was stopped because it exceeded the maximum number of pages.', 'abilities-catalog' ),
+						array( 'status' => 500 )
 					);
 				}
 
-				$response = call_user_func($callback, $email_address, $page);
+				$response = call_user_func( $callback, $email_address, $page );
 
-				if (is_wp_error($response) || !is_array($response) || !isset($response['done'])) {
+				if ( is_wp_error( $response ) || ! is_array( $response ) || ! isset( $response['done'] ) ) {
 					return new WP_Error(
 						'webmcp_export_failed',
-						__('The export request could not be processed.', 'abilities-catalog'),
-						array('status' => 500)
+						__( 'The export request could not be processed.', 'abilities-catalog' ),
+						array( 'status' => 500 )
 					);
 				}
 
@@ -237,23 +233,23 @@ final class GenerateExport implements Ability
 					$exporter_key
 				);
 
-				if (is_wp_error($response) || !is_array($response) || !isset($response['done'])) {
+				if ( is_wp_error( $response ) || ! is_array( $response ) || ! isset( $response['done'] ) ) {
 					return new WP_Error(
 						'webmcp_export_failed',
-						__('The export request could not be processed.', 'abilities-catalog'),
-						array('status' => 500)
+						__( 'The export request could not be processed.', 'abilities-catalog' ),
+						array( 'status' => 500 )
 					);
 				}
 
-				$page++;
-			} while (true !== $response['done']);
+				++$page;
+			} while ( true !== $response['done'] );
 		}
 
-		wp_privacy_generate_personal_data_export_file($request_id);
+		wp_privacy_generate_personal_data_export_file( $request_id );
 
 		return array(
 			'request_id' => $request_id,
-			'status'     => (string) get_post_status($request_id),
+			'status'     => (string) get_post_status( $request_id ),
 			'generated'  => true,
 		);
 	}

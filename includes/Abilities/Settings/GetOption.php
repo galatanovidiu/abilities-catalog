@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\ReadableOptionAllowList;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -28,32 +28,30 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class GetOption implements Ability
-{
+final class GetOption implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'settings/get-option';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Option (allow-listed)', 'abilities-catalog'),
-			'description'         => __('Reads a single WordPress option by name, but only when the name is on the read allow-list. Any other name is refused. Secret-bearing options are never readable through this tool.', 'abilities-catalog'),
+			'label'               => __( 'Get Option (allow-listed)', 'abilities-catalog' ),
+			'description'         => __( 'Reads a single WordPress option by name, but only when the name is on the read allow-list. Any other name is refused. Secret-bearing options are never readable through this tool.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
-				'required'             => array('name'),
+				'required'             => array( 'name' ),
 				'properties'           => array(
 					'name' => array(
 						'type'        => 'string',
-						'description' => __('The option name to read. Must be one of the read allow-listed option names; any other name is refused.', 'abilities-catalog'),
+						'description' => __( 'The option name to read. Must be one of the read allow-listed option names; any other name is refused.', 'abilities-catalog' ),
 						'enum'        => ReadableOptionAllowList::ALLOWED,
 					),
 				),
@@ -61,21 +59,21 @@ final class GetOption implements Ability
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('name', 'value'),
+				'required'             => array( 'name', 'value' ),
 				'properties'           => array(
 					'name'  => array(
 						'type'        => 'string',
-						'description' => __('The option name that was read.', 'abilities-catalog'),
+						'description' => __( 'The option name that was read.', 'abilities-catalog' ),
 					),
 					'value' => array(
 						'type'        => 'string',
-						'description' => __('The stored option value as a string.', 'abilities-catalog'),
+						'description' => __( 'The stored option value as a string.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -97,19 +95,18 @@ final class GetOption implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the call may proceed.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		if (!isset($input['name'])) {
+		if ( ! isset( $input['name'] ) ) {
 			return false;
 		}
 
-		if (!ReadableOptionAllowList::isAllowed((string) $input['name'])) {
+		if ( ! ReadableOptionAllowList::isAllowed( (string) $input['name'] ) ) {
 			return false;
 		}
 
-		return current_user_can('manage_options');
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -122,22 +119,21 @@ final class GetOption implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The stored option, or a WP_Error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
-		$name  = (string) ($input['name'] ?? '');
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
+		$name  = (string) ( $input['name'] ?? '' );
 
-		if (!ReadableOptionAllowList::isAllowed($name)) {
+		if ( ! ReadableOptionAllowList::isAllowed( $name ) ) {
 			return new WP_Error(
 				'webmcp_option_not_readable',
-				__('That option name is not on the read allow-list and cannot be read.', 'abilities-catalog'),
-				array('status' => 403)
+				__( 'That option name is not on the read allow-list and cannot be read.', 'abilities-catalog' ),
+				array( 'status' => 403 )
 			);
 		}
 
 		return array(
 			'name'  => $name,
-			'value' => (string) get_option($name),
+			'value' => (string) get_option( $name ),
 		);
 	}
 }

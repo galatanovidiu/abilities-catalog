@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Users;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -21,45 +21,43 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetUser implements Ability
-{
+final class GetUser implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'users/get-user';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get User', 'abilities-catalog'),
-			'description'         => __('Returns a single user by ID, including name, slug, roles, and (with edit access) email.', 'abilities-catalog'),
+			'label'               => __( 'Get User', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single user by ID, including name, slug, roles, and (with edit access) email.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __('The user ID.', 'abilities-catalog'),
+						'description' => __( 'The user ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => $this->outputSchema(),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -80,21 +78,20 @@ final class GetUser implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the requested user.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = isset($input['id']) ? absint($input['id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 		$context = $input['context'] ?? 'view';
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		if ('edit' === $context) {
-			return current_user_can('edit_user', $id);
+		if ( 'edit' === $context ) {
+			return current_user_can( 'edit_user', $id );
 		}
 
-		return current_user_can('list_users');
+		return current_user_can( 'list_users' );
 	}
 
 	/**
@@ -103,23 +100,22 @@ final class GetUser implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Flat user fields, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id']);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] );
 		$context = $input['context'] ?? 'view';
 
-		$request = new WP_REST_Request('GET', '/wp/v2/users/' . $id);
-		$request->set_param('context', $context);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/users/' . $id );
+		$request->set_param( 'context', $context );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
-		return self::mapUser($data, $id);
+		return self::mapUser( $data, $id );
 	}
 
 	/**
@@ -127,49 +123,48 @@ final class GetUser implements Ability
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function outputSchema(): array
-	{
+	private function outputSchema(): array {
 		return array(
 			'type'                 => 'object',
-			'required'             => array('id', 'name'),
+			'required'             => array( 'id', 'name' ),
 			'properties'           => array(
-				'id'               => array(
+				'id'              => array(
 					'type'        => 'integer',
-					'description' => __('The user ID.', 'abilities-catalog'),
+					'description' => __( 'The user ID.', 'abilities-catalog' ),
 				),
-				'name'             => array(
+				'name'            => array(
 					'type'        => 'string',
-					'description' => __('The display name for the user.', 'abilities-catalog'),
+					'description' => __( 'The display name for the user.', 'abilities-catalog' ),
 				),
-				'slug'             => array(
+				'slug'            => array(
 					'type'        => 'string',
-					'description' => __('An alphanumeric identifier for the user.', 'abilities-catalog'),
+					'description' => __( 'An alphanumeric identifier for the user.', 'abilities-catalog' ),
 				),
-				'email'            => array(
-					'type'        => array('string', 'null'),
-					'description' => __('The email address (only with edit access).', 'abilities-catalog'),
+				'email'           => array(
+					'type'        => array( 'string', 'null' ),
+					'description' => __( 'The email address (only with edit access).', 'abilities-catalog' ),
 				),
-				'roles'            => array(
-					'type'        => array('array', 'null'),
-					'items'       => array('type' => 'string'),
-					'description' => __('Roles assigned to the user (only with edit access).', 'abilities-catalog'),
+				'roles'           => array(
+					'type'        => array( 'array', 'null' ),
+					'items'       => array( 'type' => 'string' ),
+					'description' => __( 'Roles assigned to the user (only with edit access).', 'abilities-catalog' ),
 				),
-				'capabilities'     => array(
+				'capabilities'    => array(
 					'type'                 => 'object',
 					'additionalProperties' => true,
-					'description'          => __('Capabilities of the user (only with edit access).', 'abilities-catalog'),
+					'description'          => __( 'Capabilities of the user (only with edit access).', 'abilities-catalog' ),
 				),
-				'registered_date'  => array(
-					'type'        => array('string', 'null'),
-					'description' => __('The registration date (only with edit access).', 'abilities-catalog'),
+				'registered_date' => array(
+					'type'        => array( 'string', 'null' ),
+					'description' => __( 'The registration date (only with edit access).', 'abilities-catalog' ),
 				),
-				'url'              => array(
+				'url'             => array(
 					'type'        => 'string',
-					'description' => __('The website URL for the user.', 'abilities-catalog'),
+					'description' => __( 'The website URL for the user.', 'abilities-catalog' ),
 				),
-				'description'      => array(
+				'description'     => array(
 					'type'        => 'string',
-					'description' => __('The biographical description for the user.', 'abilities-catalog'),
+					'description' => __( 'The biographical description for the user.', 'abilities-catalog' ),
 				),
 			),
 			'additionalProperties' => false,
@@ -186,31 +181,30 @@ final class GetUser implements Ability
 	 * @param int   $id   The fallback user ID.
 	 * @return array<string,mixed>
 	 */
-	public static function mapUser($data, int $id): array
-	{
-		$data = is_array($data) ? $data : array();
+	public static function mapUser( $data, int $id ): array {
+		$data = is_array( $data ) ? $data : array();
 
 		$out = array(
-			'id'          => (int) ($data['id'] ?? $id),
-			'name'        => (string) ($data['name'] ?? ''),
-			'slug'        => (string) ($data['slug'] ?? ''),
-			'url'         => (string) ($data['url'] ?? ''),
-			'description' => (string) ($data['description'] ?? ''),
+			'id'          => (int) ( $data['id'] ?? $id ),
+			'name'        => (string) ( $data['name'] ?? '' ),
+			'slug'        => (string) ( $data['slug'] ?? '' ),
+			'url'         => (string) ( $data['url'] ?? '' ),
+			'description' => (string) ( $data['description'] ?? '' ),
 		);
 
-		if (isset($data['email'])) {
+		if ( isset( $data['email'] ) ) {
 			$out['email'] = (string) $data['email'];
 		}
 
-		if (isset($data['roles'])) {
-			$out['roles'] = array_map('strval', (array) $data['roles']);
+		if ( isset( $data['roles'] ) ) {
+			$out['roles'] = array_map( 'strval', (array) $data['roles'] );
 		}
 
-		if (isset($data['capabilities'])) {
+		if ( isset( $data['capabilities'] ) ) {
 			$out['capabilities'] = (array) $data['capabilities'];
 		}
 
-		if (isset($data['registered_date'])) {
+		if ( isset( $data['registered_date'] ) ) {
 			$out['registered_date'] = (string) $data['registered_date'];
 		}
 

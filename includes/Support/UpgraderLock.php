@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -21,8 +21,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class UpgraderLock
-{
+final class UpgraderLock {
+
 	/**
 	 * The shared lock name for T3 upgrader runs.
 	 *
@@ -36,15 +36,14 @@ final class UpgraderLock
 	 * @return bool|\WP_Error True when the lock was acquired, or a 409 error when
 	 *                        another update already holds it.
 	 */
-	public static function acquire()
-	{
-		AdminIncludes::load('class-wp-upgrader');
+	public static function acquire() {
+		AdminIncludes::load( 'class-wp-upgrader' );
 
-		if (!\WP_Upgrader::create_lock(self::LOCK)) {
+		if ( ! \WP_Upgrader::create_lock( self::LOCK ) ) {
 			return new \WP_Error(
 				'webmcp_update_locked',
-				__('Another update is already in progress. Try again in a moment.', 'abilities-catalog'),
-				array('status' => 409)
+				__( 'Another update is already in progress. Try again in a moment.', 'abilities-catalog' ),
+				array( 'status' => 409 )
 			);
 		}
 
@@ -56,9 +55,8 @@ final class UpgraderLock
 	 *
 	 * @return void
 	 */
-	public static function release(): void
-	{
-		AdminIncludes::load('class-wp-upgrader');
-		\WP_Upgrader::release_lock(self::LOCK);
+	public static function release(): void {
+		AdminIncludes::load( 'class-wp-upgrader' );
+		\WP_Upgrader::release_lock( self::LOCK );
 	}
 }

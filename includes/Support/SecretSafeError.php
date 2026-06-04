@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -30,27 +30,26 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.2.0
  */
-final class SecretSafeError
-{
+final class SecretSafeError {
+
 	/**
 	 * Returns a redacted copy of a REST error, safe to return from a
 	 * secret-bearing ability.
 	 *
-	 * @param WP_Error $error The original error from the wrapped REST request.
-	 * @return WP_Error A new error with the original code and status, a generic
+	 * @param \WP_Error $error The original error from the wrapped REST request.
+	 * @return \WP_Error A new error with the original code and status, a generic
 	 *                  message, and no other data.
 	 */
-	public static function redact(WP_Error $error): WP_Error
-	{
+	public static function redact( WP_Error $error ): WP_Error {
 		$code   = $error->get_error_code();
-		$code   = is_string($code) && '' !== $code ? $code : 'webmcp_write_failed';
+		$code   = is_string( $code ) && '' !== $code ? $code : 'webmcp_write_failed';
 		$data   = $error->get_error_data();
-		$status = is_array($data) && isset($data['status']) ? (int) $data['status'] : 500;
+		$status = is_array( $data ) && isset( $data['status'] ) ? (int) $data['status'] : 500;
 
 		return new WP_Error(
 			$code,
-			__('The request could not be completed. Details are withheld because this operation handles sensitive data.', 'abilities-catalog'),
-			array('status' => $status)
+			__( 'The request could not be completed. Details are withheld because this operation handles sensitive data.', 'abilities-catalog' ),
+			array( 'status' => $status )
 		);
 	}
 }

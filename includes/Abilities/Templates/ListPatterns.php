@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -20,29 +20,27 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ListPatterns implements Ability
-{
+final class ListPatterns implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/list-patterns';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('List Patterns', 'abilities-catalog'),
-			'description'         => __('Lists the registered block patterns available on the site.', 'abilities-catalog'),
+			'label'               => __( 'List Patterns', 'abilities-catalog' ),
+			'description'         => __( 'Lists the registered block patterns available on the site.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
@@ -50,13 +48,13 @@ final class ListPatterns implements Ability
 							'type'                 => 'object',
 							'additionalProperties' => true,
 						),
-						'description' => __('The list of registered block patterns.', 'abilities-catalog'),
+						'description' => __( 'The list of registered block patterns.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -74,9 +72,8 @@ final class ListPatterns implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the pattern registry.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('edit_posts');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
@@ -85,19 +82,18 @@ final class ListPatterns implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The collection, or the REST error.
 	 */
-	public function execute($input = null)
-	{
-		$request = new WP_REST_Request('GET', '/wp/v2/block-patterns/patterns');
+	public function execute( $input = null ) {
+		$request = new WP_REST_Request( 'GET', '/wp/v2/block-patterns/patterns' );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$items = rest_get_server()->response_to_data($response, false);
+		$items = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'items' => is_array($items) ? $items : array(),
+			'items' => is_array( $items ) ? $items : array(),
 		);
 	}
 }

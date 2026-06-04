@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Fonts;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -19,68 +19,66 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetFontFamily implements Ability
-{
+final class GetFontFamily implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'fonts/get-font-family';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Font Family', 'abilities-catalog'),
-			'description'         => __('Returns a single installed font family by ID, including its settings and font faces.', 'abilities-catalog'),
+			'label'               => __( 'Get Font Family', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single installed font family by ID, including its settings and font faces.', 'abilities-catalog' ),
 			'category'            => 'fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __('The font family post ID.', 'abilities-catalog'),
+						'description' => __( 'The font family post ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
-						'enum'        => array('view', 'edit'),
+						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __('Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog'),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'                 => array(
+					'id'                   => array(
 						'type'        => 'integer',
-						'description' => __('The font family post ID.', 'abilities-catalog'),
+						'description' => __( 'The font family post ID.', 'abilities-catalog' ),
 					),
 					'font_family_settings' => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The font family settings (name, font family value, slug).', 'abilities-catalog'),
+						'description'          => __( 'The font family settings (name, font family value, slug).', 'abilities-catalog' ),
 					),
-					'font_faces'         => array(
+					'font_faces'           => array(
 						'type'        => 'array',
-						'description' => __('The font face IDs or objects belonging to this family.', 'abilities-catalog'),
+						'description' => __( 'The font face IDs or objects belonging to this family.', 'abilities-catalog' ),
 					),
-					'theme_json_version' => array(
+					'theme_json_version'   => array(
 						'type'        => 'integer',
-						'description' => __('The theme.json schema version of the family.', 'abilities-catalog'),
+						'description' => __( 'The theme.json schema version of the family.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -100,16 +98,15 @@ final class GetFontFamily implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the font family.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['id']) ? absint($input['id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		return current_user_can('edit_theme_options');
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -118,27 +115,26 @@ final class GetFontFamily implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Flat font-family fields, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$id      = absint($input['id'] ?? 0);
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$id      = absint( $input['id'] ?? 0 );
 		$context = $input['context'] ?? 'view';
 
-		$request = new WP_REST_Request('GET', '/wp/v2/font-families/' . $id);
-		$request->set_param('context', $context);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/font-families/' . $id );
+		$request->set_param( 'context', $context );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'                   => (int) ($data['id'] ?? $id),
-			'font_family_settings' => is_array($data['font_family_settings'] ?? null) ? $data['font_family_settings'] : array(),
-			'font_faces'           => is_array($data['font_faces'] ?? null) ? $data['font_faces'] : array(),
-			'theme_json_version'   => (int) ($data['theme_json_version'] ?? 0),
+			'id'                   => (int) ( $data['id'] ?? $id ),
+			'font_family_settings' => is_array( $data['font_family_settings'] ?? null ) ? $data['font_family_settings'] : array(),
+			'font_faces'           => is_array( $data['font_faces'] ?? null ) ? $data['font_faces'] : array(),
+			'theme_json_version'   => (int) ( $data['theme_json_version'] ?? 0 ),
 		);
 	}
 }

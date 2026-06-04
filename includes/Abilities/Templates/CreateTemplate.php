@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -29,24 +29,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class CreateTemplate implements Ability
-{
+final class CreateTemplate implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/create-template';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Template', 'abilities-catalog'),
-			'description'         => __('Creates a new site-editor template or template part (post type wp_template / wp_template_part). Returns the new "theme//slug" id, status, and edit_link (the Site Editor URL) — surface edit_link so a human can open and finish the template. Does not change theme files and does not overwrite an existing template — use update-template for that. Send the content field as Gutenberg block markup (e.g. <!-- wp:template-part {"slug":"header"} /-->), not bare HTML.', 'abilities-catalog'),
+			'label'               => __( 'Create Template', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new site-editor template or template part (post type wp_template / wp_template_part). Returns the new "theme//slug" id, status, and edit_link (the Site Editor URL) — surface edit_link so a human can open and finish the template. Does not change theme files and does not overwrite an existing template — use update-template for that. Send the content field as Gutenberg block markup (e.g. <!-- wp:template-part {"slug":"header"} /-->), not bare HTML.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -54,55 +52,55 @@ final class CreateTemplate implements Ability
 					'slug'        => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __('The template slug (e.g. "page-about" or, for a part, "header"). Combined with the active theme to form the "theme//slug" id.', 'abilities-catalog'),
+						'description' => __( 'The template slug (e.g. "page-about" or, for a part, "header"). Combined with the active theme to form the "theme//slug" id.', 'abilities-catalog' ),
 					),
 					'post_type'   => array(
 						'type'        => 'string',
-						'enum'        => array('wp_template', 'wp_template_part'),
+						'enum'        => array( 'wp_template', 'wp_template_part' ),
 						'default'     => 'wp_template',
-						'description' => __('Which collection to create in: "wp_template" or "wp_template_part".', 'abilities-catalog'),
+						'description' => __( 'Which collection to create in: "wp_template" or "wp_template_part".', 'abilities-catalog' ),
 					),
 					'title'       => array(
 						'type'        => 'string',
-						'description' => __('The template title.', 'abilities-catalog'),
+						'description' => __( 'The template title.', 'abilities-catalog' ),
 					),
 					'content'     => array(
 						'type'        => 'string',
-						'description' => __('The template content as Gutenberg block markup (e.g. <!-- wp:group --><div class="wp-block-group"></div><!-- /wp:group -->). Bare HTML saves but degrades to a single Classic block; compose blocks for an editable result.', 'abilities-catalog'),
+						'description' => __( 'The template content as Gutenberg block markup (e.g. <!-- wp:group --><div class="wp-block-group"></div><!-- /wp:group -->). Bare HTML saves but degrades to a single Classic block; compose blocks for an editable result.', 'abilities-catalog' ),
 					),
 					'description' => array(
 						'type'        => 'string',
-						'description' => __('The template description.', 'abilities-catalog'),
+						'description' => __( 'The template description.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('slug'),
+				'required'             => array( 'slug' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'status', 'edit_link'),
+				'required'             => array( 'id', 'status', 'edit_link' ),
 				'properties'           => array(
 					'id'        => array(
 						'type'        => 'string',
-						'description' => __('The new template id in "theme//slug" form.', 'abilities-catalog'),
+						'description' => __( 'The new template id in "theme//slug" form.', 'abilities-catalog' ),
 					),
 					'status'    => array(
 						'type'        => 'string',
-						'description' => __('The resulting template status.', 'abilities-catalog'),
+						'description' => __( 'The resulting template status.', 'abilities-catalog' ),
 					),
 					'title'     => array(
 						'type'        => 'string',
-						'description' => __('The resulting template title.', 'abilities-catalog'),
+						'description' => __( 'The resulting template title.', 'abilities-catalog' ),
 					),
 					'edit_link' => array(
 						'type'        => 'string',
-						'description' => __('The Site Editor URL where a human can open and edit the new template.', 'abilities-catalog'),
+						'description' => __( 'The Site Editor URL where a human can open and edit the new template.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -125,9 +123,8 @@ final class CreateTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create site-editor templates.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -139,41 +136,42 @@ final class CreateTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The shaped new template, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input     = is_array($input) ? $input : array();
-		$post_type = 'wp_template_part' === ($input['post_type'] ?? 'wp_template') ? 'wp_template_part' : 'wp_template';
+	public function execute( $input ) {
+		$input     = is_array( $input ) ? $input : array();
+		$post_type = 'wp_template_part' === ( $input['post_type'] ?? 'wp_template' ) ? 'wp_template_part' : 'wp_template';
 		$base      = 'wp_template_part' === $post_type ? 'template-parts' : 'templates';
 
-		$request = new WP_REST_Request('POST', '/wp/v2/' . $base);
-		$request->set_param('slug', sanitize_title((string) ($input['slug'] ?? '')));
+		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $base );
+		$request->set_param( 'slug', sanitize_title( (string) ( $input['slug'] ?? '' ) ) );
 
-		foreach (array('content', 'title', 'description') as $field) {
-			if (isset($input[$field]) && '' !== $input[$field]) {
-				$request->set_param($field, (string) $input[$field]);
+		foreach ( array( 'content', 'title', 'description' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+				continue;
 			}
+
+			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		$title = $data['title'] ?? '';
-		if (is_array($title)) {
+		if ( is_array( $title ) ) {
 			$title = $title['rendered'] ?? '';
 		}
 
-		$id        = (string) ($data['id'] ?? '');
+		$id        = (string) ( $data['id'] ?? '' );
 		$edit_link = '' === $id
 			? ''
-			: admin_url('site-editor.php?postType=' . $post_type . '&postId=' . rawurlencode($id) . '&canvas=edit');
+			: admin_url( 'site-editor.php?postType=' . $post_type . '&postId=' . rawurlencode( $id ) . '&canvas=edit' );
 
 		return array(
 			'id'        => $id,
-			'status'    => (string) ($data['status'] ?? ''),
+			'status'    => (string) ( $data['status'] ?? '' ),
 			'title'     => (string) $title,
 			'edit_link' => $edit_link,
 		);

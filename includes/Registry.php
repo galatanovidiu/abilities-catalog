@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -33,12 +33,12 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class Registry
-{
+final class Registry {
+
 	/**
 	 * Discovered ability instances, keyed by ability name.
 	 *
-	 * @var array<string,Ability>
+	 * @var array<string,\GalatanOvidiu\AbilitiesCatalog\Contracts\Ability>
 	 */
 	private array $abilities = array();
 
@@ -50,26 +50,25 @@ final class Registry
 	 *
 	 * @return void
 	 */
-	public function register(): void
-	{
+	public function register(): void {
 		// The Abilities API must be present (WordPress 7.0+).
-		if (!function_exists('wp_register_ability')) {
+		if ( ! function_exists( 'wp_register_ability' ) ) {
 			return;
 		}
 
 		$this->discover();
 
-		add_action('wp_abilities_api_categories_init', array($this, 'registerCategories'));
-		add_action('wp_abilities_api_init', array($this, 'registerAbilities'));
+		add_action( 'wp_abilities_api_categories_init', array( $this, 'registerCategories' ) );
+		add_action( 'wp_abilities_api_init', array( $this, 'registerAbilities' ) );
 
 		// Contribute the dangerous-tools catalog the adapter reads for its per-ability
 		// opt-in. Added after discover() so $this->abilities is populated.
-		add_filter('webmcp_dangerous_tools', array($this, 'contributeDangerousTools'));
+		add_filter( 'webmcp_dangerous_tools', array( $this, 'contributeDangerousTools' ) );
 
 		// Contribute the screen-link map the adapter reads to deep-link a write
 		// entry to the wp-admin screen it touched. Added after discover() so
 		// $this->abilities is populated.
-		add_filter('webmcp_screen_links', array($this, 'contributeScreenLinks'));
+		add_filter( 'webmcp_screen_links', array( $this, 'contributeScreenLinks' ) );
 	}
 
 	/**
@@ -83,14 +82,15 @@ final class Registry
 	 * @param array<string,string> $tools Existing dangerous-tools map.
 	 * @return array<string,string> The map including this plugin's dangerous abilities.
 	 */
-	public function contributeDangerousTools(array $tools): array
-	{
-		foreach ($this->abilities as $name => $ability) {
+	public function contributeDangerousTools( array $tools ): array {
+		foreach ( $this->abilities as $name => $ability ) {
 			$annotations = $ability->args()['meta']['annotations'] ?? array();
 
-			if (true === ($annotations['dangerous'] ?? null)) {
-				$tools[$name] = (string) ($ability->args()['label'] ?? $name);
+			if ( true !== ( $annotations['dangerous'] ?? null ) ) {
+				continue;
 			}
+
+			$tools[ $name ] = (string) ( $ability->args()['label'] ?? $name );
 		}
 
 		return $tools;
@@ -111,21 +111,22 @@ final class Registry
 	 * @param array<string,string> $links Existing screen-links map.
 	 * @return array<string,string> The map including this plugin's screen templates.
 	 */
-	public function contributeScreenLinks(array $links): array
-	{
-		foreach ($this->abilities as $name => $ability) {
+	public function contributeScreenLinks( array $links ): array {
+		foreach ( $this->abilities as $name => $ability ) {
 			$meta        = $ability->args()['meta'] ?? array();
 			$annotations = $meta['annotations'] ?? array();
 
-			if (true === ($annotations['readonly'] ?? null)) {
+			if ( true === ( $annotations['readonly'] ?? null ) ) {
 				continue;
 			}
 
 			$screen = $meta['screen'] ?? null;
 
-			if (is_string($screen) && '' !== $screen) {
-				$links[$name] = $screen;
+			if ( ! is_string( $screen ) || '' === $screen ) {
+				continue;
 			}
+
+			$links[ $name ] = $screen;
 		}
 
 		return $links;
@@ -140,9 +141,8 @@ final class Registry
 	 *
 	 * @return void
 	 */
-	public function registerCategories(): void
-	{
-		foreach (Categories::all() as $slug => $category) {
+	public function registerCategories(): void {
+		foreach ( Categories::all() as $slug => $category ) {
 			wp_register_ability_category(
 				$slug,
 				array(
@@ -163,36 +163,37 @@ final class Registry
 	 *
 	 * @return void
 	 */
-	public function registerAbilities(): void
-	{
-		foreach ($this->abilities as $name => $ability) {
+	public function registerAbilities(): void {
+		foreach ( $this->abilities as $name => $ability ) {
 			$args = $ability->args();
 
-			$annotations  = $args['meta']['annotations'] ?? array();
-			$is_readonly  = true === ($annotations['readonly'] ?? null);
-			$has_annotated_safety = array_key_exists('destructive', $annotations)
-				&& is_bool($annotations['destructive']);
+			$annotations          = $args['meta']['annotations'] ?? array();
+			$is_readonly          = true === ( $annotations['readonly'] ?? null );
+			$has_annotated_safety = array_key_exists( 'destructive', $annotations )
+				&& is_bool( $annotations['destructive'] );
 
-			if (!$is_readonly && !$has_annotated_safety) {
+			if ( ! $is_readonly && ! $has_annotated_safety ) {
 				_doing_it_wrong(
 					__METHOD__,
 					sprintf(
 						/* translators: %s: ability name. */
-						esc_html__('Ability "%s" was refused: it must be read-only or a write that explicitly sets annotations.destructive to a boolean. A write that omits the destructive annotation is treated as unsafe and not registered.', 'abilities-catalog'),
-						esc_html($name)
+						esc_html__( 'Ability "%s" was refused: it must be read-only or a write that explicitly sets annotations.destructive to a boolean. A write that omits the destructive annotation is treated as unsafe and not registered.', 'abilities-catalog' ),
+						esc_html( $name )
 					),
 					'0.2.0'
 				);
 				continue;
 			}
 
-			foreach (array('input_schema', 'output_schema') as $schema_key) {
-				if (isset($args[$schema_key]) && is_array($args[$schema_key])) {
-					$args[$schema_key] = $this->normalizeSchema($args[$schema_key]);
+			foreach ( array( 'input_schema', 'output_schema' ) as $schema_key ) {
+				if ( ! isset( $args[ $schema_key ] ) || ! is_array( $args[ $schema_key ] ) ) {
+					continue;
 				}
+
+				$args[ $schema_key ] = $this->normalizeSchema( $args[ $schema_key ] );
 			}
 
-			wp_register_ability($name, $args);
+			wp_register_ability( $name, $args );
 		}
 	}
 
@@ -214,32 +215,35 @@ final class Registry
 	 * @param array<string,mixed> $schema The schema node to normalize.
 	 * @return array<string,mixed> The normalized schema node.
 	 */
-	private function normalizeSchema(array $schema): array
-	{
-		foreach ($schema as $key => $value) {
-			if ('required' === $key && is_array($value) && array() === $value) {
-				unset($schema[$key]);
+	private function normalizeSchema( array $schema ): array {
+		foreach ( $schema as $key => $value ) {
+			if ( 'required' === $key && is_array( $value ) && array() === $value ) {
+				unset( $schema[ $key ] );
 				continue;
 			}
 
-			if ('properties' === $key && is_array($value)) {
-				if (array() === $value) {
-					$schema[$key] = new \stdClass();
+			if ( 'properties' === $key && is_array( $value ) ) {
+				if ( array() === $value ) {
+					$schema[ $key ] = new \stdClass();
 					continue;
 				}
 
-				foreach ($value as $prop_name => $prop_schema) {
-					if (is_array($prop_schema)) {
-						$value[$prop_name] = $this->normalizeSchema($prop_schema);
+				foreach ( $value as $prop_name => $prop_schema ) {
+					if ( ! is_array( $prop_schema ) ) {
+						continue;
 					}
+
+					$value[ $prop_name ] = $this->normalizeSchema( $prop_schema );
 				}
-				$schema[$key] = $value;
+				$schema[ $key ] = $value;
 				continue;
 			}
 
-			if (is_array($value)) {
-				$schema[$key] = $this->normalizeSchema($value);
+			if ( ! is_array( $value ) ) {
+				continue;
 			}
+
+			$schema[ $key ] = $this->normalizeSchema( $value );
 		}
 
 		return $schema;
@@ -253,25 +257,24 @@ final class Registry
 	 *
 	 * @return void
 	 */
-	private function discover(): void
-	{
+	private function discover(): void {
 		$base    = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
 		$pattern = $base . '*/*.php';
 
-		foreach (glob($pattern) as $file) {
-			$relative = substr($file, strlen($base), -strlen('.php'));
-			$class    = __NAMESPACE__ . '\\Abilities\\' . str_replace('/', '\\', $relative);
+		foreach ( glob( $pattern ) as $file ) {
+			$relative = substr( $file, strlen( $base ), -strlen( '.php' ) );
+			$class    = __NAMESPACE__ . '\\Abilities\\' . str_replace( '/', '\\', $relative );
 
-			if (!class_exists($class)) {
+			if ( ! class_exists( $class ) ) {
 				continue;
 			}
 
-			if (!is_subclass_of($class, Ability::class)) {
+			if ( ! is_subclass_of( $class, Ability::class ) ) {
 				continue;
 			}
 
-			$ability = new $class();
-			$this->abilities[$ability->name()] = $ability;
+			$ability                             = new $class();
+			$this->abilities[ $ability->name() ] = $ability;
 		}
 	}
 }

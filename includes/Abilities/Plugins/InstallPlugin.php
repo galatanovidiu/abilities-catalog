@@ -8,9 +8,8 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\FilesystemGuard;
 use GalatanOvidiu\AbilitiesCatalog\Support\SourceValidator;
 use WP_REST_Request;
-use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -28,57 +27,55 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class InstallPlugin implements Ability
-{
+final class InstallPlugin implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'plugins/install-plugin';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Install Plugin', 'abilities-catalog'),
-			'description'         => __('Installs an inactive plugin from the wordpress.org directory by its slug. Installing brings new code onto the site.', 'abilities-catalog'),
+			'label'               => __( 'Install Plugin', 'abilities-catalog' ),
+			'description'         => __( 'Installs an inactive plugin from the wordpress.org directory by its slug. Installing brings new code onto the site.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'slug' => array(
 						'type'        => 'string',
-						'description' => __('The wordpress.org directory slug, for example "akismet".', 'abilities-catalog'),
+						'description' => __( 'The wordpress.org directory slug, for example "akismet".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('slug'),
+				'required'             => array( 'slug' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('plugin', 'status', 'name'),
+				'required'             => array( 'plugin', 'status', 'name' ),
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __('The installed plugin file path.', 'abilities-catalog'),
+						'description' => __( 'The installed plugin file path.', 'abilities-catalog' ),
 					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __('The resulting plugin activation status.', 'abilities-catalog'),
+						'description' => __( 'The resulting plugin activation status.', 'abilities-catalog' ),
 					),
 					'name'   => array(
 						'type'        => 'string',
-						'description' => __('The installed plugin name.', 'abilities-catalog'),
+						'description' => __( 'The installed plugin name.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -103,16 +100,15 @@ final class InstallPlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may install plugins.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$slug  = isset($input['slug']) ? (string) $input['slug'] : '';
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$slug  = isset( $input['slug'] ) ? (string) $input['slug'] : '';
 
-		if ('' === $slug) {
+		if ( '' === $slug ) {
 			return false;
 		}
 
-		return current_user_can('install_plugins');
+		return current_user_can( 'install_plugins' );
 	}
 
 	/**
@@ -125,35 +121,34 @@ final class InstallPlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The installed plugin file, status, and name, or an error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
-		$slug  = isset($input['slug']) ? (string) $input['slug'] : '';
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
+		$slug  = isset( $input['slug'] ) ? (string) $input['slug'] : '';
 
-		$slug = SourceValidator::slug($slug);
-		if (is_wp_error($slug)) {
+		$slug = SourceValidator::slug( $slug );
+		if ( is_wp_error( $slug ) ) {
 			return $slug;
 		}
 
-		$fs = FilesystemGuard::ensureDirect(WP_PLUGIN_DIR);
-		if (is_wp_error($fs)) {
+		$fs = FilesystemGuard::ensureDirect( WP_PLUGIN_DIR );
+		if ( is_wp_error( $fs ) ) {
 			return $fs;
 		}
 
-		$request = new WP_REST_Request('POST', '/wp/v2/plugins');
-		$request->set_param('slug', $slug);
+		$request = new WP_REST_Request( 'POST', '/wp/v2/plugins' );
+		$request->set_param( 'slug', $slug );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'plugin' => (string) ($data['plugin'] ?? ''),
-			'status' => (string) ($data['status'] ?? ''),
-			'name'   => (string) ($data['name'] ?? ''),
+			'plugin' => (string) ( $data['plugin'] ?? '' ),
+			'status' => (string) ( $data['status'] ?? '' ),
+			'name'   => (string) ( $data['name'] ?? '' ),
 		);
 	}
 }

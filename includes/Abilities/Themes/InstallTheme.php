@@ -11,7 +11,7 @@ use GalatanOvidiu\AbilitiesCatalog\Support\SourceValidator;
 use GalatanOvidiu\AbilitiesCatalog\Support\UpgradeRunner;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -29,57 +29,55 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class InstallTheme implements Ability
-{
+final class InstallTheme implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'themes/install-theme';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Install Theme', 'abilities-catalog'),
-			'description'         => __('Installs a theme from the wordpress.org directory by its slug. Installing code from the directory changes the site, so this is a dangerous operation.', 'abilities-catalog'),
+			'label'               => __( 'Install Theme', 'abilities-catalog' ),
+			'description'         => __( 'Installs a theme from the wordpress.org directory by its slug. Installing code from the directory changes the site, so this is a dangerous operation.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'slug' => array(
 						'type'        => 'string',
-						'description' => __('The wordpress.org theme directory slug to install, for example "twentytwentyfive".', 'abilities-catalog'),
+						'description' => __( 'The wordpress.org theme directory slug to install, for example "twentytwentyfive".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('slug'),
+				'required'             => array( 'slug' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('installed', 'stylesheet', 'name'),
+				'required'             => array( 'installed', 'stylesheet', 'name' ),
 				'properties'           => array(
 					'installed'  => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the theme was installed.', 'abilities-catalog'),
+						'description' => __( 'Whether the theme was installed.', 'abilities-catalog' ),
 					),
 					'stylesheet' => array(
 						'type'        => 'string',
-						'description' => __('The stylesheet (directory name) of the installed theme.', 'abilities-catalog'),
+						'description' => __( 'The stylesheet (directory name) of the installed theme.', 'abilities-catalog' ),
 					),
 					'name'       => array(
 						'type'        => 'string',
-						'description' => __('The display name of the installed theme.', 'abilities-catalog'),
+						'description' => __( 'The display name of the installed theme.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -102,15 +100,14 @@ final class InstallTheme implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may install themes.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		if (empty($input['slug'])) {
+		if ( empty( $input['slug'] ) ) {
 			return false;
 		}
 
-		return current_user_can('install_themes');
+		return current_user_can( 'install_themes' );
 	}
 
 	/**
@@ -124,51 +121,59 @@ final class InstallTheme implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Install result, or an error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
-		$slug  = isset($input['slug']) ? (string) $input['slug'] : '';
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
+		$slug  = isset( $input['slug'] ) ? (string) $input['slug'] : '';
 
-		$slug = SourceValidator::slug($slug);
-		if (is_wp_error($slug)) {
+		$slug = SourceValidator::slug( $slug );
+		if ( is_wp_error( $slug ) ) {
 			return $slug;
 		}
 
-		$fs = FilesystemGuard::ensureDirect(get_theme_root());
-		if (is_wp_error($fs)) {
+		$fs = FilesystemGuard::ensureDirect( get_theme_root() );
+		if ( is_wp_error( $fs ) ) {
 			return $fs;
 		}
 
-		AdminIncludes::load('theme', 'class-wp-upgrader', 'class-theme-upgrader', 'file');
+		AdminIncludes::load( 'theme', 'class-wp-upgrader', 'class-theme-upgrader', 'file' );
 
-		$api = themes_api('theme_information', array('slug' => $slug, 'fields' => array('sections' => false)));
-		if (is_wp_error($api)) {
+		$api = themes_api(
+			'theme_information',
+			array(
+				'slug'   => $slug,
+				'fields' => array( 'sections' => false ),
+			)
+		);
+		if ( is_wp_error( $api ) ) {
 			return $api;
 		}
 
-		if (empty($api->download_link)) {
+		if ( empty( $api->download_link ) ) {
 			return new WP_Error(
 				'webmcp_theme_not_found',
-				__('No wordpress.org theme found for that slug.', 'abilities-catalog'),
-				array('status' => 404)
+				__( 'No wordpress.org theme found for that slug.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
-		$result = UpgradeRunner::withLock(get_theme_root(), function () use ($api) {
-			$upgrader = new \Theme_Upgrader(UpgradeRunner::skin());
+		$result = UpgradeRunner::withLock(
+			get_theme_root(),
+			static function () use ( $api ) {
+				$upgrader = new \Theme_Upgrader( UpgradeRunner::skin() );
 
-			return $upgrader->install($api->download_link);
-		});
+				return $upgrader->install( $api->download_link );
+			}
+		);
 
-		if (is_wp_error($result)) {
+		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
-		if (true !== $result) {
+		if ( true !== $result ) {
 			return new WP_Error(
 				'webmcp_install_failed',
-				__('The theme installation did not complete.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The theme installation did not complete.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 

@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Terms;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,69 +23,67 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class CreateCategory implements Ability
-{
+final class CreateCategory implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'terms/create-category';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Category', 'abilities-catalog'),
-			'description'         => __('Creates a new category term.', 'abilities-catalog'),
+			'label'               => __( 'Create Category', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new category term.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'name'        => array(
 						'type'        => 'string',
-						'description' => __('The category name (required).', 'abilities-catalog'),
+						'description' => __( 'The category name (required).', 'abilities-catalog' ),
 					),
 					'slug'        => array(
 						'type'        => 'string',
-						'description' => __('The category slug. Generated from the name when omitted.', 'abilities-catalog'),
+						'description' => __( 'The category slug. Generated from the name when omitted.', 'abilities-catalog' ),
 					),
 					'description' => array(
 						'type'        => 'string',
-						'description' => __('The category description.', 'abilities-catalog'),
+						'description' => __( 'The category description.', 'abilities-catalog' ),
 					),
 					'parent'      => array(
 						'type'        => 'integer',
-						'description' => __('The parent category term ID.', 'abilities-catalog'),
+						'description' => __( 'The parent category term ID.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('name'),
+				'required'             => array( 'name' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'name', 'slug'),
+				'required'             => array( 'id', 'name', 'slug' ),
 				'properties'           => array(
 					'id'   => array(
 						'type'        => 'integer',
-						'description' => __('The new category term ID.', 'abilities-catalog'),
+						'description' => __( 'The new category term ID.', 'abilities-catalog' ),
 					),
 					'name' => array(
 						'type'        => 'string',
-						'description' => __('The category name.', 'abilities-catalog'),
+						'description' => __( 'The category name.', 'abilities-catalog' ),
 					),
 					'slug' => array(
 						'type'        => 'string',
-						'description' => __('The category slug.', 'abilities-catalog'),
+						'description' => __( 'The category slug.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -107,14 +105,13 @@ final class CreateCategory implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create a category.
 	 */
-	public function hasPermission($input): bool
-	{
-		$taxonomy = get_taxonomy('category');
-		if (!$taxonomy) {
+	public function hasPermission( $input ): bool {
+		$taxonomy = get_taxonomy( 'category' );
+		if ( ! $taxonomy ) {
 			return false;
 		}
 
-		return current_user_can($taxonomy->cap->edit_terms);
+		return current_user_can( $taxonomy->cap->edit_terms );
 	}
 
 	/**
@@ -123,38 +120,37 @@ final class CreateCategory implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$request = new WP_REST_Request('POST', '/wp/v2/categories');
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$request = new WP_REST_Request( 'POST', '/wp/v2/categories' );
 
-		if (isset($input['name'])) {
-			$request->set_param('name', sanitize_text_field((string) $input['name']));
+		if ( isset( $input['name'] ) ) {
+			$request->set_param( 'name', sanitize_text_field( (string) $input['name'] ) );
 		}
 
-		if (isset($input['slug']) && '' !== $input['slug']) {
-			$request->set_param('slug', sanitize_title((string) $input['slug']));
+		if ( isset( $input['slug'] ) && '' !== $input['slug'] ) {
+			$request->set_param( 'slug', sanitize_title( (string) $input['slug'] ) );
 		}
 
-		if (isset($input['description'])) {
-			$request->set_param('description', sanitize_text_field((string) $input['description']));
+		if ( isset( $input['description'] ) ) {
+			$request->set_param( 'description', sanitize_text_field( (string) $input['description'] ) );
 		}
 
-		if (!empty($input['parent'])) {
-			$request->set_param('parent', absint($input['parent']));
+		if ( ! empty( $input['parent'] ) ) {
+			$request->set_param( 'parent', absint( $input['parent'] ) );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ($data['id'] ?? 0),
-			'name' => (string) ($data['name'] ?? ''),
-			'slug' => (string) ($data['slug'] ?? ''),
+			'id'   => (int) ( $data['id'] ?? 0 ),
+			'name' => (string) ( $data['name'] ?? '' ),
+			'slug' => (string) ( $data['slug'] ?? '' ),
 		);
 	}
 }

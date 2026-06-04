@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Connectors;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -26,61 +26,59 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetConnector implements Ability
-{
+final class GetConnector implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'connectors/get-connector';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Connector', 'abilities-catalog'),
-			'description'         => __('Returns a single AI provider connector by ID with non-secret metadata. The API key is never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog'),
+			'label'               => __( 'Get Connector', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single AI provider connector by ID with non-secret metadata. The API key is never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
 			'category'            => 'connectors',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'string',
-						'description' => __('The connector identifier.', 'abilities-catalog'),
+						'description' => __( 'The connector identifier.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id'         => array(
 						'type'        => 'string',
-						'description' => __('The connector identifier.', 'abilities-catalog'),
+						'description' => __( 'The connector identifier.', 'abilities-catalog' ),
 					),
 					'name'       => array(
 						'type'        => 'string',
-						'description' => __('The connector display name.', 'abilities-catalog'),
+						'description' => __( 'The connector display name.', 'abilities-catalog' ),
 					),
 					'type'       => array(
 						'type'        => 'string',
-						'description' => __('The connector type, e.g. "ai_provider".', 'abilities-catalog'),
+						'description' => __( 'The connector type, e.g. "ai_provider".', 'abilities-catalog' ),
 					),
 					'configured' => array(
 						'type'        => 'boolean',
-						'description' => __('Whether an API key is configured for this connector. The key value itself is never returned.', 'abilities-catalog'),
+						'description' => __( 'Whether an API key is configured for this connector. The key value itself is never returned.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -101,9 +99,8 @@ final class GetConnector implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may manage options.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('manage_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -112,26 +109,25 @@ final class GetConnector implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array{id:string,name:string,type:string,configured:bool}|\WP_Error The connector, or a 404 error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['id']) ? (string) $input['id'] : '';
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['id'] ) ? (string) $input['id'] : '';
 
-		$connector = wp_get_connector($id);
+		$connector = wp_get_connector( $id );
 
-		if (null === $connector) {
+		if ( null === $connector ) {
 			return new WP_Error(
 				'connector_not_found',
-				__('The requested connector was not found.', 'abilities-catalog'),
-				array('status' => 404)
+				__( 'The requested connector was not found.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
 		return array(
 			'id'         => $id,
-			'name'       => (string) ($connector['name'] ?? ''),
-			'type'       => (string) ($connector['type'] ?? ''),
-			'configured' => self::isConfigured($connector),
+			'name'       => (string) ( $connector['name'] ?? '' ),
+			'type'       => (string) ( $connector['type'] ?? '' ),
+			'configured' => self::isConfigured( $connector ),
 		);
 	}
 
@@ -148,39 +144,38 @@ final class GetConnector implements Ability
 	 * @param array<string,mixed> $connector The connector record from `wp_get_connector()`.
 	 * @return bool True if a key is set (or none is required).
 	 */
-	private static function isConfigured(array $connector): bool
-	{
-		$auth = isset($connector['authentication']) && is_array($connector['authentication'])
+	private static function isConfigured( array $connector ): bool {
+		$auth = isset( $connector['authentication'] ) && is_array( $connector['authentication'] )
 			? $connector['authentication']
 			: array();
 
-		if (($auth['method'] ?? '') !== 'api_key') {
+		if ( ( $auth['method'] ?? '' ) !== 'api_key' ) {
 			return true;
 		}
 
-		$setting_name  = (string) ($auth['setting_name'] ?? '');
-		$env_var_name  = (string) ($auth['env_var_name'] ?? '');
-		$constant_name = (string) ($auth['constant_name'] ?? '');
+		$setting_name  = (string) ( $auth['setting_name'] ?? '' );
+		$env_var_name  = (string) ( $auth['env_var_name'] ?? '' );
+		$constant_name = (string) ( $auth['constant_name'] ?? '' );
 
-		if (function_exists('_wp_connectors_get_api_key_source')) {
-			return 'none' !== _wp_connectors_get_api_key_source($setting_name, $env_var_name, $constant_name);
+		if ( function_exists( '_wp_connectors_get_api_key_source' ) ) {
+			return 'none' !== _wp_connectors_get_api_key_source( $setting_name, $env_var_name, $constant_name );
 		}
 
 		// Fallback: detect presence only, never read the value into output.
-		if ('' !== $env_var_name) {
-			$env_value = getenv($env_var_name);
-			if (false !== $env_value && '' !== $env_value) {
+		if ( '' !== $env_var_name ) {
+			$env_value = getenv( $env_var_name );
+			if ( false !== $env_value && '' !== $env_value ) {
 				return true;
 			}
 		}
 
-		if ('' !== $constant_name && defined($constant_name)) {
-			$const_value = constant($constant_name);
-			if (is_string($const_value) && '' !== $const_value) {
+		if ( '' !== $constant_name && defined( $constant_name ) ) {
+			$const_value = constant( $constant_name );
+			if ( is_string( $const_value ) && '' !== $const_value ) {
 				return true;
 			}
 		}
 
-		return '' !== $setting_name && '' !== (string) get_option($setting_name, '');
+		return '' !== $setting_name && '' !== (string) get_option( $setting_name, '' );
 	}
 }

@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Terms;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,65 +23,63 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class CreateTag implements Ability
-{
+final class CreateTag implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'terms/create-tag';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Tag', 'abilities-catalog'),
-			'description'         => __('Creates a new tag term.', 'abilities-catalog'),
+			'label'               => __( 'Create Tag', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new tag term.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'name'        => array(
 						'type'        => 'string',
-						'description' => __('The tag name (required).', 'abilities-catalog'),
+						'description' => __( 'The tag name (required).', 'abilities-catalog' ),
 					),
 					'slug'        => array(
 						'type'        => 'string',
-						'description' => __('The tag slug. Generated from the name when omitted.', 'abilities-catalog'),
+						'description' => __( 'The tag slug. Generated from the name when omitted.', 'abilities-catalog' ),
 					),
 					'description' => array(
 						'type'        => 'string',
-						'description' => __('The tag description.', 'abilities-catalog'),
+						'description' => __( 'The tag description.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('name'),
+				'required'             => array( 'name' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'name', 'slug'),
+				'required'             => array( 'id', 'name', 'slug' ),
 				'properties'           => array(
 					'id'   => array(
 						'type'        => 'integer',
-						'description' => __('The new tag term ID.', 'abilities-catalog'),
+						'description' => __( 'The new tag term ID.', 'abilities-catalog' ),
 					),
 					'name' => array(
 						'type'        => 'string',
-						'description' => __('The tag name.', 'abilities-catalog'),
+						'description' => __( 'The tag name.', 'abilities-catalog' ),
 					),
 					'slug' => array(
 						'type'        => 'string',
-						'description' => __('The tag slug.', 'abilities-catalog'),
+						'description' => __( 'The tag slug.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -103,14 +101,13 @@ final class CreateTag implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create a tag.
 	 */
-	public function hasPermission($input): bool
-	{
-		$taxonomy = get_taxonomy('post_tag');
-		if (!$taxonomy) {
+	public function hasPermission( $input ): bool {
+		$taxonomy = get_taxonomy( 'post_tag' );
+		if ( ! $taxonomy ) {
 			return false;
 		}
 
-		return current_user_can($taxonomy->cap->assign_terms);
+		return current_user_can( $taxonomy->cap->assign_terms );
 	}
 
 	/**
@@ -119,34 +116,33 @@ final class CreateTag implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$request = new WP_REST_Request('POST', '/wp/v2/tags');
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$request = new WP_REST_Request( 'POST', '/wp/v2/tags' );
 
-		if (isset($input['name'])) {
-			$request->set_param('name', sanitize_text_field((string) $input['name']));
+		if ( isset( $input['name'] ) ) {
+			$request->set_param( 'name', sanitize_text_field( (string) $input['name'] ) );
 		}
 
-		if (isset($input['slug']) && '' !== $input['slug']) {
-			$request->set_param('slug', sanitize_title((string) $input['slug']));
+		if ( isset( $input['slug'] ) && '' !== $input['slug'] ) {
+			$request->set_param( 'slug', sanitize_title( (string) $input['slug'] ) );
 		}
 
-		if (isset($input['description'])) {
-			$request->set_param('description', sanitize_text_field((string) $input['description']));
+		if ( isset( $input['description'] ) ) {
+			$request->set_param( 'description', sanitize_text_field( (string) $input['description'] ) );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ($data['id'] ?? 0),
-			'name' => (string) ($data['name'] ?? ''),
-			'slug' => (string) ($data['slug'] ?? ''),
+			'id'   => (int) ( $data['id'] ?? 0 ),
+			'name' => (string) ( $data['name'] ?? '' ),
+			'slug' => (string) ( $data['slug'] ?? '' ),
 		);
 	}
 }

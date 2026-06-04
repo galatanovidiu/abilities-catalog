@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -28,24 +28,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class SearchDirectory implements Ability
-{
+final class SearchDirectory implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'plugins/search-directory';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Search Plugin Directory', 'abilities-catalog'),
-			'description'         => __('Searches the WordPress.org plugin directory by keyword and returns matches (slug, name, version, rating, active installs, short description, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with plugins/install-plugin to install one.', 'abilities-catalog'),
+			'label'               => __( 'Search Plugin Directory', 'abilities-catalog' ),
+			'description'         => __( 'Searches the WordPress.org plugin directory by keyword and returns matches (slug, name, version, rating, active installs, short description, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with plugins/install-plugin to install one.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -53,77 +51,77 @@ final class SearchDirectory implements Ability
 					'search'   => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __('The search keyword(s) to query the plugin directory.', 'abilities-catalog'),
+						'description' => __( 'The search keyword(s) to query the plugin directory.', 'abilities-catalog' ),
 					),
 					'page'     => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'default'     => 1,
-						'description' => __('The page of results to return.', 'abilities-catalog'),
+						'description' => __( 'The page of results to return.', 'abilities-catalog' ),
 					),
 					'per_page' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'maximum'     => 100,
 						'default'     => 10,
-						'description' => __('The number of results per page (1-100).', 'abilities-catalog'),
+						'description' => __( 'The number of results per page (1-100).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('search'),
+				'required'             => array( 'search' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
-							'required'             => array('slug', 'name'),
+							'required'             => array( 'slug', 'name' ),
 							'properties'           => array(
 								'slug'              => array(
 									'type'        => 'string',
-									'description' => __('The plugin directory slug (use this to install).', 'abilities-catalog'),
+									'description' => __( 'The plugin directory slug (use this to install).', 'abilities-catalog' ),
 								),
 								'name'              => array(
 									'type'        => 'string',
-									'description' => __('The plugin name.', 'abilities-catalog'),
+									'description' => __( 'The plugin name.', 'abilities-catalog' ),
 								),
 								'version'           => array(
 									'type'        => 'string',
-									'description' => __('The latest available version.', 'abilities-catalog'),
+									'description' => __( 'The latest available version.', 'abilities-catalog' ),
 								),
 								'rating'            => array(
 									'type'        => 'integer',
-									'description' => __('The rating as a percentage (0-100).', 'abilities-catalog'),
+									'description' => __( 'The rating as a percentage (0-100).', 'abilities-catalog' ),
 								),
 								'num_ratings'       => array(
 									'type'        => 'integer',
-									'description' => __('The number of ratings.', 'abilities-catalog'),
+									'description' => __( 'The number of ratings.', 'abilities-catalog' ),
 								),
 								'active_installs'   => array(
 									'type'        => 'integer',
-									'description' => __('The approximate active install count.', 'abilities-catalog'),
+									'description' => __( 'The approximate active install count.', 'abilities-catalog' ),
 								),
 								'short_description' => array(
 									'type'        => 'string',
-									'description' => __('A short plain-text description.', 'abilities-catalog'),
+									'description' => __( 'A short plain-text description.', 'abilities-catalog' ),
 								),
 								'author'            => array(
 									'type'        => 'string',
-									'description' => __('The plugin author (plain text).', 'abilities-catalog'),
+									'description' => __( 'The plugin author (plain text).', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,
 						),
-						'description' => __('The list of matching plugins from the directory.', 'abilities-catalog'),
+						'description' => __( 'The list of matching plugins from the directory.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -145,9 +143,8 @@ final class SearchDirectory implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may search/install plugins.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('install_plugins');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'install_plugins' );
 	}
 
 	/**
@@ -156,26 +153,25 @@ final class SearchDirectory implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The shaped matches, or an error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
 
 		// `plugins_api()` lives in an admin-only include not loaded over REST.
-		AdminIncludes::load('plugin-install');
-		if (!function_exists('plugins_api')) {
+		AdminIncludes::load( 'plugin-install' );
+		if ( ! function_exists( 'plugins_api' ) ) {
 			return new WP_Error(
 				'plugin_directory_unavailable',
-				__('The plugin directory API is not available on this site.', 'abilities-catalog'),
-				array('status' => 501)
+				__( 'The plugin directory API is not available on this site.', 'abilities-catalog' ),
+				array( 'status' => 501 )
 			);
 		}
 
 		$result = plugins_api(
 			'query_plugins',
 			array(
-				'search'   => (string) ($input['search'] ?? ''),
-				'page'     => isset($input['page']) ? absint($input['page']) : 1,
-				'per_page' => isset($input['per_page']) ? absint($input['per_page']) : 10,
+				'search'   => (string) ( $input['search'] ?? '' ),
+				'page'     => isset( $input['page'] ) ? absint( $input['page'] ) : 1,
+				'per_page' => isset( $input['per_page'] ) ? absint( $input['per_page'] ) : 10,
 				'fields'   => array(
 					'short_description' => true,
 					'icons'             => false,
@@ -184,26 +180,26 @@ final class SearchDirectory implements Ability
 			)
 		);
 
-		if (is_wp_error($result)) {
+		if ( is_wp_error( $result ) ) {
 			return new WP_Error(
 				'plugin_directory_error',
-				__('Could not reach the WordPress.org plugin directory.', 'abilities-catalog'),
-				array('status' => 502)
+				__( 'Could not reach the WordPress.org plugin directory.', 'abilities-catalog' ),
+				array( 'status' => 502 )
 			);
 		}
 
 		$items = array();
-		foreach ((array) ($result->plugins ?? array()) as $plugin) {
-			$plugin = (array) $plugin;
+		foreach ( (array) ( $result->plugins ?? array() ) as $plugin ) {
+			$plugin  = (array) $plugin;
 			$items[] = array(
-				'slug'              => (string) ($plugin['slug'] ?? ''),
-				'name'              => wp_strip_all_tags((string) ($plugin['name'] ?? '')),
-				'version'           => (string) ($plugin['version'] ?? ''),
-				'rating'            => (int) round((float) ($plugin['rating'] ?? 0)),
-				'num_ratings'       => (int) ($plugin['num_ratings'] ?? 0),
-				'active_installs'   => (int) ($plugin['active_installs'] ?? 0),
-				'short_description' => wp_strip_all_tags((string) ($plugin['short_description'] ?? '')),
-				'author'            => wp_strip_all_tags((string) ($plugin['author'] ?? '')),
+				'slug'              => (string) ( $plugin['slug'] ?? '' ),
+				'name'              => wp_strip_all_tags( (string) ( $plugin['name'] ?? '' ) ),
+				'version'           => (string) ( $plugin['version'] ?? '' ),
+				'rating'            => (int) round( (float) ( $plugin['rating'] ?? 0 ) ),
+				'num_ratings'       => (int) ( $plugin['num_ratings'] ?? 0 ),
+				'active_installs'   => (int) ( $plugin['active_installs'] ?? 0 ),
+				'short_description' => wp_strip_all_tags( (string) ( $plugin['short_description'] ?? '' ) ),
+				'author'            => wp_strip_all_tags( (string) ( $plugin['author'] ?? '' ) ),
 			);
 		}
 

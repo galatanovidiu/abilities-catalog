@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Search;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,24 +23,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class SearchContent implements Ability
-{
+final class SearchContent implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'search/search-content';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Search Content', 'abilities-catalog'),
-			'description'         => __('Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Use this to find content when you do not already know its id.', 'abilities-catalog'),
+			'label'               => __( 'Search Content', 'abilities-catalog' ),
+			'description'         => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Use this to find content when you do not already know its id.', 'abilities-catalog' ),
 			'category'            => 'search',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -48,76 +46,76 @@ final class SearchContent implements Ability
 					'search'   => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __('The search keyword(s).', 'abilities-catalog'),
+						'description' => __( 'The search keyword(s).', 'abilities-catalog' ),
 					),
 					'type'     => array(
 						'type'        => 'string',
-						'enum'        => array('post', 'term', 'post-format'),
+						'enum'        => array( 'post', 'term', 'post-format' ),
 						'default'     => 'post',
-						'description' => __('The object type to search. Defaults to "post" (posts and pages).', 'abilities-catalog'),
+						'description' => __( 'The object type to search. Defaults to "post" (posts and pages).', 'abilities-catalog' ),
 					),
 					'subtype'  => array(
 						'type'        => 'string',
 						'default'     => 'any',
-						'description' => __('Limit to a single subtype (e.g. a specific post type or taxonomy). Defaults to "any".', 'abilities-catalog'),
+						'description' => __( 'Limit to a single subtype (e.g. a specific post type or taxonomy). Defaults to "any".', 'abilities-catalog' ),
 					),
 					'page'     => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'default'     => 1,
-						'description' => __('The page of results to return.', 'abilities-catalog'),
+						'description' => __( 'The page of results to return.', 'abilities-catalog' ),
 					),
 					'per_page' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'maximum'     => 100,
 						'default'     => 10,
-						'description' => __('The number of results per page (1-100).', 'abilities-catalog'),
+						'description' => __( 'The number of results per page (1-100).', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('search'),
+				'required'             => array( 'search' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('items'),
+				'required'             => array( 'items' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
-							'required'             => array('id', 'title', 'url', 'type'),
+							'required'             => array( 'id', 'title', 'url', 'type' ),
 							'properties'           => array(
 								'id'      => array(
-									'type'        => array('integer', 'string'),
-									'description' => __('The object ID of the match.', 'abilities-catalog'),
+									'type'        => array( 'integer', 'string' ),
+									'description' => __( 'The object ID of the match.', 'abilities-catalog' ),
 								),
 								'title'   => array(
 									'type'        => 'string',
-									'description' => __('The match title.', 'abilities-catalog'),
+									'description' => __( 'The match title.', 'abilities-catalog' ),
 								),
 								'url'     => array(
 									'type'        => 'string',
-									'description' => __('The public URL of the match.', 'abilities-catalog'),
+									'description' => __( 'The public URL of the match.', 'abilities-catalog' ),
 								),
 								'type'    => array(
 									'type'        => 'string',
-									'description' => __('The object type (post, term, post-format).', 'abilities-catalog'),
+									'description' => __( 'The object type (post, term, post-format).', 'abilities-catalog' ),
 								),
 								'subtype' => array(
 									'type'        => 'string',
-									'description' => __('The object subtype (e.g. post, page, category).', 'abilities-catalog'),
+									'description' => __( 'The object subtype (e.g. post, page, category).', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,
 						),
-						'description' => __('The list of search matches.', 'abilities-catalog'),
+						'description' => __( 'The list of search matches.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -139,9 +137,8 @@ final class SearchContent implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may search content.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('edit_posts');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
@@ -150,32 +147,31 @@ final class SearchContent implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The shaped matches, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
 
-		$request = new WP_REST_Request('GET', '/wp/v2/search');
-		$request->set_param('search', (string) ($input['search'] ?? ''));
-		$request->set_param('type', isset($input['type']) ? sanitize_key((string) $input['type']) : 'post');
-		$request->set_param('subtype', isset($input['subtype']) && '' !== $input['subtype'] ? sanitize_key((string) $input['subtype']) : 'any');
-		$request->set_param('page', isset($input['page']) ? absint($input['page']) : 1);
-		$request->set_param('per_page', isset($input['per_page']) ? absint($input['per_page']) : 10);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/search' );
+		$request->set_param( 'search', (string) ( $input['search'] ?? '' ) );
+		$request->set_param( 'type', isset( $input['type'] ) ? sanitize_key( (string) $input['type'] ) : 'post' );
+		$request->set_param( 'subtype', isset( $input['subtype'] ) && '' !== $input['subtype'] ? sanitize_key( (string) $input['subtype'] ) : 'any' );
+		$request->set_param( 'page', isset( $input['page'] ) ? absint( $input['page'] ) : 1 );
+		$request->set_param( 'per_page', isset( $input['per_page'] ) ? absint( $input['per_page'] ) : 10 );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data  = rest_get_server()->response_to_data($response, false);
+		$data  = rest_get_server()->response_to_data( $response, false );
 		$items = array();
 
-		foreach (is_array($data) ? $data : array() as $row) {
+		foreach ( is_array( $data ) ? $data : array() as $row ) {
 			$items[] = array(
 				'id'      => $row['id'] ?? 0,
-				'title'   => (string) ($row['title'] ?? ''),
-				'url'     => (string) ($row['url'] ?? ''),
-				'type'    => (string) ($row['type'] ?? ''),
-				'subtype' => (string) ($row['subtype'] ?? ''),
+				'title'   => (string) ( $row['title'] ?? '' ),
+				'url'     => (string) ( $row['url'] ?? '' ),
+				'type'    => (string) ( $row['type'] ?? '' ),
+				'subtype' => (string) ( $row['subtype'] ?? '' ),
 			);
 		}
 

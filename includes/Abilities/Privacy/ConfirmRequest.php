@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 use WP_User_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -45,31 +45,29 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class ConfirmRequest implements Ability
-{
+final class ConfirmRequest implements Ability {
+
 	/**
 	 * Request statuses that `_wp_privacy_account_request_confirmed()` will act on.
 	 *
 	 * @var string[]
 	 */
-	private const CONFIRMABLE_STATUSES = array('request-pending', 'request-failed');
+	private const CONFIRMABLE_STATUSES = array( 'request-pending', 'request-failed' );
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'privacy/confirm-request';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Confirm Request', 'abilities-catalog'),
-			'description'         => __('Administratively confirms a pending personal-data request, setting its status to request-confirmed.', 'abilities-catalog'),
+			'label'               => __( 'Confirm Request', 'abilities-catalog' ),
+			'description'         => __( 'Administratively confirms a pending personal-data request, setting its status to request-confirmed.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -77,29 +75,29 @@ final class ConfirmRequest implements Ability
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __('The ID of the user_request post to confirm.', 'abilities-catalog'),
+						'description' => __( 'The ID of the user_request post to confirm.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('request_id'),
+				'required'             => array( 'request_id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('request_id', 'status'),
+				'required'             => array( 'request_id', 'status' ),
 				'properties'           => array(
 					'request_id' => array(
 						'type'        => 'integer',
-						'description' => __('The confirmed request ID.', 'abilities-catalog'),
+						'description' => __( 'The confirmed request ID.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',
-						'description' => __('The resulting request status.', 'abilities-catalog'),
+						'description' => __( 'The resulting request status.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -123,28 +121,27 @@ final class ConfirmRequest implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may confirm this request.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input      = is_array($input) ? $input : array();
-		$request_id = isset($input['request_id']) ? absint($input['request_id']) : 0;
-		if ($request_id < 1) {
+	public function hasPermission( $input ): bool {
+		$input      = is_array( $input ) ? $input : array();
+		$request_id = isset( $input['request_id'] ) ? absint( $input['request_id'] ) : 0;
+		if ( $request_id < 1 ) {
 			return false;
 		}
 
-		if (!current_user_can('manage_privacy_options')) {
+		if ( ! current_user_can( 'manage_privacy_options' ) ) {
 			return false;
 		}
 
-		$request = wp_get_user_request($request_id);
-		if (!$request instanceof WP_User_Request) {
+		$request = wp_get_user_request( $request_id );
+		if ( ! $request instanceof WP_User_Request ) {
 			return false;
 		}
 
-		switch ($request->action_name) {
+		switch ( $request->action_name ) {
 			case 'export_personal_data':
-				return current_user_can('export_others_personal_data');
+				return current_user_can( 'export_others_personal_data' );
 			case 'remove_personal_data':
-				return current_user_can('erase_others_personal_data') && current_user_can('delete_users');
+				return current_user_can( 'erase_others_personal_data' ) && current_user_can( 'delete_users' );
 			default:
 				return false;
 		}
@@ -156,39 +153,38 @@ final class ConfirmRequest implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array{request_id:int,status:string}|\WP_Error
 	 */
-	public function execute($input)
-	{
-		$input      = is_array($input) ? $input : array();
-		$request_id = isset($input['request_id']) ? absint($input['request_id']) : 0;
+	public function execute( $input ) {
+		$input      = is_array( $input ) ? $input : array();
+		$request_id = isset( $input['request_id'] ) ? absint( $input['request_id'] ) : 0;
 
-		if ($request_id < 1) {
+		if ( $request_id < 1 ) {
 			return new WP_Error(
 				'invalid_request',
-				__('A valid request ID is required.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'A valid request ID is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		$request = wp_get_user_request($request_id);
-		if (!$request instanceof WP_User_Request) {
+		$request = wp_get_user_request( $request_id );
+		if ( ! $request instanceof WP_User_Request ) {
 			return new WP_Error(
 				'invalid_request',
-				__('No personal-data request found for that ID.', 'abilities-catalog'),
-				array('status' => 404)
+				__( 'No personal-data request found for that ID.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
-		if (!in_array($request->status, self::CONFIRMABLE_STATUSES, true)) {
+		if ( ! in_array( $request->status, self::CONFIRMABLE_STATUSES, true ) ) {
 			return new WP_Error(
 				'not_confirmable',
-				__('This request cannot be confirmed in its current state.', 'abilities-catalog'),
-				array('status' => 409)
+				__( 'This request cannot be confirmed in its current state.', 'abilities-catalog' ),
+				array( 'status' => 409 )
 			);
 		}
 
-		_wp_privacy_account_request_confirmed($request_id);
+		_wp_privacy_account_request_confirmed( $request_id );
 
-		$updated = wp_get_user_request($request_id);
+		$updated = wp_get_user_request( $request_id );
 
 		return array(
 			'request_id' => $request_id,

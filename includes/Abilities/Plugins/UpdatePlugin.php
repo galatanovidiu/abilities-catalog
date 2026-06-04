@@ -9,7 +9,7 @@ use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use GalatanOvidiu\AbilitiesCatalog\Support\UpgradeRunner;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -28,57 +28,55 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class UpdatePlugin implements Ability
-{
+final class UpdatePlugin implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'plugins/update-plugin';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Update Plugin', 'abilities-catalog'),
-			'description'         => __('Updates an installed plugin to its latest wordpress.org version. Updating replaces the plugin code on disk.', 'abilities-catalog'),
+			'label'               => __( 'Update Plugin', 'abilities-catalog' ),
+			'description'         => __( 'Updates an installed plugin to its latest wordpress.org version. Updating replaces the plugin code on disk.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog'),
+						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('plugin'),
+				'required'             => array( 'plugin' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('plugin', 'version', 'updated'),
+				'required'             => array( 'plugin', 'version', 'updated' ),
 				'properties'           => array(
 					'plugin'  => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path.', 'abilities-catalog'),
+						'description' => __( 'The plugin file path.', 'abilities-catalog' ),
 					),
 					'version' => array(
 						'type'        => 'string',
-						'description' => __('The plugin version after the update.', 'abilities-catalog'),
+						'description' => __( 'The plugin version after the update.', 'abilities-catalog' ),
 					),
 					'updated' => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the update completed.', 'abilities-catalog'),
+						'description' => __( 'Whether the update completed.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -101,16 +99,15 @@ final class UpdatePlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update plugins.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function hasPermission( $input ): bool {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return false;
 		}
 
-		return current_user_can('update_plugins');
+		return current_user_can( 'update_plugins' );
 	}
 
 	/**
@@ -125,55 +122,57 @@ final class UpdatePlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The plugin file, new version, and updated flag, or an error.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__('A plugin file path is required.', 'abilities-catalog')
+				__( 'A plugin file path is required.', 'abilities-catalog' )
 			);
 		}
 
 		$file = $plugin . '.php';
 
-		AdminIncludes::load('plugin');
+		AdminIncludes::load( 'plugin' );
 
 		$all = get_plugins();
-		if (!isset($all[$file])) {
+		if ( ! isset( $all[ $file ] ) ) {
 			return new WP_Error(
 				'webmcp_plugin_not_found',
-				__('The requested plugin is not installed.', 'abilities-catalog'),
-				array('status' => 404)
+				__( 'The requested plugin is not installed.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
 		wp_update_plugins();
 
-		AdminIncludes::load('class-wp-upgrader', 'class-plugin-upgrader');
+		AdminIncludes::load( 'class-wp-upgrader', 'class-plugin-upgrader' );
 
-		$result = UpgradeRunner::withLock(WP_PLUGIN_DIR, function () use ($file) {
-			$upgrader = new \Plugin_Upgrader(UpgradeRunner::skin());
+		$result = UpgradeRunner::withLock(
+			WP_PLUGIN_DIR,
+			static function () use ( $file ) {
+				$upgrader = new \Plugin_Upgrader( UpgradeRunner::skin() );
 
-			return $upgrader->upgrade($file);
-		});
+				return $upgrader->upgrade( $file );
+			}
+		);
 
-		if (is_wp_error($result)) {
+		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
-		if (false === $result || null === $result) {
+		if ( false === $result || null === $result ) {
 			return new WP_Error(
 				'webmcp_update_failed',
-				__('The plugin update did not complete.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The plugin update did not complete.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
 		$installed = get_plugins();
-		$version   = isset($installed[$file]['Version']) ? (string) $installed[$file]['Version'] : '';
+		$version   = isset( $installed[ $file ]['Version'] ) ? (string) $installed[ $file ]['Version'] : '';
 
 		return array(
 			'plugin'  => $file,

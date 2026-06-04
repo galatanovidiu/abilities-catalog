@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -26,8 +26,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class ExportContent implements Ability
-{
+final class ExportContent implements Ability {
+
 	/**
 	 * Maximum inline export size in bytes (5 MB).
 	 *
@@ -38,19 +38,17 @@ final class ExportContent implements Ability
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'tools/export-content';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Export Content', 'abilities-catalog'),
-			'description'         => __('Exports site content as a WXR (WordPress eXtended RSS) XML document, filtered by type, date range, author, category, or status.', 'abilities-catalog'),
+			'label'               => __( 'Export Content', 'abilities-catalog' ),
+			'description'         => __( 'Exports site content as a WXR (WordPress eXtended RSS) XML document, filtered by type, date range, author, category, or status.', 'abilities-catalog' ),
 			'category'            => 'tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -58,56 +56,56 @@ final class ExportContent implements Ability
 					'content'    => array(
 						'type'        => 'string',
 						'default'     => 'all',
-						'description' => __('What to export: a post type slug, or "all" for everything.', 'abilities-catalog'),
+						'description' => __( 'What to export: a post type slug, or "all" for everything.', 'abilities-catalog' ),
 					),
 					'post_type'  => array(
 						'type'        => 'string',
-						'description' => __('Restrict to a single post type.', 'abilities-catalog'),
+						'description' => __( 'Restrict to a single post type.', 'abilities-catalog' ),
 					),
 					'start_date' => array(
 						'type'        => 'string',
-						'description' => __('Earliest publish date to include (e.g. "2024-01").', 'abilities-catalog'),
+						'description' => __( 'Earliest publish date to include (e.g. "2024-01").', 'abilities-catalog' ),
 					),
 					'end_date'   => array(
 						'type'        => 'string',
-						'description' => __('Latest publish date to include (e.g. "2024-12").', 'abilities-catalog'),
+						'description' => __( 'Latest publish date to include (e.g. "2024-12").', 'abilities-catalog' ),
 					),
 					'author'     => array(
 						'type'        => 'integer',
-						'description' => __('Restrict to a single author user ID.', 'abilities-catalog'),
+						'description' => __( 'Restrict to a single author user ID.', 'abilities-catalog' ),
 					),
 					'category'   => array(
 						'type'        => 'integer',
-						'description' => __('Restrict to a single category term ID.', 'abilities-catalog'),
+						'description' => __( 'Restrict to a single category term ID.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',
-						'description' => __('Restrict to a single post status.', 'abilities-catalog'),
+						'description' => __( 'Restrict to a single post status.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('data', 'length'),
+				'required'             => array( 'data', 'length' ),
 				'properties'           => array(
 					'content_type' => array(
 						'type'        => 'string',
-						'description' => __('The MIME type of the export payload.', 'abilities-catalog'),
+						'description' => __( 'The MIME type of the export payload.', 'abilities-catalog' ),
 					),
 					'data'         => array(
 						'type'        => 'string',
-						'description' => __('The WXR XML document.', 'abilities-catalog'),
+						'description' => __( 'The WXR XML document.', 'abilities-catalog' ),
 					),
 					'length'       => array(
 						'type'        => 'integer',
-						'description' => __('The byte length of the export payload.', 'abilities-catalog'),
+						'description' => __( 'The byte length of the export payload.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -125,58 +123,58 @@ final class ExportContent implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user has the `export` capability.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('export');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'export' );
 	}
 
 	/**
 	 * Executes the ability by capturing the WXR export.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The inline export, or an error if too large.
+	 * @return array<string,mixed>|\WP_Error The inline export, or an error if too large.
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
 
-		AdminIncludes::load('export');
+		AdminIncludes::load( 'export' );
 
-		if (!function_exists('export_wp')) {
+		if ( ! function_exists( 'export_wp' ) ) {
 			return new WP_Error(
 				'export_unavailable',
-				__('The export function is not available.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The export function is not available.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
 		$args = array(
-			'content'    => isset($input['content']) ? (string) $input['content'] : 'all',
-			'post_type'  => isset($input['post_type']) ? (string) $input['post_type'] : '',
-			'start_date' => isset($input['start_date']) ? (string) $input['start_date'] : '',
-			'end_date'   => isset($input['end_date']) ? (string) $input['end_date'] : '',
-			'author'     => isset($input['author']) ? (int) $input['author'] : 0,
-			'category'   => isset($input['category']) ? (int) $input['category'] : 0,
-			'status'     => isset($input['status']) ? (string) $input['status'] : '',
+			'content'    => isset( $input['content'] ) ? (string) $input['content'] : 'all',
+			'post_type'  => isset( $input['post_type'] ) ? (string) $input['post_type'] : '',
+			'start_date' => isset( $input['start_date'] ) ? (string) $input['start_date'] : '',
+			'end_date'   => isset( $input['end_date'] ) ? (string) $input['end_date'] : '',
+			'author'     => isset( $input['author'] ) ? (int) $input['author'] : 0,
+			'category'   => isset( $input['category'] ) ? (int) $input['category'] : 0,
+			'status'     => isset( $input['status'] ) ? (string) $input['status'] : '',
 		);
 
 		// Drop empty keys so export_wp() applies its own defaults.
-		foreach ($args as $key => $value) {
-			if ('' === $value || 0 === $value) {
-				unset($args[$key]);
+		foreach ( $args as $key => $value ) {
+			if ( '' !== $value && 0 !== $value ) {
+				continue;
 			}
+
+			unset( $args[ $key ] );
 		}
 
 		ob_start();
-		export_wp($args);
+		export_wp( $args );
 		$xml = (string) ob_get_clean();
 
-		$length = strlen($xml);
+		$length = strlen( $xml );
 
-		if ($length > self::MAX_BYTES) {
+		if ( $length > self::MAX_BYTES ) {
 			return new WP_Error(
 				'export_too_large',
-				__('Export exceeds the 5 MB inline limit.', 'abilities-catalog'),
+				__( 'Export exceeds the 5 MB inline limit.', 'abilities-catalog' ),
 				array(
 					'status' => 413,
 					'length' => $length,

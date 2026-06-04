@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Support;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -29,8 +29,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class UpgradeRunner
-{
+final class UpgradeRunner {
+
 	/**
 	 * Runs a callback behind the filesystem guard and the upgrader lock.
 	 *
@@ -42,15 +42,14 @@ final class UpgradeRunner
 	 * @param callable $callback  The upgrader call to run while the lock is held.
 	 * @return mixed|\WP_Error The callback result, or a guard error.
 	 */
-	public static function withLock(string $fsContext, callable $callback)
-	{
-		$fs = FilesystemGuard::ensureDirect($fsContext);
-		if (is_wp_error($fs)) {
+	public static function withLock( string $fsContext, callable $callback ) {
+		$fs = FilesystemGuard::ensureDirect( $fsContext );
+		if ( is_wp_error( $fs ) ) {
 			return $fs;
 		}
 
 		$lock = UpgraderLock::acquire();
-		if (is_wp_error($lock)) {
+		if ( is_wp_error( $lock ) ) {
 			return $lock;
 		}
 
@@ -70,9 +69,8 @@ final class UpgradeRunner
 	 *
 	 * @return \WP_Upgrader_Skin A non-echoing upgrader skin.
 	 */
-	public static function skin(): \WP_Upgrader_Skin
-	{
-		AdminIncludes::load('class-wp-upgrader', 'class-automatic-upgrader-skin');
+	public static function skin(): \WP_Upgrader_Skin {
+		AdminIncludes::load( 'class-wp-upgrader', 'class-automatic-upgrader-skin' );
 
 		return new \Automatic_Upgrader_Skin();
 	}

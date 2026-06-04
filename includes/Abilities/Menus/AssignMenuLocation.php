@@ -6,9 +6,8 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
-use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -26,58 +25,56 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class AssignMenuLocation implements Ability
-{
+final class AssignMenuLocation implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'menus/assign-menu-location';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Assign Menu Location', 'abilities-catalog'),
-			'description'         => __('Assigns a classic menu to a registered theme location.', 'abilities-catalog'),
+			'label'               => __( 'Assign Menu Location', 'abilities-catalog' ),
+			'description'         => __( 'Assigns a classic menu to a registered theme location.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'menu_id'  => array(
 						'type'        => 'integer',
-						'description' => __('The classic menu term ID to assign.', 'abilities-catalog'),
+						'description' => __( 'The classic menu term ID to assign.', 'abilities-catalog' ),
 					),
 					'location' => array(
 						'type'        => 'string',
-						'description' => __('The registered theme location slug to assign the menu to.', 'abilities-catalog'),
+						'description' => __( 'The registered theme location slug to assign the menu to.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('menu_id', 'location'),
+				'required'             => array( 'menu_id', 'location' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id'        => array(
 						'type'        => 'integer',
-						'description' => __('The classic menu term ID.', 'abilities-catalog'),
+						'description' => __( 'The classic menu term ID.', 'abilities-catalog' ),
 					),
 					'locations' => array(
 						'type'        => 'array',
-						'items'       => array('type' => 'string'),
-						'description' => __('The theme locations now assigned to the menu.', 'abilities-catalog'),
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'The theme locations now assigned to the menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -99,16 +96,15 @@ final class AssignMenuLocation implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may assign the menu location.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
-		$id    = isset($input['menu_id']) ? absint($input['menu_id']) : 0;
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
+		$id    = isset( $input['menu_id'] ) ? absint( $input['menu_id'] ) : 0;
 
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return false;
 		}
 
-		return current_user_can('edit_term', $id);
+		return current_user_can( 'edit_term', $id );
 	}
 
 	/**
@@ -119,27 +115,26 @@ final class AssignMenuLocation implements Ability
 	 * returns an error for an unregistered location.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The menu's id and assigned locations, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The menu's id and assigned locations, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input    = is_array($input) ? $input : array();
-		$id       = absint($input['menu_id']);
-		$location = sanitize_key((string) ($input['location'] ?? ''));
+	public function execute( $input ) {
+		$input    = is_array( $input ) ? $input : array();
+		$id       = absint( $input['menu_id'] );
+		$location = sanitize_key( (string) ( $input['location'] ?? '' ) );
 
-		$request = new WP_REST_Request('POST', '/wp/v2/menus/' . $id);
-		$request->set_param('locations', array($location));
+		$request = new WP_REST_Request( 'POST', '/wp/v2/menus/' . $id );
+		$request->set_param( 'locations', array( $location ) );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'        => (int) ($data['id'] ?? $id),
-			'locations' => isset($data['locations']) && is_array($data['locations']) ? array_values($data['locations']) : array(),
+			'id'        => (int) ( $data['id'] ?? $id ),
+			'locations' => isset( $data['locations'] ) && is_array( $data['locations'] ) ? array_values( $data['locations'] ) : array(),
 		);
 	}
 }

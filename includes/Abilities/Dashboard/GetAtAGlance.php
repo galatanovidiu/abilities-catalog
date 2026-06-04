@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Dashboard;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -21,59 +21,57 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetAtAGlance implements Ability
-{
+final class GetAtAGlance implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'dashboard/get-at-a-glance';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get At a Glance', 'abilities-catalog'),
-			'description'         => __('Returns the dashboard "At a Glance" summary: post and page counts, comment counts, active theme, and WordPress version.', 'abilities-catalog'),
+			'label'               => __( 'Get At a Glance', 'abilities-catalog' ),
+			'description'         => __( 'Returns the dashboard "At a Glance" summary: post and page counts, comment counts, active theme, and WordPress version.', 'abilities-catalog' ),
 			'category'            => 'dashboard',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('posts', 'pages'),
+				'required'             => array( 'posts', 'pages' ),
 				'properties'           => array(
 					'posts'             => array(
 						'type'        => 'integer',
-						'description' => __('Number of published posts.', 'abilities-catalog'),
+						'description' => __( 'Number of published posts.', 'abilities-catalog' ),
 					),
 					'pages'             => array(
 						'type'        => 'integer',
-						'description' => __('Number of published pages.', 'abilities-catalog'),
+						'description' => __( 'Number of published pages.', 'abilities-catalog' ),
 					),
 					'comments_approved' => array(
 						'type'        => 'integer',
-						'description' => __('Number of approved comments.', 'abilities-catalog'),
+						'description' => __( 'Number of approved comments.', 'abilities-catalog' ),
 					),
 					'comments_pending'  => array(
 						'type'        => 'integer',
-						'description' => __('Number of comments awaiting moderation.', 'abilities-catalog'),
+						'description' => __( 'Number of comments awaiting moderation.', 'abilities-catalog' ),
 					),
 					'theme'             => array(
 						'type'        => 'string',
-						'description' => __('Name of the active theme.', 'abilities-catalog'),
+						'description' => __( 'Name of the active theme.', 'abilities-catalog' ),
 					),
 					'wp_version'        => array(
 						'type'        => 'string',
-						'description' => __('The WordPress version.', 'abilities-catalog'),
+						'description' => __( 'The WordPress version.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -93,9 +91,8 @@ final class GetAtAGlance implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may edit posts.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('edit_posts');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
@@ -104,19 +101,18 @@ final class GetAtAGlance implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed> The dashboard summary fields.
 	 */
-	public function execute($input = null)
-	{
-		$posts    = wp_count_posts('post');
-		$pages    = wp_count_posts('page');
+	public function execute( $input = null ) {
+		$posts    = wp_count_posts( 'post' );
+		$pages    = wp_count_posts( 'page' );
 		$comments = wp_count_comments();
 
 		return array(
-			'posts'             => (int) ($posts->publish ?? 0),
-			'pages'             => (int) ($pages->publish ?? 0),
-			'comments_approved' => (int) ($comments->approved ?? 0),
-			'comments_pending'  => (int) ($comments->moderated ?? 0),
-			'theme'             => (string) wp_get_theme()->get('Name'),
-			'wp_version'        => (string) get_bloginfo('version'),
+			'posts'             => (int) ( $posts->publish ?? 0 ),
+			'pages'             => (int) ( $pages->publish ?? 0 ),
+			'comments_approved' => (int) ( $comments->approved ?? 0 ),
+			'comments_pending'  => (int) ( $comments->moderated ?? 0 ),
+			'theme'             => (string) wp_get_theme()->get( 'Name' ),
+			'wp_version'        => (string) get_bloginfo( 'version' ),
 		);
 	}
 }

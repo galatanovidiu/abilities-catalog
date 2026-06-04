@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use WP_REST_Request;
 use WP_Error;
+use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,89 +23,87 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetPlugin implements Ability
-{
+final class GetPlugin implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'plugins/get-plugin';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Plugin', 'abilities-catalog'),
-			'description'         => __('Returns details about a single installed plugin by its file path.', 'abilities-catalog'),
+			'label'               => __( 'Get Plugin', 'abilities-catalog' ),
+			'description'         => __( 'Returns details about a single installed plugin by its file path.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path without the .php extension, for example "webmcp-adapter/webmcp-adapter".', 'abilities-catalog'),
+						'description' => __( 'The plugin file path without the .php extension, for example "webmcp-adapter/webmcp-adapter".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('plugin'),
+				'required'             => array( 'plugin' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('plugin', 'status'),
+				'required'             => array( 'plugin', 'status' ),
 				'properties'           => array(
 					'plugin'       => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path.', 'abilities-catalog'),
+						'description' => __( 'The plugin file path.', 'abilities-catalog' ),
 					),
 					'status'       => array(
 						'type'        => 'string',
-						'description' => __('The plugin activation status.', 'abilities-catalog'),
+						'description' => __( 'The plugin activation status.', 'abilities-catalog' ),
 					),
 					'name'         => array(
 						'type'        => 'string',
-						'description' => __('The plugin name.', 'abilities-catalog'),
+						'description' => __( 'The plugin name.', 'abilities-catalog' ),
 					),
 					'version'      => array(
 						'type'        => 'string',
-						'description' => __('The plugin version.', 'abilities-catalog'),
+						'description' => __( 'The plugin version.', 'abilities-catalog' ),
 					),
 					'description'  => array(
 						'type'        => 'string',
-						'description' => __('The plugin description.', 'abilities-catalog'),
+						'description' => __( 'The plugin description.', 'abilities-catalog' ),
 					),
 					'author'       => array(
 						'type'        => 'string',
-						'description' => __('The plugin author.', 'abilities-catalog'),
+						'description' => __( 'The plugin author.', 'abilities-catalog' ),
 					),
 					'plugin_uri'   => array(
 						'type'        => 'string',
-						'description' => __('The plugin home page URL.', 'abilities-catalog'),
+						'description' => __( 'The plugin home page URL.', 'abilities-catalog' ),
 					),
 					'network_only' => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the plugin can only be activated network-wide.', 'abilities-catalog'),
+						'description' => __( 'Whether the plugin can only be activated network-wide.', 'abilities-catalog' ),
 					),
 					'requires_wp'  => array(
 						'type'        => 'string',
-						'description' => __('The minimum required WordPress version.', 'abilities-catalog'),
+						'description' => __( 'The minimum required WordPress version.', 'abilities-catalog' ),
 					),
 					'requires_php' => array(
 						'type'        => 'string',
-						'description' => __('The minimum required PHP version.', 'abilities-catalog'),
+						'description' => __( 'The minimum required PHP version.', 'abilities-catalog' ),
 					),
 					'textdomain'   => array(
 						'type'        => 'string',
-						'description' => __('The plugin text domain.', 'abilities-catalog'),
+						'description' => __( 'The plugin text domain.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -126,15 +124,14 @@ final class GetPlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the plugin.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		if (empty($input['plugin'])) {
+		if ( empty( $input['plugin'] ) ) {
 			return false;
 		}
 
-		return current_user_can('activate_plugins');
+		return current_user_can( 'activate_plugins' );
 	}
 
 	/**
@@ -143,38 +140,37 @@ final class GetPlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Flat plugin fields, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__('A plugin file path is required.', 'abilities-catalog')
+				__( 'A plugin file path is required.', 'abilities-catalog' )
 			);
 		}
 
-		$request  = new WP_REST_Request('GET', '/wp/v2/plugins/' . $plugin);
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$request  = new WP_REST_Request( 'GET', '/wp/v2/plugins/' . $plugin );
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'plugin'       => (string) ($data['plugin'] ?? $plugin),
-			'status'       => (string) ($data['status'] ?? ''),
-			'name'         => $this->coerceString($data['name'] ?? ''),
-			'version'      => (string) ($data['version'] ?? ''),
-			'description'  => $this->coerceString($data['description'] ?? ''),
-			'author'       => $this->coerceString($data['author'] ?? ''),
-			'plugin_uri'   => (string) ($data['plugin_uri'] ?? ''),
-			'network_only' => (bool) ($data['network_only'] ?? false),
-			'requires_wp'  => (string) ($data['requires_wp'] ?? ''),
-			'requires_php' => (string) ($data['requires_php'] ?? ''),
-			'textdomain'   => (string) ($data['textdomain'] ?? ''),
+			'plugin'       => (string) ( $data['plugin'] ?? $plugin ),
+			'status'       => (string) ( $data['status'] ?? '' ),
+			'name'         => $this->coerceString( $data['name'] ?? '' ),
+			'version'      => (string) ( $data['version'] ?? '' ),
+			'description'  => $this->coerceString( $data['description'] ?? '' ),
+			'author'       => $this->coerceString( $data['author'] ?? '' ),
+			'plugin_uri'   => (string) ( $data['plugin_uri'] ?? '' ),
+			'network_only' => (bool) ( $data['network_only'] ?? false ),
+			'requires_wp'  => (string) ( $data['requires_wp'] ?? '' ),
+			'requires_php' => (string) ( $data['requires_php'] ?? '' ),
+			'textdomain'   => (string) ( $data['textdomain'] ?? '' ),
 		);
 	}
 
@@ -184,10 +180,9 @@ final class GetPlugin implements Ability
 	 * @param mixed $value The raw field value.
 	 * @return string The string value.
 	 */
-	private function coerceString($value): string
-	{
-		if (is_array($value)) {
-			$value = $value['rendered'] ?? ($value['raw'] ?? '');
+	private function coerceString( $value ): string {
+		if ( is_array( $value ) ) {
+			$value = $value['rendered'] ?? ( $value['raw'] ?? '' );
 		}
 
 		return (string) $value;

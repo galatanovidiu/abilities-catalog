@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Privacy;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -23,8 +23,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-trait QueriesUserRequests
-{
+trait QueriesUserRequests {
+
 	/**
 	 * Queries `user_request` posts for one action and maps them to clean records.
 	 *
@@ -33,19 +33,18 @@ trait QueriesUserRequests
 	 * @param mixed  $input       The validated ability input (status, page, per_page).
 	 * @return array{items:array<int,array<string,mixed>>,total:int}
 	 */
-	private function queryUserRequests(string $action_name, $input): array
-	{
-		$input    = is_array($input) ? $input : array();
-		$page     = isset($input['page']) ? max(1, absint($input['page'])) : 1;
-		$per_page = isset($input['per_page']) ? max(1, min(100, absint($input['per_page']))) : 20;
-		$status   = isset($input['status']) ? sanitize_key($input['status']) : '';
+	private function queryUserRequests( string $action_name, $input ): array {
+		$input    = is_array( $input ) ? $input : array();
+		$page     = isset( $input['page'] ) ? max( 1, absint( $input['page'] ) ) : 1;
+		$per_page = isset( $input['per_page'] ) ? max( 1, min( 100, absint( $input['per_page'] ) ) ) : 20;
+		$status   = isset( $input['status'] ) ? sanitize_key( $input['status'] ) : '';
 
 		$post_status = '' !== $status ? $status : 'any';
 
 		$query_args = array(
 			'post_type'        => 'user_request',
 			'post_status'      => $post_status,
-			'post_name__in'    => array($action_name),
+			'post_name__in'    => array( $action_name ),
 			'posts_per_page'   => $per_page,
 			'paged'            => $page,
 			'orderby'          => 'date',
@@ -54,12 +53,12 @@ trait QueriesUserRequests
 			'suppress_filters' => false,
 		);
 
-		$query = new \WP_Query($query_args);
+		$query = new \WP_Query( $query_args );
 		$items = array();
 
-		foreach ($query->posts as $post) {
-			$request = wp_get_user_request($post->ID);
-			if (!$request) {
+		foreach ( $query->posts as $post ) {
+			$request = wp_get_user_request( $post->ID );
+			if ( ! $request ) {
 				continue;
 			}
 
@@ -67,7 +66,7 @@ trait QueriesUserRequests
 				'id'          => (int) $request->ID,
 				'email'       => (string) $request->email,
 				'status'      => (string) $request->status,
-				'created'     => (string) get_post_field('post_date', $post->ID),
+				'created'     => (string) get_post_field( 'post_date', $post->ID ),
 				'action_name' => (string) $request->action_name,
 			);
 		}

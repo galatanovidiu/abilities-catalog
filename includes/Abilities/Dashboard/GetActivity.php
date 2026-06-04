@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Dashboard;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -20,24 +20,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetActivity implements Ability
-{
+final class GetActivity implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'dashboard/get-activity';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Activity', 'abilities-catalog'),
-			'description'         => __('Returns recent dashboard activity: recently published posts and recent approved comments.', 'abilities-catalog'),
+			'label'               => __( 'Get Activity', 'abilities-catalog' ),
+			'description'         => __( 'Returns recent dashboard activity: recently published posts and recent approved comments.', 'abilities-catalog' ),
 			'category'            => 'dashboard',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -47,18 +45,18 @@ final class GetActivity implements Ability
 						'default'     => 5,
 						'minimum'     => 1,
 						'maximum'     => 20,
-						'description' => __('Maximum number of items to return for each list (1-20).', 'abilities-catalog'),
+						'description' => __( 'Maximum number of items to return for each list (1-20).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('published', 'comments'),
+				'required'             => array( 'published', 'comments' ),
 				'properties'           => array(
 					'published' => array(
 						'type'        => 'array',
-						'description' => __('Recently published posts.', 'abilities-catalog'),
+						'description' => __( 'Recently published posts.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => true,
@@ -66,7 +64,7 @@ final class GetActivity implements Ability
 					),
 					'comments'  => array(
 						'type'        => 'array',
-						'description' => __('Recent approved comments.', 'abilities-catalog'),
+						'description' => __( 'Recent approved comments.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => true,
@@ -75,8 +73,8 @@ final class GetActivity implements Ability
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -96,9 +94,8 @@ final class GetActivity implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may edit posts.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_posts');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
@@ -107,11 +104,10 @@ final class GetActivity implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed> The recent activity lists.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$number = isset($input['number']) ? (int) $input['number'] : 5;
-		$number = max(1, min(20, $number));
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$number = isset( $input['number'] ) ? (int) $input['number'] : 5;
+		$number = max( 1, min( 20, $number ) );
 
 		$recent_published = get_posts(
 			array(
@@ -123,11 +119,11 @@ final class GetActivity implements Ability
 		);
 
 		$published = array();
-		foreach ($recent_published as $post) {
+		foreach ( $recent_published as $post ) {
 			$published[] = array(
 				'id'    => (int) $post->ID,
-				'title' => (string) get_the_title($post->ID),
-				'date'  => (string) ($post->post_date ?? ''),
+				'title' => (string) get_the_title( $post->ID ),
+				'date'  => (string) ( $post->post_date ?? '' ),
 			);
 		}
 
@@ -139,13 +135,13 @@ final class GetActivity implements Ability
 		);
 
 		$comments = array();
-		foreach ($recent_comments as $comment) {
+		foreach ( $recent_comments as $comment ) {
 			$comments[] = array(
 				'id'      => (int) $comment->comment_ID,
 				'post'    => (int) $comment->comment_post_ID,
-				'author'  => (string) ($comment->comment_author ?? ''),
-				'date'    => (string) ($comment->comment_date ?? ''),
-				'excerpt' => (string) wp_trim_words((string) ($comment->comment_content ?? '')),
+				'author'  => (string) ( $comment->comment_author ?? '' ),
+				'date'    => (string) ( $comment->comment_date ?? '' ),
+				'excerpt' => (string) wp_trim_words( (string) ( $comment->comment_content ?? '' ) ),
 			);
 		}
 

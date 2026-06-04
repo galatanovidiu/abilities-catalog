@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use WP_REST_Request;
 use WP_Error;
+use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -22,53 +22,51 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-final class GetGlobalStyles implements Ability
-{
+final class GetGlobalStyles implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/get-global-styles';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Get Global Styles', 'abilities-catalog'),
-			'description'         => __('Returns the global styles (settings and styles) for the active theme.', 'abilities-catalog'),
+			'label'               => __( 'Get Global Styles', 'abilities-catalog' ),
+			'description'         => __( 'Returns the global styles (settings and styles) for the active theme.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __('The global styles post ID for the active theme.', 'abilities-catalog'),
+						'description' => __( 'The global styles post ID for the active theme.', 'abilities-catalog' ),
 					),
 					'settings' => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The theme.json-shaped settings overrides.', 'abilities-catalog'),
+						'description'          => __( 'The theme.json-shaped settings overrides.', 'abilities-catalog' ),
 					),
 					'styles'   => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __('The theme.json-shaped style overrides.', 'abilities-catalog'),
+						'description'          => __( 'The theme.json-shaped style overrides.', 'abilities-catalog' ),
 					),
 					'title'    => array(
 						'type'        => 'string',
-						'description' => __('The global styles record title.', 'abilities-catalog'),
+						'description' => __( 'The global styles record title.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -86,9 +84,8 @@ final class GetGlobalStyles implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the global styles.
 	 */
-	public function hasPermission($input = null): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input = null ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -97,39 +94,38 @@ final class GetGlobalStyles implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The shaped global styles, or an error.
 	 */
-	public function execute($input = null)
-	{
+	public function execute( $input = null ) {
 		if (
-			!class_exists('WP_Theme_JSON_Resolver')
-			|| !method_exists('WP_Theme_JSON_Resolver', 'get_user_global_styles_post_id')
+			! class_exists( 'WP_Theme_JSON_Resolver' )
+			|| ! method_exists( 'WP_Theme_JSON_Resolver', 'get_user_global_styles_post_id' )
 		) {
 			return new WP_Error(
 				'global_styles_unavailable',
-				__('Global styles are not available on this site.', 'abilities-catalog'),
-				array('status' => 501)
+				__( 'Global styles are not available on this site.', 'abilities-catalog' ),
+				array( 'status' => 501 )
 			);
 		}
 
 		$id = (int) \WP_Theme_JSON_Resolver::get_user_global_styles_post_id();
-		if ($id <= 0) {
+		if ( $id <= 0 ) {
 			return new WP_Error(
 				'global_styles_unavailable',
-				__('No global styles record exists for the active theme.', 'abilities-catalog'),
-				array('status' => 404)
+				__( 'No global styles record exists for the active theme.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
-		$request = new WP_REST_Request('GET', '/wp/v2/global-styles/' . $id);
+		$request = new WP_REST_Request( 'GET', '/wp/v2/global-styles/' . $id );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		$title = $data['title'] ?? '';
-		if (is_array($title)) {
+		if ( is_array( $title ) ) {
 			$title = $title['rendered'] ?? '';
 		}
 
@@ -137,9 +133,9 @@ final class GetGlobalStyles implements Ability
 		// matching the `type: object` output schema; an empty PHP array would
 		// serialize as `[]` and fail output validation.
 		return array(
-			'id'       => (int) ($data['id'] ?? $id),
-			'settings' => (object) (is_array($data['settings'] ?? null) ? $data['settings'] : array()),
-			'styles'   => (object) (is_array($data['styles'] ?? null) ? $data['styles'] : array()),
+			'id'       => (int) ( $data['id'] ?? $id ),
+			'settings' => (object) ( is_array( $data['settings'] ?? null ) ? $data['settings'] : array() ),
+			'styles'   => (object) ( is_array( $data['styles'] ?? null ) ? $data['styles'] : array() ),
 			'title'    => (string) $title,
 		);
 	}

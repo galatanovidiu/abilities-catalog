@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use WP_REST_Request;
 use WP_Error;
+use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -26,53 +26,51 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class ActivatePlugin implements Ability
-{
+final class ActivatePlugin implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'plugins/activate-plugin';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Activate Plugin', 'abilities-catalog'),
-			'description'         => __('Activates an installed plugin by its file path. Activating a plugin runs its code.', 'abilities-catalog'),
+			'label'               => __( 'Activate Plugin', 'abilities-catalog' ),
+			'description'         => __( 'Activates an installed plugin by its file path. Activating a plugin runs its code.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog'),
+						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('plugin'),
+				'required'             => array( 'plugin' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('plugin', 'status'),
+				'required'             => array( 'plugin', 'status' ),
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path.', 'abilities-catalog'),
+						'description' => __( 'The plugin file path.', 'abilities-catalog' ),
 					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __('The resulting plugin activation status.', 'abilities-catalog'),
+						'description' => __( 'The resulting plugin activation status.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -95,23 +93,22 @@ final class ActivatePlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may activate the plugin.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function hasPermission( $input ): bool {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return false;
 		}
 
-		if (!current_user_can('activate_plugins')) {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return false;
 		}
 
 		// The route appends ".php"; the object capability is checked against the file.
-		$file = plugin_basename(sanitize_text_field($plugin . '.php'));
+		$file = plugin_basename( sanitize_text_field( $plugin . '.php' ) );
 
-		return current_user_can('activate_plugin', $file);
+		return current_user_can( 'activate_plugin', $file );
 	}
 
 	/**
@@ -123,31 +120,30 @@ final class ActivatePlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The plugin file path and resulting status, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__('A plugin file path is required.', 'abilities-catalog')
+				__( 'A plugin file path is required.', 'abilities-catalog' )
 			);
 		}
 
-		$request = new WP_REST_Request('POST', '/wp/v2/plugins/' . $plugin);
-		$request->set_param('status', 'active');
+		$request = new WP_REST_Request( 'POST', '/wp/v2/plugins/' . $plugin );
+		$request->set_param( 'status', 'active' );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'plugin' => (string) ($data['plugin'] ?? $plugin),
-			'status' => (string) ($data['status'] ?? ''),
+			'plugin' => (string) ( $data['plugin'] ?? $plugin ),
+			'status' => (string) ( $data['status'] ?? '' ),
 		);
 	}
 }

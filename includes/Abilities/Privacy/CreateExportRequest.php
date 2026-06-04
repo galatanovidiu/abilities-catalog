@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Privacy;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -31,24 +31,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class CreateExportRequest implements Ability
-{
+final class CreateExportRequest implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'privacy/create-export-request';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Export Request', 'abilities-catalog'),
-			'description'         => __('Creates a personal-data export request for an email address. Optionally emails the data subject a confirmation link.', 'abilities-catalog'),
+			'label'               => __( 'Create Export Request', 'abilities-catalog' ),
+			'description'         => __( 'Creates a personal-data export request for an email address. Optionally emails the data subject a confirmation link.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -56,38 +54,38 @@ final class CreateExportRequest implements Ability
 					'email'                   => array(
 						'type'        => 'string',
 						'format'      => 'email',
-						'description' => __('The email address of the data subject to export.', 'abilities-catalog'),
+						'description' => __( 'The email address of the data subject to export.', 'abilities-catalog' ),
 					),
 					'send_confirmation_email' => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __('When true, emails the data subject a confirmation link after creating the request. Defaults to false.', 'abilities-catalog'),
+						'description' => __( 'When true, emails the data subject a confirmation link after creating the request. Defaults to false.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('email'),
+				'required'             => array( 'email' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('request_id', 'status', 'action_name'),
+				'required'             => array( 'request_id', 'status', 'action_name' ),
 				'properties'           => array(
 					'request_id'  => array(
 						'type'        => 'integer',
-						'description' => __('The new request ID.', 'abilities-catalog'),
+						'description' => __( 'The new request ID.', 'abilities-catalog' ),
 					),
 					'status'      => array(
 						'type'        => 'string',
-						'description' => __('The resulting request status.', 'abilities-catalog'),
+						'description' => __( 'The resulting request status.', 'abilities-catalog' ),
 					),
 					'action_name' => array(
 						'type'        => 'string',
-						'description' => __('The request action name (export_personal_data).', 'abilities-catalog'),
+						'description' => __( 'The request action name (export_personal_data).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -111,9 +109,8 @@ final class CreateExportRequest implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create an export request.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('export_others_personal_data');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'export_others_personal_data' );
 	}
 
 	/**
@@ -122,33 +119,32 @@ final class CreateExportRequest implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array{request_id:int,status:string,action_name:string}|\WP_Error
 	 */
-	public function execute($input)
-	{
-		$input = is_array($input) ? $input : array();
-		$email = isset($input['email']) ? sanitize_email((string) $input['email']) : '';
-		$send  = !empty($input['send_confirmation_email']);
+	public function execute( $input ) {
+		$input = is_array( $input ) ? $input : array();
+		$email = isset( $input['email'] ) ? sanitize_email( (string) $input['email'] ) : '';
+		$send  = ! empty( $input['send_confirmation_email'] );
 
-		if ('' === $email) {
+		if ( '' === $email ) {
 			return new WP_Error(
 				'invalid_email',
-				__('A valid email address is required.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'A valid email address is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		$request_id = wp_create_user_request($email, 'export_personal_data');
-		if (is_wp_error($request_id)) {
+		$request_id = wp_create_user_request( $email, 'export_personal_data' );
+		if ( is_wp_error( $request_id ) ) {
 			return $request_id;
 		}
 
-		if ($send) {
-			$sent = wp_send_user_request((int) $request_id);
-			if (is_wp_error($sent)) {
+		if ( $send ) {
+			$sent = wp_send_user_request( (int) $request_id );
+			if ( is_wp_error( $sent ) ) {
 				return $sent;
 			}
 		}
 
-		$request = wp_get_user_request((int) $request_id);
+		$request = wp_get_user_request( (int) $request_id );
 
 		return array(
 			'request_id'  => (int) $request_id,

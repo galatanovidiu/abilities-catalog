@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Contracts;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -20,8 +20,8 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.1.0
  */
-interface Ability
-{
+interface Ability {
+
 	/**
 	 * The ability name (id) passed as the first argument to `wp_register_ability()`.
 	 *

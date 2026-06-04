@@ -7,10 +7,10 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use GalatanOvidiu\AbilitiesCatalog\Support\FilesystemGuard;
-use WP_REST_Request;
 use WP_Error;
+use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -30,53 +30,51 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.4.0
  */
-final class DeletePlugin implements Ability
-{
+final class DeletePlugin implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'plugins/delete-plugin';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Delete Plugin', 'abilities-catalog'),
-			'description'         => __('Permanently deletes an installed, inactive plugin by its file path. Deleting removes the plugin code from disk.', 'abilities-catalog'),
+			'label'               => __( 'Delete Plugin', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes an installed, inactive plugin by its file path. Deleting removes the plugin code from disk.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __('The plugin file path without the .php extension, for example "hello".', 'abilities-catalog'),
+						'description' => __( 'The plugin file path without the .php extension, for example "hello".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('plugin'),
+				'required'             => array( 'plugin' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('deleted', 'plugin'),
+				'required'             => array( 'deleted', 'plugin' ),
 				'properties'           => array(
 					'deleted' => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the plugin was deleted.', 'abilities-catalog'),
+						'description' => __( 'Whether the plugin was deleted.', 'abilities-catalog' ),
 					),
 					'plugin'  => array(
 						'type'        => 'string',
-						'description' => __('The deleted plugin file path without the .php extension.', 'abilities-catalog'),
+						'description' => __( 'The deleted plugin file path without the .php extension.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -100,16 +98,15 @@ final class DeletePlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may delete plugins.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function hasPermission( $input ): bool {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return false;
 		}
 
-		return current_user_can('delete_plugins');
+		return current_user_can( 'delete_plugins' );
 	}
 
 	/**
@@ -123,15 +120,14 @@ final class DeletePlugin implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The deleted flag and plugin path, or an error.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$plugin = isset($input['plugin']) ? (string) $input['plugin'] : '';
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
-		if ('' === $plugin) {
+		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__('A plugin file path is required.', 'abilities-catalog')
+				__( 'A plugin file path is required.', 'abilities-catalog' )
 			);
 		}
 
@@ -139,46 +135,46 @@ final class DeletePlugin implements Ability
 		// a single-file slug, or a two-segment "dir/file" path (no extra segments,
 		// traversal, or stray characters). Keeps the input contract explicit rather
 		// than relying solely on the core route regex to reject malformed values.
-		if (!preg_match('#^[a-z0-9-]+(?:/[a-z0-9._-]+)?$#i', $plugin)) {
+		if ( ! preg_match( '#^[a-z0-9-]+(?:/[a-z0-9._-]+)?$#i', $plugin ) ) {
 			return new WP_Error(
 				'webmcp_invalid_plugin',
-				__('The plugin path is not a valid plugin file reference.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'The plugin path is not a valid plugin file reference.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		$fs = FilesystemGuard::ensureDirect(WP_PLUGIN_DIR);
-		if (is_wp_error($fs)) {
+		$fs = FilesystemGuard::ensureDirect( WP_PLUGIN_DIR );
+		if ( is_wp_error( $fs ) ) {
 			return $fs;
 		}
 
-		AdminIncludes::load('plugin', 'class-wp-plugin-dependencies');
+		AdminIncludes::load( 'plugin', 'class-wp-plugin-dependencies' );
 
 		// Directory slug; '.' for single-file plugins.
-		$slug = dirname(plugin_basename($plugin . '.php'));
+		$slug = dirname( plugin_basename( $plugin . '.php' ) );
 
-		if (class_exists('\WP_Plugin_Dependencies') && method_exists('\WP_Plugin_Dependencies', 'get_dependents')) {
+		if ( class_exists( '\WP_Plugin_Dependencies' ) && method_exists( '\WP_Plugin_Dependencies', 'get_dependents' ) ) {
 			\WP_Plugin_Dependencies::initialize();
-			$dependents = \WP_Plugin_Dependencies::get_dependents($slug);
+			$dependents = \WP_Plugin_Dependencies::get_dependents( $slug );
 
-			if (!empty($dependents)) {
+			if ( ! empty( $dependents ) ) {
 				return new WP_Error(
 					'webmcp_plugin_has_dependents',
 					sprintf(
 						/* translators: 1: plugin slug, 2: comma-separated list of dependent plugins. */
-						__('Cannot delete "%1$s": it is required by %2$s.', 'abilities-catalog'),
+						__( 'Cannot delete "%1$s": it is required by %2$s.', 'abilities-catalog' ),
 						$slug,
-						implode(', ', (array) $dependents)
+						implode( ', ', (array) $dependents )
 					),
-					array('status' => 409)
+					array( 'status' => 409 )
 				);
 			}
 		}
 
-		$request = new WP_REST_Request('DELETE', '/wp/v2/plugins/' . $plugin);
+		$request = new WP_REST_Request( 'DELETE', '/wp/v2/plugins/' . $plugin );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 

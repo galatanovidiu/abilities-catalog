@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\SecretSafeError;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -30,69 +30,67 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class CreateApplicationPassword implements Ability
-{
+final class CreateApplicationPassword implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'users/create-application-password';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Application Password', 'abilities-catalog'),
-			'description'         => __('Creates a new application password for a user. The plaintext password is returned once and cannot be retrieved again.', 'abilities-catalog'),
+			'label'               => __( 'Create Application Password', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new application password for a user. The plaintext password is returned once and cannot be retrieved again.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'user_id' => array(
 						'type'        => 'integer',
-						'description' => __('The user ID. Defaults to the current user.', 'abilities-catalog'),
+						'description' => __( 'The user ID. Defaults to the current user.', 'abilities-catalog' ),
 					),
 					'name'    => array(
 						'type'        => 'string',
-						'description' => __('A human-readable name for the application password.', 'abilities-catalog'),
+						'description' => __( 'A human-readable name for the application password.', 'abilities-catalog' ),
 					),
 					'app_id'  => array(
 						'type'        => 'string',
-						'description' => __('An optional UUID identifying the application.', 'abilities-catalog'),
+						'description' => __( 'An optional UUID identifying the application.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('name'),
+				'required'             => array( 'name' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('uuid', 'password'),
+				'required'             => array( 'uuid', 'password' ),
 				'properties'           => array(
 					'uuid'     => array(
 						'type'        => 'string',
-						'description' => __('The unique identifier for the application password.', 'abilities-catalog'),
+						'description' => __( 'The unique identifier for the application password.', 'abilities-catalog' ),
 					),
 					'app_id'   => array(
 						'type'        => 'string',
-						'description' => __('The application UUID, if one was provided.', 'abilities-catalog'),
+						'description' => __( 'The application UUID, if one was provided.', 'abilities-catalog' ),
 					),
 					'name'     => array(
 						'type'        => 'string',
-						'description' => __('The name of the application password.', 'abilities-catalog'),
+						'description' => __( 'The name of the application password.', 'abilities-catalog' ),
 					),
 					'password' => array(
 						'type'        => 'string',
-						'description' => __('The generated plaintext password. Returned once only; cannot be retrieved again.', 'abilities-catalog'),
+						'description' => __( 'The generated plaintext password. Returned once only; cannot be retrieved again.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -113,15 +111,14 @@ final class CreateApplicationPassword implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create the application password.
 	 */
-	public function hasPermission($input): bool
-	{
-		$user_id = $this->resolveUserId($input);
+	public function hasPermission( $input ): bool {
+		$user_id = $this->resolveUserId( $input );
 
-		if ($user_id <= 0) {
+		if ( $user_id <= 0 ) {
 			return false;
 		}
 
-		return current_user_can('create_app_password', $user_id);
+		return current_user_can( 'create_app_password', $user_id );
 	}
 
 	/**
@@ -134,33 +131,32 @@ final class CreateApplicationPassword implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The new record (uuid, app_id, name, password), or a redacted error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$user_id = $this->resolveUserId($input);
-		$request = new WP_REST_Request('POST', '/wp/v2/users/' . $user_id . '/application-passwords');
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$user_id = $this->resolveUserId( $input );
+		$request = new WP_REST_Request( 'POST', '/wp/v2/users/' . $user_id . '/application-passwords' );
 
-		if (isset($input['name']) && '' !== $input['name']) {
-			$request->set_param('name', (string) $input['name']);
+		if ( isset( $input['name'] ) && '' !== $input['name'] ) {
+			$request->set_param( 'name', (string) $input['name'] );
 		}
 
-		if (isset($input['app_id']) && '' !== $input['app_id']) {
-			$request->set_param('app_id', (string) $input['app_id']);
+		if ( isset( $input['app_id'] ) && '' !== $input['app_id'] ) {
+			$request->set_param( 'app_id', (string) $input['app_id'] );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
-			return SecretSafeError::redact($response->as_error());
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
+			return SecretSafeError::redact( $response->as_error() );
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
-		$data = is_array($data) ? $data : array();
+		$data = rest_get_server()->response_to_data( $response, false );
+		$data = is_array( $data ) ? $data : array();
 
 		return array(
-			'uuid'     => (string) ($data['uuid'] ?? ''),
-			'app_id'   => (string) ($data['app_id'] ?? ''),
-			'name'     => (string) ($data['name'] ?? ''),
-			'password' => (string) ($data['password'] ?? ''),
+			'uuid'     => (string) ( $data['uuid'] ?? '' ),
+			'app_id'   => (string) ( $data['app_id'] ?? '' ),
+			'name'     => (string) ( $data['name'] ?? '' ),
+			'password' => (string) ( $data['password'] ?? '' ),
 		);
 	}
 
@@ -170,12 +166,11 @@ final class CreateApplicationPassword implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return int The resolved user ID, or 0 when none is available.
 	 */
-	private function resolveUserId($input): int
-	{
-		$input = is_array($input) ? $input : array();
+	private function resolveUserId( $input ): int {
+		$input = is_array( $input ) ? $input : array();
 
-		if (isset($input['user_id'])) {
-			return absint($input['user_id']);
+		if ( isset( $input['user_id'] ) ) {
+			return absint( $input['user_id'] );
 		}
 
 		return get_current_user_id();

@@ -6,7 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -25,24 +25,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class LookupTemplate implements Ability
-{
+final class LookupTemplate implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/lookup-template';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Lookup Template', 'abilities-catalog'),
-			'description'         => __('Resolves which template renders a given slug. Returns the template hierarchy WordPress would try (most specific first) and the first one that exists for the active theme, with its "theme//slug" id and title. Use it to find a template id before reading or updating it.', 'abilities-catalog'),
+			'label'               => __( 'Lookup Template', 'abilities-catalog' ),
+			'description'         => __( 'Resolves which template renders a given slug. Returns the template hierarchy WordPress would try (most specific first) and the first one that exists for the active theme, with its "theme//slug" id and title. Use it to find a template id before reading or updating it.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -50,48 +48,48 @@ final class LookupTemplate implements Ability
 					'slug'            => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __('The template slug to resolve (e.g. "single", "page", "404", "page-about").', 'abilities-catalog'),
+						'description' => __( 'The template slug to resolve (e.g. "single", "page", "404", "page-about").', 'abilities-catalog' ),
 					),
 					'is_custom'       => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __('Whether the slug is a user-defined custom template (a "wp_template" with no matching theme file).', 'abilities-catalog'),
+						'description' => __( 'Whether the slug is a user-defined custom template (a "wp_template" with no matching theme file).', 'abilities-catalog' ),
 					),
 					'template_prefix' => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __('Optional prefix for a more specific slug (e.g. "page" for the slug "page-about"). Affects the generated hierarchy.', 'abilities-catalog'),
+						'description' => __( 'Optional prefix for a more specific slug (e.g. "page" for the slug "page-about"). Affects the generated hierarchy.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('slug'),
+				'required'             => array( 'slug' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('hierarchy', 'resolved'),
+				'required'             => array( 'hierarchy', 'resolved' ),
 				'properties'           => array(
 					'hierarchy'      => array(
 						'type'        => 'array',
-						'items'       => array('type' => 'string'),
-						'description' => __('The ordered template slugs WordPress would try, most specific first.', 'abilities-catalog'),
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'The ordered template slugs WordPress would try, most specific first.', 'abilities-catalog' ),
 					),
 					'resolved'       => array(
 						'type'        => 'string',
-						'description' => __('The slug of the first template in the hierarchy that exists for the active theme; empty if none exists.', 'abilities-catalog'),
+						'description' => __( 'The slug of the first template in the hierarchy that exists for the active theme; empty if none exists.', 'abilities-catalog' ),
 					),
 					'resolved_id'    => array(
 						'type'        => 'string',
-						'description' => __('The resolved template id in "theme//slug" form; empty if none exists.', 'abilities-catalog'),
+						'description' => __( 'The resolved template id in "theme//slug" form; empty if none exists.', 'abilities-catalog' ),
 					),
 					'resolved_title' => array(
 						'type'        => 'string',
-						'description' => __('The resolved template title; empty if none exists.', 'abilities-catalog'),
+						'description' => __( 'The resolved template title; empty if none exists.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => true,
@@ -112,9 +110,8 @@ final class LookupTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read template resolution.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -123,49 +120,50 @@ final class LookupTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The hierarchy and resolved template, or an error.
 	 */
-	public function execute($input)
-	{
-		$input  = is_array($input) ? $input : array();
-		$slug   = sanitize_title((string) ($input['slug'] ?? ''));
-		$prefix = isset($input['template_prefix']) ? sanitize_key((string) $input['template_prefix']) : '';
-		$custom = !empty($input['is_custom']);
+	public function execute( $input ) {
+		$input  = is_array( $input ) ? $input : array();
+		$slug   = sanitize_title( (string) ( $input['slug'] ?? '' ) );
+		$prefix = isset( $input['template_prefix'] ) ? sanitize_key( (string) $input['template_prefix'] ) : '';
+		$custom = ! empty( $input['is_custom'] );
 
-		if ('' === $slug) {
+		if ( '' === $slug ) {
 			return new \WP_Error(
 				'invalid_slug',
-				__('A non-empty template slug is required.', 'abilities-catalog'),
-				array('status' => 400)
+				__( 'A non-empty template slug is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
-		if (!function_exists('get_template_hierarchy') || !function_exists('get_block_templates')) {
+		if ( ! function_exists( 'get_template_hierarchy' ) || ! function_exists( 'get_block_templates' ) ) {
 			return new \WP_Error(
 				'block_templates_unavailable',
-				__('Block template resolution is not available on this site.', 'abilities-catalog'),
-				array('status' => 501)
+				__( 'Block template resolution is not available on this site.', 'abilities-catalog' ),
+				array( 'status' => 501 )
 			);
 		}
 
-		$hierarchy = get_template_hierarchy($slug, $custom, $prefix);
-		$hierarchy = array_values(array_filter(array_map('strval', is_array($hierarchy) ? $hierarchy : array())));
+		$hierarchy = get_template_hierarchy( $slug, $custom, $prefix );
+		$hierarchy = array_values( array_filter( array_map( 'strval', is_array( $hierarchy ) ? $hierarchy : array() ) ) );
 
 		// Map existing block templates by slug for the active theme.
 		$existing = array();
-		foreach (get_block_templates(array(), 'wp_template') as $template) {
-			if (isset($template->slug)) {
-				$existing[(string) $template->slug] = $template;
+		foreach ( get_block_templates( array(), 'wp_template' ) as $template ) {
+			if ( ! isset( $template->slug ) ) {
+				continue;
 			}
+
+			$existing[ (string) $template->slug ] = $template;
 		}
 
 		$resolved       = '';
 		$resolved_id    = '';
 		$resolved_title = '';
-		foreach ($hierarchy as $candidate) {
-			if (isset($existing[$candidate])) {
-				$template       = $existing[$candidate];
+		foreach ( $hierarchy as $candidate ) {
+			if ( isset( $existing[ $candidate ] ) ) {
+				$template       = $existing[ $candidate ];
 				$resolved       = $candidate;
-				$resolved_id    = (string) ($template->id ?? '');
-				$resolved_title = (string) ($template->title ?? '');
+				$resolved_id    = (string) ( $template->id ?? '' );
+				$resolved_title = (string) ( $template->title ?? '' );
 				break;
 			}
 		}

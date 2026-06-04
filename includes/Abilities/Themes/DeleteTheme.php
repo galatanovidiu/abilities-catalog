@@ -9,7 +9,7 @@ use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use GalatanOvidiu\AbilitiesCatalog\Support\FilesystemGuard;
 use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -26,53 +26,51 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class DeleteTheme implements Ability
-{
+final class DeleteTheme implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'themes/delete-theme';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Delete Theme', 'abilities-catalog'),
-			'description'         => __('Permanently deletes an installed theme by its stylesheet (directory name). The active theme and the parent of the active theme cannot be deleted.', 'abilities-catalog'),
+			'label'               => __( 'Delete Theme', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes an installed theme by its stylesheet (directory name). The active theme and the parent of the active theme cannot be deleted.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'stylesheet' => array(
 						'type'        => 'string',
-						'description' => __('The theme directory name (stylesheet) to delete, for example "twentytwentyfour".', 'abilities-catalog'),
+						'description' => __( 'The theme directory name (stylesheet) to delete, for example "twentytwentyfour".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('stylesheet'),
+				'required'             => array( 'stylesheet' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('deleted', 'stylesheet'),
+				'required'             => array( 'deleted', 'stylesheet' ),
 				'properties'           => array(
 					'deleted'    => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the theme was deleted.', 'abilities-catalog'),
+						'description' => __( 'Whether the theme was deleted.', 'abilities-catalog' ),
 					),
 					'stylesheet' => array(
 						'type'        => 'string',
-						'description' => __('The stylesheet (directory name) of the deleted theme.', 'abilities-catalog'),
+						'description' => __( 'The stylesheet (directory name) of the deleted theme.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -95,15 +93,14 @@ final class DeleteTheme implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may delete themes.
 	 */
-	public function hasPermission($input): bool
-	{
-		$input = is_array($input) ? $input : array();
+	public function hasPermission( $input ): bool {
+		$input = is_array( $input ) ? $input : array();
 
-		if (empty($input['stylesheet'])) {
+		if ( empty( $input['stylesheet'] ) ) {
 			return false;
 		}
 
-		return current_user_can('delete_themes');
+		return current_user_can( 'delete_themes' );
 	}
 
 	/**
@@ -116,54 +113,53 @@ final class DeleteTheme implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error Delete result, or an error.
 	 */
-	public function execute($input)
-	{
-		$input      = is_array($input) ? $input : array();
-		$stylesheet = isset($input['stylesheet']) ? (string) $input['stylesheet'] : '';
+	public function execute( $input ) {
+		$input      = is_array( $input ) ? $input : array();
+		$stylesheet = isset( $input['stylesheet'] ) ? (string) $input['stylesheet'] : '';
 
-		if ('' === $stylesheet) {
+		if ( '' === $stylesheet ) {
 			return new WP_Error(
 				'webmcp_missing_stylesheet',
-				__('A theme stylesheet is required.', 'abilities-catalog')
+				__( 'A theme stylesheet is required.', 'abilities-catalog' )
 			);
 		}
 
-		$theme = wp_get_theme($stylesheet);
-		if (!$theme->exists()) {
+		$theme = wp_get_theme( $stylesheet );
+		if ( ! $theme->exists() ) {
 			return new WP_Error(
 				'webmcp_theme_not_found',
 				/* translators: %s: theme stylesheet. */
-				sprintf(__('No installed theme found for stylesheet "%s".', 'abilities-catalog'), $stylesheet),
-				array('status' => 404)
+				sprintf( __( 'No installed theme found for stylesheet "%s".', 'abilities-catalog' ), $stylesheet ),
+				array( 'status' => 404 )
 			);
 		}
 
-		if ($stylesheet === get_stylesheet() || $stylesheet === get_template()) {
+		if ( $stylesheet === get_stylesheet() || $stylesheet === get_template() ) {
 			return new WP_Error(
 				'webmcp_theme_in_use',
-				__('Cannot delete the active theme or the parent of the active theme.', 'abilities-catalog'),
-				array('status' => 409)
+				__( 'Cannot delete the active theme or the parent of the active theme.', 'abilities-catalog' ),
+				array( 'status' => 409 )
 			);
 		}
 
-		$fs = FilesystemGuard::ensureDirect(get_theme_root($stylesheet));
-		if (is_wp_error($fs)) {
+		$fs = FilesystemGuard::ensureDirect( get_theme_root( $stylesheet ) );
+		if ( is_wp_error( $fs ) ) {
 			return $fs;
 		}
 
-		AdminIncludes::load('theme', 'file');
+		AdminIncludes::load( 'theme', 'file' );
 
-		$result = delete_theme($stylesheet);
+		$result = delete_theme( $stylesheet );
 
-		if (is_wp_error($result)) {
+		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
-		if (false === $result) {
+		if ( false === $result ) {
 			return new WP_Error(
 				'webmcp_delete_failed',
-				__('The theme could not be deleted.', 'abilities-catalog'),
-				array('status' => 500)
+				__( 'The theme could not be deleted.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 

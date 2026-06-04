@@ -7,7 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -35,24 +35,22 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.5.0
  */
-final class DeleteTemplate implements Ability
-{
+final class DeleteTemplate implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'templates/delete-template';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Delete Template', 'abilities-catalog'),
-			'description'         => __('Deletes a site-editor template or template part by its "theme//slug" id. A customized theme template is reverted to the theme default; a user-created custom template is removed. Templates that exist only as theme files cannot be deleted. This permanently removes the database record and cannot be undone.', 'abilities-catalog'),
+			'label'               => __( 'Delete Template', 'abilities-catalog' ),
+			'description'         => __( 'Deletes a site-editor template or template part by its "theme//slug" id. A customized theme template is reverted to the theme default; a user-created custom template is removed. Templates that exist only as theme files cannot be deleted. This permanently removes the database record and cannot be undone.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -60,35 +58,35 @@ final class DeleteTemplate implements Ability
 					'id'        => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __('The template id in "theme//slug" form (e.g. "twentytwentyfive//single").', 'abilities-catalog'),
+						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//single").', 'abilities-catalog' ),
 					),
 					'post_type' => array(
 						'type'        => 'string',
-						'enum'        => array('wp_template', 'wp_template_part'),
+						'enum'        => array( 'wp_template', 'wp_template_part' ),
 						'default'     => 'wp_template',
-						'description' => __('Which collection the id belongs to: "wp_template" or "wp_template_part".', 'abilities-catalog'),
+						'description' => __( 'Which collection the id belongs to: "wp_template" or "wp_template_part".', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('id'),
+				'required'             => array( 'id' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('deleted', 'id'),
+				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
 					'deleted' => array(
 						'type'        => 'boolean',
-						'description' => __('Whether the template record was deleted (reverted/removed).', 'abilities-catalog'),
+						'description' => __( 'Whether the template record was deleted (reverted/removed).', 'abilities-catalog' ),
 					),
 					'id'      => array(
 						'type'        => 'string',
-						'description' => __('The deleted template id in "theme//slug" form.', 'abilities-catalog'),
+						'description' => __( 'The deleted template id in "theme//slug" form.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -111,9 +109,8 @@ final class DeleteTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may delete site-editor templates.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
@@ -127,26 +124,25 @@ final class DeleteTemplate implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The deleted flag and id, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input     = is_array($input) ? $input : array();
-		$id        = (string) ($input['id'] ?? '');
+	public function execute( $input ) {
+		$input     = is_array( $input ) ? $input : array();
+		$id        = (string) ( $input['id'] ?? '' );
 		$post_type = $input['post_type'] ?? 'wp_template';
 		$base      = 'wp_template_part' === $post_type ? 'template-parts' : 'templates';
 
 		// The "theme//slug" id is part of the route path; do not URL-encode the "//".
-		$request = new WP_REST_Request('DELETE', '/wp/v2/' . $base . '/' . $id);
-		$request->set_param('force', true);
+		$request = new WP_REST_Request( 'DELETE', '/wp/v2/' . $base . '/' . $id );
+		$request->set_param( 'force', true );
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'deleted' => (bool) ($data['deleted'] ?? false),
+			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
 		);
 	}

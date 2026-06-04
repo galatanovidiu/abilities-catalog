@@ -6,9 +6,8 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_REST_Request;
-use WP_Error;
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -25,62 +24,60 @@ if (!defined('ABSPATH')) {
  *
  * @since 0.3.0
  */
-final class CreateClassicMenu implements Ability
-{
+final class CreateClassicMenu implements Ability {
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public function name(): string
-	{
+	public function name(): string {
 		return 'menus/create-classic-menu';
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function args(): array
-	{
+	public function args(): array {
 		return array(
-			'label'               => __('Create Classic Menu', 'abilities-catalog'),
-			'description'         => __('Creates a new classic (nav_menu term) menu. Optionally assigns it to theme locations.', 'abilities-catalog'),
+			'label'               => __( 'Create Classic Menu', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new classic (nav_menu term) menu. Optionally assigns it to theme locations.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'name'        => array(
 						'type'        => 'string',
-						'description' => __('The menu name.', 'abilities-catalog'),
+						'description' => __( 'The menu name.', 'abilities-catalog' ),
 					),
 					'description' => array(
 						'type'        => 'string',
-						'description' => __('The menu description.', 'abilities-catalog'),
+						'description' => __( 'The menu description.', 'abilities-catalog' ),
 					),
 					'locations'   => array(
 						'type'        => 'array',
-						'items'       => array('type' => 'string'),
-						'description' => __('Theme location slugs to assign this menu to.', 'abilities-catalog'),
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Theme location slugs to assign this menu to.', 'abilities-catalog' ),
 					),
 				),
-				'required'             => array('name'),
+				'required'             => array( 'name' ),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array('id', 'name'),
+				'required'             => array( 'id', 'name' ),
 				'properties'           => array(
 					'id'   => array(
 						'type'        => 'integer',
-						'description' => __('The new classic menu term ID.', 'abilities-catalog'),
+						'description' => __( 'The new classic menu term ID.', 'abilities-catalog' ),
 					),
 					'name' => array(
 						'type'        => 'string',
-						'description' => __('The resulting menu name.', 'abilities-catalog'),
+						'description' => __( 'The resulting menu name.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
-			'execute_callback'    => array($this, 'execute'),
-			'permission_callback' => array($this, 'hasPermission'),
+			'execute_callback'    => array( $this, 'execute' ),
+			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
 				'annotations'  => array(
 					'readonly'    => false,
@@ -102,42 +99,42 @@ final class CreateClassicMenu implements Ability
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create the classic menu.
 	 */
-	public function hasPermission($input): bool
-	{
-		return current_user_can('edit_theme_options');
+	public function hasPermission( $input ): bool {
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|WP_Error The new menu's id and name, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new menu's id and name, or the REST error.
 	 */
-	public function execute($input)
-	{
-		$input   = is_array($input) ? $input : array();
-		$request = new WP_REST_Request('POST', '/wp/v2/menus');
+	public function execute( $input ) {
+		$input   = is_array( $input ) ? $input : array();
+		$request = new WP_REST_Request( 'POST', '/wp/v2/menus' );
 
-		foreach (array('name', 'description') as $field) {
-			if (isset($input[$field]) && '' !== $input[$field]) {
-				$request->set_param($field, (string) $input[$field]);
+		foreach ( array( 'name', 'description' ) as $field ) {
+			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+				continue;
 			}
+
+			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if (!empty($input['locations']) && is_array($input['locations'])) {
-			$request->set_param('locations', array_map('sanitize_key', $input['locations']));
+		if ( ! empty( $input['locations'] ) && is_array( $input['locations'] ) ) {
+			$request->set_param( 'locations', array_map( 'sanitize_key', $input['locations'] ) );
 		}
 
-		$response = rest_do_request($request);
-		if ($response->is_error()) {
+		$response = rest_do_request( $request );
+		if ( $response->is_error() ) {
 			return $response->as_error();
 		}
 
-		$data = rest_get_server()->response_to_data($response, false);
+		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ($data['id'] ?? 0),
-			'name' => (string) ($data['name'] ?? ''),
+			'id'   => (int) ( $data['id'] ?? 0 ),
+			'name' => (string) ( $data['name'] ?? '' ),
 		);
 	}
 }
