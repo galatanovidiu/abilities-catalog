@@ -10,7 +10,13 @@ The first build (loop L2) implemented every **T1 read** ability from the catalog
 (L4), and the **T3 dangerous tier** (L5, 8 abilities — see below). Loop **L6** closed five
 catalog-planned-but-unbuilt gaps: `content/create-cpt-item`, `content/update-cpt-item`,
 `menus/delete-menu-item` (permanent — menu items have no Trash), `fonts/delete-font-family`,
-and `settings/get-option` (read-gated by `Support/ReadableOptionAllowList`).
+and `settings/get-option` (read-gated by `Support/ReadableOptionAllowList`). Loop **L7** added
+13 authoring-context + completeness abilities — six reads (block types, block-pattern
+categories, synced patterns, theme styles, style variations, and a new **Search** domain),
+four writes (`templates/create-template`/`delete-template`, `menus/delete-classic-menu`,
+`menus/delete-navigation`), and three discovery abilities (`templates/lookup-template` plus
+`plugins/`/`themes/search-directory`, which make an outbound wp.org call and gate on the
+install capability).
 
 ## Structure
 

@@ -22,10 +22,19 @@ their risk classification. It does not surface them to any agent or UI — that 
 ## Current state
 
 - Registers all catalog **T1 read** abilities (62, across 17 domains), **T1 safe writes** (L3),
-  **T2 standard writes** (L4), the **T3 dangerous tier** (L5, 8 abilities), and the **L6
+  **T2 standard writes** (L4), the **T3 dangerous tier** (L5, 8 abilities), the **L6
   catalog-gap abilities** (5): `content/create-cpt-item`, `content/update-cpt-item`,
   `menus/delete-menu-item` (permanent — no Trash, `destructive`), `fonts/delete-font-family`,
-  `settings/get-option` (read-gated by `Support/ReadableOptionAllowList`).
+  `settings/get-option` (read-gated by `Support/ReadableOptionAllowList`), and the **L7
+  authoring-context + completeness abilities** (13): six reads
+  (`templates/list-block-types`, `list-block-pattern-categories`, `list-synced-patterns`,
+  `get-theme-styles`, `list-global-style-variations`, and the new **Search** domain's
+  `search/search-content`), four writes (`templates/create-template`,
+  `templates/delete-template` (`destructive`), `menus/delete-classic-menu` (`destructive`),
+  `menus/delete-navigation` (`destructive`)), and three discovery abilities
+  (`templates/lookup-template` (pure core); `plugins/search-directory` and
+  `themes/search-directory` — outbound wp.org call, `readonly`, gated on
+  `install_plugins`/`install_themes`).
 - One PHP class per ability under `includes/Abilities/<Domain>/`. The `Registry` scans them,
   registers each category once on `wp_abilities_api_categories_init` and each ability on
   `wp_abilities_api_init`. No Composer step, no shared manifest — adding a domain edits only its
