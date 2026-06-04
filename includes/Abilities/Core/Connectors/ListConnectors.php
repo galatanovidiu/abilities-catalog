@@ -13,8 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `connectors/list-connectors`.
  *
- * Lists the AI provider connectors registered through the WordPress 7.0
- * connectors API (`wp_get_connectors()`). Each connector is mapped to a strict,
+ * Lists every connector registered through the WordPress 7.0 connectors API
+ * (`wp_get_connectors()`). Core registers AI-provider connectors (`type` of
+ * `ai_provider`) plus non-AI connectors such as `akismet` (`type` of
+ * `spam_filtering`), and plugins may register more via `wp_connectors_init`;
+ * the `type` field distinguishes them. Each connector is mapped to a strict,
  * non-secret field set: `id`, `name`, `type`, and a boolean `configured` flag.
  *
  * The API key is never read into the output. Connector records do not store the
@@ -40,7 +43,7 @@ final class ListConnectors implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Connectors', 'abilities-catalog' ),
-			'description'         => __( 'Lists registered AI provider connectors with non-secret metadata. API keys are never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
+			'description'         => __( 'Lists registered connectors with non-secret metadata. The "type" field distinguishes AI providers ("ai_provider") from other kinds (e.g. "spam_filtering"). API keys are never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
 			'category'            => 'connectors',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -52,6 +55,7 @@ final class ListConnectors implements Ability {
 						'description' => __( 'The registered connectors.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
+							'required'             => array( 'id', 'name', 'type', 'configured' ),
 							'additionalProperties' => false,
 							'properties'           => array(
 								'id'         => array(
