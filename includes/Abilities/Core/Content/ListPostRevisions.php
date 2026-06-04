@@ -122,14 +122,16 @@ final class ListPostRevisions implements Ability {
 			return RestError::from( $response );
 		}
 
-		$items   = rest_get_server()->response_to_data( $response, false );
-		$headers = $response->get_headers();
-		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'revisionSummary' ), $items ) : array();
+		$items = rest_get_server()->response_to_data( $response, false );
+		$rows  = is_array( $items ) ? array_map( array( ContentListShaper::class, 'revisionSummary' ), $items ) : array();
 
+		// The core revisions controller returns the full set in one response and
+		// emits no pagination headers, so derive the total from the rows rather
+		// than reading X-WP-Total (which would always be 0).
 		return array(
 			'items'       => $rows,
-			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
-			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
+			'total'       => count( $rows ),
+			'total_pages' => array() === $rows ? 0 : 1,
 		);
 	}
 }

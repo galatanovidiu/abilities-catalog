@@ -62,12 +62,26 @@ Copy [`Abilities/Core/Content/GetPost.php`](../includes/Abilities/Core/Content/G
    `category` (= slug), `input_schema`, `output_schema`, `execute_callback`,
    `permission_callback`, and `meta` with `annotations.readonly = true` and
    `show_in_rest = true`.
-4. `permission_callback` encodes the **catalog capability exactly** (never weaker). For
-   object-level caps read the id from the input: `current_user_can('read_post', $id)`.
-   This is the hard guard; `rest_do_request` re-checks underneath as defense-in-depth.
-5. `execute_callback` wraps a core function or an internal REST route
+4. `permission_callback` encodes the **catalog capability exactly** (never weaker), but uses a
+   **coarse, object-independent** check — a type-level capability (`edit_posts`, `delete_pages`,
+   `$obj->cap->edit_posts`), or `return true` for a read that the wrapped route gates per object.
+   Do **not** do an object-level `current_user_can('read_post', $id)` here. The Abilities API runs
+   `permission_callback` inside `execute()` and, on any non-`true` return, replaces the result with a
+   single generic "does not have necessary permission" error (a `WP_Error` you return is swallowed).
+   Because `current_user_can($cap, $id)` returns `false` for a missing, zero, or non-existent id, an
+   object-level check there collapses bad-id (404), unknown-type (400), and real auth failures (403)
+   into the same opaque error — the agent cannot tell what to fix.
+5. Enforce the **object-level** capability in `execute_callback`, where its specific error reaches
+   the caller. Two ways: (a) the wrapped core REST route already does it — `rest_do_request()` returns
+   `rest_post_invalid_id` (404) / `rest_forbidden` (403), surfaced via `Support\RestError::from()`; or
+   (b) for an ability that calls a core function directly, resolve the object yourself —
+   `Support\PostAccess::resolveEditable($id)` returns the post or a 404/403 `WP_Error`. A core function
+   with no capability check of its own (e.g. `wp_restore_post_revision()`) **must** be guarded by an
+   explicit `current_user_can()` in `execute()` before it runs.
+6. `execute_callback` wraps a core function or an internal REST route
    (`rest_do_request`) — do not reimplement WordPress logic. Return a `WP_Error` on
-   failure; otherwise an array matching `output_schema`.
+   failure; otherwise an array matching `output_schema`. For unknown/non-REST `post_type`, let
+   `permission_callback` return true and have `execute()` return a specific `invalid_post_type` (400).
 
 The Registry refuses any ability whose `meta.annotations.readonly` is not strictly `true`
 unless it is registered through the write path, so a write ability cannot ship by accident.
