@@ -1,0 +1,22 @@
+{
+	"name": "abilities-catalog",
+	"type": "module",
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/galatanovidiu/abilities-catalog.git"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"wp-env": "wp-env",
+		"wp-env:test": "wp-env --config=.wp-env.test.json",
+		"test:php": "npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/$(basename \"$(pwd)\")/ vendor/bin/phpunit -c phpunit.xml.dist --no-coverage",
+		"test:php:coverage": "npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/$(basename \"$(pwd)\")/ vendor/bin/phpunit -c phpunit.xml.dist",
+		"test:php:setup": "npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/$(basename \"$(pwd)\")/ composer install"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^11.6.0"
+	}
+}

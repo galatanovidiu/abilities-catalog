@@ -17,6 +17,9 @@ their risk classification. It does not surface them to any agent or UI — that 
   adding abilities.
 - [docs/schema-constraints.md](docs/schema-constraints.md) — input/output schema rules that make an
   ability execute (not just register). Read before authoring or debugging an ability's schema.
+- [docs/testing.md](docs/testing.md) — the TDD workflow: how to run PHPUnit in wp-env, the
+  red-green-refactor loop, and where tests live. Read before adding or changing an ability;
+  new abilities are built test-first.
 - `.hyper/loops/` (local, gitignored) — L1/L2/L5 build history.
 
 ## Current state
