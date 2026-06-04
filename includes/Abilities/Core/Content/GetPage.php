@@ -62,47 +62,55 @@ final class GetPage implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'title', 'status', 'link' ),
 				'properties'           => array(
-					'id'         => array(
+					'id'                 => array(
 						'type'        => 'integer',
 						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
-					'title'      => array(
+					'title'              => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
 					),
-					'content'    => array(
+					'content'            => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered page content.', 'abilities-catalog' ),
 					),
-					'excerpt'    => array(
+					'excerpt'            => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered page excerpt.', 'abilities-catalog' ),
 					),
-					'status'     => array(
+					'slug'               => array(
+						'type'        => 'string',
+						'description' => __( 'The page slug.', 'abilities-catalog' ),
+					),
+					'status'             => array(
 						'type'        => 'string',
 						'description' => __( 'The page status.', 'abilities-catalog' ),
 					),
-					'author'     => array(
+					'author'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The author user ID.', 'abilities-catalog' ),
 					),
-					'link'       => array(
+					'link'               => array(
 						'type'        => 'string',
-						'description' => __( 'The public permalink.', 'abilities-catalog' ),
+						'description' => __( 'The page URL (may be a non-public draft/preview URL for non-published pages).', 'abilities-catalog' ),
 					),
-					'date'       => array(
+					'password_protected' => array(
+						'type'        => 'boolean',
+						'description' => __( 'True when the page is password-protected. The rendered content/excerpt are empty unless the correct password is supplied.', 'abilities-catalog' ),
+					),
+					'date'               => array(
 						'type'        => 'string',
-						'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
+						'description' => __( 'The publish date in site time. Empty when no date is set (e.g. some drafts).', 'abilities-catalog' ),
 					),
-					'modified'   => array(
+					'modified'           => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
-					'parent'     => array(
+					'parent'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The parent page ID.', 'abilities-catalog' ),
 					),
-					'menu_order' => array(
+					'menu_order'         => array(
 						'type'        => 'integer',
 						'description' => __( 'The page order value.', 'abilities-catalog' ),
 					),
@@ -163,17 +171,19 @@ final class GetPage implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'         => (int) ( $data['id'] ?? $id ),
-			'title'      => (string) ( $data['title']['rendered'] ?? '' ),
-			'content'    => (string) ( $data['content']['rendered'] ?? '' ),
-			'excerpt'    => (string) ( $data['excerpt']['rendered'] ?? '' ),
-			'status'     => (string) ( $data['status'] ?? get_post_status( $id ) ),
-			'author'     => (int) ( $data['author'] ?? 0 ),
-			'link'       => (string) ( $data['link'] ?? '' ),
-			'date'       => (string) ( $data['date'] ?? '' ),
-			'modified'   => (string) ( $data['modified'] ?? '' ),
-			'parent'     => (int) ( $data['parent'] ?? 0 ),
-			'menu_order' => (int) ( $data['menu_order'] ?? 0 ),
+			'id'                 => (int) ( $data['id'] ?? $id ),
+			'title'              => (string) ( $data['title']['rendered'] ?? '' ),
+			'content'            => (string) ( $data['content']['rendered'] ?? '' ),
+			'excerpt'            => (string) ( $data['excerpt']['rendered'] ?? '' ),
+			'slug'               => (string) ( $data['slug'] ?? '' ),
+			'status'             => (string) ( $data['status'] ?? get_post_status( $id ) ),
+			'author'             => (int) ( $data['author'] ?? 0 ),
+			'link'               => (string) ( $data['link'] ?? '' ),
+			'password_protected' => (bool) ( $data['content']['protected'] ?? $data['excerpt']['protected'] ?? false ),
+			'date'               => (string) ( $data['date'] ?? '' ),
+			'modified'           => (string) ( $data['modified'] ?? '' ),
+			'parent'             => (int) ( $data['parent'] ?? 0 ),
+			'menu_order'         => (int) ( $data['menu_order'] ?? 0 ),
 		);
 	}
 }
