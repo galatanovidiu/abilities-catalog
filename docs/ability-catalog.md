@@ -152,8 +152,7 @@ All write entries must be consumer-gated; capability is the hard guard.
 
 ## Connectors — namespace `connectors`  (WP 7.0 AI providers; cap `manage_options` — no dedicated cap; see Open decisions)
 - **connectors/list-connectors**, **get-connector** — R · net-new (wrap `WP_Connector_Registry`) · T1. Output must NOT include API keys — only a `configured` flag.
-- **connectors/register-connector** — W · net-new · T2 (high-sensitivity). Carries a live `api_key` — never log/echo/trace. Not idempotent. In: id, name, type, api_key. Out: id, registered.
-- **connectors/unregister-connector** — W · D! · net-new · T2 (high-sensitivity). Breaks features relying on the provider. In: id. Out: id, unregistered.
+- **connectors/register-connector**, **unregister-connector** — **dropped.** `WP_Connector_Registry` is an in-memory singleton, rebuilt every request on `init` (`_wp_connectors_init` → `do_action( 'wp_connectors_init', $registry )`). A `register()`/`unregister()` call persists only for the current request; the intended registration path is a plugin re-registering on the `wp_connectors_init` action (code-only). An ability executing in one REST request cannot durably register or unregister a connector, so these were removed. Durable connector key management belongs to the setting option (e.g. `connectors_ai_anthropic_api_key`) — a `settings/update-option` concern, not a registry write.
 
 ## Appearance: Themes — namespace `themes`
 - **themes/list-themes**, **get-active-theme** — R · wrapper `/wp/v2/themes` GET · T1. Cap: `switch_themes` (read also via `edit_theme_options`).
