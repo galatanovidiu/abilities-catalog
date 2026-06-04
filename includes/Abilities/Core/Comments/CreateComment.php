@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * comment's id, status, and link. A reply is the same call with a `parent`.
  * The `permission_callback` encodes the catalog capabilities: the user must be
  * logged in and able to read the target post; setting any moderation field
- * (`status`, `author`, `author_email`, `author_ip`, `author_name`) additionally
+ * (`status`, `author`, `author_email`, `author_name`) additionally
  * requires `moderate_comments`. The REST route re-checks every capability
  * underneath (defense in depth) and sanitizes content.
  *
@@ -32,7 +32,7 @@ final class CreateComment implements Ability {
 	 *
 	 * @var string[]
 	 */
-	private const MODERATION_FIELDS = array( 'status', 'author', 'author_email', 'author_ip', 'author_name' );
+	private const MODERATION_FIELDS = array( 'status', 'author', 'author_email', 'author_name' );
 
 	/**
 	 * {@inheritDoc}
@@ -78,7 +78,8 @@ final class CreateComment implements Ability {
 					),
 					'status'       => array(
 						'type'        => 'string',
-						'description' => __( 'The comment status (e.g. "approve", "hold"). Requires the moderate_comments capability.', 'abilities-catalog' ),
+						'enum'        => array( 'approve', 'hold' ),
+						'description' => __( 'The comment status ("approve" or "hold"). Requires the moderate_comments capability.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'post', 'content' ),
@@ -86,19 +87,23 @@ final class CreateComment implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status', 'link' ),
+				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new comment ID.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting comment status.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The public permalink to the comment.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the comment. Surface this so a moderator can review a held comment.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -186,12 +191,14 @@ final class CreateComment implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data       = rest_get_server()->response_to_data( $response, false );
+		$comment_id = (int) ( $data['id'] ?? 0 );
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'status' => (string) ( $data['status'] ?? '' ),
-			'link'   => (string) ( $data['link'] ?? '' ),
+			'id'        => $comment_id,
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'edit_link' => (string) get_edit_comment_link( $comment_id ),
 		);
 	}
 }
