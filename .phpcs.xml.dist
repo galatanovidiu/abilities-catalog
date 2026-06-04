@@ -66,6 +66,24 @@
 		<exclude name="WordPress.Files.FileName" />
 		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound" />
 		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed" />
+		<!--
+			This plugin is deliberately PSR-style: PascalCase classes, camelCase
+			methods, camelCase variables/properties, and non-Yoda conditions. The
+			WordPress naming and Yoda sniffs below conflict with that choice, so they
+			are excluded rather than rewriting working, consistently PSR code.
+			See the namespace root GalatanOvidiu\AbilitiesCatalog and 190+ camelCase
+			methods across includes/.
+		-->
+		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid" />
+		<exclude name="WordPress.NamingConventions.ValidVariableName" />
+		<exclude name="WordPress.PHP.YodaConditions" />
+		<!--
+			Dynamic, object-derived capability checks (e.g. $taxonomy->cap->edit_terms,
+			$post_type_object->cap->edit_posts) cannot be resolved statically, so this
+			sniff reports only false positives for them. The parent Capabilities sniff
+			stays active to catch invalid literal capability strings.
+		-->
+		<exclude name="WordPress.WP.Capabilities.Undetermined" />
 	</rule>
 
 	<!--
