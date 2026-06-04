@@ -193,6 +193,11 @@ final class Registry {
 				$args[ $schema_key ] = $this->normalizeSchema( $args[ $schema_key ] );
 			}
 
+			$name = strtolower( $name );
+			if ( ! $name ) {
+				continue;
+			}
+
 			wp_register_ability( $name, $args );
 		}
 	}
@@ -261,7 +266,7 @@ final class Registry {
 		$base    = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
 		$pattern = $base . '*/*.php';
 
-		foreach ( glob( $pattern ) as $file ) {
+		foreach ( ( glob( $pattern ) ?: array() ) as $file ) {
 			$relative = substr( $file, strlen( $base ), -strlen( '.php' ) );
 			$class    = __NAMESPACE__ . '\\Abilities\\' . str_replace( '/', '\\', $relative );
 
