@@ -55,8 +55,9 @@ Coverage is intentionally not a CI gate while the suite is young. Promote it to 
 - `tests/phpunit/Fixtures/` — test doubles (e.g. an unsafe write ability used to prove the
   Registry annotation guard refuses it).
 
-Test files end in `Test.php`. Integration tests for an ability mirror its source path, e.g.
-`includes/Abilities/Comments/GetComment.php` → `tests/phpunit/Integration/Abilities/Comments/GetCommentTest.php`.
+Test files end in `Test.php`. Integration tests for an ability mirror its source path by
+`<Domain>` (the group segment is dropped in the test tree), e.g.
+`includes/Abilities/Core/Comments/GetComment.php` → `tests/phpunit/Integration/Abilities/Comments/GetCommentTest.php`.
 
 ## The red-green-refactor loop (required for new abilities)
 

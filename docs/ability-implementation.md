@@ -22,33 +22,37 @@ install capability).
 
 ```
 abilities-catalog/
-  abilities-catalog.php            # plugin header + no-build PSR-4 autoloader + bootstrap
+  abilities-catalog.php                  # plugin header + no-build PSR-4 autoloader + bootstrap
   includes/
-    Contracts/Ability.php         # interface: name(), args()
-    Categories.php                # central category catalog (slug => label/description)
-    Registry.php                  # discovers ability classes, registers them, guards
-    Support/AdminIncludes.php     # loads wp-admin/includes/* on demand (for net-new reads)
-    Abilities/<Domain>/<Class>.php # one class per ability
+    Contracts/Ability.php               # interface: name(), args()
+    Contracts/CategoryProvider.php      # interface: categories() — one provider per group
+    Registry.php                        # recursively discovers abilities + providers, guards
+    Support/AdminIncludes.php           # loads wp-admin/includes/* on demand (for net-new reads)
+    Abilities/Core/CategoryCatalog.php       # Core group's category catalog (slug => label/description)
+    Abilities/<Group>/<Domain>/<Class>.php # one class per ability
 ```
 
-`Automattic\AbilitiesCatalog\` maps to `includes/`. There is **no Composer step** and **no
-shared manifest**: `Registry` scans `includes/Abilities/*/*.php`, instantiates every class
-implementing `Ability`, and registers each ability on `wp_abilities_api_init`. Categories
-are defined centrally in `Categories.php` and registered on
-`wp_abilities_api_categories_init`; an ability links to its category by slug through
-`args()['category']`. To add a domain you add files under its own folder **and** add one
-category entry to `Categories.php` (the only shared file a new domain touches).
+`GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`. There is **no Composer step** and **no
+shared manifest**: `Registry` scans `includes/Abilities/` recursively (any depth), instantiates
+every class implementing `Ability`, and registers each ability on `wp_abilities_api_init`.
+Abilities are organized into top-level **groups** — `Core/` for the core WP catalog, and a
+sibling folder per add-on (e.g. `Woo/`). Categories are contributed **per group** by a class
+implementing `CategoryProvider`; the Registry discovers them in the same scan and registers
+their categories on `wp_abilities_api_categories_init`. An ability links to its category by slug
+through `args()['category']`. To add a domain you add files under its group's folder; a new
+group also adds its own `CategoryProvider`. No shared file is edited.
 
 ## Adding a read ability
 
-Copy [`Abilities/Content/GetPost.php`](../includes/Abilities/Content/GetPost.php)
+Copy [`Abilities/Core/Content/GetPost.php`](../includes/Abilities/Core/Content/GetPost.php)
 — the canonical template — and follow it:
 
-1. `declare(strict_types=1)`, namespace `Automattic\AbilitiesCatalog\Abilities\<Domain>`,
-   `if (!defined('ABSPATH')) { exit; }`, one `final class` implementing `Ability`.
-2. For a net-new domain, add one entry to `Categories.php` keyed by slug
-   (`'slug' => ['slug' => ..., 'label' => ..., 'description' => ...]`). Existing
-   domains already have an entry — reuse the slug.
+1. `declare(strict_types=1)`, namespace `GalatanOvidiu\AbilitiesCatalog\Abilities\<Group>\<Domain>`
+   (e.g. `...\Abilities\Core\Content`), `if (!defined('ABSPATH')) { exit; }`, one `final class`
+   implementing `Ability`.
+2. For a net-new domain, add one entry to the group's `CategoryProvider` keyed by slug
+   (`'slug' => ['slug' => ..., 'label' => ..., 'description' => ...]`; the Core group's is
+   `Abilities/Core/CategoryCatalog.php`). Existing domains already have an entry — reuse the slug.
 3. `args()` returns the `wp_register_ability` array: `label`, `description`,
    `category` (= slug), `input_schema`, `output_schema`, `execute_callback`,
    `permission_callback`, and `meta` with `annotations.readonly = true` and

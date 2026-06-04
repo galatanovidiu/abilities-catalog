@@ -44,7 +44,7 @@ parameters:
 		-
 			identifier: function.notFound
 			message: '#Function wp_get_connectors? not found\.#'
-			path: includes/Abilities/Connectors
+			path: includes/Abilities/Core/Connectors
 
 		# export_wp() stubs type $args['author'] and $args['category'] as string, but
 		# the catalog passes integer IDs. export_wp() resolves the category via
@@ -53,4 +53,4 @@ parameters:
 		# prepared statement. Integers are correct at runtime; the stub is too narrow.
 		-
 			identifier: argument.type
-			path: includes/Abilities/Tools/ExportContent.php
+			path: includes/Abilities/Core/Tools/ExportContent.php

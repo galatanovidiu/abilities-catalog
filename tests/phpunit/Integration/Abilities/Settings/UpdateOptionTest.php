@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Settings;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Settings\UpdateOption;
+use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Settings\UpdateOption;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
