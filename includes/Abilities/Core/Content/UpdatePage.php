@@ -145,23 +145,21 @@ final class UpdatePage implements Ability {
 	/**
 	 * Permission check encoding the catalog capabilities for updating a page.
 	 *
-	 * Requires object-level `edit_post` on the target (mapped to page caps via
-	 * `map_meta_cap`); additionally `publish_pages` when the requested status
-	 * would publish, and `edit_others_pages` when reassigning the page to
-	 * another user.
+	 * Uses the type-level `edit_pages` capability as the coarse guard — an
+	 * object-independent check so a missing or non-existent id is not masked as a
+	 * permission failure. The object-level `edit_post` check and the specific
+	 * `rest_post_invalid_id` (404) / `rest_cannot_edit` (403) errors come from the
+	 * wrapped `POST /wp/v2/pages/<id>` route in `execute()`. Additionally requires
+	 * `publish_pages` when the requested status would publish, and
+	 * `edit_others_pages` when reassigning the page to another user.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the requested page.
+	 * @return bool True if the current user may update pages of this type.
 	 */
 	public function hasPermission( $input ): bool {
 		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( ! current_user_can( 'edit_post', $id ) ) {
+		if ( ! current_user_can( 'edit_pages' ) ) {
 			return false;
 		}
 

@@ -134,6 +134,10 @@ final class PostMetaTest extends TestCase {
 		$result = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		// A logged-out user cannot edit the post, so the object-level guard in
+		// execute() returns a specific authorization error (401 when unauthenticated)
+		// rather than the generic "does not have necessary permission" collapse.
+		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

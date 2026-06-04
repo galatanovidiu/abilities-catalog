@@ -82,20 +82,18 @@ final class TrashPost implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_post` on the target post.
+	 * Permission check: type-level `delete_posts` as the coarse guard.
+	 *
+	 * Object-independent so a missing or non-existent id is not masked as a
+	 * permission failure. The object-level `delete_post` check and the specific
+	 * `rest_post_invalid_id` (404) / `rest_cannot_delete` (403) errors come from
+	 * the wrapped `DELETE /wp/v2/posts/<id>` route in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may trash the post.
+	 * @return bool True if the current user may trash posts.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( 'delete_posts' );
 	}
 
 	/**

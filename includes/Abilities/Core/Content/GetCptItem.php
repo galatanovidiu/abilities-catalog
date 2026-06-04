@@ -121,27 +121,20 @@ final class GetCptItem implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `read_post` on the requested item. Rejects
-	 * unknown or non-REST post types and missing IDs.
+	 * Permission check: delegated to the wrapped REST route.
+	 *
+	 * Reads through `GET /wp/v2/<rest_base>/<id>`, whose permission check enforces
+	 * `read_post` on the object. Deferring to the route preserves anonymous reads
+	 * of published public items and lets `execute()` surface specific errors:
+	 * `invalid_post_type` (400) for an unknown or non-REST type, and the route's
+	 * `rest_post_invalid_id` (404) / `rest_forbidden` (403) for the item itself —
+	 * instead of masking all of them as a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the item.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input     = is_array( $input ) ? $input : array();
-		$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : '';
-		$id        = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( '' === $post_type || $id <= 0 ) {
-			return false;
-		}
-
-		$obj = get_post_type_object( $post_type );
-		if ( ! $obj || empty( $obj->show_in_rest ) ) {
-			return false;
-		}
-
-		return current_user_can( 'read_post', $id );
+		return true;
 	}
 
 	/**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\PostAccess;
 use GalatanOvidiu\AbilitiesCatalog\Support\PostMetaKeys;
 use WP_Error;
 
@@ -94,23 +95,20 @@ final class DeletePostMeta implements Ability {
 	}
 
 	/**
-	 * Permission check: edit access to the target post (object-level).
+	 * Permission check: delegated to `execute()`.
 	 *
-	 * The coarse `edit_post` gate is the hard guard; the per-key
-	 * `edit_post_meta` capability is enforced in {@see self::execute()}.
+	 * This ability calls core directly (no wrapped REST route), so object-level
+	 * `edit_post` is enforced in `execute()` via
+	 * {@see PostAccess::resolveEditable()} — returning `rest_post_invalid_id` (404)
+	 * for a missing post and `rest_cannot_edit` (403) when the user may not edit it,
+	 * instead of masking both as a single permission error. The per-key
+	 * `edit_post_meta` capability is also enforced in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may edit the post.
+	 * @return bool Always true; `execute()` is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $id );
+		return true;
 	}
 
 	/**
@@ -125,10 +123,10 @@ final class DeletePostMeta implements Ability {
 	public function execute( $input ) {
 		$input = is_array( $input ) ? $input : array();
 		$id    = absint( $input['id'] );
-		$post  = get_post( $id );
+		$post  = PostAccess::resolveEditable( $id );
 
-		if ( ! $post ) {
-			return new WP_Error( 'rest_post_invalid_id', __( 'Invalid post ID.', 'abilities-catalog' ), array( 'status' => 404 ) );
+		if ( is_wp_error( $post ) ) {
+			return $post;
 		}
 
 		$keys = isset( $input['keys'] ) && is_array( $input['keys'] ) ? array_values( array_unique( array_map( 'strval', $input['keys'] ) ) ) : array();

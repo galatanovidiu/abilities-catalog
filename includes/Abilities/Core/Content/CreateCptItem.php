@@ -132,24 +132,22 @@ final class CreateCptItem implements Ability {
 	/**
 	 * Permission check encoding the per-type capabilities for creating an item.
 	 *
-	 * Validates the type is registered and `show_in_rest`, then requires the type's
-	 * `create_posts` capability; additionally `publish_posts` when the requested
-	 * status would publish, and `edit_others_posts` when authoring as another user.
+	 * Requires the type's `create_posts` capability; additionally `publish_posts`
+	 * when the requested status would publish, and `edit_others_posts` when
+	 * authoring as another user. For an unknown or non-REST type it returns true so
+	 * `execute()` can surface the specific `invalid_post_type` (400) error rather
+	 * than masking it as a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may create the requested item.
+	 * @return bool True if the current user may create items of this type.
 	 */
 	public function hasPermission( $input ): bool {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : '';
 
-		if ( '' === $post_type ) {
-			return false;
-		}
-
 		$obj = get_post_type_object( $post_type );
 		if ( ! $obj || empty( $obj->show_in_rest ) ) {
-			return false;
+			return true;
 		}
 
 		if ( ! current_user_can( $obj->cap->create_posts ) ) {

@@ -91,29 +91,27 @@ final class DeleteCptItem implements Ability {
 	}
 
 	/**
-	 * Permission check: validate the type is registered and `show_in_rest`, then
-	 * apply object-level `delete_post` on the target item.
+	 * Permission check: the type's `delete_posts` capability as the coarse guard.
 	 *
-	 * Mirrors the REST posts controller `delete_item_permissions_check`.
+	 * For an unknown or non-REST type it returns true so `execute()` can surface
+	 * the specific `invalid_post_type` (400) error rather than masking it as a
+	 * permission failure. The object-level `delete_post` check and the
+	 * `rest_post_invalid_id` (404) / `rest_cannot_delete` (403) errors come from
+	 * the wrapped REST route in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the item.
+	 * @return bool True if the current user may delete items of this type.
 	 */
 	public function hasPermission( $input ): bool {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : '';
-		$id        = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( '' === $post_type || $id <= 0 ) {
-			return false;
-		}
 
 		$obj = get_post_type_object( $post_type );
 		if ( ! $obj || empty( $obj->show_in_rest ) ) {
-			return false;
+			return true;
 		}
 
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( $obj->cap->delete_posts );
 	}
 
 	/**

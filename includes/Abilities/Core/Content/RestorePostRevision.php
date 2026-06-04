@@ -100,33 +100,21 @@ final class RestorePostRevision implements Ability {
 	}
 
 	/**
-	 * Permission check: the only authorization guard for the restore.
+	 * Permission check: delegated to `execute()`.
 	 *
-	 * Core's `wp_restore_post_revision()` does no capability check, so this
-	 * callback must enforce everything. It validates that both IDs are positive,
-	 * confirms the target IS a revision and that its `post_parent` matches the
-	 * supplied parent (rejecting a mismatch so a caller cannot restore a revision
-	 * onto an unrelated post), and finally requires object-level `edit_post` on
-	 * the parent post.
+	 * Core's `wp_restore_post_revision()` does no capability check, so `execute()`
+	 * is the authorization guard: it validates both IDs, confirms the target is a
+	 * revision of the supplied parent, and requires object-level `edit_post` on the
+	 * parent — returning a specific error for each failure (a 400 for a bad/mismatched
+	 * revision, a 403 for an authorization failure) instead of masking them as a
+	 * single permission error. The object-level capability is still enforced
+	 * server-side before the restore runs.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may restore the revision onto the parent.
+	 * @return bool Always true; `execute()` is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input       = is_array( $input ) ? $input : array();
-		$parent      = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
-		$revision_id = isset( $input['revision_id'] ) ? absint( $input['revision_id'] ) : 0;
-
-		if ( $parent <= 0 || $revision_id <= 0 ) {
-			return false;
-		}
-
-		$revision = wp_get_post_revision( $revision_id );
-		if ( ! $revision instanceof WP_Post || (int) $revision->post_parent !== $parent ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $parent );
+		return true;
 	}
 
 	/**
@@ -160,6 +148,17 @@ final class RestorePostRevision implements Ability {
 				'webmcp_revision_mismatch',
 				__( 'The revision does not exist or does not belong to the given parent post.', 'abilities-catalog' ),
 				array( 'status' => 400 )
+			);
+		}
+
+		// Object-level authorization. Core's wp_restore_post_revision() performs no
+		// capability check, so this is the only guard against restoring a revision
+		// onto a post the current user may not edit.
+		if ( ! current_user_can( 'edit_post', $parent ) ) {
+			return new WP_Error(
+				'rest_cannot_edit',
+				__( 'Sorry, you are not allowed to edit this post.', 'abilities-catalog' ),
+				array( 'status' => rest_authorization_required_code() )
 			);
 		}
 

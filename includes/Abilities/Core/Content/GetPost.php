@@ -118,23 +118,21 @@ final class GetPost implements Ability {
 	}
 
 	/**
-	 * Permission check: read access to the requested post (object-level).
+	 * Permission check: delegated to the wrapped REST route.
 	 *
-	 * Encodes the catalog capability for `content/get-post` — `read_post` on the
-	 * object — which also resolves to public access for published public posts.
+	 * `content/get-post` reads through `GET /wp/v2/posts/<id>`, whose own
+	 * permission check enforces `read_post` on the object — granting public access
+	 * to published public posts (including anonymous callers) and denying private
+	 * or password-protected ones. Doing the object-level check here instead would
+	 * mask a missing or non-existent id as "permission denied"; deferring to the
+	 * route lets `execute()` surface the route's specific error
+	 * (`rest_post_invalid_id` 404, `rest_forbidden` 403) via {@see RestError::from()}.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the post.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'read_post', $id );
+		return true;
 	}
 
 	/**

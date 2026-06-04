@@ -123,20 +123,19 @@ final class GetPage implements Ability {
 	}
 
 	/**
-	 * Permission check: read access to the requested page (object-level `read_post`).
+	 * Permission check: delegated to the wrapped REST route.
+	 *
+	 * Reads through `GET /wp/v2/pages/<id>`, whose permission check enforces
+	 * `read_post` on the object. Deferring to the route preserves anonymous reads
+	 * of published public pages and lets `execute()` surface the route's specific
+	 * error (`rest_post_invalid_id` 404, `rest_forbidden` 403) instead of masking a
+	 * missing id as a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the page.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'read_post', $id );
+		return true;
 	}
 
 	/**

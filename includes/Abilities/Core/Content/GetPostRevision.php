@@ -108,21 +108,19 @@ final class GetPostRevision implements Ability {
 	}
 
 	/**
-	 * Permission check: `edit_post` on the parent post (object-level).
+	 * Permission check: delegated to the wrapped REST route.
+	 *
+	 * Reads through `GET /wp/v2/posts/<parent>/revisions/<id>`, whose permission
+	 * check enforces `edit_post` on the parent post. Deferring to the route lets
+	 * `execute()` surface its specific error (`rest_post_invalid_parent` 404,
+	 * `rest_cannot_read` 403) instead of masking a missing parent or revision as a
+	 * permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may edit the parent post.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input  = is_array( $input ) ? $input : array();
-		$parent = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
-		$id     = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $parent <= 0 || $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $parent );
+		return true;
 	}
 
 	/**
