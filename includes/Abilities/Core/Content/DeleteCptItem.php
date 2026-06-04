@@ -44,7 +44,7 @@ final class DeleteCptItem implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Custom Post Type Item', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes an item of any REST-enabled post type by ID, bypassing the Trash. This cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a post-like item of a registered post type by ID, bypassing the Trash. This cannot be undone. Does not support font, global-styles, template, navigation, or attachment types, or any type registered under a custom REST namespace.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -89,7 +89,7 @@ final class DeleteCptItem implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
-				'screen'       => 'edit.php',
+				'screen'       => 'edit.php?post_type={post_type}',
 			),
 		);
 	}
