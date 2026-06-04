@@ -50,14 +50,14 @@ final class CreateCptItem implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Custom Post Type Item', 'abilities-catalog' ),
-			'description'         => __( 'Creates an item of any REST-enabled post type. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
+			'description'         => __( 'Creates a post-like item (with title/content/excerpt/status fields) of a registered post type. Does not support font, global-styles, template, navigation, or attachment types. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'post_type' => array(
 						'type'        => 'string',
-						'description' => __( 'The post type slug (required).', 'abilities-catalog' ),
+						'description' => __( 'The post type slug (required). Must be a post-like REST type (title/content/excerpt/status fields); font, global-styles, template, navigation, and attachment types are not supported. Use content/list-post-types to discover available types.', 'abilities-catalog' ),
 					),
 					'title'     => array(
 						'type'        => 'string',
