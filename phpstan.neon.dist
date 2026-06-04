@@ -1,0 +1,39 @@
+# https://phpstan.org/config-reference
+
+parameters:
+	# Rules
+	treatPhpDocTypesAsCertain: false
+	inferPrivatePropertyTypeFromConstructor: true
+	checkExplicitMixedMissingReturn: true
+	checkFunctionNameCase: true
+	checkInternalClassCaseSensitivity: true
+	checkTooWideReturnTypesInProtectedAndPublicMethods: true
+	polluteScopeWithAlwaysIterableForeach: false
+	polluteScopeWithLoopInitialAssignments: false
+	reportAlwaysTrueInLastCondition: true
+	reportStaticMethodSignatures: true
+	reportWrongPhpDocTypeInVarTag: true
+
+	# Configuration
+	level: 8
+	phpVersion:
+		min: 80100
+		max: 80500
+	bootstrapFiles:
+		- abilities-catalog.php
+	paths:
+		- abilities-catalog.php
+		- includes/
+	excludePaths:
+		analyse:
+			- vendor/
+		analyseAndScan:
+			- node_modules (?)
+
+	# Do not fail when an ignore pattern matches nothing (keeps the shared
+	# ignore list portable as the codebase changes).
+	reportUnmatchedIgnoredErrors: false
+
+	ignoreErrors:
+		- # TODO: These are too noisy, we'll restore them in the future.
+			identifier: missingType.iterableValue

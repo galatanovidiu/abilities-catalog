@@ -10,6 +10,10 @@
 		"node": ">=22"
 	},
 	"scripts": {
+		"format": "wp-scripts format",
+		"lint:php": "composer lint",
+		"lint:php:fix": "composer format",
+		"lint:php:stan": "composer phpstan",
 		"wp-env": "wp-env",
 		"wp-env:test": "wp-env --config=.wp-env.test.json",
 		"test:php": "npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/$(basename \"$(pwd)\")/ vendor/bin/phpunit -c phpunit.xml.dist --no-coverage",
@@ -17,6 +21,11 @@
 		"test:php:setup": "npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/$(basename \"$(pwd)\")/ composer install"
 	},
 	"devDependencies": {
-		"@wordpress/env": "^11.6.0"
+		"@wordpress/env": "^11.6.0",
+		"@wordpress/prettier-config": "^4.45.0",
+		"@wordpress/scripts": "^32.2.0"
+	},
+	"overrides": {
+		"prettier": "npm:wp-prettier@^3"
 	}
 }
