@@ -16,7 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 write ability: `comments/update-comment`.
  *
  * Wraps `POST /wp/v2/comments/<id>` via `rest_do_request()` and returns the
- * comment's id, content, and status. The `permission_callback` encodes the
+ * comment's id, content, status, author, date, and edit link. The
+ * `permission_callback` encodes the
  * catalog capability: `moderate_comments` OR object-level `edit_comment`. The
  * REST route re-checks the capability underneath and sanitizes content.
  *
@@ -44,6 +45,7 @@ final class UpdateComment implements Ability {
 				'properties'           => array(
 					'id'           => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The comment ID to update.', 'abilities-catalog' ),
 					),
 					'content'      => array(
@@ -56,10 +58,12 @@ final class UpdateComment implements Ability {
 					),
 					'author_email' => array(
 						'type'        => 'string',
+						'format'      => 'email',
 						'description' => __( 'The new author email address.', 'abilities-catalog' ),
 					),
 					'date'         => array(
 						'type'        => 'string',
+						'format'      => 'date-time',
 						'description' => __( 'The new comment date in site time (ISO 8601).', 'abilities-catalog' ),
 					),
 				),
@@ -68,19 +72,35 @@ final class UpdateComment implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status' ),
+				'required'             => array( 'id', 'status', 'edit_link' ),
 				'properties'           => array(
-					'id'      => array(
+					'id'           => array(
 						'type'        => 'integer',
 						'description' => __( 'The comment ID.', 'abilities-catalog' ),
 					),
-					'content' => array(
+					'content'      => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered comment content.', 'abilities-catalog' ),
 					),
-					'status'  => array(
+					'status'       => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting comment status.', 'abilities-catalog' ),
+					),
+					'author_name'  => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting author display name.', 'abilities-catalog' ),
+					),
+					'author_email' => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting author email address.', 'abilities-catalog' ),
+					),
+					'date'         => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting comment date in site time (ISO 8601).', 'abilities-catalog' ),
+					),
+					'edit_link'    => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the comment.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -125,7 +145,7 @@ final class UpdateComment implements Ability {
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The comment's id, content, status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The comment's id, content, status, author, date, edit link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -151,12 +171,17 @@ final class UpdateComment implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data       = rest_get_server()->response_to_data( $response, false );
+		$comment_id = (int) ( $data['id'] ?? $id );
 
 		return array(
-			'id'      => (int) ( $data['id'] ?? $id ),
-			'content' => (string) ( $data['content']['rendered'] ?? '' ),
-			'status'  => (string) ( $data['status'] ?? '' ),
+			'id'           => $comment_id,
+			'content'      => (string) ( $data['content']['rendered'] ?? '' ),
+			'status'       => (string) ( $data['status'] ?? '' ),
+			'author_name'  => (string) ( $data['author_name'] ?? '' ),
+			'author_email' => (string) ( $data['author_email'] ?? '' ),
+			'date'         => (string) ( $data['date'] ?? '' ),
+			'edit_link'    => (string) get_edit_comment_link( $comment_id ),
 		);
 	}
 }
