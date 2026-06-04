@@ -14,9 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `connectors/get-connector`.
  *
- * Returns a single AI provider connector by ID (`wp_get_connector()`) as a
- * strict, non-secret field set: `id`, `name`, `type`, and a boolean
- * `configured` flag.
+ * Returns a single connector by ID (`wp_get_connector()`) as a strict,
+ * non-secret field set: `id`, `name`, `type`, and a boolean `configured`
+ * flag. Core registers AI-provider connectors plus non-AI connectors such as
+ * `akismet`, and plugins may register more via `wp_connectors_init`; this
+ * ability returns any registered connector type.
  *
  * The API key is never read into the output. Connector records do not store the
  * key value; they only carry pointers (`setting_name`, `constant_name`,
@@ -41,14 +43,14 @@ final class GetConnector implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Connector', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single AI provider connector by ID with non-secret metadata. The API key is never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single connector by ID with non-secret metadata. The API key is never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
 			'category'            => 'connectors',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'string',
-						'description' => __( 'The connector identifier.', 'abilities-catalog' ),
+						'description' => __( 'The connector identifier. Discover IDs via the connectors/list-connectors ability.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -56,7 +58,7 @@ final class GetConnector implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id' ),
+				'required'             => array( 'id', 'name', 'type', 'configured' ),
 				'properties'           => array(
 					'id'         => array(
 						'type'        => 'string',
@@ -113,7 +115,10 @@ final class GetConnector implements Ability {
 		$input = is_array( $input ) ? $input : array();
 		$id    = isset( $input['id'] ) ? (string) $input['id'] : '';
 
-		$connector = wp_get_connector( $id );
+		// Pre-check registration: `wp_get_connector()` calls `_doing_it_wrong()`
+		// for any unregistered id, which emits a developer notice under WP_DEBUG
+		// on the normal not-found path. Guard with the registration check first.
+		$connector = wp_is_connector_registered( $id ) ? wp_get_connector( $id ) : null;
 
 		if ( null === $connector ) {
 			return new WP_Error(
@@ -135,8 +140,8 @@ final class GetConnector implements Ability {
 	 * Determines whether an API key is configured for a connector.
 	 *
 	 * Connector records never store the key value; they hold pointers to where
-	 * the key lives. This method resolves only whether a key exists and never
-	 * reads or returns the key value.
+	 * the key lives. The fallback path reads the env/constant/option value only
+	 * to test that it is non-empty; the value is never returned in the output.
 	 *
 	 * Connectors using the `none` authentication method are always treated as
 	 * configured (they need no key).
