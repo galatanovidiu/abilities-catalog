@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Updates;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Updates;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Support\AdminIncludes;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 
 if (!defined('ABSPATH')) {
 	exit;

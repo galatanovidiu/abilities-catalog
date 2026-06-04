@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Privacy;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Privacy;
 
 if (!defined('ABSPATH')) {
 	exit;
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
  * exposes any exported personal data (the export payload itself).
  *
  * This file is discovered by the Registry directory scan but skipped: it is a
- * trait, not an {@see \Automattic\AbilitiesCatalog\Contracts\Ability}, so it is
+ * trait, not an {@see \GalatanOvidiu\AbilitiesCatalog\Contracts\Ability}, so it is
  * never registered as an ability.
  *
  * @since 0.1.0

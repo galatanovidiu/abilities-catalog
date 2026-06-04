@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Contracts;
+namespace GalatanOvidiu\AbilitiesCatalog\Contracts;
 
 if (!defined('ABSPATH')) {
 	exit;
@@ -11,11 +11,11 @@ if (!defined('ABSPATH')) {
 /**
  * Contract for a single Abilities API ability.
  *
- * One class per ability, one file per class, discovered by {@see \Automattic\AbilitiesCatalog\Registry}
+ * One class per ability, one file per class, discovered by {@see \GalatanOvidiu\AbilitiesCatalog\Registry}
  * via a directory scan of `includes/Abilities/<Domain>/`. Implementations declare
  * the full `wp_register_ability()` argument array; the Registry registers the
  * ability on `wp_abilities_api_init`. Categories live centrally in
- * {@see \Automattic\AbilitiesCatalog\Categories}; an ability references its
+ * {@see \GalatanOvidiu\AbilitiesCatalog\Categories}; an ability references its
  * category by slug through `args()['category']`.
  *
  * @since 0.1.0

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog;
+namespace GalatanOvidiu\AbilitiesCatalog;
 
 if (!defined('ABSPATH')) {
 	exit;

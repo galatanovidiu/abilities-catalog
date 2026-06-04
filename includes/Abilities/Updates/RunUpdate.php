@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Updates;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Updates;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Support\AdminIncludes;
-use Automattic\AbilitiesCatalog\Support\UpgradeRunner;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
+use GalatanOvidiu\AbilitiesCatalog\Support\UpgradeRunner;
 use WP_Error;
 
 if (!defined('ABSPATH')) {

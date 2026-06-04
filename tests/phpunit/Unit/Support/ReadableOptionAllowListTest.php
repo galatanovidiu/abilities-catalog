@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Unit\Support;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Unit\Support;
 
-use Automattic\AbilitiesCatalog\Support\ReadableOptionAllowList;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Support\ReadableOptionAllowList;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * The read allow-list is deny-by-default and excludes any secret-bearing option,

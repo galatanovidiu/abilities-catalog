@@ -17,7 +17,7 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog;
+namespace GalatanOvidiu\AbilitiesCatalog;
 
 if (!defined('ABSPATH')) {
 	exit;
@@ -28,7 +28,7 @@ define('ABILITIES_CATALOG_FILE', __FILE__);
 define('ABILITIES_CATALOG_DIR', plugin_dir_path(__FILE__));
 
 /**
- * No-build PSR-4 autoloader for the `Automattic\AbilitiesCatalog\` namespace.
+ * No-build PSR-4 autoloader for the `GalatanOvidiu\AbilitiesCatalog\` namespace.
  *
  * Maps the namespace root to the `includes/` directory, mirroring the
  * adapter's no-build ethos (no Composer step). Registered before the bootstrap

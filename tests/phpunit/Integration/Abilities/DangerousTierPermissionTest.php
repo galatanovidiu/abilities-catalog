@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Integration\Abilities;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * Every dangerous ability is gated by a capability that an unprivileged user does
@@ -47,7 +47,7 @@ final class DangerousTierPermissionTest extends TestCase {
 
 		foreach (glob($base . '*/*.php') as $file) {
 			$relative = substr($file, strlen($base), -strlen('.php'));
-			$class    = 'Automattic\\AbilitiesCatalog\\Abilities\\' . str_replace('/', '\\', $relative);
+			$class    = 'GalatanOvidiu\\AbilitiesCatalog\\Abilities\\' . str_replace('/', '\\', $relative);
 
 			if (!class_exists($class) || !is_subclass_of($class, Ability::class)) {
 				continue;

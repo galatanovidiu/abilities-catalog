@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Templates;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Templates;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 
 if (!defined('ABSPATH')) {
 	exit;

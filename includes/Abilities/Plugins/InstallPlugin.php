@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Plugins;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Plugins;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
-use Automattic\AbilitiesCatalog\Support\FilesystemGuard;
-use Automattic\AbilitiesCatalog\Support\SourceValidator;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\FilesystemGuard;
+use GalatanOvidiu\AbilitiesCatalog\Support\SourceValidator;
 use WP_REST_Request;
 use WP_Error;
 

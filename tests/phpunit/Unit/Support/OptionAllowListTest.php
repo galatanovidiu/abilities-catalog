@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Unit\Support;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Unit\Support;
 
-use Automattic\AbilitiesCatalog\Support\OptionAllowList;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Support\OptionAllowList;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * The write allow-list is deny-by-default. Site-defining, security-sensitive, and

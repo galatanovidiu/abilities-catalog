@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Abilities\Privacy;
+namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Privacy;
 
-use Automattic\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use WP_Error;
 use WP_User_Request;
 

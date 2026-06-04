@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Integration\Abilities\Settings;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Settings;
 
-use Automattic\AbilitiesCatalog\Abilities\Settings\UpdateOption;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Abilities\Settings\UpdateOption;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**

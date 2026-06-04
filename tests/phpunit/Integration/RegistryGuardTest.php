@@ -7,11 +7,11 @@
 
 declare(strict_types=1);
 
-namespace Automattic\AbilitiesCatalog\Tests\Integration;
+namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration;
 
-use Automattic\AbilitiesCatalog\Registry;
-use Automattic\AbilitiesCatalog\Tests\Fixtures\UnsafeWriteAbility;
-use Automattic\AbilitiesCatalog\Tests\TestCase;
+use GalatanOvidiu\AbilitiesCatalog\Registry;
+use GalatanOvidiu\AbilitiesCatalog\Tests\Fixtures\UnsafeWriteAbility;
+use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use ReflectionProperty;
 
 /**
