@@ -38,14 +38,15 @@ final class UnapproveComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Unapprove Comment', 'abilities-catalog' ),
-			'description'         => __( 'Unapproves a comment, setting its status to "hold". Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Unapproves a comment, forcing its status to "hold" from any current state (also clears "spam" or "trash"). Reversible: re-approve with comments/approve-comment to restore "approved". Unapproving an already-held comment is a no-op that reports the existing "hold" status. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The comment ID to unapprove.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The comment ID to unapprove. Discover valid IDs with comments/list-comments.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -55,13 +56,17 @@ final class UnapproveComment implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'status' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'              => array(
 						'type'        => 'integer',
 						'description' => __( 'The comment ID.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'          => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting comment status.', 'abilities-catalog' ),
+					),
+					'previous_status' => array(
+						'type'        => 'string',
+						'description' => __( 'The comment status before this call (e.g. "approved", "spam", "trash", "hold").', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -107,11 +112,13 @@ final class UnapproveComment implements Ability {
 	 * a fixed `status` of `hold`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The comment's id and status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The comment's id, resulting status, and prior status, or the REST error.
 	 */
 	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] ?? 0 );
+		$input           = is_array( $input ) ? $input : array();
+		$id              = absint( $input['id'] ?? 0 );
+		$previous_status = (string) wp_get_comment_status( $id );
+
 		$request = new WP_REST_Request( 'POST', '/wp/v2/comments/' . $id );
 		$request->set_param( 'status', 'hold' );
 
@@ -123,8 +130,9 @@ final class UnapproveComment implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? $id ),
-			'status' => (string) ( $data['status'] ?? '' ),
+			'id'              => (int) ( $data['id'] ?? $id ),
+			'status'          => (string) ( $data['status'] ?? '' ),
+			'previous_status' => $previous_status,
 		);
 	}
 }
