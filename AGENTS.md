@@ -38,13 +38,17 @@ their risk classification. It does not surface them to any agent or UI — that 
   (`templates/lookup-template` (pure core); `plugins/search-directory` and
   `themes/search-directory` — outbound wp.org call, `readonly`, gated on
   `install_plugins`/`install_themes`).
-- One PHP class per ability under `includes/Abilities/<Domain>/`. The `Registry` scans them
-  and registers each ability on `wp_abilities_api_init`. Categories live centrally in
-  `includes/Categories.php` (one entry per domain) and register on
-  `wp_abilities_api_categories_init`; each ability links to its category by slug via
-  `args()['category']`. No Composer step, no shared manifest. Adding a domain edits its own
-  folder plus one entry in `Categories.php`; adding an ability to an existing domain edits
-  only that domain's folder.
+- Abilities are organized into top-level **groups** under `includes/Abilities/<Group>/`. The
+  core WP catalog lives in `includes/Abilities/Core/<Domain>/`; non-core add-ons get their own
+  sibling group (e.g. `includes/Abilities/Woo/`). One PHP class per ability. The `Registry`
+  scans `includes/Abilities/` recursively (any depth) and registers each ability on
+  `wp_abilities_api_init`. Categories are contributed **per group** by a class implementing
+  `Contracts\CategoryProvider` (the Core group's is `Abilities\Core\CategoryCatalog`); the Registry
+  discovers providers in the same scan and registers their categories on
+  `wp_abilities_api_categories_init`. Each ability links to its category by slug via
+  `args()['category']`. No Composer step, no shared manifest, no shared category file. Adding a
+  group means a new folder plus its own `CategoryProvider`; adding a domain or ability to an
+  existing group edits only that group's folder.
 - **T3 dangerous tier** runs behind the server-side safety pipeline in `includes/Support/`:
   `FilesystemGuard` (direct-or-fail), `SourceValidator` (wp.org-slug-only source), `OptionAllowList`
   (deny-by-default for `settings/update-option`), `UpgraderLock`, `UpgradeRunner`. Scope: plugin/theme

@@ -42,11 +42,19 @@ final class DangerousTierPermissionTest extends TestCase {
 	 * @return array<int,string>
 	 */
 	private function dangerousAbilityNames(): array {
-		$base    = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
-		$names   = array();
+		$base  = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
+		$names = array();
 
-		foreach (glob($base . '*/*.php') as $file) {
-			$relative = substr($file, strlen($base), -strlen('.php'));
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS)
+		);
+
+		foreach ($files as $file) {
+			if (!$file->isFile() || 'php' !== $file->getExtension()) {
+				continue;
+			}
+
+			$relative = substr($file->getPathname(), strlen($base), -strlen('.php'));
 			$class    = 'GalatanOvidiu\\AbilitiesCatalog\\Abilities\\' . str_replace('/', '\\', $relative);
 
 			if (!class_exists($class) || !is_subclass_of($class, Ability::class)) {

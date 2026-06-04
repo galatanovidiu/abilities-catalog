@@ -20,20 +20,27 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 final class RegistryTest extends TestCase {
 
 	/**
-	 * Instantiates every ability class under includes/Abilities/<Domain>/.
+	 * Instantiates every ability class under includes/Abilities/<Group>/.
 	 *
-	 * Mirrors Registry::discover() so the test sees exactly the same set the
-	 * Registry would register.
+	 * Mirrors Registry::discover() (recursive, group-aware) so the test sees exactly
+	 * the same set the Registry would register.
 	 *
 	 * @return array<int,Ability> Ability instances.
 	 */
 	private function discoverAbilities(): array {
-		$base    = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
-		$pattern = $base . '*/*.php';
+		$base = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS)
+		);
 
 		$abilities = array();
-		foreach (glob($pattern) as $file) {
-			$relative = substr($file, strlen($base), -strlen('.php'));
+		foreach ($files as $file) {
+			if (!$file->isFile() || 'php' !== $file->getExtension()) {
+				continue;
+			}
+
+			$relative = substr($file->getPathname(), strlen($base), -strlen('.php'));
 			$class    = 'GalatanOvidiu\\AbilitiesCatalog\\Abilities\\' . str_replace('/', '\\', $relative);
 
 			if (!class_exists($class) || !is_subclass_of($class, Ability::class)) {
@@ -80,7 +87,7 @@ final class RegistryTest extends TestCase {
 		$this->assertSame(
 			array(),
 			$unregistered,
-			'Abilities reference categories that are not registered in Categories.php.'
+			'Abilities reference categories that are not registered by any CategoryProvider.'
 		);
 	}
 

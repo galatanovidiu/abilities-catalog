@@ -28,7 +28,8 @@ documents that surface, including the write-gating mechanism.
   (`content/create-post`). Custom post types and custom taxonomies use ONE generic family
   keyed by a `post_type` / `taxonomy` param.
 - **Naming:** `namespace/verb-resource`, kebab-case. Namespace = the domain / ability
-  category. New domains need one entry in `includes/Categories.php`.
+  category. New domains need one entry in their group's `CategoryProvider` (the Core group's is
+  `includes/Abilities/Core/CategoryCatalog.php`).
 - **Capability** is always the hard server-side guard (`permission_callback`), regardless of
   client-side gating. Object-level checks (`edit_post`, `edit_term`, `edit_user`) are noted.
 - **REST tag:** `wrapper` (delegates to a `/wp/v2/...` route or core function — preferred:

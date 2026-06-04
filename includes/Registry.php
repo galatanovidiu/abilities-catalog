@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Contracts\CategoryProvider;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -13,11 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Discovers ability classes and registers them with the Abilities API.
  *
- * Discovery is convention-driven: every PHP file under `includes/Abilities/<Domain>/`
- * whose class implements {@see Ability} is registered. There is no shared manifest
- * and no shared category file, so per-domain contributors add files only under their
- * own domain folder and never edit a shared list — the safe shape for parallel
- * fan-out.
+ * Discovery is convention-driven: the scan recurses through `includes/Abilities/`,
+ * and every class implementing {@see Ability} is registered. Abilities are organized
+ * into top-level groups (`Core`, and any add-on group such as `Woo`), each owning its
+ * own {@see CategoryProvider}. There is no shared manifest and no shared category
+ * file, so a contributor adds files only under their own group folder and never edits
+ * a shared list — the safe shape for parallel fan-out.
  *
  * An annotation guard is enforced here as a hard gate: read-only abilities and
  * writes that explicitly declare a boolean `annotations.destructive` (true or
@@ -41,6 +43,13 @@ final class Registry {
 	 * @var array<string,\GalatanOvidiu\AbilitiesCatalog\Contracts\Ability>
 	 */
 	private array $abilities = array();
+
+	/**
+	 * Discovered category-provider instances, one per ability group.
+	 *
+	 * @var array<int,\GalatanOvidiu\AbilitiesCatalog\Contracts\CategoryProvider>
+	 */
+	private array $categoryProviders = array();
 
 	/**
 	 * Registers the Abilities API hooks.
@@ -133,23 +142,28 @@ final class Registry {
 	}
 
 	/**
-	 * Registers each ability category from the central {@see Categories} catalog.
+	 * Registers every ability category contributed by the discovered providers.
 	 *
-	 * Categories are defined centrally, not per ability, so this registers the
-	 * full catalog regardless of which ability files are present. Every ability's
-	 * `args()['category']` slug must exist in {@see Categories::all()}.
+	 * Each ability group owns a {@see CategoryProvider} (e.g. the Core group's
+	 * `Abilities\Core\CategoryCatalog`); this merges their `categories()` and registers
+	 * each one. Categories are defined per group, not per ability, so this registers
+	 * the full set regardless of which ability files are present. Every ability's
+	 * `args()['category']` slug must exist in some provider. `categories()` is called
+	 * here, on the categories init hook, so its `__()` calls have translations ready.
 	 *
 	 * @return void
 	 */
 	public function registerCategories(): void {
-		foreach ( Categories::all() as $slug => $category ) {
-			wp_register_ability_category(
-				$slug,
-				array(
-					'label'       => $category['label'] ?? $slug,
-					'description' => $category['description'] ?? '',
-				)
-			);
+		foreach ( $this->categoryProviders as $provider ) {
+			foreach ( $provider->categories() as $slug => $category ) {
+				wp_register_ability_category(
+					$slug,
+					array(
+						'label'       => $category['label'] ?? $slug,
+						'description' => $category['description'] ?? '',
+					)
+				);
+			}
 		}
 	}
 
@@ -255,31 +269,50 @@ final class Registry {
 	}
 
 	/**
-	 * Scans `includes/Abilities/<Domain>/` and instantiates ability classes.
+	 * Scans `includes/Abilities/<Group>/.../` and instantiates the discovered classes.
 	 *
-	 * The fully-qualified class name is derived from the file path so the
-	 * autoloader resolves it; only classes implementing {@see Ability} are kept.
+	 * The scan recurses to any depth, so a group nests its abilities however it
+	 * likes (e.g. `Core/Content/`, `Woo/Products/Basic/`). The fully-qualified class
+	 * name is derived from the file path so the autoloader resolves it. A class is
+	 * kept as an ability when it implements {@see Ability}, and as a category source
+	 * when it implements {@see CategoryProvider}; every other class is ignored.
 	 *
 	 * @return void
 	 */
 	private function discover(): void {
-		$base    = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
-		$pattern = $base . '*/*.php';
+		$base = ABILITIES_CATALOG_DIR . 'includes/Abilities/';
 
-		foreach ( ( glob( $pattern ) ?: array() ) as $file ) {
-			$relative = substr( $file, strlen( $base ), -strlen( '.php' ) );
+		if ( ! is_dir( $base ) ) {
+			return;
+		}
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator( $base, \FilesystemIterator::SKIP_DOTS )
+		);
+
+		foreach ( $files as $file ) {
+			if ( ! $file->isFile() || 'php' !== $file->getExtension() ) {
+				continue;
+			}
+
+			$relative = substr( $file->getPathname(), strlen( $base ), -strlen( '.php' ) );
 			$class    = __NAMESPACE__ . '\\Abilities\\' . str_replace( '/', '\\', $relative );
 
 			if ( ! class_exists( $class ) ) {
 				continue;
 			}
 
-			if ( ! is_subclass_of( $class, Ability::class ) ) {
+			if ( is_subclass_of( $class, Ability::class ) ) {
+				$ability                             = new $class();
+				$this->abilities[ $ability->name() ] = $ability;
 				continue;
 			}
 
-			$ability                             = new $class();
-			$this->abilities[ $ability->name() ] = $ability;
+			if ( ! is_subclass_of( $class, CategoryProvider::class ) ) {
+				continue;
+			}
+
+			$this->categoryProviders[] = new $class();
 		}
 	}
 }
