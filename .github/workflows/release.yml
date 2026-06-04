@@ -1,0 +1,57 @@
+name: Release
+
+# Disable permissions for all available scopes by default.
+permissions: {}
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  # Builds the distributable plugin zip and attaches it to the GitHub Release.
+  #
+  # The zip is built with `wp-scripts plugin-zip`, which honours `.distignore`
+  # and produces a single top-level `abilities-catalog/` directory so the file
+  # installs cleanly via Plugins -> Add New -> Upload Plugin.
+  build-zip:
+    name: Build and attach plugin zip
+    runs-on: ubuntu-24.04
+    permissions:
+      # Required to upload the asset to the release.
+      contents: write
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Verify plugin version matches release tag
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          header="$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*//p' abilities-catalog.php | head -n1 | tr -d '[:space:]')"
+          constant="$(sed -n "s/.*ABILITIES_CATALOG_VERSION'[, ]*'\([^']*\)'.*/\1/p" abilities-catalog.php | head -n1)"
+          echo "tag=$tag header=$header constant=$constant"
+          if [ "$tag" != "$header" ] || [ "$tag" != "$constant" ]; then
+            echo "::error::Release tag ($tag) does not match plugin header ($header) and/or ABILITIES_CATALOG_VERSION ($constant). Bump the version before releasing."
+            exit 1
+          fi
+
+      - name: Build plugin zip
+        run: npm run plugin-zip
+
+      - name: Upload zip to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" abilities-catalog.zip --clobber
