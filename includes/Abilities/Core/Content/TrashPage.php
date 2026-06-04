@@ -54,23 +54,19 @@ final class TrashPage implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status', 'edit_link' ),
+				'required'             => array( 'id', 'status' ),
 				'properties'           => array(
-					'id'        => array(
+					'id'     => array(
 						'type'        => 'integer',
 						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
-					'title'     => array(
+					'title'  => array(
 						'type'        => 'string',
-						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
+						'description' => __( 'The rendered title of the trashed page, so a human can confirm what was moved to Trash.', 'abilities-catalog' ),
 					),
-					'status'    => array(
+					'status' => array(
 						'type'        => 'string',
-						'description' => __( 'The resulting page status (trash).', 'abilities-catalog' ),
-					),
-					'edit_link' => array(
-						'type'        => 'string',
-						'description' => __( 'The wp-admin URL to edit the trashed page (e.g. to restore it). Surface this so a human can review or undo.', 'abilities-catalog' ),
+						'description' => __( 'The resulting page status (trash). The page is recoverable from Pages → Trash. No edit_link is returned: a trashed page cannot be opened in the editor (wp-admin returns HTTP 409); it must be restored first.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -112,7 +108,7 @@ final class TrashPage implements Ability {
 	 * returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The page's id and status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The page's id, title, and status, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -128,11 +124,14 @@ final class TrashPage implements Ability {
 		$data    = rest_get_server()->response_to_data( $response, false );
 		$page_id = (int) ( $data['id'] ?? $id );
 
+		// No edit_link: a trashed page cannot be edited. wp-admin/post.php wp_die()s
+		// with HTTP 409 ("you cannot edit this item because it is in the Trash") for
+		// any page whose status is 'trash', so get_edit_post_link() would hand back a
+		// URL that dead-ends. The page must be restored before it can be edited.
 		return array(
-			'id'        => $page_id,
-			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
-			'status'    => (string) ( $data['status'] ?? 'trash' ),
-			'edit_link' => (string) get_edit_post_link( $page_id, 'raw' ),
+			'id'     => $page_id,
+			'title'  => (string) ( $data['title']['rendered'] ?? '' ),
+			'status' => (string) ( $data['status'] ?? 'trash' ),
 		);
 	}
 }

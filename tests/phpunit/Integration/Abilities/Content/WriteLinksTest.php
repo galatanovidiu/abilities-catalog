@@ -2,10 +2,11 @@
 /**
  * Integration tests for D5: edit_link + title on write responses.
  *
- * Proves create/update/trash/restore content abilities return an actionable
- * wp-admin `edit_link` (and a `title`) so an agent can hand a human a link to
- * review the change, and that delete abilities echo the `title` of what was
- * removed without an `edit_link` (the post no longer exists).
+ * Proves create/update/restore content abilities return an actionable wp-admin
+ * `edit_link` (and a `title`) so an agent can hand a human a link to review the
+ * change. Trash and delete abilities return a `title` but no `edit_link`: a
+ * deleted post no longer exists, and a trashed post cannot be opened in the
+ * editor (wp-admin returns HTTP 409) until it is restored.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -118,7 +119,7 @@ final class WriteLinksTest extends TestCase {
 		$this->assertNotEmpty( $result['edit_link'] );
 	}
 
-	public function test_trash_post_returns_title_and_edit_link(): void {
+	public function test_trash_post_returns_title_and_status_without_edit_link(): void {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create(
 			array(
@@ -131,7 +132,10 @@ final class WriteLinksTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'To trash', $result['title'] );
-		$this->assertNotEmpty( $result['edit_link'] );
+		$this->assertSame( 'trash', $result['status'] );
+		// A trashed post cannot be edited (wp-admin returns HTTP 409), so no
+		// edit_link is returned; it would dead-end.
+		$this->assertArrayNotHasKey( 'edit_link', $result );
 	}
 
 	public function test_delete_post_echoes_title_without_edit_link(): void {
