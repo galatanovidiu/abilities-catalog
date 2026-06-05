@@ -140,6 +140,95 @@ final class UpdateCommentTest extends TestCase {
 		);
 	}
 
+	/**
+	 * B7 regression: an explicit empty `author_name` is a "blank this field"
+	 * intent, not an omission. Core forwards it (isset gate) and stores the empty
+	 * value, so the ability must forward it too rather than dropping it via a
+	 * `'' !==` guard.
+	 */
+	public function test_explicit_empty_author_name_blanks_the_stored_value(): void {
+		$this->actingAs('administrator');
+
+		// Seed a non-empty author so a blank is observable.
+		wp_update_comment(
+			array(
+				'comment_ID'     => $this->comment_id,
+				'comment_author' => 'Seeded Author',
+			)
+		);
+
+		$result = wp_get_ability('comments/update-comment')->execute(
+			array(
+				'id'          => $this->comment_id,
+				'author_name' => '',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertSame('', $result['author_name']);
+		$this->assertSame(
+			'',
+			get_comment($this->comment_id)->comment_author,
+			'An explicit empty author_name must blank the stored author, not be dropped.'
+		);
+	}
+
+	/**
+	 * B7 regression: an explicit empty `author_email` blanks the stored email.
+	 * Core forwards the empty string (isset gate) and stores it.
+	 */
+	public function test_explicit_empty_author_email_blanks_the_stored_value(): void {
+		$this->actingAs('administrator');
+
+		wp_update_comment(
+			array(
+				'comment_ID'           => $this->comment_id,
+				'comment_author_email' => 'seed@example.com',
+			)
+		);
+
+		$result = wp_get_ability('comments/update-comment')->execute(
+			array(
+				'id'           => $this->comment_id,
+				'author_email' => '',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertSame('', $result['author_email']);
+		$this->assertSame(
+			'',
+			get_comment($this->comment_id)->comment_author_email,
+			'An explicit empty author_email must blank the stored email, not be dropped.'
+		);
+	}
+
+	/**
+	 * B7 regression: an explicit empty `content` must reach core, which rejects it
+	 * with a 400 `rest_comment_content_invalid`. The ability must NOT drop the
+	 * empty value via a `'' !==` guard and silently succeed as a no-op, which
+	 * would hide core's validation error.
+	 */
+	public function test_explicit_empty_content_surfaces_core_validation_error(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('comments/update-comment')->execute(
+			array(
+				'id'      => $this->comment_id,
+				'content' => '',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_content_invalid', $result->get_error_code());
+		$this->assertSame(400, $result->get_error_data()['status']);
+		$this->assertSame(
+			'Original comment body.',
+			get_comment($this->comment_id)->comment_content,
+			'The stored content must be unchanged when core rejects an empty value.'
+		);
+	}
+
 	public function test_non_positive_id_is_rejected_by_schema(): void {
 		$this->actingAs('administrator');
 

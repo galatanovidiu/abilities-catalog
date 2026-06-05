@@ -145,23 +145,31 @@ final class UpdateComment implements Ability {
 		$id      = absint( $input['id'] ?? 0 );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/comments/' . $id );
 
-		// Content passes through to the REST route, which sanitizes it.
-		if ( isset( $input['content'] ) && '' !== $input['content'] ) {
+		// Forward a field whenever the caller supplied the key, including an
+		// explicit empty string. On an update, key presence is the caller's
+		// intent: an omitted field means "leave unchanged", while an explicit ''
+		// means "blank this field". Core gates each field on `isset()` only
+		// (class-wp-rest-comments-controller.php update path) and forwards the
+		// empty value — so blanking `author_name`/`author_email` writes empty, and
+		// an empty `content` reaches core's content-allowed check, which returns a
+		// 400 `rest_comment_content_invalid`. A `'' !==` guard here would drop the
+		// value and silently no-op, discarding intent and hiding core's error.
+		if ( array_key_exists( 'content', $input ) ) {
 			$request->set_param( 'content', (string) $input['content'] );
 		}
-		if ( isset( $input['author_name'] ) && '' !== $input['author_name'] ) {
+		if ( array_key_exists( 'author_name', $input ) ) {
 			$request->set_param( 'author_name', sanitize_text_field( (string) $input['author_name'] ) );
 		}
 		// Pass the raw value: the wrapped route's `check_comment_author_email`
 		// sanitize_callback validates it and returns `rest_invalid_email` on a
-		// malformed address. Pre-running `sanitize_email()` here would strip an
-		// invalid value to '' and the guard above would then drop it, hiding core's
-		// validation error (wrap, don't reimplement). The input schema omits
+		// malformed address (wrap, don't reimplement). The input schema omits
 		// `format: email` for the same reason — schema-level format validation would
 		// reject a malformed value as `ability_invalid_input` before core is reached.
-		if ( isset( $input['author_email'] ) && '' !== $input['author_email'] ) {
+		if ( array_key_exists( 'author_email', $input ) ) {
 			$request->set_param( 'author_email', (string) $input['author_email'] );
 		}
+		// Core ignores an empty `date` (`! empty()` gate); there is no "blank the
+		// date" semantic, so an empty value is treated as omission here too.
 		if ( isset( $input['date'] ) && '' !== $input['date'] ) {
 			$request->set_param( 'date', (string) $input['date'] );
 		}
