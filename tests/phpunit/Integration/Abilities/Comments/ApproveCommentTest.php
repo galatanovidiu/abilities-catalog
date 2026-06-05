@@ -199,6 +199,57 @@ final class ApproveCommentTest extends TestCase {
 	}
 
 	/**
+	 * A spam comment is rejected with a 409 `rest_comment_wrong_state` error and
+	 * left untouched. Approving via wp_set_comment_status only flips
+	 * comment_approved and skips the unspam restore path, leaving stale meta, so
+	 * the caller must unspam first. Contrast comments/unapprove-comment, which
+	 * accepts any state.
+	 */
+	public function test_approving_spam_comment_returns_409_and_leaves_status_unchanged(): void {
+		$this->actingAs('administrator');
+
+		$spam_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'  => $this->post_id,
+				'comment_content'  => 'A spam comment.',
+				'comment_approved' => 'spam',
+			)
+		);
+
+		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $spam_id));
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
+		$this->assertSame(409, $result->get_error_data()['status']);
+		$this->assertSame('spam', wp_get_comment_status($spam_id));
+	}
+
+	/**
+	 * A trashed comment is rejected with a 409 `rest_comment_wrong_state` error and
+	 * left untouched. Approving via wp_set_comment_status only flips
+	 * comment_approved and skips the untrash restore path (leaving the
+	 * _wp_trash_meta_status meta stale), so the comment must be restored first.
+	 */
+	public function test_approving_trash_comment_returns_409_and_leaves_status_unchanged(): void {
+		$this->actingAs('administrator');
+
+		$trash_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'  => $this->post_id,
+				'comment_content'  => 'A trashed comment.',
+				'comment_approved' => 'trash',
+			)
+		);
+
+		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $trash_id));
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
+		$this->assertSame(409, $result->get_error_data()['status']);
+		$this->assertSame('trash', wp_get_comment_status($trash_id));
+	}
+
+	/**
 	 * A moderator passing a non-existent comment id gets a clean 404 WP_Error,
 	 * not a PHP warning or an action on an aliased id. Representative for the four
 	 * status abilities, which share the same id-validity + existence guard.

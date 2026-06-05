@@ -19,8 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `comment_author_IP` from `REMOTE_ADDR` and so corrupts the stored commenter IP
  * (see backlog B3). `wp_unspam_comment()` restores the status saved when the
  * comment was marked spam, falling back to `unapproved`/`hold` when that saved
- * status is missing. Should only be called on a comment currently in `spam`
- * status; on a non-spam comment it moves the comment to `hold`. The
+ * status is missing. Accepts only a comment currently in `spam` status; on any
+ * other status it returns a `rest_comment_wrong_state` 409 error without mutating
+ * the comment, so a non-spam comment is never silently demoted. The
  * `permission_callback` is a coarse `is_user_logged_in()` gate; the object-level
  * `edit_comment` capability is enforced inside `execute()` so the caller receives
  * the specific `rest_comment_invalid_id` 404 / `rest_cannot_edit` 403 instead of a
@@ -44,7 +45,7 @@ final class UnspamComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Unspam Comment', 'abilities-catalog' ),
-			'description'         => __( 'Removes the spam mark from a comment, restoring the status saved when it was marked spam (falling back to "unapproved"/"hold" if that saved status is missing). Should only be called on a comment currently in "spam" status; on a non-spam comment it silently moves the comment to "hold". Returns the comment status before this call in "previous_status". Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Removes the spam mark from a comment, restoring the status saved when it was marked spam (falling back to "unapproved"/"hold" if that saved status is missing). Accepts only a comment currently in "spam" status; on any other status it returns a "rest_comment_wrong_state" 409 error without changing the comment. Returns the comment status before this call in "previous_status". Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -72,7 +73,7 @@ final class UnspamComment implements Ability {
 					),
 					'previous_status' => array(
 						'type'        => 'string',
-						'description' => __( 'The comment status before this call. Expected to be "spam" for correct use; any other value indicates the ability was called on a non-spam comment.', 'abilities-catalog' ),
+						'description' => __( 'The comment status before this call. Always "spam" for a successful call, since the ability only accepts a comment in "spam" status.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -133,6 +134,17 @@ final class UnspamComment implements Ability {
 				'rest_cannot_edit',
 				__( 'Sorry, you are not allowed to edit this comment.', 'abilities-catalog' ),
 				array( 'status' => 403 )
+			);
+		}
+
+		// Wrong-state guard: only a comment currently marked spam can be unspammed.
+		// Calling wp_unspam_comment() on a non-spam comment silently demotes it to
+		// hold (data loss), so reject before mutating anything.
+		if ( 'spam' !== wp_get_comment_status( $id ) ) {
+			return new WP_Error(
+				'rest_comment_wrong_state',
+				__( 'This comment is not marked as spam, so it cannot be unspammed.', 'abilities-catalog' ),
+				array( 'status' => 409 )
 			);
 		}
 

@@ -15,9 +15,9 @@ use WP_Error;
 /**
  * Exercises the unspam-comment write ability end-to-end: a spam comment is
  * restored to the status saved when it was spammed, the capability guard is
- * enforced on execute(), the prior status is captured, and the verified
- * wrong-state asymmetry (approved -> silent hold vs already-hold -> 500) is
- * documented.
+ * enforced on execute(), the prior status is captured, and the wrong-state guard
+ * rejects a non-spam comment with a 409 `rest_comment_wrong_state` error without
+ * mutating it.
  */
 final class UnspamCommentTest extends TestCase {
 
@@ -129,13 +129,12 @@ final class UnspamCommentTest extends TestCase {
 	}
 
 	/**
-	 * Wrong-state behavior: unspam on an approved, non-spam comment silently
-	 * demotes it to `hold` without an error. wp_unspam_comment restores the saved
-	 * prior status or falls back to hold; an approved comment has none saved, so it
-	 * falls back. `previous_status` surfaces the real prior state, making the silent
-	 * demotion visible. Asserts the present contract.
+	 * Wrong-state guard: unspam on an approved, non-spam comment is rejected with a
+	 * 409 `rest_comment_wrong_state` error and the comment is left untouched. The
+	 * ability accepts only a comment currently in `spam` status; calling it on an
+	 * approved comment must not demote it.
 	 */
-	public function test_unspam_on_approved_comment_silently_moves_to_hold(): void {
+	public function test_unspam_on_approved_comment_is_rejected_with_409(): void {
 		$this->actingAs('administrator');
 
 		$comment_id = self::factory()->comment->create(
@@ -148,18 +147,21 @@ final class UnspamCommentTest extends TestCase {
 
 		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
 
-		$this->assertIsArray($result);
-		$this->assertSame('hold', $result['status']);
-		$this->assertSame('approved', $result['previous_status']);
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
+		$this->assertSame(409, $result->get_error_data()['status']);
+
+		// No mutation: the comment is still approved.
+		$this->assertSame('approved', wp_get_comment_status($comment_id));
+		$this->assertSame('1', get_comment($comment_id)->comment_approved);
 	}
 
 	/**
-	 * The other half of the wrong-state behavior: unspam on a comment already at
-	 * hold (`0`) and non-spam reports `hold`, with `previous_status` of
-	 * `unapproved`. wp_unspam_comment falls back to hold when no prior status is
-	 * saved. Asserts the present contract.
+	 * The other half of the wrong-state guard: unspam on a comment already at hold
+	 * (`0`) and non-spam is rejected with the same 409 `rest_comment_wrong_state`
+	 * error and the comment is left at hold.
 	 */
-	public function test_unspam_on_held_comment_keeps_hold_status(): void {
+	public function test_unspam_on_held_comment_is_rejected_with_409(): void {
 		$this->actingAs('administrator');
 
 		$comment_id = self::factory()->comment->create(
@@ -172,9 +174,13 @@ final class UnspamCommentTest extends TestCase {
 
 		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
 
-		$this->assertIsArray($result);
-		$this->assertSame('hold', $result['status']);
-		$this->assertSame('unapproved', $result['previous_status']);
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
+		$this->assertSame(409, $result->get_error_data()['status']);
+
+		// No mutation: the comment is still on hold (unapproved).
+		$this->assertSame('unapproved', wp_get_comment_status($comment_id));
+		$this->assertSame('0', get_comment($comment_id)->comment_approved);
 	}
 
 	/**
