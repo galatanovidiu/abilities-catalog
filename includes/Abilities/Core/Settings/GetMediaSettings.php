@@ -13,7 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `settings/get-media`.
  *
- * Returns the Media Settings screen values, read directly from options.
+ * Returns the media option values, read directly from options. The year/month
+ * upload folder flag is a single-site setting and is not shown on the Media
+ * Settings screen under multisite.
  * Net-new read: no REST route is dispatched.
  *
  * @since 0.1.0
@@ -33,12 +35,21 @@ final class GetMediaSettings implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Media Settings', 'abilities-catalog' ),
-			'description'         => __( 'Returns the Media Settings screen values: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the media option values: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag (the folder flag is a single-site setting; it is not shown on the Media Settings screen under multisite).', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'thumbnail_size_w' ),
+				'required'             => array(
+					'thumbnail_size_w',
+					'thumbnail_size_h',
+					'thumbnail_crop',
+					'medium_size_w',
+					'medium_size_h',
+					'large_size_w',
+					'large_size_h',
+					'uploads_use_yearmonth_folders',
+				),
 				'properties'           => array(
 					'thumbnail_size_w'              => array(
 						'type'        => 'integer',
