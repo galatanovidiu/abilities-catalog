@@ -16,9 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 write ability: `content/trash-page`.
  *
  * Wraps `DELETE /wp/v2/pages/<id>` with `force=false` via `rest_do_request()`,
- * moving the page to Trash (recoverable). The `permission_callback` encodes the
- * catalog's object-level `delete_post` capability (mapped to page caps via
- * `map_meta_cap`). When Trash is disabled (`EMPTY_TRASH_DAYS` is 0) the REST
+ * moving the page to Trash (recoverable). The `permission_callback` enforces the
+ * type-level `delete_pages` capability as a coarse guard; object-level
+ * `delete_post` is enforced by the wrapped route. When Trash is disabled on the
+ * site (`EMPTY_TRASH_DAYS` is 0) or by the `rest_page_trashable` filter, the REST
  * route returns a 501 `rest_trash_not_supported` error, which is surfaced
  * unchanged; this ability never calls `wp_trash_post()` directly.
  *
@@ -39,14 +40,15 @@ final class TrashPage implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Trash Page', 'abilities-catalog' ),
-			'description'         => __( 'Moves a page to the Trash by ID. The page is recoverable. Fails if Trash is disabled on the site.', 'abilities-catalog' ),
+			'description'         => __( 'Moves a page to the Trash by ID. The page is recoverable. Fails if Trash is disabled on the site or by a filter. If the page is the site\'s front page or posts page, trashing it resets the homepage / posts-page reading settings, and restoring the page does not restore those settings.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The page ID to move to Trash.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The page ID to move to Trash. Obtain it from a list/get content ability (e.g. `content/list-pages` or `content/get-page`).', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -66,6 +68,7 @@ final class TrashPage implements Ability {
 					),
 					'status' => array(
 						'type'        => 'string',
+						'enum'        => array( 'trash' ),
 						'description' => __( 'The resulting page status (trash). The page is recoverable from Pages → Trash. No edit_link is returned: a trashed page cannot be opened in the editor (wp-admin returns HTTP 409); it must be restored first.', 'abilities-catalog' ),
 					),
 				),
@@ -104,8 +107,9 @@ final class TrashPage implements Ability {
 	 * Executes the ability by dispatching the internal REST delete request.
 	 *
 	 * Forces `force=false` so the page is trashed (not permanently deleted). A
-	 * 501 `rest_trash_not_supported` error from the route (Trash disabled) is
-	 * returned to the caller unchanged.
+	 * 501 `rest_trash_not_supported` error from the route (Trash disabled on the
+	 * site or by the `rest_page_trashable` filter) is returned to the caller
+	 * unchanged.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The page's id, title, and status, or the REST error.

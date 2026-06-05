@@ -178,6 +178,35 @@ final class WriteLinksTest extends TestCase {
 		$this->assertArrayNotHasKey( 'edit_link', $result );
 	}
 
+	public function test_trash_page_returns_title_and_status_without_edit_link(): void {
+		$this->actingAs( 'administrator' );
+		$page_id = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_title'  => 'Page to trash',
+				'post_status' => 'publish',
+			)
+		);
+
+		$result = wp_get_ability( 'content/trash-page' )->execute( array( 'id' => $page_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'Page to trash', $result['title'] );
+		$this->assertSame( 'trash', $result['status'] );
+		// A trashed page cannot be edited (wp-admin returns HTTP 409), so no
+		// edit_link is returned; it would dead-end.
+		$this->assertArrayNotHasKey( 'edit_link', $result );
+	}
+
+	public function test_trash_page_rejects_non_positive_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/trash-page' )->execute( array( 'id' => -12 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
 	public function test_delete_post_echoes_title_without_edit_link(): void {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_title' => 'Doomed' ) );
