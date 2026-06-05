@@ -114,12 +114,11 @@ final class UnspamCommentTest extends TestCase {
 	}
 
 	/**
-	 * Documents the verified wrong-state behavior: unspam on an approved,
-	 * non-spam comment silently demotes it to `hold` without an error. Core
-	 * never returns the literal `unspam` from wp_get_comment_status, so the
-	 * controller's no-op guard never fires; wp_unspam_comment restores the saved
-	 * status or falls back to hold. `previous_status` surfaces the real prior
-	 * state, making the silent demotion visible. Asserts the present contract.
+	 * Wrong-state behavior: unspam on an approved, non-spam comment silently
+	 * demotes it to `hold` without an error. wp_unspam_comment restores the saved
+	 * prior status or falls back to hold; an approved comment has none saved, so it
+	 * falls back. `previous_status` surfaces the real prior state, making the silent
+	 * demotion visible. Asserts the present contract.
 	 */
 	public function test_unspam_on_approved_comment_silently_moves_to_hold(): void {
 		$this->actingAs('administrator');
@@ -140,13 +139,10 @@ final class UnspamCommentTest extends TestCase {
 	}
 
 	/**
-	 * Documents the other half of the wrong-state behavior: unspam on a comment
-	 * already at hold (`0`) and non-spam succeeds and reports `hold`, with
-	 * `previous_status` of `unapproved`. The status-only 500 path that core's
-	 * comment.php would take on an unchanged value via `$wpdb->update` is never
-	 * reached, because the REST controller always populates `comment_author_IP`
-	 * in prepare_item_for_database, so wp_update_comment changes a row and
-	 * wp_set_comment_status does not return false. Asserts the present contract.
+	 * The other half of the wrong-state behavior: unspam on a comment already at
+	 * hold (`0`) and non-spam reports `hold`, with `previous_status` of
+	 * `unapproved`. wp_unspam_comment falls back to hold when no prior status is
+	 * saved. Asserts the present contract.
 	 */
 	public function test_unspam_on_held_comment_keeps_hold_status(): void {
 		$this->actingAs('administrator');
@@ -164,5 +160,25 @@ final class UnspamCommentTest extends TestCase {
 		$this->assertIsArray($result);
 		$this->assertSame('hold', $result['status']);
 		$this->assertSame('unapproved', $result['previous_status']);
+	}
+
+	/**
+	 * Regression guard for B3: unspamming must not rewrite the stored commenter IP.
+	 */
+	public function test_unspamming_preserves_comment_author_ip(): void {
+		$this->actingAs('administrator');
+
+		$comment_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'   => $this->post_id,
+				'comment_content'   => 'Spam comment with a recorded IP.',
+				'comment_approved'  => 'spam',
+				'comment_author_IP' => '203.0.113.45',
+			)
+		);
+
+		wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+
+		$this->assertSame('203.0.113.45', get_comment($comment_id)->comment_author_IP);
 	}
 }

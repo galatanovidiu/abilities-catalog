@@ -91,10 +91,9 @@ final class ApproveCommentTest extends TestCase {
 	}
 
 	/**
-	 * Documents current behavior for an already-approved comment. The REST
-	 * controller early-returns the unchanged comment, so the ability reports the
-	 * existing `approved` status rather than an error. This asserts the present
-	 * contract, not a desired one (see the deferred review item).
+	 * An already-approved comment is a no-op: the ability skips the status change
+	 * (re-applying it returns false from wp_set_comment_status) and reports the
+	 * existing `approved` status rather than an error.
 	 */
 	public function test_reapproving_already_approved_comment_keeps_approved_status(): void {
 		$this->actingAs('administrator');
@@ -111,5 +110,43 @@ final class ApproveCommentTest extends TestCase {
 
 		$this->assertIsArray($result);
 		$this->assertSame('approved', $result['status']);
+	}
+
+	/**
+	 * Regression guard for B3: approving must not rewrite the stored commenter IP.
+	 * The status change is the only intended mutation; in a non-browser run the old
+	 * REST dispatch overwrote `comment_author_IP` with the empty/`127.0.0.1`
+	 * REMOTE_ADDR. The stored IP must survive the status change byte-for-byte.
+	 */
+	public function test_approving_preserves_comment_author_ip(): void {
+		$this->actingAs('administrator');
+
+		$comment_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'   => $this->post_id,
+				'comment_content'   => 'Held comment with a recorded IP.',
+				'comment_approved'  => '0',
+				'comment_author_IP' => '203.0.113.45',
+			)
+		);
+
+		wp_get_ability('comments/approve-comment')->execute(array('id' => $comment_id));
+
+		$this->assertSame('203.0.113.45', get_comment($comment_id)->comment_author_IP);
+	}
+
+	/**
+	 * A moderator passing a non-existent comment id gets a clean 404 WP_Error,
+	 * not a PHP warning or an action on an aliased id. Representative for the four
+	 * status abilities, which share the same id-validity + existence guard.
+	 */
+	public function test_missing_comment_id_returns_404(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => 99999999));
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_invalid_id', $result->get_error_code());
+		$this->assertSame(404, $result->get_error_data()['status']);
 	}
 }

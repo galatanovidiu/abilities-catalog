@@ -101,11 +101,9 @@ final class SpamCommentTest extends TestCase {
 	}
 
 	/**
-	 * Documents current behavior for an already-spam comment. The REST controller
-	 * always populates `comment_author_IP` in prepare_item_for_database, so the
-	 * status-only branch (which would 500 on an unchanged status) is never taken;
-	 * the update succeeds and the ability reports the existing `spam` status. This
-	 * asserts the present contract, not a desired one.
+	 * An already-spam comment is a no-op: the ability skips wp_spam_comment (which
+	 * would otherwise re-save the prior-status meta as `spam`) and reports the
+	 * existing `spam` status, with `previous_status` also `spam`.
 	 */
 	public function test_respamming_already_spam_comment_keeps_spam_status(): void {
 		$this->actingAs('administrator');
@@ -123,5 +121,25 @@ final class SpamCommentTest extends TestCase {
 		$this->assertIsArray($result);
 		$this->assertSame('spam', $result['status']);
 		$this->assertSame('spam', $result['previous_status']);
+	}
+
+	/**
+	 * Regression guard for B3: marking spam must not rewrite the stored commenter IP.
+	 */
+	public function test_spamming_preserves_comment_author_ip(): void {
+		$this->actingAs('administrator');
+
+		$comment_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'   => $this->post_id,
+				'comment_content'   => 'Held comment with a recorded IP.',
+				'comment_approved'  => '0',
+				'comment_author_IP' => '203.0.113.45',
+			)
+		);
+
+		wp_get_ability('comments/spam-comment')->execute(array('id' => $comment_id));
+
+		$this->assertSame('203.0.113.45', get_comment($comment_id)->comment_author_IP);
 	}
 }

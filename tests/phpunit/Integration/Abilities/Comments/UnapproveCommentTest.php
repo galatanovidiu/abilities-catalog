@@ -92,9 +92,8 @@ final class UnapproveCommentTest extends TestCase {
 	}
 
 	/**
-	 * Documents current behavior for an already-held comment. The REST controller
-	 * accepts the unchanged status, so the ability reports the existing `hold`
-	 * status rather than an error. This asserts the present contract.
+	 * An already-held comment is a no-op: the ability skips the status change and
+	 * reports the existing `hold` status rather than an error.
 	 */
 	public function test_unapproving_already_held_comment_keeps_hold_status(): void {
 		$this->actingAs('administrator');
@@ -111,5 +110,25 @@ final class UnapproveCommentTest extends TestCase {
 
 		$this->assertIsArray($result);
 		$this->assertSame('hold', $result['status']);
+	}
+
+	/**
+	 * Regression guard for B3: unapproving must not rewrite the stored commenter IP.
+	 */
+	public function test_unapproving_preserves_comment_author_ip(): void {
+		$this->actingAs('administrator');
+
+		$comment_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'   => $this->post_id,
+				'comment_content'   => 'Approved comment with a recorded IP.',
+				'comment_approved'  => '1',
+				'comment_author_IP' => '203.0.113.45',
+			)
+		);
+
+		wp_get_ability('comments/unapprove-comment')->execute(array('id' => $comment_id));
+
+		$this->assertSame('203.0.113.45', get_comment($comment_id)->comment_author_IP);
 	}
 }
