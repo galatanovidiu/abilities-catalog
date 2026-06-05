@@ -164,7 +164,26 @@ final class UpdatePostMeta implements Ability {
 			$name        = (string) $name;
 			$shape       = $allowed[ $name ];
 			$storage_key = $shape['storage_key'];
-			update_post_meta( $id, $storage_key, $value );
+
+			// `update_post_meta()` returns false both when the new value equals the
+			// stored value (a legitimate no-op) and when the write actually fails
+			// (a DB error or an `update_post_metadata` filter short-circuit). Detect
+			// the no-op up front so only a real failure becomes an error, matching
+			// core REST (class-wp-rest-meta-fields.php:382-414).
+			$is_noop = $value === get_post_meta( $id, $storage_key, true );
+			$result  = update_post_meta( $id, $storage_key, $value );
+			if ( false === $result && ! $is_noop ) {
+				return new WP_Error(
+					'rest_meta_database_error',
+					/* translators: %s: meta key. */
+					sprintf( __( 'Could not update the meta key "%s".', 'abilities-catalog' ), $name ),
+					array(
+						'status' => 500,
+						'key'    => $name,
+					)
+				);
+			}
+
 			$applied[ $name ] = PostMetaKeys::castForResponse( get_post_meta( $id, $storage_key, $shape['single'] ), $shape );
 		}
 
