@@ -20,8 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `user_request` custom-post-type post that records the export or erasure
  * request — NOT any exported or erased personal data. Deleting the record is
  * how the wp-admin Export / Erase Personal Data screens "remove" a request
- * row (`_wp_personal_data_handle_actions()`, the `remove` action, calls
- * `wp_delete_post($request_id, true)` in wp-admin/includes/privacy-tools.php).
+ * row: the requests list-table bulk `delete` action calls
+ * `wp_delete_post($request_id, true)` in
+ * `WP_Privacy_Requests_Table::process_bulk_action()`
+ * (wp-admin/includes/class-wp-privacy-requests-table.php:314-316).
  *
  * The deletion is permanent (force delete bypasses Trash), so this ability is
  * annotated destructive. It is a net-new wrapper: there is no REST route for
@@ -63,7 +65,7 @@ final class CancelRequest implements Ability {
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the user_request post to delete.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the user_request post to delete. Find request IDs with privacy/list-export-requests or privacy/list-erase-requests.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'request_id' ),
@@ -164,8 +166,14 @@ final class CancelRequest implements Ability {
 			);
 		}
 
+		// wp_delete_post() returns the WP_Post on success, but a non-null
+		// `pre_delete_post` filter short-circuits and returns that value
+		// unchanged — including a WP_Error (wp-includes/post.php:3808-3811).
 		$deleted = wp_delete_post( $request_id, true );
-		if ( false === $deleted || null === $deleted ) {
+		if ( $deleted instanceof WP_Error ) {
+			return $deleted;
+		}
+		if ( ! $deleted instanceof \WP_Post ) {
 			return new WP_Error(
 				'cancel_failed',
 				__( 'The request record could not be deleted.', 'abilities-catalog' ),
