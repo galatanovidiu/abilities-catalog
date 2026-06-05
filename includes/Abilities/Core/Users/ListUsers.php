@@ -63,12 +63,12 @@ final class ListUsers implements Ability {
 					'roles'        => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Limit results to users with one or more of the given roles.', 'abilities-catalog' ),
+						'description' => __( 'Limit results to users with one or more of the given roles. Pass role slugs or names (e.g. "editor"), not capabilities.', 'abilities-catalog' ),
 					),
 					'capabilities' => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Limit results to users matching one or more of the given capabilities.', 'abilities-catalog' ),
+						'description' => __( 'Limit results to users matching one or more of the given primitive capabilities (e.g. "edit_posts"). Does not work for meta capabilities mapped per-object (e.g. "edit_post").', 'abilities-catalog' ),
 					),
 					'orderby'      => array(
 						'type'        => 'string',
@@ -86,14 +86,14 @@ final class ListUsers implements Ability {
 						'type'        => 'string',
 						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access). In "edit" context, rows the caller cannot edit are dropped from items, but total/total_pages still reflect the underlying REST query, so items may be shorter than total suggests.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'items' ),
+				'required'             => array( 'items', 'total', 'total_pages' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
@@ -102,11 +102,11 @@ final class ListUsers implements Ability {
 					),
 					'total'       => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of users across all pages.', 'abilities-catalog' ),
+						'description' => __( 'Total number of users across all pages, from the underlying REST query. In "edit" context this counts the full result set, not only the rows the caller may view, so it may exceed the number of items returned.', 'abilities-catalog' ),
 					),
 					'total_pages' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of pages available.', 'abilities-catalog' ),
+						'description' => __( 'Total number of pages available, from the underlying REST query. In "edit" context this is computed from the full result set, not only the rows the caller may view.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
