@@ -16,8 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T3 dangerous write ability: `plugins/update-plugin`.
  *
- * Net-new (not REST-wrapped): updates an installed plugin to its latest
- * wordpress.org version through `Plugin_Upgrader`. Updating replaces plugin code on
+ * Net-new (not REST-wrapped): updates an installed plugin to the version offered by
+ * its configured update source (usually wordpress.org, possibly a third-party Update
+ * URI provider) through `Plugin_Upgrader`. Updating replaces plugin code on
  * disk, so this ability is annotated dangerous and is exposed to the browser only
  * behind the third gate plus a per-ability opt-in. The `plugin` input is the plugin
  * file path without the `.php` extension (for example `akismet/akismet`), the same
@@ -43,7 +44,7 @@ final class UpdatePlugin implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Plugin', 'abilities-catalog' ),
-			'description'         => __( 'Updates an installed plugin to its latest wordpress.org version. Updating replaces the plugin code on disk.', 'abilities-catalog' ),
+			'description'         => __( 'Updates an installed plugin to the version offered by its configured update source (usually wordpress.org; may be a third-party Update URI provider). Requires direct filesystem write access. Updating replaces the plugin code on disk.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -51,6 +52,8 @@ final class UpdatePlugin implements Ability {
 					'plugin' => array(
 						'type'        => 'string',
 						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 					),
 				),
 				'required'             => array( 'plugin' ),
@@ -58,17 +61,21 @@ final class UpdatePlugin implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'plugin', 'version', 'updated' ),
+				'required'             => array( 'plugin', 'version', 'previous_version', 'updated' ),
 				'properties'           => array(
-					'plugin'  => array(
+					'plugin'           => array(
 						'type'        => 'string',
 						'description' => __( 'The plugin file path.', 'abilities-catalog' ),
 					),
-					'version' => array(
+					'version'          => array(
 						'type'        => 'string',
 						'description' => __( 'The plugin version after the update.', 'abilities-catalog' ),
 					),
-					'updated' => array(
+					'previous_version' => array(
+						'type'        => 'string',
+						'description' => __( 'The plugin version before the update.', 'abilities-catalog' ),
+					),
+					'updated'          => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the update completed.', 'abilities-catalog' ),
 					),
@@ -129,7 +136,8 @@ final class UpdatePlugin implements Ability {
 		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__( 'A plugin file path is required.', 'abilities-catalog' )
+				__( 'A plugin file path is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
@@ -145,6 +153,8 @@ final class UpdatePlugin implements Ability {
 				array( 'status' => 404 )
 			);
 		}
+
+		$previous_version = isset( $all[ $file ]['Version'] ) ? (string) $all[ $file ]['Version'] : '';
 
 		wp_update_plugins();
 
@@ -175,9 +185,10 @@ final class UpdatePlugin implements Ability {
 		$version   = isset( $installed[ $file ]['Version'] ) ? (string) $installed[ $file ]['Version'] : '';
 
 		return array(
-			'plugin'  => $file,
-			'version' => $version,
-			'updated' => true,
+			'plugin'           => $file,
+			'version'          => $version,
+			'previous_version' => $previous_version,
+			'updated'          => true,
 		);
 	}
 }
