@@ -65,7 +65,7 @@ final class ListNavigation implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'items' ),
+				'required'             => array( 'items', 'total', 'total_pages' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
