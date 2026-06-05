@@ -139,6 +139,10 @@ final class GetActivity implements Ability {
 	/**
 	 * Executes the ability by reading recent posts and comments.
 	 *
+	 * Comments pass through the same visibility gate wp-admin applies: a user
+	 * who cannot edit the parent post does not see comments on posts that are
+	 * password-protected or that they cannot read.
+	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed> The recent activity lists.
 	 */
@@ -167,27 +171,56 @@ final class GetActivity implements Ability {
 			);
 		}
 
-		$recent_comments = get_comments(
-			array(
-				'number' => $number,
-				'status' => 'approve',
-			)
+		// Mirror core's wp-admin Activity widget visibility gate
+		// (wp-admin/includes/dashboard.php wp_dashboard_recent_comments()): hide
+		// comments on posts the user cannot edit when the post is password-protected
+		// or unreadable by them. Over-fetch and refill so the requested count is
+		// still honored after the gate removes hidden comments.
+		$comments       = array();
+		$comments_count = 0;
+		$query_args     = array(
+			'number' => $number * 5,
+			'offset' => 0,
+			'status' => 'approve',
 		);
-		$recent_comments = is_array( $recent_comments ) ? $recent_comments : array();
 
-		$comments = array();
-		foreach ( $recent_comments as $comment ) {
-			if ( ! $comment instanceof \WP_Comment ) {
-				continue;
+		do {
+			$possible = get_comments( $query_args );
+			if ( empty( $possible ) || ! is_array( $possible ) ) {
+				break;
 			}
-			$comments[] = array(
-				'id'      => (int) $comment->comment_ID,
-				'post'    => (int) $comment->comment_post_ID,
-				'author'  => (string) $comment->comment_author,
-				'date'    => (string) $comment->comment_date,
-				'excerpt' => (string) wp_trim_words( (string) $comment->comment_content ),
-			);
-		}
+
+			foreach ( $possible as $comment ) {
+				if ( ! $comment instanceof \WP_Comment ) {
+					continue;
+				}
+
+				$post_id = (int) $comment->comment_post_ID;
+				if ( ! current_user_can( 'edit_post', $post_id )
+					&& ( post_password_required( $post_id )
+						|| ! current_user_can( 'read_post', $post_id ) )
+				) {
+					// No access to the parent post: hide its comments, as wp-admin does.
+					continue;
+				}
+
+				$comments[]     = array(
+					'id'      => (int) $comment->comment_ID,
+					'post'    => $post_id,
+					'author'  => (string) $comment->comment_author,
+					'date'    => (string) $comment->comment_date,
+					'excerpt' => (string) wp_trim_words( (string) $comment->comment_content ),
+				);
+				$comments_count = count( $comments );
+
+				if ( $comments_count === $number ) {
+					break 2;
+				}
+			}
+
+			$query_args['offset'] += $query_args['number'];
+			$query_args['number']  = $number * 10;
+		} while ( $comments_count < $number );
 
 		return array(
 			'published' => $published,

@@ -81,6 +81,68 @@ final class GetActivityTest extends TestCase {
 		}
 	}
 
+	public function test_comments_on_inaccessible_private_posts_are_hidden(): void {
+		// A private post owned by another user, with an approved comment.
+		$owner_id          = self::factory()->user->create( array( 'role' => 'editor' ) );
+		$private_post_id   = self::factory()->post->create(
+			array(
+				'post_status' => 'private',
+				'post_author' => $owner_id,
+			)
+		);
+		$hidden_comment_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'  => $private_post_id,
+				'comment_approved' => '1',
+			)
+		);
+
+		// A public post anyone can read, with an approved comment.
+		$public_post_id     = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$visible_comment_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'  => $public_post_id,
+				'comment_approved' => '1',
+			)
+		);
+
+		// A contributor: holds edit_posts (passes the coarse guard) but cannot
+		// edit or read another user's private post.
+		$this->actingAs( 'contributor' );
+
+		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array( 'number' => 20 ) );
+
+		$this->assertIsArray( $result );
+		$ids = wp_list_pluck( $result['comments'], 'id' );
+		$this->assertNotContains(
+			$hidden_comment_id,
+			$ids,
+			'Comment on an inaccessible private post must not leak.'
+		);
+		$this->assertContains(
+			$visible_comment_id,
+			$ids,
+			'Comment on a readable public post must still appear.'
+		);
+	}
+
+	public function test_administrator_sees_comments_on_private_posts(): void {
+		$this->actingAs( 'administrator' );
+
+		$private_post_id = self::factory()->post->create( array( 'post_status' => 'private' ) );
+		$comment_id      = self::factory()->comment->create(
+			array(
+				'comment_post_ID'  => $private_post_id,
+				'comment_approved' => '1',
+			)
+		);
+
+		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array( 'number' => 20 ) );
+
+		$ids = wp_list_pluck( $result['comments'], 'id' );
+		$this->assertContains( $comment_id, $ids );
+	}
+
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
