@@ -18,7 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Reports the importers registered with the site via the core
  * `register_importer()` mechanism. Wraps `get_importers()`, which returns the
  * `$wp_importers` global as a map of importer id to descriptor. Each descriptor
- * is shaped into a flat `{id, name, description}` record. An empty list is a
+ * is shaped into a flat `{id, name, description, installed, action_url}` record.
+ * Listed importers are always registered, so `installed` is always true, and
+ * `action_url` is the wp-admin URL that runs the importer. An empty list is a
  * valid result on a site with no importer plugins active.
  *
  * @since 0.1.0
@@ -38,7 +40,7 @@ final class ListImporters implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Importers', 'abilities-catalog' ),
-			'description'         => __( 'Returns the importers registered with the site, each with its id, name, and description.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the importers registered with the site, each with its id, name, description, installed flag, and the wp-admin URL that runs it.', 'abilities-catalog' ),
 			'category'            => 'tools',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -50,7 +52,30 @@ final class ListImporters implements Ability {
 						'description' => __( 'The registered importers.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id', 'name', 'description', 'installed', 'action_url' ),
+							'properties'           => array(
+								'id'          => array(
+									'type'        => 'string',
+									'description' => __( 'The importer id used to dispatch the import.', 'abilities-catalog' ),
+								),
+								'name'        => array(
+									'type'        => 'string',
+									'description' => __( 'The human-readable importer name.', 'abilities-catalog' ),
+								),
+								'description' => array(
+									'type'        => 'string',
+									'description' => __( 'The importer description.', 'abilities-catalog' ),
+								),
+								'installed'   => array(
+									'type'        => 'boolean',
+									'description' => __( 'Whether the importer is registered (always true for listed importers).', 'abilities-catalog' ),
+								),
+								'action_url'  => array(
+									'type'        => 'string',
+									'description' => __( 'The wp-admin URL that runs this importer.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 				),
@@ -102,11 +127,14 @@ final class ListImporters implements Ability {
 
 		foreach ( $importers as $id => $importer ) {
 			$importer = is_array( $importer ) ? $importer : array();
+			$id       = (string) $id;
 
 			$items[] = array(
-				'id'          => (string) $id,
+				'id'          => $id,
 				'name'        => (string) ( $importer[0] ?? '' ),
 				'description' => (string) ( $importer[1] ?? '' ),
+				'installed'   => true,
+				'action_url'  => add_query_arg( array( 'import' => $id ), self_admin_url( 'admin.php' ) ),
 			);
 		}
 
