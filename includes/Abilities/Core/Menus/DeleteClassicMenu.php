@@ -45,14 +45,14 @@ final class DeleteClassicMenu implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Classic Menu', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes an entire classic menu (a nav_menu term) and all of its items by menu ID. Classic menus have no Trash, so this cannot be undone. Deletes the whole menu, not a single item.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes an entire classic menu (a nav_menu term) and all of its items by menu ID. Classic menus have no Trash, so this cannot be undone. Also clears the menu from any theme locations it was assigned to. Deletes the whole menu, not a single item.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The classic menu (nav_menu term) ID to permanently delete.', 'abilities-catalog' ),
+						'description' => __( 'The classic menu (nav_menu term) ID to permanently delete. Discover it with menus/list-classic-menus or menus/get-classic-menu.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -62,13 +62,26 @@ final class DeleteClassicMenu implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'           => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the menu was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'                => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted menu ID.', 'abilities-catalog' ),
+					),
+					'name'              => array(
+						'type'        => 'string',
+						'description' => __( 'The name of the menu that was deleted.', 'abilities-catalog' ),
+					),
+					'slug'              => array(
+						'type'        => 'string',
+						'description' => __( 'The slug of the menu that was deleted.', 'abilities-catalog' ),
+					),
+					'removed_locations' => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Theme location slugs the deleted menu was cleared from.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -114,7 +127,7 @@ final class DeleteClassicMenu implements Ability {
 	 * no Trash). Any REST error is returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted flag and id, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deleted flag, id, and a snapshot of the destroyed menu, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -127,11 +140,26 @@ final class DeleteClassicMenu implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data     = rest_get_server()->response_to_data( $response, false );
+		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
 
-		return array(
+		$result = array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
 		);
+
+		if ( isset( $previous['name'] ) ) {
+			$result['name'] = (string) $previous['name'];
+		}
+
+		if ( isset( $previous['slug'] ) ) {
+			$result['slug'] = (string) $previous['slug'];
+		}
+
+		if ( isset( $previous['locations'] ) && is_array( $previous['locations'] ) ) {
+			$result['removed_locations'] = array_values( $previous['locations'] );
+		}
+
+		return $result;
 	}
 }
