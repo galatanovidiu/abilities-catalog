@@ -53,10 +53,13 @@ final class CreateApplicationPassword implements Ability {
 				'properties'           => array(
 					'user_id' => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The user ID. Defaults to the current user.', 'abilities-catalog' ),
 					),
 					'name'    => array(
 						'type'        => 'string',
+						'minLength'   => 1,
+						'pattern'     => '.*\S.*',
 						'description' => __( 'A human-readable name for the application password.', 'abilities-catalog' ),
 					),
 					'app_id'  => array(
@@ -69,7 +72,7 @@ final class CreateApplicationPassword implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'uuid', 'password' ),
+				'required'             => array( 'uuid', 'app_id', 'name', 'password' ),
 				'properties'           => array(
 					'uuid'     => array(
 						'type'        => 'string',
