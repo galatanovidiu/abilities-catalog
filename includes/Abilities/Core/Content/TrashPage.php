@@ -80,7 +80,7 @@ final class TrashPage implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
-				'screen'       => 'edit.php',
+				'screen'       => 'edit.php?post_type=page',
 			),
 		);
 	}
