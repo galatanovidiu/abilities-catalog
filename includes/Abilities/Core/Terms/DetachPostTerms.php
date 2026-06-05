@@ -56,7 +56,7 @@ final class DetachPostTerms implements Ability {
 					'terms'    => array(
 						'type'        => 'array',
 						'minItems'    => 1,
-						'description' => __( 'Terms to remove, as term IDs (integers) or slugs/names (strings).', 'abilities-catalog' ),
+						'description' => __( 'Terms to remove, as term IDs (integers) or slugs/names (strings). Discover the post\'s current term IDs/slugs with terms/list-terms or terms/get-term.', 'abilities-catalog' ),
 						'items'       => array(
 							'type' => array( 'integer', 'string' ),
 						),
