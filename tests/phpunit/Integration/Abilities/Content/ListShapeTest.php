@@ -135,12 +135,24 @@ final class ListShapeTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
+		$this->assertSame( count( $result['items'] ), $result['total'] );
+		$this->assertSame( 1, $result['total_pages'] );
 		foreach ( $result['items'] as $row ) {
 			$this->assertArrayNotHasKey( '_links', $row );
 			$this->assertArrayNotHasKey( 'guid', $row );
 			$this->assertArrayHasKey( 'parent', $row );
 			$this->assertSame( $post_id, $row['parent'] );
 		}
+	}
+
+	public function test_list_post_revisions_negative_parent_returns_404_not_retargeted(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create();
+
+		$result = wp_get_ability( 'content/list-post-revisions' )->execute( array( 'parent' => -$post_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 
 	public function test_list_post_types_reports_supports_as_flat_list(): void {

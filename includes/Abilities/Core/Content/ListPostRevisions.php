@@ -36,14 +36,14 @@ final class ListPostRevisions implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Post Revisions', 'abilities-catalog' ),
-			'description'         => __( 'Lists the saved revisions of a post by its parent post ID.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the saved revisions of a post by its parent post ID. Requires edit access to the parent post.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'parent'  => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent post ID.', 'abilities-catalog' ),
+						'description' => __( 'The parent post ID. Use content/list-posts, content/list-pages, or content/get-post to find it.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -112,7 +112,7 @@ final class ListPostRevisions implements Ability {
 	 */
 	public function execute( $input ) {
 		$input  = is_array( $input ) ? $input : array();
-		$parent = absint( $input['parent'] );
+		$parent = (int) $input['parent'];
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/posts/' . $parent . '/revisions' );
 		$request->set_param( 'context', $input['context'] ?? 'view' );
@@ -122,16 +122,14 @@ final class ListPostRevisions implements Ability {
 			return RestError::from( $response );
 		}
 
-		$items = rest_get_server()->response_to_data( $response, false );
-		$rows  = is_array( $items ) ? array_map( array( ContentListShaper::class, 'revisionSummary' ), $items ) : array();
+		$items   = rest_get_server()->response_to_data( $response, false );
+		$headers = $response->get_headers();
+		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'revisionSummary' ), $items ) : array();
 
-		// The core revisions controller returns the full set in one response and
-		// emits no pagination headers, so derive the total from the rows rather
-		// than reading X-WP-Total (which would always be 0).
 		return array(
 			'items'       => $rows,
-			'total'       => count( $rows ),
-			'total_pages' => array() === $rows ? 0 : 1,
+			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
+			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
 	}
 }
