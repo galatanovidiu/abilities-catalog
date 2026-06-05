@@ -33,7 +33,7 @@ final class GetDiscussion implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Discussion Settings', 'abilities-catalog' ),
-			'description'         => __( 'Returns the Discussion Settings screen values: comment and ping defaults, moderation rules, notification flags, and avatar settings.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the main Discussion Settings: comment and ping defaults, moderation rules, notification flags, and avatar settings.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -42,10 +42,12 @@ final class GetDiscussion implements Ability {
 				'properties'           => array(
 					'default_comment_status'       => array(
 						'type'        => 'string',
+						'enum'        => array( 'open', 'closed' ),
 						'description' => __( 'Default comment status for new posts ("open" or "closed").', 'abilities-catalog' ),
 					),
 					'default_ping_status'          => array(
 						'type'        => 'string',
+						'enum'        => array( 'open', 'closed' ),
 						'description' => __( 'Default pingback/trackback status for new posts ("open" or "closed").', 'abilities-catalog' ),
 					),
 					'comment_registration'         => array(
@@ -66,10 +68,12 @@ final class GetDiscussion implements Ability {
 					),
 					'default_comments_page'        => array(
 						'type'        => 'string',
+						'enum'        => array( 'newest', 'oldest' ),
 						'description' => __( 'Which comments page is shown by default ("newest" or "oldest").', 'abilities-catalog' ),
 					),
 					'comment_order'                => array(
 						'type'        => 'string',
+						'enum'        => array( 'asc', 'desc' ),
 						'description' => __( 'Order comments are displayed in ("asc" or "desc").', 'abilities-catalog' ),
 					),
 					'comment_moderation'           => array(
@@ -94,6 +98,7 @@ final class GetDiscussion implements Ability {
 					),
 					'avatar_rating'                => array(
 						'type'        => 'string',
+						'enum'        => array( 'G', 'PG', 'R', 'X' ),
 						'description' => __( 'Maximum avatar rating to display (e.g. "G").', 'abilities-catalog' ),
 					),
 					'avatar_default'               => array(
@@ -148,7 +153,7 @@ final class GetDiscussion implements Ability {
 			'comments_notify'              => (bool) get_option( 'comments_notify' ),
 			'show_avatars'                 => (bool) get_option( 'show_avatars' ),
 			'avatar_rating'                => (string) ( get_option( 'avatar_rating' ) ?? '' ),
-			'avatar_default'               => (string) ( get_option( 'avatar_default' ) ?? '' ),
+			'avatar_default'               => (string) get_option( 'avatar_default', 'mystery' ),
 		);
 	}
 }
