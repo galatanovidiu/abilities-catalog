@@ -38,7 +38,19 @@ final class GetGeneral implements Ability {
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'title' ),
+				'required'             => array(
+					'title',
+					'description',
+					'url',
+					'wpurl',
+					'admin_email',
+					'timezone',
+					'gmt_offset',
+					'date_format',
+					'time_format',
+					'start_of_week',
+					'language',
+				),
 				'properties'           => array(
 					'title'         => array(
 						'type'        => 'string',
@@ -66,7 +78,7 @@ final class GetGeneral implements Ability {
 					),
 					'gmt_offset'    => array(
 						'type'        => 'string',
-						'description' => __( 'The manual UTC offset in hours.', 'abilities-catalog' ),
+						'description' => __( 'The effective current UTC offset in hours; empty or zero means none. Reflects the active timezone (computed and DST-sensitive when a timezone string is set), not necessarily a manually set offset.', 'abilities-catalog' ),
 					),
 					'date_format'   => array(
 						'type'        => 'string',
@@ -82,7 +94,7 @@ final class GetGeneral implements Ability {
 					),
 					'language'      => array(
 						'type'        => 'string',
-						'description' => __( 'The site locale (e.g. "en_US").', 'abilities-catalog' ),
+						'description' => __( 'The active resolved site locale (e.g. "en_US"). This may differ from the stored Site Language value; it is "en_US" when the stored value is empty (English).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
