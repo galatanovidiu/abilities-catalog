@@ -39,17 +39,113 @@ final class ListAvailableUpdates implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		$update_set = array(
+		$core_set = array(
 			'type'  => 'array',
 			'items' => array(
 				'type'                 => 'object',
-				'additionalProperties' => true,
+				'properties'           => array(
+					'response' => array(
+						'type'        => 'string',
+						'description' => __( 'Core update state, e.g. "upgrade", "latest", or "development".', 'abilities-catalog' ),
+					),
+					'current'  => array(
+						'type'        => 'string',
+						'description' => __( 'The currently installed core version.', 'abilities-catalog' ),
+					),
+					'version'  => array(
+						'type'        => 'string',
+						'description' => __( 'The offered core version.', 'abilities-catalog' ),
+					),
+					'locale'   => array(
+						'type'        => 'string',
+						'description' => __( 'The locale of the offered core update.', 'abilities-catalog' ),
+					),
+				),
+				'additionalProperties' => false,
+			),
+		);
+
+		$plugin_set = array(
+			'type'  => 'array',
+			'items' => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'plugin'          => array(
+						'type'        => 'string',
+						'description' => __( 'The plugin file path relative to the plugins directory.', 'abilities-catalog' ),
+					),
+					'name'            => array(
+						'type'        => 'string',
+						'description' => __( 'The human-readable plugin name.', 'abilities-catalog' ),
+					),
+					'current_version' => array(
+						'type'        => 'string',
+						'description' => __( 'The currently installed plugin version.', 'abilities-catalog' ),
+					),
+					'new_version'     => array(
+						'type'        => 'string',
+						'description' => __( 'The available plugin version.', 'abilities-catalog' ),
+					),
+				),
+				'additionalProperties' => false,
+			),
+		);
+
+		$theme_set = array(
+			'type'  => 'array',
+			'items' => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'theme'           => array(
+						'type'        => 'string',
+						'description' => __( 'The theme stylesheet (directory) slug.', 'abilities-catalog' ),
+					),
+					'name'            => array(
+						'type'        => 'string',
+						'description' => __( 'The human-readable theme name.', 'abilities-catalog' ),
+					),
+					'current_version' => array(
+						'type'        => 'string',
+						'description' => __( 'The currently installed theme version.', 'abilities-catalog' ),
+					),
+					'new_version'     => array(
+						'type'        => 'string',
+						'description' => __( 'The available theme version.', 'abilities-catalog' ),
+					),
+				),
+				'additionalProperties' => false,
+			),
+		);
+
+		$translation_set = array(
+			'type'  => 'array',
+			'items' => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'type'     => array(
+						'type'        => 'string',
+						'description' => __( 'The translation target type: "core", "plugin", or "theme".', 'abilities-catalog' ),
+					),
+					'slug'     => array(
+						'type'        => 'string',
+						'description' => __( 'The slug of the core component, plugin, or theme the translation targets.', 'abilities-catalog' ),
+					),
+					'language' => array(
+						'type'        => 'string',
+						'description' => __( 'The language code of the available translation pack.', 'abilities-catalog' ),
+					),
+					'version'  => array(
+						'type'        => 'string',
+						'description' => __( 'The version of the targeted core component, plugin, or theme — NOT the language-pack version.', 'abilities-catalog' ),
+					),
+				),
+				'additionalProperties' => false,
 			),
 		);
 
 		return array(
 			'label'               => __( 'List Available Updates', 'abilities-catalog' ),
-			'description'         => __( 'Returns the available core, plugin, theme, and translation updates from the cached update data.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the available core, plugin, theme, and translation updates from the cached update data. This is a read of cached results; it does not trigger a fresh remote check, so an empty result means no cached check has run, not necessarily that no updates exist.', 'abilities-catalog' ),
 			'category'            => 'updates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -67,10 +163,10 @@ final class ListAvailableUpdates implements Ability {
 			'output_schema'       => array(
 				'type'                 => 'object',
 				'properties'           => array(
-					'core'         => $update_set,
-					'plugins'      => $update_set,
-					'themes'       => $update_set,
-					'translations' => $update_set,
+					'core'         => $core_set,
+					'plugins'      => $plugin_set,
+					'themes'       => $theme_set,
+					'translations' => $translation_set,
 				),
 				'additionalProperties' => false,
 			),
@@ -210,8 +306,10 @@ final class ListAvailableUpdates implements Ability {
 			$update = isset( $vars['update'] ) && is_array( $vars['update'] ) ? $vars['update'] : array();
 
 			$list[] = array(
-				'theme'       => (string) $stylesheet,
-				'new_version' => isset( $update['new_version'] ) ? (string) $update['new_version'] : '',
+				'theme'           => (string) $stylesheet,
+				'name'            => (string) $theme->get( 'Name' ),
+				'current_version' => (string) $theme->get( 'Version' ),
+				'new_version'     => isset( $update['new_version'] ) ? (string) $update['new_version'] : '',
 			);
 		}
 
