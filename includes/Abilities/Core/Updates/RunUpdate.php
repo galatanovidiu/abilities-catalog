@@ -155,7 +155,7 @@ final class RunUpdate implements Ability {
 		if ( ! in_array( $type, array( 'plugin', 'theme', 'translation' ), true ) ) {
 			return new WP_Error(
 				'webmcp_unsupported_update_type',
-				__( 'Only plugin, theme, and translation updates are supported. Core updates are not available over WebMCP.', 'abilities-catalog' ),
+				__( 'Only plugin, theme, and translation updates are supported. Core updates are not supported by this ability.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -178,6 +178,10 @@ final class RunUpdate implements Ability {
 			wp_update_themes();
 			$fs_context = get_theme_root();
 		} else {
+			// Translation packs live across the core, plugin, and theme update
+			// transients (wp-includes/update.php), so refresh all three. Core-bundled
+			// language packs are populated only by wp_version_check().
+			wp_version_check();
 			wp_update_plugins();
 			wp_update_themes();
 			$fs_context = WP_LANG_DIR;
@@ -203,9 +207,9 @@ final class RunUpdate implements Ability {
 	 * Runs plugin updates for the given files, or all available when none given.
 	 *
 	 * @param array<int,string> $items Plugin file paths with the .php extension.
-	 * @return array<string,mixed> The normalized plugin update result.
+	 * @return array<string,mixed>|\WP_Error The normalized plugin update result, or a top-level failure.
 	 */
-	private function runPlugins( array $items ): array {
+	private function runPlugins( array $items ) {
 		$available = array_keys( get_plugin_updates() );
 		// Constrain caller-supplied items to plugins that actually have an available
 		// update (the update source is the refreshed transient, never the input).
@@ -225,6 +229,11 @@ final class RunUpdate implements Ability {
 		$upgrader = new \Plugin_Upgrader( UpgradeRunner::skin() );
 		$result   = $upgrader->bulk_upgrade( $plugins );
 
+		$failure = $this->topLevelFailure( $result );
+		if ( null !== $failure ) {
+			return $failure;
+		}
+
 		return array(
 			'type'    => 'plugin',
 			'results' => (object) $this->normalizeResults( $result ),
@@ -235,9 +244,9 @@ final class RunUpdate implements Ability {
 	 * Runs theme updates for the given stylesheets, or all available when none given.
 	 *
 	 * @param array<int,string> $items Theme stylesheet directory names.
-	 * @return array<string,mixed> The normalized theme update result.
+	 * @return array<string,mixed>|\WP_Error The normalized theme update result, or a top-level failure.
 	 */
-	private function runThemes( array $items ): array {
+	private function runThemes( array $items ) {
 		$available = array_keys( get_theme_updates() );
 		// Constrain caller-supplied items to themes that actually have an available
 		// update; drop unknown/uninstalled stylesheets before the upgrader sees them.
@@ -256,6 +265,11 @@ final class RunUpdate implements Ability {
 		$upgrader = new \Theme_Upgrader( UpgradeRunner::skin() );
 		$result   = $upgrader->bulk_upgrade( $themes );
 
+		$failure = $this->topLevelFailure( $result );
+		if ( null !== $failure ) {
+			return $failure;
+		}
+
 		return array(
 			'type'    => 'theme',
 			'results' => (object) $this->normalizeResults( $result ),
@@ -265,9 +279,9 @@ final class RunUpdate implements Ability {
 	/**
 	 * Runs all available translation (language pack) updates.
 	 *
-	 * @return array<string,mixed> The normalized translation update result.
+	 * @return array<string,mixed>|\WP_Error The normalized translation update result, or a top-level failure.
 	 */
-	private function runTranslations(): array {
+	private function runTranslations() {
 		$updates = wp_get_translation_updates();
 
 		if ( empty( $updates ) ) {
@@ -281,9 +295,45 @@ final class RunUpdate implements Ability {
 		$upgrader = new \Language_Pack_Upgrader( UpgradeRunner::skin() );
 		$result   = $upgrader->bulk_upgrade( $updates );
 
+		$failure = $this->topLevelFailure( $result );
+		if ( null !== $failure ) {
+			return $failure;
+		}
+
 		return array(
 			'type'    => 'translation',
 			'results' => (object) $this->normalizeResults( $result ),
+		);
+	}
+
+	/**
+	 * Detects a hard top-level failure from a `bulk_upgrade()` call.
+	 *
+	 * Core's bulk upgraders can fail before producing any per-target map: they
+	 * return a top-level `WP_Error` (for example `Language_Pack_Upgrader` on a
+	 * language-dir create failure) or `false` (for example a filesystem-connect
+	 * failure in any of the three upgraders). Without this check those collapse to
+	 * an empty `results` map, indistinguishable from "nothing to update". A top-level
+	 * `WP_Error` is returned unchanged so its code and status survive; a `false`
+	 * result becomes a generic `webmcp_update_failed` error. A normal per-target
+	 * array yields `null` (no top-level failure).
+	 *
+	 * @param mixed $result The raw `bulk_upgrade()` return value.
+	 * @return \WP_Error|null The top-level failure, or null when the result is a per-target map.
+	 */
+	private function topLevelFailure( $result ): ?WP_Error {
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		if ( is_array( $result ) ) {
+			return null;
+		}
+
+		return new WP_Error(
+			'webmcp_update_failed',
+			__( 'The update could not be run. The filesystem may be unavailable or the upgrader could not start.', 'abilities-catalog' ),
+			array( 'status' => 500 )
 		);
 	}
 
