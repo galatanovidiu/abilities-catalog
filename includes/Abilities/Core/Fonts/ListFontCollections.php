@@ -55,6 +55,12 @@ final class ListFontCollections implements Ability {
 						'default'     => 10,
 						'description' => __( 'Number of items to return per page.', 'abilities-catalog' ),
 					),
+					'context'  => array(
+						'type'        => 'string',
+						'enum'        => array( 'view', 'edit' ),
+						'default'     => 'view',
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -72,7 +78,7 @@ final class ListFontCollections implements Ability {
 					),
 					'total'       => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of font collections matching the query.', 'abilities-catalog' ),
+						'description' => __( 'Total number of registered font collections. May exceed the number of returned items because collections that fail to load are skipped.', 'abilities-catalog' ),
 					),
 					'total_pages' => array(
 						'type'        => 'integer',
@@ -114,6 +120,7 @@ final class ListFontCollections implements Ability {
 		$input = is_array( $input ) ? $input : array();
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/font-collections' );
+		$request->set_param( 'context', $input['context'] ?? 'view' );
 
 		if ( isset( $input['page'] ) ) {
 			$request->set_param( 'page', absint( $input['page'] ) );
