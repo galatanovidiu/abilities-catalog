@@ -56,7 +56,8 @@ final class DeleteApplicationPassword implements Ability {
 					),
 					'uuid'    => array(
 						'type'        => 'string',
-						'description' => __( 'The UUID of the application password to revoke.', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'description' => __( 'The UUID of the application password to revoke. Use users/list-application-passwords to discover existing UUIDs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'uuid' ),
@@ -64,15 +65,31 @@ final class DeleteApplicationPassword implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'deleted', 'uuid' ),
+				'required'             => array( 'deleted', 'uuid', 'name', 'app_id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'   => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the application password was revoked.', 'abilities-catalog' ),
 					),
-					'uuid'    => array(
+					'uuid'      => array(
 						'type'        => 'string',
 						'description' => __( 'The UUID of the revoked application password.', 'abilities-catalog' ),
+					),
+					'name'      => array(
+						'type'        => 'string',
+						'description' => __( 'The human-readable name of the revoked application password.', 'abilities-catalog' ),
+					),
+					'app_id'    => array(
+						'type'        => 'string',
+						'description' => __( 'The application UUID of the revoked credential, if one was set.', 'abilities-catalog' ),
+					),
+					'created'   => array(
+						'type'        => 'string',
+						'description' => __( 'When the revoked application password was created (GMT, ISO 8601).', 'abilities-catalog' ),
+					),
+					'last_used' => array(
+						'type'        => array( 'string', 'null' ),
+						'description' => __( 'When the revoked application password was last used (GMT, ISO 8601), or null if never used.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -118,7 +135,7 @@ final class DeleteApplicationPassword implements Ability {
 	 * A REST error (e.g. unknown uuid, app passwords unavailable) is surfaced unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deletion result, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deletion result, including a snapshot of the revoked credential, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -139,11 +156,17 @@ final class DeleteApplicationPassword implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data     = rest_get_server()->response_to_data( $response, false );
+		$data     = is_array( $data ) ? $data : array();
+		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
 
 		return array(
-			'deleted' => (bool) ( $data['deleted'] ?? false ),
-			'uuid'    => $uuid,
+			'deleted'   => (bool) ( $data['deleted'] ?? false ),
+			'uuid'      => $uuid,
+			'name'      => (string) ( $previous['name'] ?? '' ),
+			'app_id'    => (string) ( $previous['app_id'] ?? '' ),
+			'created'   => (string) ( $previous['created'] ?? '' ),
+			'last_used' => $previous['last_used'] ?? null,
 		);
 	}
 
