@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * are written directly. Each value is sanitized with `sanitize_option()` (the
  * same callback the Settings API would run) and the input is allow-listed to the
  * three permalink keys only. A non-empty `permalink_structure` must contain at
- * least one `%tag%` placeholder, matching the core validation in
+ * least one structure tag (e.g. `%postname%`), matching the core validation in
  * `sanitize_option()`; an empty string selects plain permalinks.
  *
  * The cap mirrors the wp-admin Permalink Settings screen, which gates on
@@ -63,7 +63,7 @@ final class UpdatePermalinks implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Permalink Settings', 'abilities-catalog' ),
-			'description'         => __( 'Updates the permalink structure and the category and tag base prefixes, then rebuilds the rewrite rules. Provide at least one field. A non-empty permalink structure must contain a %tag% placeholder; an empty structure selects plain permalinks.', 'abilities-catalog' ),
+			'description'         => __( 'Updates the permalink structure and the category and tag base prefixes, then rebuilds the rewrite rules. Provide at least one field. A non-empty permalink structure must contain at least one structure tag, e.g. %postname%; an empty structure selects plain permalinks.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -85,7 +85,7 @@ final class UpdatePermalinks implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'permalink_structure' ),
+				'required'             => array( 'permalink_structure', 'category_base', 'tag_base' ),
 				'properties'           => array(
 					'permalink_structure' => array(
 						'type'        => 'string',
@@ -161,15 +161,16 @@ final class UpdatePermalinks implements Ability {
 			);
 		}
 
-		// A non-empty permalink structure must contain a %tag% placeholder,
-		// matching core sanitize_option() validation; an empty string is plain.
+		// A non-empty permalink structure must contain at least one structure tag
+		// (e.g. %postname%), matching core sanitize_option() validation; an empty
+		// string is plain.
 		if ( isset( $updates['permalink_structure'] )
 			&& '' !== $updates['permalink_structure']
 			&& ! preg_match( '/%[^\/%]+%/', $updates['permalink_structure'] )
 		) {
 			return new WP_Error(
 				'invalid_permalink_structure',
-				__( 'A non-empty permalink structure must contain at least one %tag% placeholder.', 'abilities-catalog' ),
+				__( 'A non-empty permalink structure must contain at least one structure tag, e.g. %postname%.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
 		}
