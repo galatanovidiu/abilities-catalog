@@ -43,7 +43,8 @@ final class GetNavigation implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The navigation menu ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The navigation menu ID. Discover IDs with `menus/list-navigation`.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -59,29 +60,33 @@ final class GetNavigation implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The navigation menu ID.', 'abilities-catalog' ),
 					),
-					'title'    => array(
+					'title'     => array(
 						'type'        => 'string',
 						'description' => __( 'The navigation menu title.', 'abilities-catalog' ),
 					),
-					'content'  => array(
+					'content'   => array(
 						'type'        => 'string',
 						'description' => __( 'The serialized block content of the menu.', 'abilities-catalog' ),
 					),
-					'status'   => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The navigation menu post status.', 'abilities-catalog' ),
 					),
-					'date'     => array(
+					'date'      => array(
 						'type'        => 'string',
 						'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
 					),
-					'modified' => array(
+					'modified'  => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The site-editor URL for editing the navigation menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -138,15 +143,17 @@ final class GetNavigation implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data        = rest_get_server()->response_to_data( $response, false );
+		$resolved_id = (int) ( $data['id'] ?? $id );
 
 		return array(
-			'id'       => (int) ( $data['id'] ?? $id ),
-			'title'    => $this->coerceField( $data['title'] ?? '' ),
-			'content'  => $this->coerceField( $data['content'] ?? '' ),
-			'status'   => (string) ( $data['status'] ?? '' ),
-			'date'     => (string) ( $data['date'] ?? '' ),
-			'modified' => (string) ( $data['modified'] ?? '' ),
+			'id'        => $resolved_id,
+			'title'     => $this->coerceField( $data['title'] ?? '' ),
+			'content'   => $this->coerceField( $data['content'] ?? '' ),
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'date'      => (string) ( $data['date'] ?? '' ),
+			'modified'  => (string) ( $data['modified'] ?? '' ),
+			'edit_link' => $resolved_id > 0 ? (string) get_edit_post_link( $resolved_id, 'raw' ) : '',
 		);
 	}
 
