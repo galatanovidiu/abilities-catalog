@@ -16,7 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T2 write ability: `content/update-cpt-item` (generic, keyed by `post_type`).
  *
- * Resolves the type's REST base and wraps `POST /wp/v2/<rest_base>/<id>` via
+ * Resolves the type's REST item route via `rest_get_route_for_post_type_items()`
+ * (honoring a custom `rest_namespace`) and wraps `POST <route>/<id>` via
  * `rest_do_request()` to update an item of any registered `show_in_rest` post
  * type. Mirrors the update fan-out of `content/update-post`, but resolves the
  * publish and author capabilities per-type from `get_post_type_object()`. Only
@@ -210,9 +211,16 @@ final class UpdateCptItem implements Ability {
 			);
 		}
 
-		$rest_base = $obj->rest_base ?: $post_type;
+		$items_route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $items_route ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist or is not available in REST.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
-		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $rest_base . '/' . $id );
+		$request = new WP_REST_Request( 'POST', $items_route . '/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them
 		// (content via wp_kses_post, etc.). Control fields are sanitized here.

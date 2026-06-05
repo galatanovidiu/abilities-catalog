@@ -17,9 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `content/list-cpt-items`.
  *
- * Generic collection reader keyed by `post_type`. Resolves the type's REST base
- * and wraps `GET /wp/v2/<rest_base>` via `rest_do_request()`. Rejects post types
- * that are not exposed in REST.
+ * Generic collection reader keyed by `post_type`. Resolves the type's REST
+ * collection route via `rest_get_route_for_post_type_items()` (honoring a custom
+ * `rest_namespace`) and wraps `GET <route>` via `rest_do_request()`. Rejects post
+ * types that are not exposed in REST.
  *
  * @since 0.1.0
  */
@@ -167,9 +168,16 @@ final class ListCptItems implements Ability {
 			);
 		}
 
-		$rest_base = $obj->rest_base ?: $post_type;
+		$items_route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $items_route ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist or is not available in REST.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
-		$request = new WP_REST_Request( 'GET', '/wp/v2/' . $rest_base );
+		$request = new WP_REST_Request( 'GET', $items_route );
 		$request->set_param( 'context', $input['context'] ?? 'view' );
 
 		if ( isset( $input['search'] ) ) {

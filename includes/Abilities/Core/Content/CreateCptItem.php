@@ -16,9 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T2 write ability: `content/create-cpt-item` (generic, keyed by `post_type`).
  *
- * Resolves the type's REST base and wraps `POST /wp/v2/<rest_base>` via
- * `rest_do_request()` to create an item of any registered `show_in_rest` post
- * type. Mirrors the create fan-out of `content/create-post`, but resolves every
+ * Resolves the type's REST collection route via
+ * `rest_get_route_for_post_type_items()` (honoring a custom `rest_namespace`) and
+ * wraps `POST <route>` via `rest_do_request()` to create an item of any registered
+ * `show_in_rest` post type. Mirrors the create fan-out of `content/create-post`, but resolves every
  * capability per-type from `get_post_type_object()`: `create_posts` to author a
  * draft, `publish_posts` to publish, and `edit_others_posts` to set another user
  * as author. Defaults to a draft. Write annotations
@@ -196,9 +197,16 @@ final class CreateCptItem implements Ability {
 			);
 		}
 
-		$rest_base = $obj->rest_base ?: $post_type;
+		$items_route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $items_route ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist or is not available in REST.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
-		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $rest_base );
+		$request = new WP_REST_Request( 'POST', $items_route );
 
 		// String fields pass through to the REST route, which sanitizes them
 		// (content via wp_kses_post, etc.). Control fields are sanitized here.
