@@ -96,10 +96,12 @@ final class UpdateDiscussion implements Ability {
 					),
 					'close_comments_days_old'      => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Number of days after which comments close.', 'abilities-catalog' ),
 					),
 					'comments_per_page'            => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Number of top-level comments shown per page.', 'abilities-catalog' ),
 					),
 					'default_comments_page'        => array(
@@ -118,6 +120,7 @@ final class UpdateDiscussion implements Ability {
 					),
 					'comment_max_links'            => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Number of links in a comment that triggers the moderation queue.', 'abilities-catalog' ),
 					),
 					'moderation_notify'            => array(
@@ -256,6 +259,22 @@ final class UpdateDiscussion implements Ability {
 			);
 		}
 
+		// Reject an unknown avatar_default before any write. Core offers only the
+		// keys from the filtered avatar_defaults set; sanitize_option() has no
+		// case for this option, so without this guard any string would be stored.
+		if ( array_key_exists( 'avatar_default', $input ) ) {
+			$avatar_default = sanitize_text_field( (string) $input['avatar_default'] );
+			$allowed        = array_keys( $this->avatarDefaults() );
+
+			if ( ! in_array( $avatar_default, $allowed, true ) ) {
+				return new \WP_Error(
+					'webmcp_invalid_avatar_default',
+					__( 'The provided avatar_default is not a recognized default avatar.', 'abilities-catalog' ),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
 		$request  = new WP_REST_Request( 'POST', '/wp/v2/settings' );
 		$has_rest = false;
 
@@ -314,7 +333,33 @@ final class UpdateDiscussion implements Ability {
 			'comments_notify'              => (bool) get_option( 'comments_notify' ),
 			'show_avatars'                 => (bool) get_option( 'show_avatars' ),
 			'avatar_rating'                => (string) ( get_option( 'avatar_rating' ) ?? '' ),
-			'avatar_default'               => (string) ( get_option( 'avatar_default' ) ?? '' ),
+			'avatar_default'               => (string) get_option( 'avatar_default', 'mystery' ),
 		);
+	}
+
+	/**
+	 * Returns the current set of allowed default avatars.
+	 *
+	 * Mirrors the core Discussion screen: the base set is run through the
+	 * `avatar_defaults` filter, so the allow-list stays in sync with any
+	 * registered custom avatars.
+	 *
+	 * @return array<string,string> Map of avatar key to display name.
+	 */
+	private function avatarDefaults(): array {
+		$avatar_defaults = array(
+			'mystery'          => __( 'Mystery Person', 'abilities-catalog' ),
+			'blank'            => __( 'Blank', 'abilities-catalog' ),
+			'gravatar_default' => __( 'Gravatar Logo', 'abilities-catalog' ),
+			'identicon'        => __( 'Identicon (Generated)', 'abilities-catalog' ),
+			'wavatar'          => __( 'Wavatar (Generated)', 'abilities-catalog' ),
+			'monsterid'        => __( 'MonsterID (Generated)', 'abilities-catalog' ),
+			'retro'            => __( 'Retro (Generated)', 'abilities-catalog' ),
+			'robohash'         => __( 'RoboHash (Generated)', 'abilities-catalog' ),
+		);
+
+		/** This filter is documented in wp-admin/options-discussion.php */
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Reading WordPress core's own avatar_defaults filter, not defining a plugin hook.
+		return (array) apply_filters( 'avatar_defaults', $avatar_defaults );
 	}
 }
