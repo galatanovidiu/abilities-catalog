@@ -41,7 +41,7 @@ final class ListExportRequests implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Export Requests', 'abilities-catalog' ),
-			'description'         => __( 'Lists personal-data export requests with their status and metadata. Does not expose exported data.', 'abilities-catalog' ),
+			'description'         => __( 'Discovery/read step for personal-data export requests: lists each request with its status and metadata so you can find the id (also returned as request_id) that the follow-on privacy abilities (confirm-request, cancel-request, generate-export) accept. Returns metadata only; does not expose exported data.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
