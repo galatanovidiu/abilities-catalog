@@ -190,8 +190,13 @@ final class CreateComment implements Ability {
 		if ( isset( $input['author_name'] ) && '' !== $input['author_name'] ) {
 			$request->set_param( 'author_name', sanitize_text_field( (string) $input['author_name'] ) );
 		}
+		// Pass the raw value: the wrapped route's `check_comment_author_email`
+		// sanitize_callback validates it and returns `rest_invalid_email` on a
+		// malformed address. Pre-running `sanitize_email()` here would strip an
+		// invalid value to '' and the guard above would then drop it, hiding core's
+		// validation error (wrap, don't reimplement).
 		if ( isset( $input['author_email'] ) && '' !== $input['author_email'] ) {
-			$request->set_param( 'author_email', sanitize_email( (string) $input['author_email'] ) );
+			$request->set_param( 'author_email', (string) $input['author_email'] );
 		}
 		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
 			$request->set_param( 'status', sanitize_key( (string) $input['status'] ) );

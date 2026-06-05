@@ -167,6 +167,61 @@ final class CreateCommentTest extends TestCase {
 	}
 
 	/**
+	 * B6 regression: a malformed author_email submitted by a moderator must reach
+	 * core, which validates it via check_comment_author_email and returns
+	 * rest_invalid_email (400). The ability must NOT pre-sanitize the value to ''
+	 * and silently drop it.
+	 */
+	public function test_malformed_author_email_surfaces_core_validation_error(): void {
+		$this->actingAs('administrator');
+
+		$before = get_comments(array('post_id' => $this->post_id, 'count' => true));
+
+		$result = wp_get_ability('comments/create-comment')->execute(
+			array(
+				'post'         => $this->post_id,
+				'content'      => 'Comment with a broken email.',
+				'author_email' => 'not-an-email',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		// Core wraps the per-param failure in `rest_invalid_param` and nests the
+		// specific `rest_invalid_email` code under error_data details.
+		$this->assertSame('rest_invalid_param', $result->get_error_code());
+		$data = $result->get_error_data();
+		$this->assertSame(400, $data['status']);
+		$this->assertSame('rest_invalid_email', $data['details']['author_email']['code']);
+		$this->assertSame(
+			$before,
+			get_comments(array('post_id' => $this->post_id, 'count' => true)),
+			'No comment should be created when the email is rejected by core.'
+		);
+	}
+
+	/**
+	 * Companion to the malformed-email case: a valid author_email from a moderator
+	 * is stored on the created comment.
+	 */
+	public function test_valid_author_email_is_stored(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('comments/create-comment')->execute(
+			array(
+				'post'         => $this->post_id,
+				'content'      => 'Comment with a valid email.',
+				'author_name'  => 'Valid Author',
+				'author_email' => 'valid.author@example.com',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertGreaterThan(0, $result['id']);
+		$comment = get_comment($result['id']);
+		$this->assertSame('valid.author@example.com', $comment->comment_author_email);
+	}
+
+	/**
 	 * B4 win: a non-moderator setting `status` now reaches the wrapped route, which
 	 * surfaces its specific `rest_comment_invalid_status` error instead of the
 	 * Abilities API collapsing it into a generic permission failure.

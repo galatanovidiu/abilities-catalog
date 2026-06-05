@@ -61,8 +61,7 @@ final class UpdateComment implements Ability {
 					),
 					'author_email' => array(
 						'type'        => 'string',
-						'format'      => 'email',
-						'description' => __( 'The new author email address.', 'abilities-catalog' ),
+						'description' => __( 'The new author email address. Validated by core; a malformed value returns rest_invalid_email.', 'abilities-catalog' ),
 					),
 					'date'         => array(
 						'type'        => 'string',
@@ -153,8 +152,15 @@ final class UpdateComment implements Ability {
 		if ( isset( $input['author_name'] ) && '' !== $input['author_name'] ) {
 			$request->set_param( 'author_name', sanitize_text_field( (string) $input['author_name'] ) );
 		}
+		// Pass the raw value: the wrapped route's `check_comment_author_email`
+		// sanitize_callback validates it and returns `rest_invalid_email` on a
+		// malformed address. Pre-running `sanitize_email()` here would strip an
+		// invalid value to '' and the guard above would then drop it, hiding core's
+		// validation error (wrap, don't reimplement). The input schema omits
+		// `format: email` for the same reason — schema-level format validation would
+		// reject a malformed value as `ability_invalid_input` before core is reached.
 		if ( isset( $input['author_email'] ) && '' !== $input['author_email'] ) {
-			$request->set_param( 'author_email', sanitize_email( (string) $input['author_email'] ) );
+			$request->set_param( 'author_email', (string) $input['author_email'] );
 		}
 		if ( isset( $input['date'] ) && '' !== $input['date'] ) {
 			$request->set_param( 'date', (string) $input['date'] );

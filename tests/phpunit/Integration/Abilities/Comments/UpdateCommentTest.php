@@ -89,6 +89,57 @@ final class UpdateCommentTest extends TestCase {
 		$this->assertStringContainsString((string) $result['id'], $result['edit_link']);
 	}
 
+	/**
+	 * B6 regression: a malformed author_email must reach core, which validates it
+	 * via check_comment_author_email and returns rest_invalid_email (400). The
+	 * ability must NOT pre-sanitize the value to '' and silently drop it.
+	 */
+	public function test_malformed_author_email_surfaces_core_validation_error(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('comments/update-comment')->execute(
+			array(
+				'id'           => $this->comment_id,
+				'author_email' => 'not-an-email',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		// Core wraps the per-param failure in `rest_invalid_param` and nests the
+		// specific `rest_invalid_email` code under error_data details.
+		$this->assertSame('rest_invalid_param', $result->get_error_code());
+		$data = $result->get_error_data();
+		$this->assertSame(400, $data['status']);
+		$this->assertSame('rest_invalid_email', $data['details']['author_email']['code']);
+		$this->assertSame(
+			'',
+			get_comment($this->comment_id)->comment_author_email,
+			'The stored email should be unchanged when core rejects the new value.'
+		);
+	}
+
+	/**
+	 * Companion to the malformed-email case: a valid author_email updates the
+	 * stored comment.
+	 */
+	public function test_valid_author_email_is_stored(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('comments/update-comment')->execute(
+			array(
+				'id'           => $this->comment_id,
+				'author_email' => 'new.email@example.com',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertSame('new.email@example.com', $result['author_email']);
+		$this->assertSame(
+			'new.email@example.com',
+			get_comment($this->comment_id)->comment_author_email
+		);
+	}
+
 	public function test_non_positive_id_is_rejected_by_schema(): void {
 		$this->actingAs('administrator');
 
