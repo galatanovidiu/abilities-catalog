@@ -74,7 +74,7 @@ final class SearchDirectory implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'items' ),
 				'properties'           => array(
-					'items' => array(
+					'items'         => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
@@ -112,6 +112,14 @@ final class SearchDirectory implements Ability {
 							'additionalProperties' => false,
 						),
 						'description' => __( 'The list of matching themes from the directory.', 'abilities-catalog' ),
+					),
+					'total_results' => array(
+						'type'        => 'integer',
+						'description' => __( 'The total number of matching themes across all pages.', 'abilities-catalog' ),
+					),
+					'has_more'      => array(
+						'type'        => 'boolean',
+						'description' => __( 'True if more results exist beyond the current page.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -174,16 +182,19 @@ final class SearchDirectory implements Ability {
 				'fields'   => array(
 					'description' => false,
 					'sections'    => false,
+					'rating'      => true,
+					'num_ratings' => true,
 				),
 			)
 		);
 
 		if ( is_wp_error( $result ) ) {
-			return new WP_Error(
-				'theme_directory_error',
-				__( 'Could not reach the WordPress.org theme directory.', 'abilities-catalog' ),
-				array( 'status' => 502 )
-			);
+			// Preserve the stable core error code (e.g. `themes_api_failed`) and any
+			// data. Core's error carries no HTTP status, so add 502 only when absent.
+			if ( null === $result->get_error_data() ) {
+				$result->add_data( array( 'status' => 502 ) );
+			}
+			return $result;
 		}
 
 		$items = array();
@@ -205,8 +216,15 @@ final class SearchDirectory implements Ability {
 			);
 		}
 
+		$info          = (array) ( $result->info ?? array() );
+		$total_results = (int) ( $info['results'] ?? 0 );
+		$page          = isset( $input['page'] ) ? absint( $input['page'] ) : 1;
+		$per_page      = isset( $input['per_page'] ) ? absint( $input['per_page'] ) : 10;
+
 		return array(
-			'items' => $items,
+			'items'         => $items,
+			'total_results' => $total_results,
+			'has_more'      => $page * $per_page < $total_results,
 		);
 	}
 }
