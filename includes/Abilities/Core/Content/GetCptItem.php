@@ -129,7 +129,8 @@ final class GetCptItem implements Ability {
 	/**
 	 * Permission check: delegated to the wrapped REST route.
 	 *
-	 * Reads through `GET /wp/v2/<rest_base>/<id>`, whose permission check enforces
+	 * Reads through `GET <route>/<id>` (the route resolved via
+	 * `rest_get_route_for_post_type_items()`), whose permission check enforces
 	 * `read_post` on the object. Deferring to the route preserves anonymous reads
 	 * of published public items and lets `execute()` surface specific errors:
 	 * `invalid_post_type` (400) for an unknown or non-REST type, and the route's
