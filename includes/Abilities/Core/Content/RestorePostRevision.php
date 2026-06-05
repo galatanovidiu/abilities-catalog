@@ -98,27 +98,28 @@ final class RestorePostRevision implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
-				'screen'       => 'revision.php?revision={revision_id}',
+				'screen'       => 'post.php?post={parent}&action=edit',
 			),
 		);
 	}
 
 	/**
-	 * Permission check: delegated to `execute()`.
+	 * Permission check: coarse `edit_posts` guard.
 	 *
-	 * Core's `wp_restore_post_revision()` does no capability check, so `execute()`
-	 * is the authorization guard: it validates both IDs, confirms the target is a
-	 * revision of the supplied parent, and requires object-level `edit_post` on the
-	 * parent — returning a specific error for each failure (a 400 for a bad/mismatched
-	 * revision, a 403 for an authorization failure) instead of masking them as a
-	 * single permission error. The object-level capability is still enforced
-	 * server-side before the restore runs.
+	 * Mirrors the sibling write pattern (CreatePost/UpdatePost): a coarse,
+	 * object-independent capability guard here, with the object-level `edit_post`
+	 * check kept in `execute()`. Core's `wp_restore_post_revision()` does no
+	 * capability check, so `execute()` remains the authoritative object-level guard:
+	 * it validates both IDs, confirms the target is a revision of the supplied
+	 * parent, and requires object-level `edit_post` on the parent — returning a
+	 * specific error for each failure (404 for a bad/mismatched revision, 403 for an
+	 * authorization failure) instead of masking them as a single permission error.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool Always true; `execute()` is the server-side guard.
+	 * @return bool Whether the current user can edit posts; `execute()` enforces the object-level guard.
 	 */
 	public function hasPermission( $input ): bool {
-		return true;
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
@@ -127,8 +128,12 @@ final class RestorePostRevision implements Ability {
 	 * Re-validates that the revision belongs to the parent (defense in depth, in
 	 * case the permission layer is bypassed), then calls the core function. That
 	 * function returns the restored parent post ID on success, `false` if there
-	 * are no fields to restore, or `null` if the target is not a revision. Any
-	 * non-positive result is surfaced as a `WP_Error`.
+	 * are no fields to restore (a normal no-op, not an error), or `null` if the
+	 * target is not a revision. Distinct failures surface distinct core-mirroring
+	 * codes: `rest_post_invalid_id` (404) for a bad/non-revision ID,
+	 * `rest_revision_parent_id_mismatch` (404) for a wrong-parent revision,
+	 * `rest_no_fields_to_restore` (409) for the `false` no-op, and a generic
+	 * `rest_restore_failed` (500) for a genuinely unexpected result.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The restore result, or an error if it did not happen.
@@ -140,18 +145,26 @@ final class RestorePostRevision implements Ability {
 
 		if ( $parent <= 0 || $revision_id <= 0 ) {
 			return new WP_Error(
-				'webmcp_invalid_input',
+				'rest_post_invalid_id',
 				__( 'Both parent and revision_id must be positive integers.', 'abilities-catalog' ),
-				array( 'status' => 400 )
+				array( 'status' => 404 )
 			);
 		}
 
 		$revision = wp_get_post_revision( $revision_id );
-		if ( ! $revision instanceof WP_Post || (int) $revision->post_parent !== $parent ) {
+		if ( ! $revision instanceof WP_Post ) {
 			return new WP_Error(
-				'webmcp_revision_mismatch',
-				__( 'The revision does not exist or does not belong to the given parent post.', 'abilities-catalog' ),
-				array( 'status' => 400 )
+				'rest_post_invalid_id',
+				__( 'The revision does not exist or is not a revision.', 'abilities-catalog' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( (int) $revision->post_parent !== $parent ) {
+			return new WP_Error(
+				'rest_revision_parent_id_mismatch',
+				__( 'The revision does not belong to the given parent post.', 'abilities-catalog' ),
+				array( 'status' => 404 )
 			);
 		}
 
@@ -168,10 +181,20 @@ final class RestorePostRevision implements Ability {
 
 		$result = wp_restore_post_revision( $revision_id );
 
+		// Core returns false when there are no revisionable fields to restore
+		// (revision.php:478-480). This is an expected no-op, not a server error.
+		if ( false === $result ) {
+			return new WP_Error(
+				'rest_no_fields_to_restore',
+				__( 'No fields were available to restore from this revision.', 'abilities-catalog' ),
+				array( 'status' => 409 )
+			);
+		}
+
 		if ( ! is_int( $result ) || $result <= 0 ) {
 			return new WP_Error(
-				'webmcp_restore_failed',
-				__( 'The revision could not be restored. No fields were available to restore, or the restore did not complete.', 'abilities-catalog' ),
+				'rest_restore_failed',
+				__( 'The revision could not be restored.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);
 		}
