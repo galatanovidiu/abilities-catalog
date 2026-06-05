@@ -17,8 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T2 non-destructive write ability: `media/upload-media`.
  *
  * Wraps `POST /wp/v2/media` via `rest_do_request()` to create a new attachment
- * from base64-encoded file bytes, then (optionally) wraps `POST /wp/v2/media/<id>`
- * to set metadata fields. File transport is base64 inline only: the decoded bytes
+ * from base64-encoded file bytes, setting any provided metadata fields (title,
+ * alt text, caption, description, parent post) on the same create request. File
+ * transport is base64 inline only: the decoded bytes
  * are sent as the request body with `Content-Type` and
  * `Content-Disposition: attachment; filename="..."` headers, so the attachments
  * controller's `upload_from_data()` path handles the upload and keeps the
@@ -88,6 +89,7 @@ final class UploadMedia implements Ability {
 					),
 					'post'        => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The ID of the post to attach the media to. Requires edit access to that post.', 'abilities-catalog' ),
 					),
 				),
@@ -98,21 +100,41 @@ final class UploadMedia implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'source_url' ),
 				'properties'           => array(
-					'id'         => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The new attachment ID.', 'abilities-catalog' ),
 					),
-					'source_url' => array(
+					'source_url'  => array(
 						'type'        => 'string',
 						'description' => __( 'The direct URL of the uploaded file.', 'abilities-catalog' ),
 					),
-					'media_type' => array(
+					'media_type'  => array(
 						'type'        => 'string',
 						'description' => __( 'The media type (e.g. "image", "file").', 'abilities-catalog' ),
 					),
-					'mime_type'  => array(
+					'mime_type'   => array(
 						'type'        => 'string',
 						'description' => __( 'The MIME type of the uploaded file.', 'abilities-catalog' ),
+					),
+					'title'       => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting rendered media title.', 'abilities-catalog' ),
+					),
+					'alt_text'    => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting alternative text.', 'abilities-catalog' ),
+					),
+					'caption'     => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting rendered caption.', 'abilities-catalog' ),
+					),
+					'description' => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting rendered description.', 'abilities-catalog' ),
+					),
+					'post'        => array(
+						'type'        => 'integer',
+						'description' => __( 'The ID of the post the media is attached to, if any.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -158,7 +180,7 @@ final class UploadMedia implements Ability {
 	}
 
 	/**
-	 * Executes the ability: upload the file, then set any provided metadata.
+	 * Executes the ability: upload the file with all metadata on one create request.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The uploaded media fields, or a REST/validation error.
@@ -175,22 +197,30 @@ final class UploadMedia implements Ability {
 			);
 		}
 
-		$bytes = $this->decodeFile( $input['file'] ?? '' );
+		$file = $input['file'] ?? '';
+		if ( ! is_string( $file ) || '' === $file ) {
+			return new WP_Error(
+				'webmcp_missing_file',
+				__( 'A base64-encoded file is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$max_bytes = min( self::MAX_UPLOAD_BYTES, (int) wp_max_upload_size() );
+
+		// Reject by the estimated decoded size before allocating the decoded
+		// bytes, so an oversized payload never reaches base64_decode().
+		if ( (int) ( strlen( $file ) * 3 / 4 ) > $max_bytes ) {
+			return $this->tooLargeError( $max_bytes );
+		}
+
+		$bytes = $this->decodeFile( $file );
 		if ( $bytes instanceof WP_Error ) {
 			return $bytes;
 		}
 
-		$max_bytes = min( self::MAX_UPLOAD_BYTES, (int) wp_max_upload_size() );
 		if ( strlen( $bytes ) > $max_bytes ) {
-			return new WP_Error(
-				'webmcp_file_too_large',
-				sprintf(
-					/* translators: %s: maximum allowed size in bytes. */
-					__( 'The uploaded file exceeds the maximum allowed size of %s bytes.', 'abilities-catalog' ),
-					number_format_i18n( $max_bytes )
-				),
-				array( 'status' => 413 )
-			);
+			return $this->tooLargeError( $max_bytes );
 		}
 
 		$mime = $this->detectMime( $bytes, $filename );
@@ -199,6 +229,17 @@ final class UploadMedia implements Ability {
 		$upload->set_header( 'Content-Type', $mime );
 		$upload->set_header( 'Content-Disposition', 'attachment; filename="' . $filename . '"' );
 		$upload->set_body( $bytes );
+
+		// Set metadata whenever the key is present, so an explicit empty value
+		// (e.g. alt_text: "") blanks the field rather than being ignored. This
+		// also overrides any EXIF-derived metadata core would apply on insert.
+		foreach ( array( 'title', 'caption', 'description', 'alt_text' ) as $field ) {
+			if ( ! array_key_exists( $field, $input ) ) {
+				continue;
+			}
+
+			$upload->set_param( $field, (string) $input[ $field ] );
+		}
 
 		if ( ! empty( $input['post'] ) ) {
 			$upload->set_param( 'post', absint( $input['post'] ) );
@@ -210,39 +251,48 @@ final class UploadMedia implements Ability {
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );
-		$id   = (int) ( $data['id'] ?? 0 );
-
-		$metadata = $this->updateMetadata( $id, $input );
-		if ( $metadata instanceof WP_Error ) {
-			return $metadata;
-		}
-		if ( is_array( $metadata ) ) {
-			$data = $metadata;
+		if ( ! is_array( $data ) ) {
+			$data = array();
 		}
 
 		return array(
-			'id'         => (int) ( $data['id'] ?? $id ),
-			'source_url' => (string) ( $data['source_url'] ?? '' ),
-			'media_type' => (string) ( $data['media_type'] ?? '' ),
-			'mime_type'  => (string) ( $data['mime_type'] ?? '' ),
+			'id'          => (int) ( $data['id'] ?? 0 ),
+			'source_url'  => (string) ( $data['source_url'] ?? '' ),
+			'media_type'  => (string) ( $data['media_type'] ?? '' ),
+			'mime_type'   => (string) ( $data['mime_type'] ?? '' ),
+			'title'       => (string) ( $data['title']['rendered'] ?? '' ),
+			'alt_text'    => (string) ( $data['alt_text'] ?? '' ),
+			'caption'     => (string) ( $data['caption']['rendered'] ?? '' ),
+			'description' => (string) ( $data['description']['rendered'] ?? '' ),
+			'post'        => (int) ( $data['post'] ?? 0 ),
+		);
+	}
+
+	/**
+	 * Builds the 413 over-limit error.
+	 *
+	 * @param int $max_bytes The effective maximum size in bytes.
+	 * @return \WP_Error
+	 */
+	private function tooLargeError( int $max_bytes ): WP_Error {
+		return new WP_Error(
+			'webmcp_file_too_large',
+			sprintf(
+				/* translators: %s: maximum allowed size in bytes. */
+				__( 'The uploaded file exceeds the maximum allowed size of %s bytes.', 'abilities-catalog' ),
+				number_format_i18n( $max_bytes )
+			),
+			array( 'status' => 413 )
 		);
 	}
 
 	/**
 	 * Decodes the base64 `file` input into raw bytes.
 	 *
-	 * @param mixed $file The base64-encoded file input.
-	 * @return string|\WP_Error The decoded bytes, or an error when input is empty or invalid.
+	 * @param string $file The base64-encoded file input.
+	 * @return string|\WP_Error The decoded bytes, or an error when input is invalid.
 	 */
-	private function decodeFile( $file ) {
-		if ( ! is_string( $file ) || '' === $file ) {
-			return new WP_Error(
-				'webmcp_missing_file',
-				__( 'A base64-encoded file is required.', 'abilities-catalog' ),
-				array( 'status' => 400 )
-			);
-		}
-
+	private function decodeFile( string $file ) {
 		$decoded = base64_decode( $file, true );
 		if ( false === $decoded || '' === $decoded ) {
 			return new WP_Error(
@@ -281,51 +331,5 @@ final class UploadMedia implements Ability {
 		}
 
 		return 'application/octet-stream';
-	}
-
-	/**
-	 * Sets metadata fields on the new attachment via a second REST request.
-	 *
-	 * Returns the updated attachment data when any field was provided, null when
-	 * there was nothing to update, or a WP_Error when the update fails.
-	 *
-	 * @param int                 $id    The new attachment ID.
-	 * @param array<string,mixed> $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error|null
-	 */
-	private function updateMetadata( int $id, array $input ) {
-		if ( $id <= 0 ) {
-			return null;
-		}
-
-		$update = new WP_REST_Request( 'POST', '/wp/v2/media/' . $id );
-		$has    = false;
-
-		foreach ( array( 'title', 'caption', 'description', 'alt_text' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
-				continue;
-			}
-
-			$update->set_param( $field, (string) $input[ $field ] );
-			$has = true;
-		}
-
-		if ( ! empty( $input['post'] ) ) {
-			$update->set_param( 'post', absint( $input['post'] ) );
-			$has = true;
-		}
-
-		if ( ! $has ) {
-			return null;
-		}
-
-		$response = rest_do_request( $update );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
-
-		return is_array( $data ) ? $data : null;
 	}
 }
