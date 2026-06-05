@@ -16,7 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T2 destructive write ability: `media/delete-media`.
  *
  * Wraps `DELETE /wp/v2/media/<id>` with `force=true` via `rest_do_request()`,
- * permanently deleting the attachment (media has no Trash). The
+ * permanently deleting the attachment. Forcing `force=true` bypasses Trash, so
+ * the deletion cannot be undone. The
  * `permission_callback` mirrors the attachments controller
  * `delete_item_permissions_check`: object-level `delete_post`. This ability never
  * calls `wp_delete_attachment()` directly; it surfaces the REST route's `WP_Error`
@@ -42,13 +43,14 @@ final class DeleteMedia implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Media', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a media library item by ID. Media has no Trash, so this cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a media library item by ID. The deletion bypasses Trash (force), so it cannot be undone, and clears any featured-image references to the item.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The attachment (media item) ID to permanently delete.', 'abilities-catalog' ),
 					),
 				),
@@ -59,13 +61,33 @@ final class DeleteMedia implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'             => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the media item was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'                  => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted attachment ID.', 'abilities-catalog' ),
+					),
+					'previous_title'      => array(
+						'type'        => 'string',
+						'description' => __( 'The title of the deleted media item.', 'abilities-catalog' ),
+					),
+					'previous_source_url' => array(
+						'type'        => 'string',
+						'description' => __( 'The file URL of the deleted media item.', 'abilities-catalog' ),
+					),
+					'previous_mime_type'  => array(
+						'type'        => 'string',
+						'description' => __( 'The MIME type of the deleted media item.', 'abilities-catalog' ),
+					),
+					'previous_media_type' => array(
+						'type'        => 'string',
+						'description' => __( 'The media type (image or file) of the deleted media item.', 'abilities-catalog' ),
+					),
+					'previous_alt_text'   => array(
+						'type'        => 'string',
+						'description' => __( 'The alternative text of the deleted media item.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -110,11 +132,12 @@ final class DeleteMedia implements Ability {
 	 * is returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted flag and id, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deleted flag, id, and removed item
+	 *                                       identity, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
+		$id      = (int) ( $input['id'] ?? 0 );
 		$request = new WP_REST_Request( 'DELETE', '/wp/v2/media/' . $id );
 		$request->set_param( 'force', true );
 
@@ -123,11 +146,18 @@ final class DeleteMedia implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data     = rest_get_server()->response_to_data( $response, false );
+		$previous = is_array( $data['previous'] ?? null ) ? $data['previous'] : array();
+		$title    = is_array( $previous['title'] ?? null ) ? $previous['title'] : array();
 
 		return array(
-			'deleted' => (bool) ( $data['deleted'] ?? false ),
-			'id'      => $id,
+			'deleted'             => (bool) ( $data['deleted'] ?? false ),
+			'id'                  => $id,
+			'previous_title'      => (string) ( $title['rendered'] ?? '' ),
+			'previous_source_url' => (string) ( $previous['source_url'] ?? '' ),
+			'previous_mime_type'  => (string) ( $previous['mime_type'] ?? '' ),
+			'previous_media_type' => (string) ( $previous['media_type'] ?? '' ),
+			'previous_alt_text'   => (string) ( $previous['alt_text'] ?? '' ),
 		);
 	}
 }
