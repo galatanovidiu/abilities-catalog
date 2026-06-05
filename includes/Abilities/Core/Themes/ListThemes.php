@@ -6,6 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Themes;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
+use GalatanOvidiu\AbilitiesCatalog\Support\ThemeListShaper;
 use WP_REST_Request;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,8 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `themes/list-themes`.
  *
  * Wraps `GET /wp/v2/themes` via `rest_do_request()` and returns the installed
- * themes plus their totals. The themes route does not always emit `X-WP-Total`,
- * so the total fields default to 0 while `items` always reflects the response.
+ * themes plus their totals. Each row is projected by {@see ThemeListShaper} into
+ * a flat, closed summary; the raw REST objects (`_links`, nested rendered fields,
+ * active-theme-only deep fields) are never returned. The themes route always sets
+ * `X-WP-Total` and `X-WP-TotalPages` on success, so `total` reflects the match
+ * count and `total_pages` is always 1.
  *
  * @since 0.1.0
  */
@@ -57,14 +61,11 @@ final class ListThemes implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'items' ),
+				'required'             => array( 'items', 'total', 'total_pages' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => ThemeListShaper::themeItemSchema(),
 						'description' => __( 'The list of installed themes.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -125,8 +126,17 @@ final class ListThemes implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = ThemeListShaper::themeSummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
