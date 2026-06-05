@@ -45,7 +45,7 @@ final class DeleteUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete User', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a user by ID and reassigns their content to another existing user. Irreversible: users do not support trashing. The reassign target is required and must be a different, existing user.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a user by ID and reassigns their content to another existing user. Irreversible: users do not support trashing. The reassign target is required and must be a different, existing user. Single-site only: the wrapped route hard-fails on multisite with a 501 error.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -68,17 +68,38 @@ final class DeleteUser implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id', 'reassigned_to' ),
 				'properties'           => array(
-					'deleted'       => array(
+					'deleted'           => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the user was deleted.', 'abilities-catalog' ),
 					),
-					'id'            => array(
+					'id'                => array(
 						'type'        => 'integer',
 						'description' => __( 'The ID of the deleted user.', 'abilities-catalog' ),
 					),
-					'reassigned_to' => array(
+					'reassigned_to'     => array(
 						'type'        => 'integer',
 						'description' => __( 'The ID of the user that received the deleted user\'s content.', 'abilities-catalog' ),
+					),
+					'previous_username' => array(
+						'type'        => 'string',
+						'description' => __( 'The login username of the deleted user.', 'abilities-catalog' ),
+					),
+					'previous_name'     => array(
+						'type'        => 'string',
+						'description' => __( 'The display name of the deleted user.', 'abilities-catalog' ),
+					),
+					'previous_email'    => array(
+						'type'        => 'string',
+						'description' => __( 'The email address of the deleted user.', 'abilities-catalog' ),
+					),
+					'previous_slug'     => array(
+						'type'        => 'string',
+						'description' => __( 'The URL slug (nicename) of the deleted user.', 'abilities-catalog' ),
+					),
+					'previous_roles'    => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'The roles held by the deleted user.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -164,12 +185,19 @@ final class DeleteUser implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data     = rest_get_server()->response_to_data( $response, false );
+		$previous = is_array( $data['previous'] ?? null ) ? $data['previous'] : array();
+		$roles    = is_array( $previous['roles'] ?? null ) ? array_values( array_map( 'strval', $previous['roles'] ) ) : array();
 
 		return array(
-			'deleted'       => (bool) ( $data['deleted'] ?? false ),
-			'id'            => $id,
-			'reassigned_to' => $reassign,
+			'deleted'           => (bool) ( $data['deleted'] ?? false ),
+			'id'                => $id,
+			'reassigned_to'     => $reassign,
+			'previous_username' => (string) ( $previous['username'] ?? '' ),
+			'previous_name'     => (string) ( $previous['name'] ?? '' ),
+			'previous_email'    => (string) ( $previous['email'] ?? '' ),
+			'previous_slug'     => (string) ( $previous['slug'] ?? '' ),
+			'previous_roles'    => $roles,
 		);
 	}
 
