@@ -21,9 +21,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `rest_do_request()` to update an item of any registered `show_in_rest` post
  * type. Mirrors the update fan-out of `content/update-post`, but resolves the
  * publish and author capabilities per-type from `get_post_type_object()`. Only
- * the provided fields change. The `permission_callback` encodes object-level
- * `edit_post` on the target; additionally `publish_posts` when the requested
- * status would publish, and `edit_others_posts` when reassigning the author.
+ * the provided fields change. The `permission_callback` uses the type-level
+ * `edit_posts` capability as a coarse guard; the object-level `edit_post` check
+ * on the target is enforced by the wrapped REST route. It additionally requires
+ * `publish_posts` when the requested status would publish, and
+ * `edit_others_posts` when reassigning the author.
  * Write annotations (`readonly:false, destructive:false, idempotent:false`)
  * route the call as POST. The REST route re-checks every capability underneath
  * (defense in depth) and handles content sanitization.
@@ -52,17 +54,18 @@ final class UpdateCptItem implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Custom Post Type Item', 'abilities-catalog' ),
-			'description'         => __( 'Updates an item of any REST-enabled post type by ID. Only the supplied fields change. Set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
+			'description'         => __( 'Updates a post-like item (with title/content/excerpt/status fields) of a registered post type by ID. Only the supplied fields change. Does not support font, global-styles, template, navigation, or attachment types. Set status to "private", "publish", or "future" to publish it (requires publish capability).', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'post_type' => array(
 						'type'        => 'string',
-						'description' => __( 'The post type slug (required).', 'abilities-catalog' ),
+						'description' => __( 'The post type slug (required). Must be a post-like REST type (title/content/excerpt/status fields); font, global-styles, template, navigation, and attachment types are not supported.', 'abilities-catalog' ),
 					),
 					'id'        => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The item ID to update (required).', 'abilities-catalog' ),
 					),
 					'title'     => array(
@@ -92,6 +95,7 @@ final class UpdateCptItem implements Ability {
 					),
 					'author'    => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The author user ID. Setting another user requires the edit_others_posts capability.', 'abilities-catalog' ),
 					),
 				),
@@ -142,6 +146,7 @@ final class UpdateCptItem implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
+				'screen'       => 'post.php?post={id}&action=edit',
 			),
 		);
 	}
