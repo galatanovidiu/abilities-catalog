@@ -29,12 +29,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The `permission_callback` mirrors
  * {@see \WP_REST_Global_Styles_Controller::update_item_permissions_check()},
  * which delegates to `check_update_permission()` and requires object-level
- * `edit_post` on the global-styles post id. Custom CSS is passed in
- * `styles.css`; the controller exposes `edit_css` only as an action-link hint
- * (`prepare_links()`), and gates the CSS content itself through
- * `wp_filter_global_styles_post()` (`unfiltered_html`). To stay no weaker than
- * the controller's intent, this ability additionally requires `edit_css` when
- * the input includes custom CSS — a strictly tighter check, never a looser one.
+ * `edit_post` on the global-styles post id. The route re-checks `edit_post`
+ * underneath; it does NOT hard-reject custom CSS for users lacking `edit_css`.
+ * Instead custom CSS is kses-filtered via
+ * {@see \WP_Theme_JSON::remove_insecure_properties()}, which keeps the CSS only
+ * for `edit_css` users and otherwise strips it. To stay no weaker than the
+ * controller's intent, this ability additionally requires `edit_css` when the
+ * input includes a `styles.css` key — an added hard gate, not a duplicate of a
+ * route check, and strictly tighter, never looser.
  *
  * @since 0.3.0
  */
@@ -53,7 +55,7 @@ final class UpdateGlobalStyles implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Global Styles', 'abilities-catalog' ),
-			'description'         => __( 'Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Only the provided fields change.', 'abilities-catalog' ),
+			'description'         => __( 'Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Each provided top-level settings or styles object REPLACES that stored section wholesale (not a deep merge); read the current record first with templates/get-global-styles and send a complete replacement for whichever section you change.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -65,12 +67,12 @@ final class UpdateGlobalStyles implements Ability {
 					'settings' => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __( 'The theme.json-shaped settings overrides to store.', 'abilities-catalog' ),
+						'description'          => __( 'The theme.json-shaped settings overrides to store. REPLACES the entire stored settings section wholesale; sibling branches you omit are dropped. Send a complete replacement.', 'abilities-catalog' ),
 					),
 					'styles'   => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __( 'The theme.json-shaped style overrides to store. A "css" key holds custom CSS and requires the edit_css capability.', 'abilities-catalog' ),
+						'description'          => __( 'The theme.json-shaped style overrides to store. REPLACES the entire stored styles section wholesale; sibling branches you omit (e.g. styles.css, styles.blocks) are dropped. Send a complete replacement. A "css" key holds custom CSS and requires the edit_css capability.', 'abilities-catalog' ),
 					),
 					'title'    => array(
 						'type'        => 'string',
@@ -84,9 +86,23 @@ final class UpdateGlobalStyles implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id' => array(
+					'id'       => array(
 						'type'        => 'integer',
 						'description' => __( 'The global styles post ID.', 'abilities-catalog' ),
+					),
+					'title'    => array(
+						'type'        => 'string',
+						'description' => __( 'The global styles record title after the update.', 'abilities-catalog' ),
+					),
+					'settings' => array(
+						'type'                 => 'object',
+						'additionalProperties' => true,
+						'description'          => __( 'The stored theme.json-shaped settings section after the update (empty object when none).', 'abilities-catalog' ),
+					),
+					'styles'   => array(
+						'type'                 => 'object',
+						'additionalProperties' => true,
+						'description'          => __( 'The stored theme.json-shaped styles section after the update (empty object when none).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -109,10 +125,12 @@ final class UpdateGlobalStyles implements Ability {
 	 * Permission check mirroring the global-styles controller's update gate.
 	 *
 	 * Requires object-level `edit_post` on the global-styles post id (as
-	 * `check_update_permission()` does). When the input carries custom CSS
-	 * (`styles.css`), additionally requires `edit_css`, matching the controller's
-	 * `action-edit-css` intent and never weaker than it. The REST route re-checks
-	 * the capability underneath (defense in depth).
+	 * `check_update_permission()` does). The wrapped route re-checks `edit_post`
+	 * underneath, but it does NOT re-check `edit_css`: custom CSS is kses-filtered
+	 * (kept only for `edit_css` users, otherwise stripped). So when the input
+	 * carries a `styles.css` key this ability additionally requires `edit_css` —
+	 * an added hard gate, not a duplicate of a route check, never weaker than the
+	 * controller's intent.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update the global styles.
@@ -153,7 +171,9 @@ final class UpdateGlobalStyles implements Ability {
 			$request->set_param( $field, $input[ $field ] );
 		}
 
-		if ( isset( $input['title'] ) && '' !== $input['title'] ) {
+		// Forward the title whenever the key is present (core accepts an explicit
+		// empty string and clears the record title); only skip when it is absent.
+		if ( array_key_exists( 'title', $input ) ) {
 			$request->set_param( 'title', (string) $input['title'] );
 		}
 
@@ -164,21 +184,36 @@ final class UpdateGlobalStyles implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
+		$title = $data['title'] ?? '';
+		if ( is_array( $title ) ) {
+			$title = $title['rendered'] ?? '';
+		}
+
+		// Cast settings/styles to objects so an empty section serializes as `{}`
+		// (a JSON object), matching the `type: object` output schema; an empty PHP
+		// array would serialize as `[]` and fail output validation.
 		return array(
-			'id' => (int) ( $data['id'] ?? $id ),
+			'id'       => (int) ( $data['id'] ?? $id ),
+			'title'    => (string) $title,
+			'settings' => (object) ( is_array( $data['settings'] ?? null ) ? $data['settings'] : array() ),
+			'styles'   => (object) ( is_array( $data['styles'] ?? null ) ? $data['styles'] : array() ),
 		);
 	}
 
 	/**
-	 * Reports whether the input contains custom CSS under `styles.css`.
+	 * Reports whether the input carries a `styles.css` key.
+	 *
+	 * Core branches on key presence, not value (the documented contract is "a css
+	 * key requires edit_css"), so the gate fires whenever a string `css` key is
+	 * present — including an explicit empty string.
 	 *
 	 * @param array<string,mixed> $input The validated input data.
-	 * @return bool True if a non-empty `styles.css` string is present.
+	 * @return bool True if a `styles.css` string key is present.
 	 */
 	private function hasCustomCss( array $input ): bool {
 		return isset( $input['styles'] )
 			&& is_array( $input['styles'] )
-			&& isset( $input['styles']['css'] )
-			&& '' !== $input['styles']['css'];
+			&& array_key_exists( 'css', $input['styles'] )
+			&& is_string( $input['styles']['css'] );
 	}
 }
