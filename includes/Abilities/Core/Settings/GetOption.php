@@ -22,9 +22,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * This ability never reads secret-bearing options. Names such as `mailserver_pass`,
  * `mailserver_login`, and anything matching `*_pass`, `*_secret`, `*_key`, or
- * `*_token` are not on the allow-list and are therefore rejected. The stored value
- * is returned as a string via `get_option`. The `manage_options` capability is the
- * hard guard in all cases.
+ * `*_token` are not on the allow-list and are therefore rejected. The effective
+ * `get_option` value is returned as a string. This is the value core resolves, with
+ * `option_{$name}` filters and core normalization applied (for example the
+ * `home`->`siteurl` fallback and `untrailingslashit`), not a raw stored read. The
+ * `manage_options` capability is the hard guard in all cases.
  *
  * @since 0.4.0
  */
@@ -67,7 +69,7 @@ final class GetOption implements Ability {
 					),
 					'value' => array(
 						'type'        => 'string',
-						'description' => __( 'The stored option value as a string.', 'abilities-catalog' ),
+						'description' => __( 'The effective option value as a string, as resolved by get_option (filters and core normalization applied).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -113,11 +115,16 @@ final class GetOption implements Ability {
 	 * Executes the ability by reading the allow-listed option.
 	 *
 	 * Refuses any name not on {@see ReadableOptionAllowList::ALLOWED} without echoing
-	 * the rejected name. Otherwise reads the stored value via `get_option` and returns
-	 * it as a string.
+	 * the rejected name. Otherwise reads the effective value via `get_option` and
+	 * returns it as a string.
+	 *
+	 * Every allow-listed name is a scalar option in core, but an `option_{$name}`
+	 * filter can make `get_option` return a non-scalar value. Casting such a value to
+	 * string would emit a PHP warning and yield `"Array"`, so a non-scalar result
+	 * (other than `null`/`false`) is refused with a stable error instead.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The stored option, or a WP_Error.
+	 * @return array<string,mixed>|\WP_Error The effective option value, or a WP_Error.
 	 */
 	public function execute( $input ) {
 		$input = is_array( $input ) ? $input : array();
@@ -131,9 +138,19 @@ final class GetOption implements Ability {
 			);
 		}
 
+		$value = get_option( $name );
+
+		if ( null !== $value && false !== $value && ! is_scalar( $value ) ) {
+			return new WP_Error(
+				'webmcp_option_not_scalar',
+				__( 'That option does not resolve to a scalar value and cannot be returned as a string.', 'abilities-catalog' ),
+				array( 'status' => 500 )
+			);
+		}
+
 		return array(
 			'name'  => $name,
-			'value' => (string) get_option( $name ),
+			'value' => (string) $value,
 		);
 	}
 }
