@@ -120,4 +120,48 @@ final class UpdateTermTest extends TestCase {
 			'An omitted name must leave the stored name unchanged.'
 		);
 	}
+
+	/**
+	 * Output completeness: a description edit must be confirmable from the
+	 * structured result, not just from the wrapped route.
+	 */
+	public function test_output_returns_updated_description(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('terms/update-term')->execute(
+			array(
+				'taxonomy'    => 'category',
+				'id'          => $this->term_id,
+				'description' => 'New description.',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('description', $result);
+		$this->assertSame('New description.', $result['description']);
+	}
+
+	/**
+	 * Output completeness: a hierarchy move (set parent) must be confirmable
+	 * from the structured `parent` field.
+	 */
+	public function test_output_returns_updated_parent(): void {
+		$this->actingAs('administrator');
+
+		$parent_id = self::factory()->category->create(
+			array( 'name' => 'Parent Term' )
+		);
+
+		$result = wp_get_ability('terms/update-term')->execute(
+			array(
+				'taxonomy' => 'category',
+				'id'       => $this->term_id,
+				'parent'   => $parent_id,
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('parent', $result);
+		$this->assertSame($parent_id, $result['parent']);
+	}
 }
