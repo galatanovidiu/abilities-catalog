@@ -16,7 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 safe-write ability: `terms/create-category`.
  *
  * Wraps `POST /wp/v2/categories` via `rest_do_request()` and returns the new
- * term's id, name, and slug. The `category` taxonomy is hierarchical, so the
+ * term's id, name, slug, parent, and public archive link. The `category`
+ * taxonomy is hierarchical, so the
  * permission check mirrors the REST terms controller create path for a
  * hierarchical taxonomy: `current_user_can( get_taxonomy('category')->cap->edit_terms )`
  * (which resolves to `manage_categories`). The REST route re-checks the
@@ -68,17 +69,25 @@ final class CreateCategory implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'name', 'slug' ),
 				'properties'           => array(
-					'id'   => array(
+					'id'     => array(
 						'type'        => 'integer',
 						'description' => __( 'The new category term ID.', 'abilities-catalog' ),
 					),
-					'name' => array(
+					'name'   => array(
 						'type'        => 'string',
 						'description' => __( 'The category name.', 'abilities-catalog' ),
 					),
-					'slug' => array(
+					'slug'   => array(
 						'type'        => 'string',
 						'description' => __( 'The category slug.', 'abilities-catalog' ),
+					),
+					'parent' => array(
+						'type'        => 'integer',
+						'description' => __( 'The parent category term ID (0 when top-level).', 'abilities-catalog' ),
+					),
+					'link'   => array(
+						'type'        => 'string',
+						'description' => __( 'The public category archive URL.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -119,7 +128,7 @@ final class CreateCategory implements Ability {
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, parent, link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -149,9 +158,11 @@ final class CreateCategory implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ( $data['id'] ?? 0 ),
-			'name' => (string) ( $data['name'] ?? '' ),
-			'slug' => (string) ( $data['slug'] ?? '' ),
+			'id'     => (int) ( $data['id'] ?? 0 ),
+			'name'   => (string) ( $data['name'] ?? '' ),
+			'slug'   => (string) ( $data['slug'] ?? '' ),
+			'parent' => (int) ( $data['parent'] ?? 0 ),
+			'link'   => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }
