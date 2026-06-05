@@ -46,6 +46,7 @@ final class GetPlugin implements Ability {
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
+						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 						'description' => __( 'The plugin file path without the .php extension, for example "webmcp-adapter/webmcp-adapter".', 'abilities-catalog' ),
 					),
 				),
@@ -58,10 +59,11 @@ final class GetPlugin implements Ability {
 				'properties'           => array(
 					'plugin'       => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin file path.', 'abilities-catalog' ),
+						'description' => __( 'The plugin file path without the .php extension.', 'abilities-catalog' ),
 					),
 					'status'       => array(
 						'type'        => 'string',
+						'enum'        => array( 'inactive', 'active', 'network-active' ),
 						'description' => __( 'The plugin activation status.', 'abilities-catalog' ),
 					),
 					'name'         => array(
@@ -148,7 +150,8 @@ final class GetPlugin implements Ability {
 		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__( 'A plugin file path is required.', 'abilities-catalog' )
+				__( 'A plugin file path is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
