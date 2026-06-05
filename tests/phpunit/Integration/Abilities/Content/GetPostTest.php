@@ -89,6 +89,56 @@ final class GetPostTest extends TestCase {
 		$this->assertStringContainsString( 'Secret body', $result['content'] );
 	}
 
+	public function test_edit_context_returns_raw_block_markup(): void {
+		$this->actingAs( 'administrator' );
+
+		$markup = '<!-- wp:paragraph --><p>Block body</p><!-- /wp:paragraph -->';
+		$id     = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_title'   => 'Raw title',
+				'post_content' => $markup,
+				'post_excerpt' => 'Raw excerpt',
+			)
+		);
+
+		$result = wp_get_ability( 'content/get-post' )->execute(
+			array(
+				'id'      => $id,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		// In edit context core exposes the stored block markup an authoring agent
+		// diffs or restores from; the ability surfaces it as flat *_raw fields.
+		$this->assertArrayHasKey( 'content_raw', $result );
+		$this->assertSame( $markup, $result['content_raw'] );
+		$this->assertSame( 'Raw title', $result['title_raw'] );
+		$this->assertSame( 'Raw excerpt', $result['excerpt_raw'] );
+	}
+
+	public function test_view_context_omits_raw_fields(): void {
+		$this->actingAs( 'administrator' );
+
+		$id = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_title'   => 'No raw',
+				'post_content' => '<!-- wp:paragraph --><p>x</p><!-- /wp:paragraph -->',
+			)
+		);
+
+		// Default (view) context: core does not return *.raw, so the ability must
+		// not invent the field.
+		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => $id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayNotHasKey( 'content_raw', $result );
+		$this->assertArrayNotHasKey( 'title_raw', $result );
+		$this->assertArrayNotHasKey( 'excerpt_raw', $result );
+	}
+
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 

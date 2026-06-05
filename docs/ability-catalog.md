@@ -91,13 +91,13 @@ All write entries must be consumer-gated; capability is the hard guard.
 
 ### Posts
 - **content/list-posts** — R · wrapper `/wp/v2/posts` GET · T1. Cap: public for published; `edit_posts` for edit-context/non-public (`read_private_posts` for private). In: search, status, author, categories[], tags[], per_page, page, orderby, order, context. Out: items[], id, title, status, link, date, total, total_pages.
-- **content/get-post** — R · wrapper `/wp/v2/posts/<id>` GET · T1. Cap: public for published; `read_post`/`edit_post` (object) otherwise. In: id, context, password. Out: id, title, content, excerpt, status, author, link, date, modified.
+- **content/get-post** — R · wrapper `/wp/v2/posts/<id>` GET · T1. Cap: public for published; `read_post`/`edit_post` (object) otherwise. In: id, context, password. Out: id, title, content, excerpt, status, author, link, date, modified; plus `title_raw`, `content_raw`, `excerpt_raw` (stored block markup, only when `context=edit`).
 - **content/create-post** — W · wrapper `/wp/v2/posts` POST · T1. Cap: `edit_posts`; `edit_others_posts` if author set; `publish_posts` to publish; `assign_term` per term. Not idempotent. In: title, content, excerpt, status, author, categories[], tags[], slug, date, featured_media. Out: id, link, status.
 - **content/update-post** — W · wrapper `/wp/v2/posts/<id>` POST/PATCH · T1. Cap: `edit_post` (object); `edit_others_posts` if author change; `publish_posts` to publish. Covers set-status (status is a field). In: id + post fields. Out: id, link, status, modified.
 - **content/trash-post** — W · wrapper `/wp/v2/posts/<id>` DELETE force=false · T1. Cap: `delete_post` (object). Not destructive (recoverable). Requires `EMPTY_TRASH_DAYS>0`. In: id. Out: id, status=trash.
 - **content/delete-post** — W · D! · wrapper `/wp/v2/posts/<id>` DELETE force=true · T2 (high-sensitivity). Cap: `delete_post` (object). In: id, force. Out: deleted, previous.
 - **content/list-post-revisions** — R · wrapper `/wp/v2/posts/<parent>/revisions` GET · T1. Cap: `edit_post` on parent (object). In: parent, context. Out: items[], id, parent, author, date, title, modified.
-- **content/get-post-revision** — R · wrapper `/wp/v2/posts/<parent>/revisions/<id>` GET · T1. Cap: `edit_post` on parent. In: parent, id, context. Out: id, parent, content, title, excerpt, date.
+- **content/get-post-revision** — R · wrapper `/wp/v2/posts/<parent>/revisions/<id>` GET · T1. Cap: `edit_post` on parent. In: parent, id, context. Out: id, parent, content, title, excerpt, date; plus `title_raw`, `content_raw`, `excerpt_raw` (stored block markup, only when `context=edit`).
 - **content/restore-post-revision** — W · **net-new** (wraps `wp_restore_post_revision()`; core fn does no cap check — integration must enforce) · T2. Cap: `edit_post` on parent. In: parent, revision_id. Out: restored, post_id, revision_id.
 
 ### Post meta  (L8 — registered `show_in_rest` keys only, via `Support/PostMetaKeys`)

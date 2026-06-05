@@ -70,13 +70,25 @@ final class GetPage implements Ability {
 						'type'        => 'string',
 						'description' => __( 'The rendered page title.', 'abilities-catalog' ),
 					),
+					'title_raw'          => array(
+						'type'        => 'string',
+						'description' => __( 'The stored (unrendered) page title. Present only when context is "edit".', 'abilities-catalog' ),
+					),
 					'content'            => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered page content.', 'abilities-catalog' ),
 					),
+					'content_raw'        => array(
+						'type'        => 'string',
+						'description' => __( 'The stored block markup of the page content, for diffing or restoring. Present only when context is "edit".', 'abilities-catalog' ),
+					),
 					'excerpt'            => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered page excerpt.', 'abilities-catalog' ),
+					),
+					'excerpt_raw'        => array(
+						'type'        => 'string',
+						'description' => __( 'The stored (unrendered) page excerpt. Present only when context is "edit".', 'abilities-catalog' ),
 					),
 					'slug'               => array(
 						'type'        => 'string',
@@ -170,7 +182,7 @@ final class GetPage implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'id'                 => (int) ( $data['id'] ?? $id ),
 			'title'              => (string) ( $data['title']['rendered'] ?? '' ),
 			'content'            => (string) ( $data['content']['rendered'] ?? '' ),
@@ -185,5 +197,32 @@ final class GetPage implements Ability {
 			'parent'             => (int) ( $data['parent'] ?? 0 ),
 			'menu_order'         => (int) ( $data['menu_order'] ?? 0 ),
 		);
+
+		return $this->withRawFields( $result, $data );
+	}
+
+	/**
+	 * Adds the stored (raw) block-markup fields when core supplied them.
+	 *
+	 * Core only includes `title.raw`/`content.raw`/`excerpt.raw` in `edit` context.
+	 * In `view` context those keys are absent, so the `*_raw` fields are omitted
+	 * rather than invented — keeping the output contract honest per context.
+	 *
+	 * @param array<string,mixed> $result The flat result being built.
+	 * @param array<string,mixed> $data   The REST response data.
+	 * @return array<string,mixed> The result with raw fields added when available.
+	 */
+	private function withRawFields( array $result, array $data ): array {
+		if ( isset( $data['title']['raw'] ) ) {
+			$result['title_raw'] = (string) $data['title']['raw'];
+		}
+		if ( isset( $data['content']['raw'] ) ) {
+			$result['content_raw'] = (string) $data['content']['raw'];
+		}
+		if ( isset( $data['excerpt']['raw'] ) ) {
+			$result['excerpt_raw'] = (string) $data['excerpt']['raw'];
+		}
+
+		return $result;
 	}
 }

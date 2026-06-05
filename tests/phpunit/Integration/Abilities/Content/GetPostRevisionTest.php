@@ -72,6 +72,65 @@ final class GetPostRevisionTest extends TestCase {
 		$this->assertStringContainsString( 'v2', $result['content'] );
 	}
 
+	public function test_edit_context_returns_raw_block_markup(): void {
+		$admin = $this->actingAs( 'administrator' );
+
+		$post_id = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_author'  => $admin,
+				'post_title'   => 'Rev raw parent',
+				'post_content' => '<!-- wp:paragraph --><p>v1</p><!-- /wp:paragraph -->',
+			)
+		);
+		$markup = '<!-- wp:paragraph --><p>v2 block</p><!-- /wp:paragraph -->';
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => $markup,
+				'post_title'   => 'Rev raw v2',
+				'post_excerpt' => 'Rev raw excerpt',
+			)
+		);
+		$revisions   = wp_get_post_revisions( $post_id );
+		$revision_id = (int) array_key_first( $revisions );
+
+		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+			array(
+				'parent'  => $post_id,
+				'id'      => $revision_id,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		// The latest revision stores the most recent block markup; edit context
+		// exposes it as flat *_raw fields.
+		$this->assertArrayHasKey( 'content_raw', $result );
+		$this->assertSame( $markup, $result['content_raw'] );
+		$this->assertSame( 'Rev raw v2', $result['title_raw'] );
+		$this->assertSame( 'Rev raw excerpt', $result['excerpt_raw'] );
+	}
+
+	public function test_view_context_omits_raw_fields(): void {
+		$admin = $this->actingAs( 'administrator' );
+
+		[ $post_id, $revision_id ] = $this->createRevision( $admin );
+
+		// Default (view) context: core does not return *.raw for revisions.
+		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+			array(
+				'parent' => $post_id,
+				'id'     => $revision_id,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertArrayNotHasKey( 'content_raw', $result );
+		$this->assertArrayNotHasKey( 'title_raw', $result );
+		$this->assertArrayNotHasKey( 'excerpt_raw', $result );
+	}
+
 	public function test_missing_revision_id_returns_specific_404_not_permission(): void {
 		$admin = $this->actingAs( 'administrator' );
 

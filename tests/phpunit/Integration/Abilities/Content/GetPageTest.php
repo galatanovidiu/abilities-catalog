@@ -88,4 +88,55 @@ final class GetPageTest extends TestCase {
 		$this->assertTrue( $result['password_protected'] );
 		$this->assertStringContainsString( 'Secret body', $result['content'] );
 	}
+
+	public function test_edit_context_returns_raw_block_markup(): void {
+		$this->actingAs( 'administrator' );
+
+		$markup = '<!-- wp:paragraph --><p>Page block body</p><!-- /wp:paragraph -->';
+		$id     = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_title'   => 'Raw page title',
+				'post_content' => $markup,
+				'post_excerpt' => 'Raw page excerpt',
+			)
+		);
+
+		$result = wp_get_ability( 'content/get-page' )->execute(
+			array(
+				'id'      => $id,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		// In edit context core exposes the stored block markup; the ability
+		// surfaces it as flat *_raw fields.
+		$this->assertArrayHasKey( 'content_raw', $result );
+		$this->assertSame( $markup, $result['content_raw'] );
+		$this->assertSame( 'Raw page title', $result['title_raw'] );
+		$this->assertSame( 'Raw page excerpt', $result['excerpt_raw'] );
+	}
+
+	public function test_view_context_omits_raw_fields(): void {
+		$this->actingAs( 'administrator' );
+
+		$id = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_title'   => 'No raw page',
+				'post_content' => '<!-- wp:paragraph --><p>x</p><!-- /wp:paragraph -->',
+			)
+		);
+
+		// Default (view) context: core does not return *.raw.
+		$result = wp_get_ability( 'content/get-page' )->execute( array( 'id' => $id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayNotHasKey( 'content_raw', $result );
+		$this->assertArrayNotHasKey( 'title_raw', $result );
+		$this->assertArrayNotHasKey( 'excerpt_raw', $result );
+	}
 }

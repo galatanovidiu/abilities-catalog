@@ -63,31 +63,43 @@ final class GetPostRevision implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'parent', 'title', 'content', 'excerpt', 'date', 'modified' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The revision ID.', 'abilities-catalog' ),
 					),
-					'parent'   => array(
+					'parent'      => array(
 						'type'        => 'integer',
 						'description' => __( 'The parent post ID.', 'abilities-catalog' ),
 					),
-					'title'    => array(
+					'title'       => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered revision title.', 'abilities-catalog' ),
 					),
-					'content'  => array(
+					'title_raw'   => array(
+						'type'        => 'string',
+						'description' => __( 'The stored (unrendered) revision title. Present only when context is "edit".', 'abilities-catalog' ),
+					),
+					'content'     => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered revision content.', 'abilities-catalog' ),
 					),
-					'excerpt'  => array(
+					'content_raw' => array(
+						'type'        => 'string',
+						'description' => __( 'The stored block markup of the revision content, for diffing or restoring. Present only when context is "edit".', 'abilities-catalog' ),
+					),
+					'excerpt'     => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered revision excerpt.', 'abilities-catalog' ),
 					),
-					'date'     => array(
+					'excerpt_raw' => array(
+						'type'        => 'string',
+						'description' => __( 'The stored (unrendered) revision excerpt. Present only when context is "edit".', 'abilities-catalog' ),
+					),
+					'date'        => array(
 						'type'        => 'string',
 						'description' => __( 'The revision date in site time.', 'abilities-catalog' ),
 					),
-					'modified' => array(
+					'modified'    => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
@@ -147,7 +159,7 @@ final class GetPostRevision implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'id'       => (int) ( $data['id'] ?? $id ),
 			'parent'   => (int) ( $data['parent'] ?? $parent ),
 			'title'    => (string) ( $data['title']['rendered'] ?? '' ),
@@ -156,5 +168,17 @@ final class GetPostRevision implements Ability {
 			'date'     => (string) ( $data['date'] ?? '' ),
 			'modified' => (string) ( $data['modified'] ?? '' ),
 		);
+
+		if ( isset( $data['title']['raw'] ) ) {
+			$result['title_raw'] = (string) $data['title']['raw'];
+		}
+		if ( isset( $data['content']['raw'] ) ) {
+			$result['content_raw'] = (string) $data['content']['raw'];
+		}
+		if ( isset( $data['excerpt']['raw'] ) ) {
+			$result['excerpt_raw'] = (string) $data['excerpt']['raw'];
+		}
+
+		return $result;
 	}
 }
