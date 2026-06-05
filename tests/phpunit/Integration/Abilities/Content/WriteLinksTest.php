@@ -173,9 +173,86 @@ final class WriteLinksTest extends TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( 'To trash', $result['title'] );
 		$this->assertSame( 'trash', $result['status'] );
+		$this->assertSame( 'publish', $result['previous_status'] );
 		// A trashed post cannot be edited (wp-admin returns HTTP 409), so no
 		// edit_link is returned; it would dead-end.
 		$this->assertArrayNotHasKey( 'edit_link', $result );
+	}
+
+	public function test_trash_post_rejects_non_positive_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => -5 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
+	public function test_trash_post_subscriber_is_denied(): void {
+		$this->actingAs( 'subscriber' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'Protected',
+				'post_status' => 'publish',
+			)
+		);
+
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+	}
+
+	public function test_trash_post_missing_object_returns_invalid_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_trash_post_already_trashed_returns_410(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'Twice',
+				'post_status' => 'publish',
+			)
+		);
+
+		wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rest_already_trashed', $result->get_error_code() );
+		$this->assertSame( 410, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_trash_post_when_trash_disabled_returns_501(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'No trash',
+				'post_status' => 'publish',
+			)
+		);
+
+		$filter = static function () {
+			return false;
+		};
+		add_filter( 'rest_post_trashable', $filter );
+
+		try {
+			$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		} finally {
+			remove_filter( 'rest_post_trashable', $filter );
+		}
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rest_trash_not_supported', $result->get_error_code() );
+		$this->assertSame( 501, $result->get_error_data()['status'] ?? null );
 	}
 
 	public function test_trash_page_returns_title_and_status_without_edit_link(): void {
