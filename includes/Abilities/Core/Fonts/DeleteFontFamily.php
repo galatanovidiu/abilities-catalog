@@ -49,7 +49,8 @@ final class DeleteFontFamily implements Ability {
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The font family post ID to permanently delete.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The font family post ID to permanently delete. Discover the ID with fonts/list-font-families.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -59,13 +60,25 @@ final class DeleteFontFamily implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'         => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the font family was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'              => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted font family post ID.', 'abilities-catalog' ),
+					),
+					'name'            => array(
+						'type'        => 'string',
+						'description' => __( 'The display name of the deleted font family.', 'abilities-catalog' ),
+					),
+					'slug'            => array(
+						'type'        => 'string',
+						'description' => __( 'The slug of the deleted font family.', 'abilities-catalog' ),
+					),
+					'font_face_count' => array(
+						'type'        => 'integer',
+						'description' => __( 'The number of font-face child posts (and their files) removed with the family.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -79,7 +92,7 @@ final class DeleteFontFamily implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
-				'screen'       => 'site-editor.php',
+				'screen'       => 'font-library.php',
 			),
 		);
 	}
@@ -95,13 +108,6 @@ final class DeleteFontFamily implements Ability {
 	 * @return bool True if the current user may delete a font family.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
 		return current_user_can( 'edit_theme_options' );
 	}
 
@@ -112,11 +118,12 @@ final class DeleteFontFamily implements Ability {
 	 * is returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted flag and id, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deleted flag, id, and removed
+	 *                                       family details, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
+		$id      = (int) ( $input['id'] ?? 0 );
 		$request = new WP_REST_Request( 'DELETE', '/wp/v2/font-families/' . $id );
 		$request->set_param( 'force', true );
 
@@ -125,11 +132,17 @@ final class DeleteFontFamily implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data     = rest_get_server()->response_to_data( $response, false );
+		$previous = is_array( $data['previous'] ?? null ) ? $data['previous'] : array();
+		$settings = is_array( $previous['font_family_settings'] ?? null ) ? $previous['font_family_settings'] : array();
+		$faces    = is_array( $previous['font_faces'] ?? null ) ? $previous['font_faces'] : array();
 
 		return array(
-			'deleted' => (bool) ( $data['deleted'] ?? false ),
-			'id'      => $id,
+			'deleted'         => (bool) ( $data['deleted'] ?? false ),
+			'id'              => $id,
+			'name'            => (string) ( $settings['name'] ?? '' ),
+			'slug'            => (string) ( $settings['slug'] ?? '' ),
+			'font_face_count' => count( $faces ),
 		);
 	}
 }
