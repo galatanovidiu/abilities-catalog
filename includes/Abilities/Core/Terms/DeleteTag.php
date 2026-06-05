@@ -42,14 +42,15 @@ final class DeleteTag implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Tag', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a tag term by ID. Taxonomy terms have no Trash, so this cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a tag term by ID. Taxonomy terms have no Trash, so this cannot be undone. Deleting the tag also removes it from every object it was assigned to.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The tag term ID to permanently delete.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The tag term ID to permanently delete. Find it via terms/list-tags or terms/get-tag.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -59,13 +60,29 @@ final class DeleteTag implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'        => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the tag term was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted tag term ID.', 'abilities-catalog' ),
+					),
+					'previous_name'  => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted tag name, from the term as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_slug'  => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted tag slug, from the term as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_link'  => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted tag archive URL as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_count' => array(
+						'type'        => 'integer',
+						'description' => __( 'The number of objects assigned to the tag before deletion.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -123,9 +140,25 @@ final class DeleteTag implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
 		);
+
+		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
+		if ( isset( $previous['name'] ) ) {
+			$result['previous_name'] = (string) $previous['name'];
+		}
+		if ( isset( $previous['slug'] ) ) {
+			$result['previous_slug'] = (string) $previous['slug'];
+		}
+		if ( isset( $previous['link'] ) ) {
+			$result['previous_link'] = (string) $previous['link'];
+		}
+		if ( isset( $previous['count'] ) ) {
+			$result['previous_count'] = (int) $previous['count'];
+		}
+
+		return $result;
 	}
 }
