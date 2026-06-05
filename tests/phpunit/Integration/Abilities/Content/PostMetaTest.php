@@ -447,4 +447,28 @@ final class PostMetaTest extends TestCase {
 		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
 		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
+
+	public function test_list_unknown_post_type_returns_invalid_post_type(): void {
+		$this->actingAs( 'administrator' );
+
+		// An unregistered post type passes the permission gate so execute() can
+		// return a specific 400 error instead of a generic permission collapse.
+		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'no_such_type' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'invalid_post_type', $result->get_error_code() );
+		$this->assertSame( 400, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_list_denies_user_without_edit_capability(): void {
+		$this->actingAs( 'subscriber' );
+
+		// A registered type the user cannot edit fails the capability guard, so
+		// core collapses it to the generic permission error — distinct from the
+		// 400 invalid_post_type returned for an unknown type.
+		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'invalid_post_type', $result->get_error_code() );
+	}
 }

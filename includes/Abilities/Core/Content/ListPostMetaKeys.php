@@ -6,6 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\PostMetaKeys;
+use WP_Error;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -38,7 +39,7 @@ final class ListPostMetaKeys implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Post Meta Keys', 'abilities-catalog' ),
-			'description'         => __( 'Returns the registered show_in_rest meta keys for a post type, with each key\'s type, single/list shape, and description. Use this to discover which custom fields the post-meta abilities can read or write.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the registered show_in_rest meta keys for a post type, with each key\'s type, single/list shape, and description. Use this to discover which custom fields the post-meta abilities operate on; read and write permission is still enforced per key by those abilities.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -68,7 +69,7 @@ final class ListPostMetaKeys implements Ability {
 							'properties'           => array(
 								'key'         => array(
 									'type'        => 'string',
-									'description' => __( 'The meta key.', 'abilities-catalog' ),
+									'description' => __( 'The public meta key (the show_in_rest alias when one is registered, otherwise the storage key).', 'abilities-catalog' ),
 								),
 								'type'        => array(
 									'type'        => 'string',
@@ -106,7 +107,9 @@ final class ListPostMetaKeys implements Ability {
 	 * Permission check: edit access to the requested post type.
 	 *
 	 * Meta keys are an editing concern, so the guard requires the post type's
-	 * `edit_posts` capability. Returns false for an unregistered post type.
+	 * `edit_posts` capability. For an unregistered post type it returns true so
+	 * `execute()` can surface the specific `invalid_post_type` (400) error instead
+	 * of masking it as a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may inspect the post type's meta keys.
@@ -117,7 +120,7 @@ final class ListPostMetaKeys implements Ability {
 
 		$object = get_post_type_object( $post_type );
 		if ( ! $object ) {
-			return false;
+			return true;
 		}
 
 		return current_user_can( $object->cap->edit_posts );
@@ -127,11 +130,19 @@ final class ListPostMetaKeys implements Ability {
 	 * Executes the ability by listing registered meta keys for the post type.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed> The post type and its registered meta keys.
+	 * @return array<string,mixed>|\WP_Error The post type and its registered meta keys, or an error.
 	 */
 	public function execute( $input ) {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = isset( $input['post_type'] ) ? sanitize_key( (string) $input['post_type'] ) : 'post';
+
+		if ( ! get_post_type_object( $post_type ) ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
 		$keys = array();
 		foreach ( PostMetaKeys::forPostType( $post_type ) as $key => $shape ) {
