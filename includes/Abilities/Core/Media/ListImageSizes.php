@@ -68,6 +68,14 @@ final class ListImageSizes implements Ability {
 									'type'        => 'boolean',
 									'description' => __( 'True if the size is hard-cropped to the exact dimensions; false if scaled to fit.', 'abilities-catalog' ),
 								),
+								'crop_x' => array(
+									'type'        => 'string',
+									'description' => __( 'Horizontal crop anchor ("left", "center", or "right"); present only when the size declares a positioned crop.', 'abilities-catalog' ),
+								),
+								'crop_y' => array(
+									'type'        => 'string',
+									'description' => __( 'Vertical crop anchor ("top", "center", or "bottom"); present only when the size declares a positioned crop.', 'abilities-catalog' ),
+								),
 							),
 							'additionalProperties' => false,
 						),
@@ -107,12 +115,23 @@ final class ListImageSizes implements Ability {
 	public function execute( $input = null ): array {
 		$sizes = array();
 		foreach ( wp_get_registered_image_subsizes() as $name => $data ) {
-			$sizes[] = array(
+			$crop = $data['crop'] ?? false;
+			$size = array(
 				'name'   => (string) $name,
 				'width'  => (int) ( $data['width'] ?? 0 ),
 				'height' => (int) ( $data['height'] ?? 0 ),
-				'crop'   => (bool) ( $data['crop'] ?? false ),
+				'crop'   => (bool) $crop,
 			);
+
+			// A positioned crop arrives as a non-empty [ $x, $y ] array; a hard
+			// crop is still true, but the anchor is preserved as optional fields.
+			if ( is_array( $crop ) && ! empty( $crop ) ) {
+				$size['crop']   = true;
+				$size['crop_x'] = (string) ( $crop[0] ?? '' );
+				$size['crop_y'] = (string) ( $crop[1] ?? '' );
+			}
+
+			$sizes[] = $size;
 		}
 
 		return array(

@@ -43,6 +43,32 @@ final class ImageSizesTest extends TestCase {
 		}
 	}
 
+	public function test_list_image_sizes_preserves_positioned_crop(): void {
+		$this->actingAs( 'administrator' );
+
+		add_image_size( 'catalog_positioned_crop', 100, 100, array( 'left', 'top' ) );
+
+		try {
+			$result = wp_get_ability( 'media/list-image-sizes' )->execute();
+			$this->assertIsArray( $result );
+
+			$match = null;
+			foreach ( $result['sizes'] as $size ) {
+				if ( 'catalog_positioned_crop' === $size['name'] ) {
+					$match = $size;
+					break;
+				}
+			}
+
+			$this->assertNotNull( $match, 'The positioned-crop size should be listed.' );
+			$this->assertTrue( $match['crop'], 'A positioned crop is still a hard crop.' );
+			$this->assertSame( 'left', $match['crop_x'] );
+			$this->assertSame( 'top', $match['crop_y'] );
+		} finally {
+			remove_image_size( 'catalog_positioned_crop' );
+		}
+	}
+
 	public function test_regenerate_thumbnails_rebuilds_sizes(): void {
 		$this->actingAs( 'administrator' );
 
