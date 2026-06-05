@@ -174,4 +174,48 @@ final class ListShapeTest extends TestCase {
 		// Flat list of feature keys, not the nested REST shape.
 		$this->assertArrayHasKey( 0, $post_row['supports'] );
 	}
+
+	public function test_list_post_types_view_context_returns_shaped_rows(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/list-post-types' )->execute( array( 'context' => 'view' ) );
+
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
+		$this->assertSame( count( $result['items'] ), $result['total'] );
+		$this->assertSame( 1, $result['total_pages'] );
+		foreach ( $result['items'] as $row ) {
+			$this->assertArrayHasKey( 'slug', $row );
+			$this->assertIsString( $row['slug'] );
+			$this->assertArrayHasKey( 'name', $row );
+			$this->assertIsString( $row['name'] );
+			$this->assertArrayHasKey( 'hierarchical', $row );
+			$this->assertIsBool( $row['hierarchical'] );
+			$this->assertArrayHasKey( 'rest_base', $row );
+			$this->assertIsString( $row['rest_base'] );
+			$this->assertArrayHasKey( 'supports', $row );
+			$this->assertIsArray( $row['supports'] );
+			$this->assertArrayHasKey( 'taxonomies', $row );
+			$this->assertIsArray( $row['taxonomies'] );
+			$this->assertArrayNotHasKey( '_links', $row );
+		}
+	}
+
+	public function test_list_post_types_view_denied_when_logged_out(): void {
+		wp_set_current_user( 0 );
+
+		$ability = wp_get_ability( 'content/list-post-types' );
+
+		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'view' ) ) );
+	}
+
+	public function test_list_post_types_edit_context_requires_edit_posts(): void {
+		$ability = wp_get_ability( 'content/list-post-types' );
+
+		$this->actingAs( 'subscriber' );
+		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+
+		$this->actingAs( 'editor' );
+		$this->assertTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+	}
 }
