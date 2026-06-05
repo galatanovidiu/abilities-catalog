@@ -16,9 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `templates/get-global-styles`.
  *
- * Returns the global styles (`wp_global_styles` CPT) for the active theme. The
- * id is resolved from core via
- * {@see \WP_Theme_JSON_Resolver::get_user_global_styles_post_id()}, then the
+ * Returns the active theme's user global-style overrides — the `wp_global_styles`
+ * CPT record holding only the settings/styles the user changed in the Site Editor.
+ * It does NOT merge the theme's baseline `theme.json`; use
+ * `templates/get-theme-styles` for the theme baseline. The id is resolved from core
+ * via {@see \WP_Theme_JSON_Resolver::get_user_global_styles_post_id()}, then the
  * record is fetched through `GET /wp/v2/global-styles/<id>`. Read-only.
  *
  * @since 0.1.0
@@ -38,7 +40,7 @@ final class GetGlobalStyles implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Global Styles', 'abilities-catalog' ),
-			'description'         => __( 'Returns the global styles (settings and styles) for the active theme.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the active theme\'s user global-style overrides (the settings and styles changed in the Site Editor), not the theme.json baseline. Use templates/get-theme-styles for the theme baseline.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -47,17 +49,17 @@ final class GetGlobalStyles implements Ability {
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __( 'The global styles post ID for the active theme.', 'abilities-catalog' ),
+						'description' => __( 'The user global-styles post ID for the active theme.', 'abilities-catalog' ),
 					),
 					'settings' => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __( 'The theme.json-shaped settings overrides.', 'abilities-catalog' ),
+						'description'          => __( 'The user\'s theme.json-shaped settings overrides (empty object when the user has no overrides; not the theme.json baseline).', 'abilities-catalog' ),
 					),
 					'styles'   => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __( 'The theme.json-shaped style overrides.', 'abilities-catalog' ),
+						'description'          => __( 'The user\'s theme.json-shaped style overrides (empty object when the user has no overrides; not the theme.json baseline).', 'abilities-catalog' ),
 					),
 					'title'    => array(
 						'type'        => 'string',
