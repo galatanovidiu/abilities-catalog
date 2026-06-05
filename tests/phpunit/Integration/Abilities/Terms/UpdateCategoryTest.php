@@ -97,6 +97,32 @@ final class UpdateCategoryTest extends TestCase {
 	}
 
 	/**
+	 * The output must echo the updated `description` and `parent` so a caller can
+	 * confirm a description edit or a category move from the structured result.
+	 */
+	public function test_output_includes_description_and_parent(): void {
+		$this->actingAs('administrator');
+
+		$parent_id = self::factory()->category->create(
+			array( 'name' => 'Parent Category' )
+		);
+
+		$result = wp_get_ability('terms/update-category')->execute(
+			array(
+				'id'          => $this->term_id,
+				'description' => 'Moved under a parent.',
+				'parent'      => $parent_id,
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('description', $result);
+		$this->assertArrayHasKey('parent', $result);
+		$this->assertSame('Moved under a parent.', $result['description']);
+		$this->assertSame($parent_id, $result['parent']);
+	}
+
+	/**
 	 * An omitted `name` means "leave unchanged": updating only the description
 	 * must not touch the name.
 	 */
