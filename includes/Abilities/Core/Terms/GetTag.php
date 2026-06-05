@@ -35,14 +35,15 @@ final class GetTag implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Tag', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single post-tag term by ID.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single post-tag term by ID. Tag-specific read; discover IDs with terms/list-tags. Use terms/get-category for categories or terms/get-term for an arbitrary taxonomy.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The tag term ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The tag term ID. Discover IDs with terms/list-tags.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -80,7 +81,7 @@ final class GetTag implements Ability {
 					),
 					'count'       => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of objects assigned to the term.', 'abilities-catalog' ),
+						'description' => __( 'Number of published posts for the term.', 'abilities-catalog' ),
 					),
 					'taxonomy'    => array(
 						'type'        => 'string',
