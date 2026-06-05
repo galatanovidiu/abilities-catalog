@@ -41,18 +41,19 @@ final class AssignMenuLocation implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Assign Menu Location', 'abilities-catalog' ),
-			'description'         => __( 'Assigns a classic menu to a registered theme location.', 'abilities-catalog' ),
+			'description'         => __( 'Assigns a classic menu to a registered theme location. This replaces any menu previously assigned to that location, and clears the menu from any other locations it was assigned to.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'menu_id'  => array(
 						'type'        => 'integer',
-						'description' => __( 'The classic menu term ID to assign.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The classic menu term ID to assign. Use menus/list-classic-menus to discover valid menu IDs.', 'abilities-catalog' ),
 					),
 					'location' => array(
 						'type'        => 'string',
-						'description' => __( 'The registered theme location slug to assign the menu to.', 'abilities-catalog' ),
+						'description' => __( 'The registered theme location slug to assign the menu to. Use menus/list-menu-locations to discover valid location slugs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'menu_id', 'location' ),
@@ -121,7 +122,7 @@ final class AssignMenuLocation implements Ability {
 	public function execute( $input ) {
 		$input    = is_array( $input ) ? $input : array();
 		$id       = absint( $input['menu_id'] );
-		$location = sanitize_key( (string) ( $input['location'] ?? '' ) );
+		$location = (string) ( $input['location'] ?? '' );
 
 		$request = new WP_REST_Request( 'POST', '/wp/v2/menus/' . $id );
 		$request->set_param( 'locations', array( $location ) );
