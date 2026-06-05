@@ -36,7 +36,7 @@ final class GetCurrentUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Current User', 'abilities-catalog' ),
-			'description'         => __( 'Returns the profile of the currently logged-in user.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the profile of the currently logged-in user, including name and slug; email, roles, and capabilities appear only in "edit" context.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -68,21 +68,21 @@ final class GetCurrentUser implements Ability {
 					),
 					'email'           => array(
 						'type'        => array( 'string', 'null' ),
-						'description' => __( 'The email address of the current user.', 'abilities-catalog' ),
+						'description' => __( 'The email address of the current user (only with edit access).', 'abilities-catalog' ),
 					),
 					'roles'           => array(
 						'type'        => array( 'array', 'null' ),
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Roles assigned to the current user.', 'abilities-catalog' ),
+						'description' => __( 'Roles assigned to the current user (only with edit access).', 'abilities-catalog' ),
 					),
 					'capabilities'    => array(
 						'type'                 => 'object',
-						'additionalProperties' => true,
-						'description'          => __( 'Capabilities of the current user.', 'abilities-catalog' ),
+						'additionalProperties' => array( 'type' => 'boolean' ),
+						'description'          => __( 'Capabilities of the current user, as a map of capability name to granted (only with edit access).', 'abilities-catalog' ),
 					),
 					'registered_date' => array(
 						'type'        => array( 'string', 'null' ),
-						'description' => __( 'The registration date of the current user.', 'abilities-catalog' ),
+						'description' => __( 'The registration date of the current user (only with edit access).', 'abilities-catalog' ),
 					),
 					'url'             => array(
 						'type'        => 'string',
