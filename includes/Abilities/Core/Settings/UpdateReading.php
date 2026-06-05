@@ -78,7 +78,7 @@ final class UpdateReading implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'show_on_front' ),
+				'required'             => array( 'show_on_front', 'page_on_front', 'page_for_posts', 'posts_per_page', 'posts_per_rss', 'blog_public' ),
 				'properties'           => array(
 					'show_on_front'  => array(
 						'type'        => 'string',
@@ -156,7 +156,17 @@ final class UpdateReading implements Ability {
 		$has_rest = false;
 
 		if ( array_key_exists( 'show_on_front', $input ) ) {
-			$request->set_param( 'show_on_front', sanitize_text_field( (string) $input['show_on_front'] ) );
+			$show_on_front = sanitize_text_field( (string) $input['show_on_front'] );
+
+			if ( ! in_array( $show_on_front, array( 'posts', 'page' ), true ) ) {
+				return new \WP_Error(
+					'webmcp_invalid_show_on_front',
+					__( 'The front page display must be "posts" or "page".', 'abilities-catalog' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			$request->set_param( 'show_on_front', $show_on_front );
 			$has_rest = true;
 		}
 
@@ -165,7 +175,11 @@ final class UpdateReading implements Ability {
 				continue;
 			}
 
-			$request->set_param( $field, absint( $input[ $field ] ) );
+			// posts_per_page passes through as a plain int so core's sanitizer
+			// preserves the -1 ("show all") sentinel; absint() would corrupt it.
+			$value = 'posts_per_page' === $field ? (int) $input[ $field ] : absint( $input[ $field ] );
+
+			$request->set_param( $field, $value );
 			$has_rest = true;
 		}
 
@@ -178,7 +192,8 @@ final class UpdateReading implements Ability {
 
 		// Non-REST keys: write via update_option() with per-type sanitization.
 		if ( array_key_exists( 'posts_per_rss', $input ) ) {
-			update_option( 'posts_per_rss', absint( $input['posts_per_rss'] ) );
+			// Plain int (not absint) so core's sanitizer preserves the -1 sentinel.
+			update_option( 'posts_per_rss', (int) $input['posts_per_rss'] );
 		}
 
 		if ( array_key_exists( 'blog_public', $input ) ) {
