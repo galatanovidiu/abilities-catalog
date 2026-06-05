@@ -45,13 +45,14 @@ final class UpdateUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update User', 'abilities-catalog' ),
-			'description'         => __( 'Updates an existing user by ID. Changing roles requires the promote capability.', 'abilities-catalog' ),
+			'description'         => __( 'Updates an existing user by ID. Changing roles requires the promote capability. Changing the email or password triggers core notification emails to the affected user.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'         => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The ID of the user to update.', 'abilities-catalog' ),
 					),
 					'name'       => array(
@@ -68,10 +69,12 @@ final class UpdateUser implements Ability {
 					),
 					'email'      => array(
 						'type'        => 'string',
+						'format'      => 'email',
 						'description' => __( 'The email address for the user.', 'abilities-catalog' ),
 					),
 					'url'        => array(
 						'type'        => 'string',
+						'format'      => 'uri',
 						'description' => __( 'The website URL for the user.', 'abilities-catalog' ),
 					),
 					'locale'     => array(
