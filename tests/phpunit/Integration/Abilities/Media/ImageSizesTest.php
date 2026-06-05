@@ -95,6 +95,17 @@ final class ImageSizesTest extends TestCase {
 		$this->assertSame( 'rest_not_an_image', $result->get_error_code() );
 	}
 
+	public function test_regenerate_negative_id_is_rejected_by_schema(): void {
+		$this->actingAs( 'administrator' );
+
+		// The minimum: 1 input guard rejects a non-positive id at the schema
+		// boundary, before absint() could retarget it to a different object.
+		$result = wp_get_ability( 'media/regenerate-thumbnails' )->execute( array( 'id' => -3 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
