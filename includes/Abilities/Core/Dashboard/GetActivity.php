@@ -13,10 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Composed T1 read ability: `dashboard/get-activity`.
  *
- * Mirrors the wp-admin "Activity" dashboard widget. Returns the most recently
- * published posts and the most recent approved comments. Built directly on core
- * query functions (`get_posts()`, `get_comments()`) rather than REST, since this
- * is a net-new composed read with no single REST equivalent.
+ * Returns a subset of the wp-admin "Activity" dashboard widget: the most
+ * recently published posts and the most recent approved comments. Built directly
+ * on core query functions (`get_posts()`, `get_comments()`) rather than REST,
+ * since this is a net-new composed read with no single REST equivalent.
  *
  * @since 0.1.0
  */
@@ -59,7 +59,22 @@ final class GetActivity implements Ability {
 						'description' => __( 'Recently published posts.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id', 'title', 'date' ),
+							'properties'           => array(
+								'id'    => array(
+									'type'        => 'integer',
+									'description' => __( 'Post ID.', 'abilities-catalog' ),
+								),
+								'title' => array(
+									'type'        => 'string',
+									'description' => __( 'Post title.', 'abilities-catalog' ),
+								),
+								'date'  => array(
+									'type'        => 'string',
+									'description' => __( 'Publish date (site timezone).', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 					'comments'  => array(
@@ -67,7 +82,30 @@ final class GetActivity implements Ability {
 						'description' => __( 'Recent approved comments.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id', 'post', 'author', 'date', 'excerpt' ),
+							'properties'           => array(
+								'id'      => array(
+									'type'        => 'integer',
+									'description' => __( 'Comment ID.', 'abilities-catalog' ),
+								),
+								'post'    => array(
+									'type'        => 'integer',
+									'description' => __( 'ID of the post the comment belongs to.', 'abilities-catalog' ),
+								),
+								'author'  => array(
+									'type'        => 'string',
+									'description' => __( 'Comment author name.', 'abilities-catalog' ),
+								),
+								'date'    => array(
+									'type'        => 'string',
+									'description' => __( 'Comment date (site timezone).', 'abilities-catalog' ),
+								),
+								'excerpt' => array(
+									'type'        => 'string',
+									'description' => __( 'Trimmed comment content.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 				),
