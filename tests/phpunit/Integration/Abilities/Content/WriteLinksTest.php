@@ -121,6 +121,44 @@ final class WriteLinksTest extends TestCase {
 		$this->assertStringContainsString( (string) $post_id, $result['edit_link'] );
 	}
 
+	public function test_update_post_returns_slug_featured_media_and_terms(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create( array( 'post_title' => 'Old' ) );
+
+		$category_id = self::factory()->category->create();
+		$tag_id      = self::factory()->tag->create();
+		$media_id    = self::factory()->attachment->create_upload_object(
+			DIR_TESTDATA . '/images/canola.jpg'
+		);
+
+		$result = wp_get_ability( 'content/update-post' )->execute(
+			array(
+				'id'             => $post_id,
+				'slug'           => 'updated-slug',
+				'categories'     => array( $category_id ),
+				'tags'           => array( $tag_id ),
+				'featured_media' => $media_id,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'updated-slug', $result['slug'] );
+		$this->assertSame( $media_id, $result['featured_media'] );
+		$this->assertSame( array( $category_id ), $result['categories'] );
+		$this->assertSame( array( $tag_id ), $result['tags'] );
+	}
+
+	public function test_update_post_rejects_negative_id_by_schema(): void {
+		$this->actingAs( 'administrator' );
+
+		// The `minimum: 1` input guard rejects a non-positive id at the schema
+		// boundary, before execute() builds a REST path that would coerce -7 to 7.
+		$result = wp_get_ability( 'content/update-post' )->execute( array( 'id' => -7 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
 	public function test_update_page_returns_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 		$page_id = self::factory()->post->create(
