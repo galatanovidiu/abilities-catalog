@@ -130,11 +130,20 @@ final class UpdateCategory implements Ability {
 		$id      = absint( $input['id'] );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/categories/' . $id );
 
-		if ( isset( $input['name'] ) && '' !== $input['name'] ) {
+		// Forward a field whenever the caller supplied the key, including an
+		// explicit empty string. On an update, key presence is the caller's
+		// intent: an omitted field means "leave unchanged", while an explicit ''
+		// means "blank this field". The REST terms controller gates name/slug on
+		// `isset()` only (prepare_item_for_database) and forwards the empty value,
+		// so an empty `name` reaches wp_update_term's `'' === trim($name)` check
+		// and surfaces its `empty_term_name` error, and an empty `slug` reaches
+		// core, which keeps the existing slug. A `'' !==` guard here would drop
+		// the value and silently no-op, discarding intent and hiding core's error.
+		if ( array_key_exists( 'name', $input ) ) {
 			$request->set_param( 'name', sanitize_text_field( (string) $input['name'] ) );
 		}
 
-		if ( isset( $input['slug'] ) && '' !== $input['slug'] ) {
+		if ( array_key_exists( 'slug', $input ) ) {
 			$request->set_param( 'slug', sanitize_title( (string) $input['slug'] ) );
 		}
 

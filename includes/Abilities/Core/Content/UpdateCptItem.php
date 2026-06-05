@@ -16,7 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T2 write ability: `content/update-cpt-item` (generic, keyed by `post_type`).
  *
- * Resolves the type's REST base and wraps `POST /wp/v2/<rest_base>/<id>` via
+ * Resolves the type's REST item route via `rest_get_route_for_post_type_items()`
+ * (honoring a custom `rest_namespace`) and wraps `POST <route>/<id>` via
  * `rest_do_request()` to update an item of any registered `show_in_rest` post
  * type. Mirrors the update fan-out of `content/update-post`, but resolves the
  * publish and author capabilities per-type from `get_post_type_object()`. Only
@@ -70,7 +71,7 @@ final class UpdateCptItem implements Ability {
 					),
 					'content'   => array(
 						'type'        => 'string',
-						'description' => __( 'The item content (HTML allowed; sanitized by WordPress).', 'abilities-catalog' ),
+						'description' => __( 'The item content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'   => array(
 						'type'        => 'string',
@@ -99,27 +100,35 @@ final class UpdateCptItem implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status' ),
+				'required'             => array( 'id', 'status', 'edit_link' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The item ID.', 'abilities-catalog' ),
 					),
-					'link'     => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered item title.', 'abilities-catalog' ),
+					),
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The item permalink.', 'abilities-catalog' ),
 					),
-					'status'   => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting item status.', 'abilities-catalog' ),
 					),
-					'modified' => array(
+					'modified'  => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
-					'type'     => array(
+					'type'      => array(
 						'type'        => 'string',
 						'description' => __( 'The post type slug.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the item. Surface this so a human can review the change.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -140,29 +149,28 @@ final class UpdateCptItem implements Ability {
 	/**
 	 * Permission check encoding the per-type capabilities for updating an item.
 	 *
-	 * Validates the type is registered and `show_in_rest`, then requires
-	 * object-level `edit_post` on the target; additionally `publish_posts` when the
-	 * requested status would publish, and `edit_others_posts` when reassigning the
-	 * item to another user.
+	 * Uses the type's `edit_posts` capability as the coarse guard. For an unknown
+	 * or non-REST type it returns true so `execute()` can surface the specific
+	 * `invalid_post_type` (400) error rather than masking it as a permission
+	 * failure. The object-level `edit_post` check and the
+	 * `rest_post_invalid_id` (404) / `rest_cannot_edit` (403) errors come from the
+	 * wrapped REST route in `execute()`. Additionally requires `publish_posts` when
+	 * the requested status would publish, and `edit_others_posts` when reassigning
+	 * the item to another user.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the requested item.
+	 * @return bool True if the current user may update items of this type.
 	 */
 	public function hasPermission( $input ): bool {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : '';
-		$id        = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( '' === $post_type || $id <= 0 ) {
-			return false;
-		}
 
 		$obj = get_post_type_object( $post_type );
 		if ( ! $obj || empty( $obj->show_in_rest ) ) {
-			return false;
+			return true;
 		}
 
-		if ( ! current_user_can( 'edit_post', $id ) ) {
+		if ( ! current_user_can( $obj->cap->edit_posts ) ) {
 			return false;
 		}
 
@@ -203,9 +211,16 @@ final class UpdateCptItem implements Ability {
 			);
 		}
 
-		$rest_base = $obj->rest_base ?: $post_type;
+		$items_route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $items_route ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist or is not available in REST.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
-		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $rest_base . '/' . $id );
+		$request = new WP_REST_Request( 'POST', $items_route . '/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them
 		// (content via wp_kses_post, etc.). Control fields are sanitized here.
@@ -230,14 +245,17 @@ final class UpdateCptItem implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$item_id = (int) ( $data['id'] ?? $id );
 
 		return array(
-			'id'       => (int) ( $data['id'] ?? $id ),
-			'link'     => (string) ( $data['link'] ?? '' ),
-			'status'   => (string) ( $data['status'] ?? '' ),
-			'modified' => (string) ( $data['modified'] ?? '' ),
-			'type'     => (string) ( $data['type'] ?? $post_type ),
+			'id'        => $item_id,
+			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'modified'  => (string) ( $data['modified'] ?? '' ),
+			'type'      => (string) ( $data['type'] ?? $post_type ),
+			'edit_link' => (string) get_edit_post_link( $item_id, 'raw' ),
 		);
 	}
 }

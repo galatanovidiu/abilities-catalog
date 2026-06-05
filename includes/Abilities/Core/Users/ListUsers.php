@@ -6,6 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Users;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
+use GalatanOvidiu\AbilitiesCatalog\Support\UserListShaper;
 use WP_REST_Request;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,9 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `users/list-users`.
  *
- * Wraps `GET /wp/v2/users` via `rest_do_request()` and returns the paginated
- * collection plus the total counts from the REST response headers. Encodes the
- * catalog capability `list_users`. Read-only.
+ * Wraps `GET /wp/v2/users` via `rest_do_request()` and returns flat summary rows
+ * (via {@see UserListShaper}) plus the total counts from the REST response
+ * headers. The full record lives behind `users/get-user`. Encodes the catalog
+ * capability `list_users`. Read-only.
  *
  * @since 0.1.0
  */
@@ -95,11 +97,8 @@ final class ListUsers implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of users.', 'abilities-catalog' ),
+						'items'       => UserListShaper::userItemSchema(),
+						'description' => __( 'The list of users as flat summary rows. Use users/get-user for the full single user.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -184,8 +183,14 @@ final class ListUsers implements Ability {
 		$data    = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$data  = is_array( $data ) ? $data : array();
+		$items = array_map(
+			static fn ( $item ): array => UserListShaper::userSummary( is_array( $item ) ? $item : array() ),
+			array_values( $data )
+		);
+
 		return array(
-			'items'       => array_values( $data ),
+			'items'       => $items,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? count( $data ) ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

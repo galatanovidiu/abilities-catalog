@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ContentListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -60,11 +61,8 @@ final class ListPostRevisions implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of revisions.', 'abilities-catalog' ),
+						'items'       => ContentListShaper::revisionItemSchema(),
+						'description' => __( 'The list of revisions as flat summary rows. Use content/get-post-revision for a single revision body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -91,20 +89,19 @@ final class ListPostRevisions implements Ability {
 	}
 
 	/**
-	 * Permission check: `edit_post` on the parent post (object-level).
+	 * Permission check: delegated to the wrapped REST route.
+	 *
+	 * Reads through `GET /wp/v2/posts/<parent>/revisions`, whose permission check
+	 * enforces `edit_post` on the parent post. Deferring to the route lets
+	 * `execute()` surface its specific error (`rest_post_invalid_parent` 404,
+	 * `rest_cannot_read` 403) instead of masking a missing parent as a permission
+	 * failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may edit the parent post.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input  = is_array( $input ) ? $input : array();
-		$parent = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
-
-		if ( $parent <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $parent );
+		return true;
 	}
 
 	/**
@@ -125,13 +122,16 @@ final class ListPostRevisions implements Ability {
 			return RestError::from( $response );
 		}
 
-		$items   = rest_get_server()->response_to_data( $response, false );
-		$headers = $response->get_headers();
+		$items = rest_get_server()->response_to_data( $response, false );
+		$rows  = is_array( $items ) ? array_map( array( ContentListShaper::class, 'revisionSummary' ), $items ) : array();
 
+		// The core revisions controller returns the full set in one response and
+		// emits no pagination headers, so derive the total from the rows rather
+		// than reading X-WP-Total (which would always be 0).
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
-			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
-			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
+			'items'       => $rows,
+			'total'       => count( $rows ),
+			'total_pages' => array() === $rows ? 0 : 1,
 		);
 	}
 }

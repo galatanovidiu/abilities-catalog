@@ -47,7 +47,7 @@ final class GetPostRevision implements Ability {
 					),
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The revision ID.', 'abilities-catalog' ),
+						'description' => __( 'The revision ID. Use content/list-post-revisions to list revisions for the parent post.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -61,33 +61,45 @@ final class GetPostRevision implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'parent' ),
+				'required'             => array( 'id', 'parent', 'title', 'content', 'excerpt', 'date', 'modified' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The revision ID.', 'abilities-catalog' ),
 					),
-					'parent'   => array(
+					'parent'      => array(
 						'type'        => 'integer',
 						'description' => __( 'The parent post ID.', 'abilities-catalog' ),
 					),
-					'title'    => array(
+					'title'       => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered revision title.', 'abilities-catalog' ),
 					),
-					'content'  => array(
+					'title_raw'   => array(
+						'type'        => 'string',
+						'description' => __( 'The stored (unrendered) revision title. Present only when context is "edit".', 'abilities-catalog' ),
+					),
+					'content'     => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered revision content.', 'abilities-catalog' ),
 					),
-					'excerpt'  => array(
+					'content_raw' => array(
+						'type'        => 'string',
+						'description' => __( 'The stored block markup of the revision content, for diffing or restoring. Present only when context is "edit".', 'abilities-catalog' ),
+					),
+					'excerpt'     => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered revision excerpt.', 'abilities-catalog' ),
 					),
-					'date'     => array(
+					'excerpt_raw' => array(
+						'type'        => 'string',
+						'description' => __( 'The stored (unrendered) revision excerpt. Present only when context is "edit".', 'abilities-catalog' ),
+					),
+					'date'        => array(
 						'type'        => 'string',
 						'description' => __( 'The revision date in site time.', 'abilities-catalog' ),
 					),
-					'modified' => array(
+					'modified'    => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
@@ -108,21 +120,21 @@ final class GetPostRevision implements Ability {
 	}
 
 	/**
-	 * Permission check: `edit_post` on the parent post (object-level).
+	 * Permission check: delegated to the wrapped REST route.
+	 *
+	 * Reads through `GET /wp/v2/posts/<parent>/revisions/<id>`, whose permission
+	 * check enforces `edit_post` on the parent post. Deferring to the route lets
+	 * `execute()` surface its specific error (`rest_post_invalid_parent` 404 for a
+	 * missing parent, `rest_post_invalid_id` 404 for an invalid or non-revision id,
+	 * `rest_revision_parent_id_mismatch` 404 when the revision is not under that
+	 * parent, `rest_cannot_read` 403 on denial) instead of masking a missing parent
+	 * or revision as a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may edit the parent post.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input  = is_array( $input ) ? $input : array();
-		$parent = isset( $input['parent'] ) ? absint( $input['parent'] ) : 0;
-		$id     = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $parent <= 0 || $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $parent );
+		return true;
 	}
 
 	/**
@@ -147,7 +159,7 @@ final class GetPostRevision implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'id'       => (int) ( $data['id'] ?? $id ),
 			'parent'   => (int) ( $data['parent'] ?? $parent ),
 			'title'    => (string) ( $data['title']['rendered'] ?? '' ),
@@ -156,5 +168,17 @@ final class GetPostRevision implements Ability {
 			'date'     => (string) ( $data['date'] ?? '' ),
 			'modified' => (string) ( $data['modified'] ?? '' ),
 		);
+
+		if ( isset( $data['title']['raw'] ) ) {
+			$result['title_raw'] = (string) $data['title']['raw'];
+		}
+		if ( isset( $data['content']['raw'] ) ) {
+			$result['content_raw'] = (string) $data['content']['raw'];
+		}
+		if ( isset( $data['excerpt']['raw'] ) ) {
+			$result['excerpt_raw'] = (string) $data['excerpt']['raw'];
+		}
+
+		return $result;
 	}
 }

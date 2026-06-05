@@ -58,7 +58,36 @@ final class ListPostTypes implements Ability {
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'slug', 'name' ),
+							'properties'           => array(
+								'slug'         => array(
+									'type'        => 'string',
+									'description' => __( 'The post type slug.', 'abilities-catalog' ),
+								),
+								'name'         => array(
+									'type'        => 'string',
+									'description' => __( 'The human-readable post type name.', 'abilities-catalog' ),
+								),
+								'hierarchical' => array(
+									'type'        => 'boolean',
+									'description' => __( 'Whether the type is hierarchical (like pages).', 'abilities-catalog' ),
+								),
+								'rest_base'    => array(
+									'type'        => 'string',
+									'description' => __( 'The REST base used in /wp/v2/<rest_base>.', 'abilities-catalog' ),
+								),
+								'supports'     => array(
+									'type'        => 'array',
+									'items'       => array( 'type' => 'string' ),
+									'description' => __( 'Flat list of supported feature keys (e.g. title, editor, thumbnail).', 'abilities-catalog' ),
+								),
+								'taxonomies'   => array(
+									'type'        => 'array',
+									'items'       => array( 'type' => 'string' ),
+									'description' => __( 'Taxonomy slugs associated with the type.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 						'description' => __( 'The list of post types.', 'abilities-catalog' ),
 					),
@@ -137,7 +166,7 @@ final class ListPostTypes implements Ability {
 					'name'         => (string) ( $type['name'] ?? '' ),
 					'hierarchical' => (bool) ( $type['hierarchical'] ?? false ),
 					'rest_base'    => (string) ( $type['rest_base'] ?? '' ),
-					'supports'     => isset( $type['supports'] ) && is_array( $type['supports'] ) ? $type['supports'] : array(),
+					'supports'     => array_keys( get_all_post_type_supports( (string) ( $type['slug'] ?? $slug ) ) ),
 					'taxonomies'   => isset( $type['taxonomies'] ) && is_array( $type['taxonomies'] ) ? array_values( $type['taxonomies'] ) : array(),
 				);
 			}

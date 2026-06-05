@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\PostAccess;
 use GalatanOvidiu\AbilitiesCatalog\Support\PostMetaKeys;
 use WP_Error;
 
@@ -93,23 +94,20 @@ final class UpdatePostMeta implements Ability {
 	}
 
 	/**
-	 * Permission check: edit access to the target post (object-level).
+	 * Permission check: delegated to `execute()`.
 	 *
-	 * The coarse `edit_post` gate is the hard guard; the per-key
-	 * `edit_post_meta` capability is enforced in {@see self::execute()}.
+	 * This ability calls core directly (no wrapped REST route), so object-level
+	 * `edit_post` is enforced in `execute()` via
+	 * {@see PostAccess::resolveEditable()} — returning `rest_post_invalid_id` (404)
+	 * for a missing post and `rest_cannot_edit` (403) when the user may not edit it,
+	 * instead of masking both as a single permission error. The per-key
+	 * `edit_post_meta` capability is also enforced in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may edit the post.
+	 * @return bool Always true; `execute()` is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $id );
+		return true;
 	}
 
 	/**
@@ -125,10 +123,10 @@ final class UpdatePostMeta implements Ability {
 	public function execute( $input ) {
 		$input = is_array( $input ) ? $input : array();
 		$id    = absint( $input['id'] );
-		$post  = get_post( $id );
+		$post  = PostAccess::resolveEditable( $id );
 
-		if ( ! $post ) {
-			return new WP_Error( 'rest_post_invalid_id', __( 'Invalid post ID.', 'abilities-catalog' ), array( 'status' => 404 ) );
+		if ( is_wp_error( $post ) ) {
+			return $post;
 		}
 
 		$values = isset( $input['meta'] ) && is_array( $input['meta'] ) ? $input['meta'] : array();
@@ -138,32 +136,36 @@ final class UpdatePostMeta implements Ability {
 
 		$allowed = PostMetaKeys::forPostType( $post->post_type );
 
-		foreach ( $values as $key => $value ) {
-			$key = (string) $key;
-			if ( ! isset( $allowed[ $key ] ) ) {
+		foreach ( $values as $name => $value ) {
+			$name = (string) $name;
+			if ( ! isset( $allowed[ $name ] ) ) {
 				return new WP_Error(
 					'rest_post_meta_unknown_key',
 					/* translators: %s: meta key. */
-					sprintf( __( 'The meta key "%s" is not registered with show_in_rest for this post type and cannot be written.', 'abilities-catalog' ), $key ),
+					sprintf( __( 'The meta key "%s" is not registered with show_in_rest for this post type and cannot be written.', 'abilities-catalog' ), $name ),
 					array( 'status' => 400 )
 				);
 			}
 
-			if ( ! current_user_can( 'edit_post_meta', $id, $key ) ) {
+			// The per-key capability is checked against the storage key, matching
+			// core (class-wp-rest-meta-fields.php:283).
+			if ( ! current_user_can( 'edit_post_meta', $id, $allowed[ $name ]['storage_key'] ) ) {
 				return new WP_Error(
 					'rest_cannot_update_post_meta',
 					/* translators: %s: meta key. */
-					sprintf( __( 'You are not allowed to edit the meta key "%s".', 'abilities-catalog' ), $key ),
+					sprintf( __( 'You are not allowed to edit the meta key "%s".', 'abilities-catalog' ), $name ),
 					array( 'status' => 403 )
 				);
 			}
 		}
 
 		$applied = array();
-		foreach ( $values as $key => $value ) {
-			$key = (string) $key;
-			update_post_meta( $id, $key, $value );
-			$applied[ $key ] = get_post_meta( $id, $key, $allowed[ $key ]['single'] );
+		foreach ( $values as $name => $value ) {
+			$name        = (string) $name;
+			$shape       = $allowed[ $name ];
+			$storage_key = $shape['storage_key'];
+			update_post_meta( $id, $storage_key, $value );
+			$applied[ $name ] = PostMetaKeys::castForResponse( get_post_meta( $id, $storage_key, $shape['single'] ), $shape );
 		}
 
 		return array(

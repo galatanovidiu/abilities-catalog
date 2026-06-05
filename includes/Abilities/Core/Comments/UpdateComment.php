@@ -16,9 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 write ability: `comments/update-comment`.
  *
  * Wraps `POST /wp/v2/comments/<id>` via `rest_do_request()` and returns the
- * comment's id, content, and status. The `permission_callback` encodes the
- * catalog capability: `moderate_comments` OR object-level `edit_comment`. The
- * REST route re-checks the capability underneath and sanitizes content.
+ * comment's id, content, status, author, date, and edit link. The
+ * `permission_callback` is a coarse `is_user_logged_in()` gate; the wrapped REST
+ * route enforces the object-level capability (`update_item_permissions_check` →
+ * `check_edit_permission`: `moderate_comments` OR `edit_comment`) and sanitizes
+ * content, surfacing the specific `rest_comment_invalid_id` 404 / `rest_cannot_edit`
+ * 403 instead of the Abilities API collapsing a `permission_callback` `WP_Error`
+ * into a generic permission failure (see backlog B4).
  *
  * @since 0.2.0
  */
@@ -44,6 +48,7 @@ final class UpdateComment implements Ability {
 				'properties'           => array(
 					'id'           => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The comment ID to update.', 'abilities-catalog' ),
 					),
 					'content'      => array(
@@ -56,10 +61,11 @@ final class UpdateComment implements Ability {
 					),
 					'author_email' => array(
 						'type'        => 'string',
-						'description' => __( 'The new author email address.', 'abilities-catalog' ),
+						'description' => __( 'The new author email address. Validated by core; a malformed value returns rest_invalid_email.', 'abilities-catalog' ),
 					),
 					'date'         => array(
 						'type'        => 'string',
+						'format'      => 'date-time',
 						'description' => __( 'The new comment date in site time (ISO 8601).', 'abilities-catalog' ),
 					),
 				),
@@ -68,19 +74,35 @@ final class UpdateComment implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status' ),
+				'required'             => array( 'id', 'status', 'edit_link' ),
 				'properties'           => array(
-					'id'      => array(
+					'id'           => array(
 						'type'        => 'integer',
 						'description' => __( 'The comment ID.', 'abilities-catalog' ),
 					),
-					'content' => array(
+					'content'      => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered comment content.', 'abilities-catalog' ),
 					),
-					'status'  => array(
+					'status'       => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting comment status.', 'abilities-catalog' ),
+					),
+					'author_name'  => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting author display name.', 'abilities-catalog' ),
+					),
+					'author_email' => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting author email address.', 'abilities-catalog' ),
+					),
+					'date'         => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting comment date in site time (ISO 8601).', 'abilities-catalog' ),
+					),
+					'edit_link'    => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the comment.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -100,48 +122,54 @@ final class UpdateComment implements Ability {
 	}
 
 	/**
-	 * Permission check: `moderate_comments` OR object-level `edit_comment`.
+	 * Coarse permission gate: the caller must be logged in. The object-level
+	 * capability is enforced by the wrapped REST route (`rest_do_request` runs the
+	 * route's own `permission_callback`), so a missing comment surfaces as a 404 and
+	 * an unauthorized edit as a 403 rather than a generic permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the comment.
+	 * @return bool True if the current user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		return $this->canModerate( absint( $input['id'] ?? 0 ) );
-	}
-
-	/**
-	 * Whether the current user can moderate the given comment.
-	 *
-	 * @param int $id The comment ID.
-	 * @return bool True if the user has moderate_comments or edit_comment on it.
-	 */
-	private function canModerate( int $id ): bool {
-		return current_user_can( 'moderate_comments' ) || current_user_can( 'edit_comment', $id );
+		return is_user_logged_in();
 	}
 
 	/**
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The comment's id, content, status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The comment's id, content, status, author, date, edit link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
 		$id      = absint( $input['id'] ?? 0 );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/comments/' . $id );
 
-		// Content passes through to the REST route, which sanitizes it.
-		if ( isset( $input['content'] ) && '' !== $input['content'] ) {
+		// Forward a field whenever the caller supplied the key, including an
+		// explicit empty string. On an update, key presence is the caller's
+		// intent: an omitted field means "leave unchanged", while an explicit ''
+		// means "blank this field". Core gates each field on `isset()` only
+		// (class-wp-rest-comments-controller.php update path) and forwards the
+		// empty value — so blanking `author_name`/`author_email` writes empty, and
+		// an empty `content` reaches core's content-allowed check, which returns a
+		// 400 `rest_comment_content_invalid`. A `'' !==` guard here would drop the
+		// value and silently no-op, discarding intent and hiding core's error.
+		if ( array_key_exists( 'content', $input ) ) {
 			$request->set_param( 'content', (string) $input['content'] );
 		}
-		if ( isset( $input['author_name'] ) && '' !== $input['author_name'] ) {
+		if ( array_key_exists( 'author_name', $input ) ) {
 			$request->set_param( 'author_name', sanitize_text_field( (string) $input['author_name'] ) );
 		}
-		if ( isset( $input['author_email'] ) && '' !== $input['author_email'] ) {
-			$request->set_param( 'author_email', sanitize_email( (string) $input['author_email'] ) );
+		// Pass the raw value: the wrapped route's `check_comment_author_email`
+		// sanitize_callback validates it and returns `rest_invalid_email` on a
+		// malformed address (wrap, don't reimplement). The input schema omits
+		// `format: email` for the same reason — schema-level format validation would
+		// reject a malformed value as `ability_invalid_input` before core is reached.
+		if ( array_key_exists( 'author_email', $input ) ) {
+			$request->set_param( 'author_email', (string) $input['author_email'] );
 		}
+		// Core ignores an empty `date` (`! empty()` gate); there is no "blank the
+		// date" semantic, so an empty value is treated as omission here too.
 		if ( isset( $input['date'] ) && '' !== $input['date'] ) {
 			$request->set_param( 'date', (string) $input['date'] );
 		}
@@ -151,12 +179,17 @@ final class UpdateComment implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data       = rest_get_server()->response_to_data( $response, false );
+		$comment_id = (int) ( $data['id'] ?? $id );
 
 		return array(
-			'id'      => (int) ( $data['id'] ?? $id ),
-			'content' => (string) ( $data['content']['rendered'] ?? '' ),
-			'status'  => (string) ( $data['status'] ?? '' ),
+			'id'           => $comment_id,
+			'content'      => (string) ( $data['content']['rendered'] ?? '' ),
+			'status'       => (string) ( $data['status'] ?? '' ),
+			'author_name'  => (string) ( $data['author_name'] ?? '' ),
+			'author_email' => (string) ( $data['author_email'] ?? '' ),
+			'date'         => (string) ( $data['date'] ?? '' ),
+			'edit_link'    => (string) get_edit_comment_link( $comment_id ),
 		);
 	}
 }

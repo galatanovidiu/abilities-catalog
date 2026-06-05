@@ -17,9 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `DELETE /wp/v2/posts/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the post (bypassing the Trash). The `permission_callback`
- * mirrors the posts controller `delete_item_permissions_check`: object-level
- * `delete_post`. This ability never calls `wp_delete_post()` directly; it surfaces
- * the REST route's `WP_Error` unchanged.
+ * enforces the coarse type-level `delete_posts` capability; the object-level
+ * `delete_post` check is enforced by the wrapped route. This ability never calls
+ * `wp_delete_post()` directly; it surfaces the REST route's `WP_Error` unchanged.
  *
  * Destructive: registered, but exposed to the browser only when both the write
  * and destructive adapter settings are on. Capability remains the hard guard.
@@ -41,14 +41,15 @@ final class DeletePost implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Post', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a post by ID, bypassing the Trash. This cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a post by ID, bypassing the Trash. This cannot be undone. To remove a post recoverably, use `content/trash-post` instead.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The post ID to permanently delete.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The post ID to permanently delete. Obtain it from a list/get content ability (e.g. `content/list-posts` or `content/get-post`).', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -65,6 +66,10 @@ final class DeletePost implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted post ID.', 'abilities-catalog' ),
+					),
+					'title'   => array(
+						'type'        => 'string',
+						'description' => __( 'The title of the deleted post, so a human can confirm what was removed. No edit_link is returned because the post no longer exists.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -84,22 +89,18 @@ final class DeletePost implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_post` on the target post.
+	 * Permission check: type-level `delete_posts` as the coarse guard.
 	 *
-	 * Mirrors the REST posts controller `delete_item_permissions_check`.
+	 * Object-independent so a missing or non-existent id is not masked as a
+	 * permission failure. The object-level `delete_post` check and the specific
+	 * `rest_post_invalid_id` (404) / `rest_cannot_delete` (403) errors come from
+	 * the wrapped `DELETE /wp/v2/posts/<id>` route in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the post.
+	 * @return bool True if the current user may delete posts.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( 'delete_posts' );
 	}
 
 	/**
@@ -125,6 +126,7 @@ final class DeletePost implements Ability {
 		return array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
+			'title'   => (string) ( $data['previous']['title']['rendered'] ?? '' ),
 		);
 	}
 }

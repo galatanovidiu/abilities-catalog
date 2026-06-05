@@ -6,6 +6,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Comments;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
+use WP_Error;
 use WP_REST_Request;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -17,22 +18,29 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `POST /wp/v2/comments` via `rest_do_request()` and returns the new
  * comment's id, status, and link. A reply is the same call with a `parent`.
- * The `permission_callback` encodes the catalog capabilities: the user must be
- * logged in and able to read the target post; setting any moderation field
- * (`status`, `author`, `author_email`, `author_ip`, `author_name`) additionally
- * requires `moderate_comments`. The REST route re-checks every capability
- * underneath (defense in depth) and sanitizes content.
+ * The `permission_callback` is a coarse `is_user_logged_in()` gate. The wrapped
+ * create route enforces `read_post` (`rest_cannot_read_post`), and gates `author`
+ * (`rest_comment_invalid_author`), `author_ip`, and `status`
+ * (`rest_comment_invalid_status`) on `moderate_comments` — those surface their
+ * specific errors instead of a generic permission failure (see backlog B4). The
+ * route does NOT gate `author_name`/`author_email` (it applies them unconditionally
+ * in `prepare_item_for_database`), so this ability keeps a moderation guard for
+ * those two identity fields in `execute()` to prevent a non-moderator from spoofing
+ * the comment author.
  *
  * @since 0.2.0
  */
 final class CreateComment implements Ability {
 
 	/**
-	 * Input fields that require the `moderate_comments` capability.
+	 * Author-identity fields the wrapped create route does NOT gate on
+	 * `moderate_comments`. Setting either lets a caller spoof the stored comment
+	 * author, so this ability enforces `moderate_comments` for them in execute().
+	 * The route already gates `author`, `author_ip`, and `status` itself.
 	 *
 	 * @var string[]
 	 */
-	private const MODERATION_FIELDS = array( 'status', 'author', 'author_email', 'author_ip', 'author_name' );
+	private const UNGATED_AUTHOR_FIELDS = array( 'author_name', 'author_email' );
 
 	/**
 	 * {@inheritDoc}
@@ -78,7 +86,8 @@ final class CreateComment implements Ability {
 					),
 					'status'       => array(
 						'type'        => 'string',
-						'description' => __( 'The comment status (e.g. "approve", "hold"). Requires the moderate_comments capability.', 'abilities-catalog' ),
+						'enum'        => array( 'approve', 'hold' ),
+						'description' => __( 'The comment status ("approve" or "hold"). Requires the moderate_comments capability.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'post', 'content' ),
@@ -86,19 +95,23 @@ final class CreateComment implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status', 'link' ),
+				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new comment ID.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting comment status.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The public permalink to the comment.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the comment. Surface this so a moderator can review a held comment.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -118,34 +131,17 @@ final class CreateComment implements Ability {
 	}
 
 	/**
-	 * Permission check encoding the catalog capabilities for creating a comment.
-	 *
-	 * Requires a logged-in user who can read the target post. Setting any
-	 * moderation field additionally requires `moderate_comments`. The REST route
-	 * re-checks these underneath.
+	 * Coarse permission gate: the caller must be logged in. `read_post`, and the
+	 * `author`/`author_ip`/`status` moderation gates, are enforced by the wrapped
+	 * create route so their specific errors reach the caller (see backlog B4). The
+	 * `author_name`/`author_email` guard the route omits is applied in
+	 * {@see execute()}.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may create the requested comment.
+	 * @return bool True if the current user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		if ( ! is_user_logged_in() ) {
-			return false;
-		}
-
-		$post = absint( $input['post'] ?? 0 );
-		if ( ! $post || ! current_user_can( 'read_post', $post ) ) {
-			return false;
-		}
-
-		foreach ( self::MODERATION_FIELDS as $field ) {
-			if ( isset( $input[ $field ] ) && '' !== $input[ $field ] ) {
-				return current_user_can( 'moderate_comments' );
-			}
-		}
-
-		return true;
+		return is_user_logged_in();
 	}
 
 	/**
@@ -155,7 +151,27 @@ final class CreateComment implements Ability {
 	 * @return array<string,mixed>|\WP_Error The new comment's id, status, link, or the REST error.
 	 */
 	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
+		$input = is_array( $input ) ? $input : array();
+
+		// The wrapped create route gates author/author_ip/status but applies
+		// author_name/author_email unconditionally, so a non-moderator could spoof
+		// the stored author. Enforce moderate_comments for those two fields here.
+		if ( ! current_user_can( 'moderate_comments' ) ) {
+			foreach ( self::UNGATED_AUTHOR_FIELDS as $field ) {
+				if ( isset( $input[ $field ] ) && '' !== $input[ $field ] ) {
+					return new WP_Error(
+						'rest_comment_invalid_author',
+						sprintf(
+							/* translators: %s: Request parameter name. */
+							__( "Sorry, you are not allowed to edit '%s' for comments.", 'abilities-catalog' ),
+							$field
+						),
+						array( 'status' => rest_authorization_required_code() )
+					);
+				}
+			}
+		}
+
 		$request = new WP_REST_Request( 'POST', '/wp/v2/comments' );
 
 		if ( ! empty( $input['post'] ) ) {
@@ -174,8 +190,13 @@ final class CreateComment implements Ability {
 		if ( isset( $input['author_name'] ) && '' !== $input['author_name'] ) {
 			$request->set_param( 'author_name', sanitize_text_field( (string) $input['author_name'] ) );
 		}
+		// Pass the raw value: the wrapped route's `check_comment_author_email`
+		// sanitize_callback validates it and returns `rest_invalid_email` on a
+		// malformed address. Pre-running `sanitize_email()` here would strip an
+		// invalid value to '' and the guard above would then drop it, hiding core's
+		// validation error (wrap, don't reimplement).
 		if ( isset( $input['author_email'] ) && '' !== $input['author_email'] ) {
-			$request->set_param( 'author_email', sanitize_email( (string) $input['author_email'] ) );
+			$request->set_param( 'author_email', (string) $input['author_email'] );
 		}
 		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
 			$request->set_param( 'status', sanitize_key( (string) $input['status'] ) );
@@ -186,12 +207,14 @@ final class CreateComment implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data       = rest_get_server()->response_to_data( $response, false );
+		$comment_id = (int) ( $data['id'] ?? 0 );
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'status' => (string) ( $data['status'] ?? '' ),
-			'link'   => (string) ( $data['link'] ?? '' ),
+			'id'        => $comment_id,
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'edit_link' => (string) get_edit_comment_link( $comment_id ),
 		);
 	}
 }

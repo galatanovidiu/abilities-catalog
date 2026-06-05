@@ -38,12 +38,13 @@ parameters:
 		- # TODO: These are too noisy, we'll restore them in the future.
 			identifier: missingType.iterableValue
 
-		# `wp_get_connector()` / `wp_get_connectors()` are WP 7.0 core Connectors API
-		# functions. They exist at runtime (verified in wp-env WP 7.0) but are absent
-		# from php-stubs/wordpress-stubs ^6.9, so PHPStan cannot see them.
+		# `wp_get_connector()`, `wp_get_connectors()`, and
+		# `wp_is_connector_registered()` are WP 7.0 core Connectors API functions.
+		# They exist at runtime (verified in wp-env WP 7.0: connectors.php:23, 85, 150)
+		# but are absent from php-stubs/wordpress-stubs ^6.9, so PHPStan cannot see them.
 		-
 			identifier: function.notFound
-			message: '#Function wp_get_connectors? not found\.#'
+			message: '#Function (wp_get_connectors?|wp_is_connector_registered) not found\.#'
 			path: includes/Abilities/Core/Connectors
 
 		# export_wp() stubs type $args['author'] and $args['category'] as string, but

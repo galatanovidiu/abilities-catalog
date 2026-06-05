@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Connectors;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ConnectorState;
 use WP_Error;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,15 +15,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `connectors/get-connector`.
  *
- * Returns a single AI provider connector by ID (`wp_get_connector()`) as a
- * strict, non-secret field set: `id`, `name`, `type`, and a boolean
- * `configured` flag.
+ * Returns a single connector by ID (`wp_get_connector()`) as a strict,
+ * non-secret field set: `id`, `name`, `type`, and the distinct usability signals
+ * `configured`, `authentication_method`, `key_source`, and `connected`. Core
+ * registers AI-provider connectors plus non-AI connectors such as `akismet`, and
+ * plugins may register more via `wp_connectors_init`; this ability returns any
+ * registered connector type.
  *
  * The API key is never read into the output. Connector records do not store the
  * key value; they only carry pointers (`setting_name`, `constant_name`,
- * `env_var_name`) to where the key lives. The `configured` flag is derived from
- * the core source resolver, which returns only a source label ('env',
- * 'constant', 'database', or 'none') and never the key itself.
+ * `env_var_name`) to where the key lives. The state fields are derived by
+ * {@see ConnectorState}, which returns only labels and booleans, never the key
+ * itself:
+ *
+ * - `authentication_method` — `none` or `api_key`.
+ * - `key_source` — `env`, `constant`, `database`, or `none` (credential location).
+ * - `configured` — exact credential presence (a key source exists, or no key is
+ *   required). This replaces the previous single overstated boolean.
+ * - `connected` — actual connectivity: AI-provider registry status for
+ *   `ai_provider` connectors, key presence otherwise, `true` for no-auth connectors.
  *
  * @since 0.1.0
  */
@@ -41,14 +52,14 @@ final class GetConnector implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Connector', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single AI provider connector by ID with non-secret metadata. The API key is never returned; a boolean "configured" flag indicates whether a key is set.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single connector by ID with non-secret metadata. The API key is never returned. The "configured" flag reports exact credential presence; "authentication_method" (none|api_key), "key_source" (env|constant|database|none), and "connected" expose the distinct connector states.', 'abilities-catalog' ),
 			'category'            => 'connectors',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'string',
-						'description' => __( 'The connector identifier.', 'abilities-catalog' ),
+						'description' => __( 'The connector identifier. Discover IDs via the connectors/list-connectors ability.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -56,23 +67,37 @@ final class GetConnector implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id' ),
+				'required'             => array( 'id', 'name', 'type', 'configured', 'authentication_method', 'key_source', 'connected' ),
 				'properties'           => array(
-					'id'         => array(
+					'id'                    => array(
 						'type'        => 'string',
 						'description' => __( 'The connector identifier.', 'abilities-catalog' ),
 					),
-					'name'       => array(
+					'name'                  => array(
 						'type'        => 'string',
 						'description' => __( 'The connector display name.', 'abilities-catalog' ),
 					),
-					'type'       => array(
+					'type'                  => array(
 						'type'        => 'string',
 						'description' => __( 'The connector type, e.g. "ai_provider".', 'abilities-catalog' ),
 					),
-					'configured' => array(
+					'configured'            => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether an API key is configured for this connector. The key value itself is never returned.', 'abilities-catalog' ),
+						'description' => __( 'Whether a credential is present: a key source exists, or no key is required. The key value itself is never returned.', 'abilities-catalog' ),
+					),
+					'authentication_method' => array(
+						'type'        => 'string',
+						'enum'        => array( 'none', 'api_key' ),
+						'description' => __( 'The authentication method: "none" (no key required) or "api_key".', 'abilities-catalog' ),
+					),
+					'key_source'            => array(
+						'type'        => 'string',
+						'enum'        => array( 'env', 'constant', 'database', 'none' ),
+						'description' => __( 'Where the API key comes from: "env", "constant", "database", or "none" when no key is set or required. The key value itself is never returned.', 'abilities-catalog' ),
+					),
+					'connected'             => array(
+						'type'        => 'boolean',
+						'description' => __( 'Actual connectivity: for AI providers, whether the AI client has the provider configured; for other api_key connectors, whether a key source exists; always true for no-auth connectors.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -107,13 +132,16 @@ final class GetConnector implements Ability {
 	 * Executes the ability, returning non-secret connector metadata.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array{id:string,name:string,type:string,configured:bool}|\WP_Error The connector, or a 404 error.
+	 * @return array{id:string,name:string,type:string,configured:bool,authentication_method:string,key_source:string,connected:bool}|\WP_Error The connector, or a 404 error.
 	 */
 	public function execute( $input ) {
 		$input = is_array( $input ) ? $input : array();
 		$id    = isset( $input['id'] ) ? (string) $input['id'] : '';
 
-		$connector = wp_get_connector( $id );
+		// Pre-check registration: `wp_get_connector()` calls `_doing_it_wrong()`
+		// for any unregistered id, which emits a developer notice under WP_DEBUG
+		// on the normal not-found path. Guard with the registration check first.
+		$connector = wp_is_connector_registered( $id ) ? wp_get_connector( $id ) : null;
 
 		if ( null === $connector ) {
 			return new WP_Error(
@@ -123,59 +151,19 @@ final class GetConnector implements Ability {
 			);
 		}
 
+		// Inject the id so ConnectorState can resolve AI-provider connectivity,
+		// which core keys by connector id.
+		$connector['id'] = $id;
+		$state           = ConnectorState::resolve( $connector );
+
 		return array(
-			'id'         => $id,
-			'name'       => (string) ( $connector['name'] ?? '' ),
-			'type'       => (string) ( $connector['type'] ?? '' ),
-			'configured' => self::isConfigured( $connector ),
+			'id'                    => $id,
+			'name'                  => (string) ( $connector['name'] ?? '' ),
+			'type'                  => (string) ( $connector['type'] ?? '' ),
+			'configured'            => $state['configured'],
+			'authentication_method' => $state['authentication_method'],
+			'key_source'            => $state['key_source'],
+			'connected'             => $state['connected'],
 		);
-	}
-
-	/**
-	 * Determines whether an API key is configured for a connector.
-	 *
-	 * Connector records never store the key value; they hold pointers to where
-	 * the key lives. This method resolves only whether a key exists and never
-	 * reads or returns the key value.
-	 *
-	 * Connectors using the `none` authentication method are always treated as
-	 * configured (they need no key).
-	 *
-	 * @param array<string,mixed> $connector The connector record from `wp_get_connector()`.
-	 * @return bool True if a key is set (or none is required).
-	 */
-	private static function isConfigured( array $connector ): bool {
-		$auth = isset( $connector['authentication'] ) && is_array( $connector['authentication'] )
-			? $connector['authentication']
-			: array();
-
-		if ( ( $auth['method'] ?? '' ) !== 'api_key' ) {
-			return true;
-		}
-
-		$setting_name  = (string) ( $auth['setting_name'] ?? '' );
-		$env_var_name  = (string) ( $auth['env_var_name'] ?? '' );
-		$constant_name = (string) ( $auth['constant_name'] ?? '' );
-
-		if ( function_exists( '_wp_connectors_get_api_key_source' ) ) {
-			return 'none' !== _wp_connectors_get_api_key_source( $setting_name, $env_var_name, $constant_name );
-		}
-
-		// Fallback: detect presence only, never read the value into output.
-		if ( '' !== $env_var_name ) {
-			$env_value = getenv( $env_var_name );
-			if ( false !== $env_value && '' !== $env_value ) {
-				return true;
-			}
-		}
-
-		if ( '' !== $constant_name && defined( $constant_name ) ) {
-			$const_value = constant( $constant_name );
-			if ( is_string( $const_value ) && '' !== $const_value ) {
-				return true;
-			}
-		}
-
-		return '' !== $setting_name && '' !== (string) get_option( $setting_name, '' );
 	}
 }

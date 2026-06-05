@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Comments;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\CommentListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -17,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/comments` via `rest_do_request()` and returns the collection
  * plus its total counts. Read-only; REST enforces per-row visibility underneath.
- * Defaults `context` to `edit` so `author_email` is returned for moderators
- * (`moderate_comments`); REST silently drops edit-only fields for users without
- * the capability.
+ * Defaults `context` to `view` so any caller with the baseline capability can
+ * list comments. Pass `context=edit` to include `author_email`; core rejects the
+ * whole request with 403 unless the user has `moderate_comments`.
  *
  * @since 0.1.0
  */
@@ -89,6 +90,7 @@ final class ListComments implements Ability {
 					),
 					'orderby'      => array(
 						'type'        => 'string',
+						'enum'        => array( 'date', 'date_gmt', 'id', 'include', 'post', 'parent', 'type' ),
 						'description' => __( 'Field to sort by (e.g. "date", "id").', 'abilities-catalog' ),
 					),
 					'order'        => array(
@@ -99,8 +101,8 @@ final class ListComments implements Ability {
 					'context'      => array(
 						'type'        => 'string',
 						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'edit',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (includes author email for moderators).', 'abilities-catalog' ),
+						'default'     => 'view',
+						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (includes author email; requires "moderate_comments").', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -111,11 +113,8 @@ final class ListComments implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of comments.', 'abilities-catalog' ),
+						'items'       => CommentListShaper::commentItemSchema(),
+						'description' => __( 'The list of comments as flat summary rows. Use comments/get-comment for a single comment.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -168,7 +167,7 @@ final class ListComments implements Ability {
 		$input = is_array( $input ) ? $input : array();
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/comments' );
-		$request->set_param( 'context', $input['context'] ?? 'edit' );
+		$request->set_param( 'context', $input['context'] ?? 'view' );
 
 		if ( ! empty( $input['post'] ) && is_array( $input['post'] ) ) {
 			$request->set_param( 'post', array_map( 'absint', $input['post'] ) );
@@ -183,7 +182,7 @@ final class ListComments implements Ability {
 			$request->set_param( 'author', array_map( 'absint', $input['author'] ) );
 		}
 		if ( isset( $input['author_email'] ) ) {
-			$request->set_param( 'author_email', sanitize_email( (string) $input['author_email'] ) );
+			$request->set_param( 'author_email', (string) $input['author_email'] );
 		}
 		if ( isset( $input['search'] ) ) {
 			$request->set_param( 'search', (string) $input['search'] );
@@ -211,9 +210,10 @@ final class ListComments implements Ability {
 
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
+		$rows    = is_array( $items ) ? array_map( array( CommentListShaper::class, 'commentSummary' ), $items ) : array();
 
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

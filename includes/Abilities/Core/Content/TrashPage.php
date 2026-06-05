@@ -60,9 +60,13 @@ final class TrashPage implements Ability {
 						'type'        => 'integer',
 						'description' => __( 'The page ID.', 'abilities-catalog' ),
 					),
+					'title'  => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered title of the trashed page, so a human can confirm what was moved to Trash.', 'abilities-catalog' ),
+					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __( 'The resulting page status (trash).', 'abilities-catalog' ),
+						'description' => __( 'The resulting page status (trash). The page is recoverable from Pages → Trash. No edit_link is returned: a trashed page cannot be opened in the editor (wp-admin returns HTTP 409); it must be restored first.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -76,28 +80,24 @@ final class TrashPage implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
-				'screen'       => 'edit.php',
+				'screen'       => 'edit.php?post_type=page',
 			),
 		);
 	}
 
 	/**
-	 * Permission check: object-level `delete_post` on the target page.
+	 * Permission check: type-level `delete_pages` as the coarse guard.
 	 *
-	 * `map_meta_cap` resolves `delete_post` to the page delete capabilities.
+	 * Object-independent so a missing or non-existent id is not masked as a
+	 * permission failure. The object-level `delete_post` check and the specific
+	 * `rest_post_invalid_id` (404) / `rest_cannot_delete` (403) errors come from
+	 * the wrapped `DELETE /wp/v2/pages/<id>` route in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may trash the page.
+	 * @return bool True if the current user may trash pages.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( 'delete_pages' );
 	}
 
 	/**
@@ -108,7 +108,7 @@ final class TrashPage implements Ability {
 	 * returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The page's id and status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The page's id, title, and status, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -121,10 +121,16 @@ final class TrashPage implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$page_id = (int) ( $data['id'] ?? $id );
 
+		// No edit_link: a trashed page cannot be edited. wp-admin/post.php wp_die()s
+		// with HTTP 409 ("you cannot edit this item because it is in the Trash") for
+		// any page whose status is 'trash', so get_edit_post_link() would hand back a
+		// URL that dead-ends. The page must be restored before it can be edited.
 		return array(
-			'id'     => (int) ( $data['id'] ?? $id ),
+			'id'     => $page_id,
+			'title'  => (string) ( $data['title']['rendered'] ?? '' ),
 			'status' => (string) ( $data['status'] ?? 'trash' ),
 		);
 	}

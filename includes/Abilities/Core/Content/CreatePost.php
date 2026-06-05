@@ -48,7 +48,7 @@ final class CreatePost implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Post', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new post. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new post. Provide at least one of title, content, or excerpt; core rejects an otherwise empty post. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -59,7 +59,7 @@ final class CreatePost implements Ability {
 					),
 					'content'        => array(
 						'type'        => 'string',
-						'description' => __( 'The post content (HTML allowed; sanitized by WordPress).', 'abilities-catalog' ),
+						'description' => __( 'The post content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'        => array(
 						'type'        => 'string',
@@ -81,7 +81,8 @@ final class CreatePost implements Ability {
 					),
 					'date'           => array(
 						'type'        => 'string',
-						'description' => __( 'The publish date in site time (ISO 8601).', 'abilities-catalog' ),
+						'format'      => 'date-time',
+						'description' => __( 'The publish date in site time, as an ISO 8601 date-time string (e.g. 2024-01-31T13:45:00).', 'abilities-catalog' ),
 					),
 					'categories'     => array(
 						'type'        => 'array',
@@ -102,19 +103,45 @@ final class CreatePost implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id', 'status', 'link' ),
+				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The new post ID.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'title'          => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered post title.', 'abilities-catalog' ),
+					),
+					'link'           => array(
 						'type'        => 'string',
 						'description' => __( 'The post permalink.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'         => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting post status.', 'abilities-catalog' ),
+					),
+					'slug'           => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting post slug, after core sanitization and uniquification.', 'abilities-catalog' ),
+					),
+					'featured_media' => array(
+						'type'        => 'integer',
+						'description' => __( 'The resulting featured image attachment ID, or 0 if none was set.', 'abilities-catalog' ),
+					),
+					'categories'     => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'description' => __( 'The resulting assigned category term IDs.', 'abilities-catalog' ),
+					),
+					'tags'           => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'description' => __( 'The resulting assigned tag term IDs.', 'abilities-catalog' ),
+					),
+					'edit_link'      => array(
+						'type'        => 'string',
+						'description' => __( 'The wp-admin URL to edit the post. Surface this so a human can review the draft.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -209,12 +236,22 @@ final class CreatePost implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$post_id = (int) ( $data['id'] ?? 0 );
+
+		$categories = is_array( $data['categories'] ?? null ) ? array_map( 'intval', $data['categories'] ) : array();
+		$tags       = is_array( $data['tags'] ?? null ) ? array_map( 'intval', $data['tags'] ) : array();
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'link'   => (string) ( $data['link'] ?? '' ),
-			'status' => (string) ( $data['status'] ?? '' ),
+			'id'             => $post_id,
+			'title'          => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'           => (string) ( $data['link'] ?? '' ),
+			'status'         => (string) ( $data['status'] ?? '' ),
+			'slug'           => (string) ( $data['slug'] ?? '' ),
+			'featured_media' => (int) ( $data['featured_media'] ?? 0 ),
+			'categories'     => $categories,
+			'tags'           => $tags,
+			'edit_link'      => (string) get_edit_post_link( $post_id, 'raw' ),
 		);
 	}
 }

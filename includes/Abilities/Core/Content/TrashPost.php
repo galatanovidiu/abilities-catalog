@@ -60,9 +60,13 @@ final class TrashPost implements Ability {
 						'type'        => 'integer',
 						'description' => __( 'The post ID.', 'abilities-catalog' ),
 					),
+					'title'  => array(
+						'type'        => 'string',
+						'description' => __( 'The rendered title of the trashed post, so a human can confirm what was moved to Trash.', 'abilities-catalog' ),
+					),
 					'status' => array(
 						'type'        => 'string',
-						'description' => __( 'The resulting post status (trash).', 'abilities-catalog' ),
+						'description' => __( 'The resulting post status (trash). The post is recoverable from Posts → Trash. No edit_link is returned: a trashed post cannot be opened in the editor (wp-admin returns HTTP 409); it must be restored first.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -82,20 +86,18 @@ final class TrashPost implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_post` on the target post.
+	 * Permission check: type-level `delete_posts` as the coarse guard.
+	 *
+	 * Object-independent so a missing or non-existent id is not masked as a
+	 * permission failure. The object-level `delete_post` check and the specific
+	 * `rest_post_invalid_id` (404) / `rest_cannot_delete` (403) errors come from
+	 * the wrapped `DELETE /wp/v2/posts/<id>` route in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may trash the post.
+	 * @return bool True if the current user may trash posts.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( 'delete_posts' );
 	}
 
 	/**
@@ -106,7 +108,7 @@ final class TrashPost implements Ability {
 	 * returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The post's id and status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The post's id, title, and status, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -119,10 +121,16 @@ final class TrashPost implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$post_id = (int) ( $data['id'] ?? $id );
 
+		// No edit_link: a trashed post cannot be edited. wp-admin/post.php wp_die()s
+		// with HTTP 409 ("you cannot edit this item because it is in the Trash") for
+		// any post whose status is 'trash', so get_edit_post_link() would hand back a
+		// URL that dead-ends. The post must be restored before it can be edited.
 		return array(
-			'id'     => (int) ( $data['id'] ?? $id ),
+			'id'     => $post_id,
+			'title'  => (string) ( $data['title']['rendered'] ?? '' ),
 			'status' => (string) ( $data['status'] ?? 'trash' ),
 		);
 	}

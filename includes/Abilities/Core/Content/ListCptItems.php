@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ContentListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_Error;
 use WP_REST_Request;
@@ -16,9 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `content/list-cpt-items`.
  *
- * Generic collection reader keyed by `post_type`. Resolves the type's REST base
- * and wraps `GET /wp/v2/<rest_base>` via `rest_do_request()`. Rejects post types
- * that are not exposed in REST.
+ * Generic collection reader keyed by `post_type`. Resolves the type's REST
+ * collection route via `rest_get_route_for_post_type_items()` (honoring a custom
+ * `rest_namespace`) and wraps `GET <route>` via `rest_do_request()`. Rejects post
+ * types that are not exposed in REST.
  *
  * @since 0.1.0
  */
@@ -92,11 +94,8 @@ final class ListCptItems implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of items.', 'abilities-catalog' ),
+						'items'       => ContentListShaper::postItemSchema(),
+						'description' => __( 'The list of items as flat summary rows. Use content/get-cpt-item for a single item body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -124,7 +123,11 @@ final class ListCptItems implements Ability {
 
 	/**
 	 * Permission check: `edit_posts` cap of the type for edit-context; otherwise
-	 * any logged-in user. Rejects unknown or non-REST post types.
+	 * any logged-in user.
+	 *
+	 * For an unknown or non-REST post type it returns true so `execute()` can
+	 * surface the specific `invalid_post_type` (400) error instead of masking it as
+	 * a permission failure.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may list the type's items.
@@ -133,13 +136,9 @@ final class ListCptItems implements Ability {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : '';
 
-		if ( '' === $post_type ) {
-			return false;
-		}
-
 		$obj = get_post_type_object( $post_type );
 		if ( ! $obj || empty( $obj->show_in_rest ) ) {
-			return false;
+			return true;
 		}
 
 		$context = $input['context'] ?? 'view';
@@ -169,9 +168,16 @@ final class ListCptItems implements Ability {
 			);
 		}
 
-		$rest_base = $obj->rest_base ?: $post_type;
+		$items_route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $items_route ) {
+			return new WP_Error(
+				'invalid_post_type',
+				__( 'The requested post type does not exist or is not available in REST.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
-		$request = new WP_REST_Request( 'GET', '/wp/v2/' . $rest_base );
+		$request = new WP_REST_Request( 'GET', $items_route );
 		$request->set_param( 'context', $input['context'] ?? 'view' );
 
 		if ( isset( $input['search'] ) ) {
@@ -200,9 +206,10 @@ final class ListCptItems implements Ability {
 
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
+		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'postSummary' ), $items ) : array();
 
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
