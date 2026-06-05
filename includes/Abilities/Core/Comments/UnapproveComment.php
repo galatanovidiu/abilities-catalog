@@ -19,8 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `wp_set_comment_status()` directly rather than the REST update path: the REST
  * path always rewrites `comment_author_IP` from `REMOTE_ADDR`, corrupting the
  * stored commenter IP on every status change (see backlog B3). The
- * `permission_callback` encodes the catalog capability: `moderate_comments` OR
- * object-level `edit_comment`.
+ * `permission_callback` is a coarse `is_user_logged_in()` gate; the object-level
+ * `edit_comment` capability is enforced inside `execute()` so the caller receives
+ * the specific `rest_comment_invalid_id` 404 / `rest_cannot_edit` 403 instead of a
+ * generic permission failure (the Abilities API swallows a `WP_Error` returned
+ * from a `permission_callback`; see backlog B4).
  *
  * @since 0.2.0
  */
@@ -87,25 +90,16 @@ final class UnapproveComment implements Ability {
 	}
 
 	/**
-	 * Permission check: `moderate_comments` OR object-level `edit_comment`.
+	 * Coarse permission gate: the caller must be logged in. The object-level
+	 * `edit_comment` capability is enforced in {@see execute()} so a missing
+	 * comment surfaces as a 404 and an unauthorized edit as a 403, rather than
+	 * the Abilities API collapsing either into a generic permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may moderate the comment.
+	 * @return bool True if the current user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		return $this->canModerate( absint( $input['id'] ?? 0 ) );
-	}
-
-	/**
-	 * Whether the current user can moderate the given comment.
-	 *
-	 * @param int $id The comment ID.
-	 * @return bool True if the user has moderate_comments or edit_comment on it.
-	 */
-	private function canModerate( int $id ): bool {
-		return current_user_can( 'moderate_comments' ) || current_user_can( 'edit_comment', $id );
+		return is_user_logged_in();
 	}
 
 	/**
@@ -124,6 +118,18 @@ final class UnapproveComment implements Ability {
 				'rest_comment_invalid_id',
 				__( 'Invalid comment ID.', 'abilities-catalog' ),
 				array( 'status' => 404 )
+			);
+		}
+
+		// Object-level capability, enforced here (not in permission_callback) so the
+		// 403 reaches the caller. Mirrors core check_edit_permission
+		// (moderate_comments OR edit_comment). Placed before the no-op branch so an
+		// unauthorized user is denied even when the status change would be a no-op.
+		if ( ! current_user_can( 'moderate_comments' ) && ! current_user_can( 'edit_comment', $id ) ) {
+			return new WP_Error(
+				'rest_cannot_edit',
+				__( 'Sorry, you are not allowed to edit this comment.', 'abilities-catalog' ),
+				array( 'status' => 403 )
 			);
 		}
 

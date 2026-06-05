@@ -17,8 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `DELETE /wp/v2/comments/<id>` with `force=false` via `rest_do_request()`,
  * moving the comment to the trash (recoverable, not a permanent delete). The
- * `permission_callback` mirrors the REST `delete_item_permissions_check`, gating
- * on `check_edit_permission`: `moderate_comments` OR object-level `edit_comment`.
+ * `permission_callback` is a coarse `is_user_logged_in()` gate; the wrapped REST
+ * route enforces the object-level capability (`delete_item_permissions_check` →
+ * `check_edit_permission`: `moderate_comments` OR `edit_comment`) and surfaces the
+ * specific `rest_comment_invalid_id` 404 / `rest_cannot_delete` 403, instead of the
+ * Abilities API collapsing a `permission_callback` `WP_Error` into a generic
+ * permission failure (see backlog B4).
  * When trashing is disabled or unsupported the REST route returns a 501
  * `WP_Error`, and re-trashing an already-trashed comment returns a 410 `WP_Error`;
  * this ability surfaces both unchanged and never calls `wp_trash_comment()`
@@ -105,28 +109,16 @@ final class TrashComment implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `edit_comment`.
-	 *
-	 * Mirrors the REST `delete_item_permissions_check`, which gates on
-	 * `check_edit_permission` (`moderate_comments` OR `edit_comment`).
+	 * Coarse permission gate: the caller must be logged in. The object-level
+	 * capability is enforced by the wrapped REST route (`rest_do_request` runs the
+	 * route's own `permission_callback`), so a missing comment surfaces as a 404 and
+	 * an unauthorized trash as a 403 rather than a generic permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may trash the comment.
+	 * @return bool True if the current user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		return $this->canModerate( absint( $input['id'] ?? 0 ) );
-	}
-
-	/**
-	 * Whether the current user can moderate the given comment.
-	 *
-	 * @param int $id The comment ID.
-	 * @return bool True if the user has moderate_comments or edit_comment on it.
-	 */
-	private function canModerate( int $id ): bool {
-		return current_user_can( 'moderate_comments' ) || current_user_can( 'edit_comment', $id );
+		return is_user_logged_in();
 	}
 
 	/**

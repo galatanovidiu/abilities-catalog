@@ -17,8 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `DELETE /wp/v2/comments/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the comment (bypassing the trash). The `permission_callback`
- * mirrors the comments controller `delete_item_permissions_check`, which gates on
- * `check_edit_permission`: `moderate_comments` OR object-level `edit_comment`. This
+ * is a coarse `is_user_logged_in()` gate; the wrapped REST route enforces the
+ * object-level capability (`delete_item_permissions_check` → `check_edit_permission`:
+ * `moderate_comments` OR `edit_comment`) and surfaces the specific
+ * `rest_comment_invalid_id` 404 / `rest_cannot_delete` 403, instead of the Abilities
+ * API collapsing a `permission_callback` `WP_Error` into a generic permission
+ * failure (see backlog B4). This
  * ability never calls `wp_delete_comment()` directly; it surfaces the REST route's
  * `WP_Error` unchanged. The output flattens a non-sensitive subset of the deleted
  * comment's prior data (`previous`) so a caller can describe what was removed;
@@ -104,23 +108,16 @@ final class DeleteComment implements Ability {
 	}
 
 	/**
-	 * Permission check: `moderate_comments` OR object-level `edit_comment`.
-	 *
-	 * Mirrors the REST comments controller `delete_item_permissions_check`, which
-	 * gates on `check_edit_permission`.
+	 * Coarse permission gate: the caller must be logged in. The object-level
+	 * capability is enforced by the wrapped REST route (`rest_do_request` runs the
+	 * route's own `permission_callback`), so a missing comment surfaces as a 404 and
+	 * an unauthorized delete as a 403 rather than a generic permission failure.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the comment.
+	 * @return bool True if the current user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'moderate_comments' ) || current_user_can( 'edit_comment', $id );
+		return is_user_logged_in();
 	}
 
 	/**

@@ -81,13 +81,76 @@ final class ApproveCommentTest extends TestCase {
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
 	}
 
-	public function test_non_moderator_is_denied(): void {
+	/**
+	 * A logged-in user without edit permission on the comment gets a specific
+	 * `rest_cannot_edit` 403 from execute(), not the generic gate failure. The
+	 * object-level capability moved out of permission_callback (backlog B4).
+	 */
+	public function test_non_moderator_is_denied_with_403(): void {
 		$this->actingAs('subscriber');
 
 		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertSame('rest_cannot_edit', $result->get_error_code());
+		$this->assertSame(403, $result->get_error_data()['status']);
+	}
+
+	/**
+	 * B4 regression: a non-moderator passing a missing comment id receives the
+	 * specific 404, not a generic permission failure. The id-validity check
+	 * (404) is ordered before the capability check (403) in execute().
+	 */
+	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
+		$this->actingAs('subscriber');
+
+		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => 99999999));
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_invalid_id', $result->get_error_code());
+		$this->assertSame(404, $result->get_error_data()['status']);
+	}
+
+	/**
+	 * The 403 fires even when the status change would be a no-op: an unauthorized
+	 * user targeting an already-approved comment is denied, proving the capability
+	 * check sits before the no-op skip branch (no information leak, no mutation).
+	 */
+	public function test_non_moderator_denied_on_already_approved_noop(): void {
+		$approved_id = self::factory()->comment->create(
+			array(
+				'comment_post_ID'  => $this->post_id,
+				'comment_content'  => 'Already approved.',
+				'comment_approved' => '1',
+			)
+		);
+
+		$this->actingAs('subscriber');
+
+		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $approved_id));
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_cannot_edit', $result->get_error_code());
+	}
+
+	/**
+	 * The execute() guard mirrors core check_edit_permission (moderate_comments OR
+	 * edit_comment). A user holding `moderate_comments` but without post-edit caps
+	 * (so `edit_comment`, which maps to `edit_post`, is false) must still be allowed.
+	 * Guards against regressing a moderator who cannot edit the parent post — e.g. an
+	 * orphaned comment whose post is gone.
+	 */
+	public function test_moderate_comments_only_user_can_approve(): void {
+		$user_id = self::factory()->user->create(array('role' => 'subscriber'));
+		get_user_by('id', $user_id)->add_cap('moderate_comments');
+		wp_set_current_user($user_id);
+
+		$this->assertFalse(current_user_can('edit_comment', $this->comment_id));
+
+		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
+
+		$this->assertIsArray($result);
+		$this->assertSame('approved', $result['status']);
 	}
 
 	/**

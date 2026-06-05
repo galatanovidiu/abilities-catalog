@@ -98,4 +98,91 @@ final class CreateCommentTest extends TestCase {
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
 	}
+
+	/**
+	 * A logged-in non-moderator can still post an ordinary comment on a readable
+	 * post. Relaxing the gate to is_user_logged_in() must not break legitimate use.
+	 */
+	public function test_non_moderator_can_create_plain_comment(): void {
+		$this->actingAs('subscriber');
+
+		$result = wp_get_ability('comments/create-comment')->execute(
+			array(
+				'post'    => $this->post_id,
+				'content' => 'A subscriber comment.',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertGreaterThan(0, $result['id']);
+	}
+
+	/**
+	 * Security guard: the wrapped create route does NOT gate author_name on
+	 * moderate_comments, so a non-moderator could otherwise spoof the stored author.
+	 * This ability blocks it in execute() with a specific rest_comment_invalid_author
+	 * 403, and no comment is created.
+	 */
+	public function test_non_moderator_cannot_spoof_author_name(): void {
+		$this->actingAs('subscriber');
+
+		$before = get_comments(array('post_id' => $this->post_id, 'count' => true));
+
+		$result = wp_get_ability('comments/create-comment')->execute(
+			array(
+				'post'        => $this->post_id,
+				'content'     => 'Spoofed identity attempt.',
+				'author_name' => 'Someone Else',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_invalid_author', $result->get_error_code());
+		$this->assertSame(403, $result->get_error_data()['status']);
+		$this->assertSame(
+			$before,
+			get_comments(array('post_id' => $this->post_id, 'count' => true)),
+			'No comment should be created when author spoofing is rejected.'
+		);
+	}
+
+	/**
+	 * Companion to the author_name guard: author_email is equally ungated by the
+	 * wrapped route and must be blocked in execute() for a non-moderator.
+	 */
+	public function test_non_moderator_cannot_spoof_author_email(): void {
+		$this->actingAs('subscriber');
+
+		$result = wp_get_ability('comments/create-comment')->execute(
+			array(
+				'post'         => $this->post_id,
+				'content'      => 'Spoofed email attempt.',
+				'author_email' => 'victim@example.com',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_invalid_author', $result->get_error_code());
+		$this->assertSame(403, $result->get_error_data()['status']);
+	}
+
+	/**
+	 * B4 win: a non-moderator setting `status` now reaches the wrapped route, which
+	 * surfaces its specific `rest_comment_invalid_status` error instead of the
+	 * Abilities API collapsing it into a generic permission failure.
+	 */
+	public function test_non_moderator_setting_status_gets_specific_route_error(): void {
+		$this->actingAs('subscriber');
+
+		$result = wp_get_ability('comments/create-comment')->execute(
+			array(
+				'post'    => $this->post_id,
+				'content' => 'Trying to self-approve.',
+				'status'  => 'approve',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_comment_invalid_status', $result->get_error_code());
+	}
 }

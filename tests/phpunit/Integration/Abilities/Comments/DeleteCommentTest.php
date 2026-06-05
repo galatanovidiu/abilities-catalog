@@ -89,4 +89,33 @@ final class DeleteCommentTest extends TestCase {
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
 		$this->assertNotNull( get_comment( $this->comment_id ) );
 	}
+
+	/**
+	 * A logged-in non-moderator gets the wrapped route's specific `rest_cannot_delete`
+	 * 403, not the generic gate failure, and the comment survives (backlog B4).
+	 */
+	public function test_non_moderator_is_denied_with_403(): void {
+		$this->actingAs( 'subscriber' );
+
+		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] );
+		$this->assertNotNull( get_comment( $this->comment_id ) );
+	}
+
+	/**
+	 * B4 regression: a non-moderator passing a missing comment id receives the
+	 * wrapped route's specific 404, not a generic permission failure.
+	 */
+	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
+		$this->actingAs( 'subscriber' );
+
+		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => 99999999 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_comment_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
 }
