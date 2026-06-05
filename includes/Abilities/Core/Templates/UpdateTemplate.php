@@ -52,14 +52,15 @@ final class UpdateTemplate implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Template', 'abilities-catalog' ),
-			'description'         => __( 'Updates a site-editor template or template part by its "theme//slug" id. Creates or replaces a database override that changes site-wide layout. Only the provided fields change.', 'abilities-catalog' ),
+			'description'         => __( 'Updates a site-editor template or template part by its "theme//slug" id. Creates or replaces a database override that changes site-wide layout. Only the provided fields change; sending a field as an empty string clears it. Returns the type and edit_link (the Site Editor URL) — surface edit_link so a human can open the result.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'string',
-						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//home").', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//home"). Discover ids via templates/list-templates or templates/lookup-template.', 'abilities-catalog' ),
 					),
 					'post_type'   => array(
 						'type'        => 'string',
@@ -85,19 +86,31 @@ final class UpdateTemplate implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'id' ),
+				'required'             => array( 'id', 'type' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'string',
 						'description' => __( 'The template id in "theme//slug" form.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'type'      => array(
+						'type'        => 'string',
+						'description' => __( 'The post type of the updated template: "wp_template" or "wp_template_part".', 'abilities-catalog' ),
+					),
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting template status.', 'abilities-catalog' ),
 					),
-					'title'  => array(
+					'title'     => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting template title.', 'abilities-catalog' ),
+					),
+					'area'      => array(
+						'type'        => 'string',
+						'description' => __( 'The template part area (e.g. "header", "footer", "uncategorized"). Empty for a wp_template.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The Site Editor URL where a human can open and edit the template.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -144,16 +157,19 @@ final class UpdateTemplate implements Ability {
 	public function execute( $input ) {
 		$input     = is_array( $input ) ? $input : array();
 		$id        = (string) ( $input['id'] ?? '' );
-		$post_type = $input['post_type'] ?? 'wp_template';
+		$post_type = 'wp_template_part' === ( $input['post_type'] ?? 'wp_template' ) ? 'wp_template_part' : 'wp_template';
 		$base      = 'wp_template_part' === $post_type ? 'template-parts' : 'templates';
 
 		// The "theme//slug" id is part of the route path; do not URL-encode the "//".
 		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $base . '/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them
-		// (content via the block-markup pipeline, etc.).
+		// (content via the block-markup pipeline, etc.). Pass a field only when the
+		// caller actually supplied the key; an empty string is a deliberate clear,
+		// so it is forwarded unchanged (core applies any present field, including
+		// ''). This diverges from create-template, where a blank field is skipped.
 		foreach ( array( 'content', 'title', 'description' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
@@ -172,10 +188,22 @@ final class UpdateTemplate implements Ability {
 			$title = $title['rendered'] ?? '';
 		}
 
+		// Build the edit link from core's canonical helper so it matches the
+		// registered template `_edit_link` and runs through the `get_edit_post_link`
+		// filter. The update response carries `wp_id` as an int (the underlying
+		// post ID).
+		$wp_id     = (int) ( $data['wp_id'] ?? 0 );
+		$edit_link = 0 === $wp_id
+			? ''
+			: (string) get_edit_post_link( $wp_id, 'raw' );
+
 		return array(
-			'id'     => (string) ( $data['id'] ?? $id ),
-			'status' => (string) ( $data['status'] ?? '' ),
-			'title'  => (string) $title,
+			'id'        => (string) ( $data['id'] ?? $id ),
+			'type'      => (string) ( $data['type'] ?? $post_type ),
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'title'     => (string) $title,
+			'area'      => (string) ( $data['area'] ?? '' ),
+			'edit_link' => $edit_link,
 		);
 	}
 }
