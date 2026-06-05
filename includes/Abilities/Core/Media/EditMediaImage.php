@@ -43,18 +43,19 @@ final class EditMediaImage implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Edit Media Image', 'abilities-catalog' ),
-			'description'         => __( 'Applies rotation and/or crop transforms to an existing image attachment, creating a new edited attachment. The original image is preserved.', 'abilities-catalog' ),
+			'description'         => __( 'Applies flip, rotation, and/or crop transforms to an existing image attachment, creating a new edited attachment. The original image is preserved.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'        => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The image attachment ID to edit.', 'abilities-catalog' ),
 					),
 					'src'       => array(
 						'type'        => 'string',
-						'description' => __( 'URL to the image file being edited. Must match the attachment\'s image source.', 'abilities-catalog' ),
+						'description' => __( 'URL to the image file being edited. May be the URL of the attachment\'s full-size, original, or any registered sub-size file.', 'abilities-catalog' ),
 					),
 					'rotation'  => array(
 						'type'        => 'integer',
@@ -91,9 +92,102 @@ final class EditMediaImage implements Ability {
 						'minItems'    => 1,
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'type', 'args' ),
+							'additionalProperties' => false,
+							'oneOf'                => array(
+								array(
+									'title'      => __( 'Flip', 'abilities-catalog' ),
+									'properties' => array(
+										'type' => array(
+											'type'        => 'string',
+											'enum'        => array( 'flip' ),
+											'description' => __( 'Flip type.', 'abilities-catalog' ),
+										),
+										'args' => array(
+											'type'        => 'object',
+											'required'    => array( 'flip' ),
+											'additionalProperties' => false,
+											'properties'  => array(
+												'flip' => array(
+													'type' => 'object',
+													'required' => array( 'horizontal', 'vertical' ),
+													'additionalProperties' => false,
+													'properties' => array(
+														'horizontal' => array(
+															'type'        => 'boolean',
+															'description' => __( 'Whether to flip in the horizontal direction.', 'abilities-catalog' ),
+														),
+														'vertical'   => array(
+															'type'        => 'boolean',
+															'description' => __( 'Whether to flip in the vertical direction.', 'abilities-catalog' ),
+														),
+													),
+													'description' => __( 'Flip direction.', 'abilities-catalog' ),
+												),
+											),
+											'description' => __( 'Flip arguments.', 'abilities-catalog' ),
+										),
+									),
+								),
+								array(
+									'title'      => __( 'Rotation', 'abilities-catalog' ),
+									'properties' => array(
+										'type' => array(
+											'type'        => 'string',
+											'enum'        => array( 'rotate' ),
+											'description' => __( 'Rotation type.', 'abilities-catalog' ),
+										),
+										'args' => array(
+											'type'        => 'object',
+											'required'    => array( 'angle' ),
+											'additionalProperties' => false,
+											'properties'  => array(
+												'angle' => array(
+													'type' => 'number',
+													'description' => __( 'Angle to rotate clockwise in degrees.', 'abilities-catalog' ),
+												),
+											),
+											'description' => __( 'Rotation arguments.', 'abilities-catalog' ),
+										),
+									),
+								),
+								array(
+									'title'      => __( 'Crop', 'abilities-catalog' ),
+									'properties' => array(
+										'type' => array(
+											'type'        => 'string',
+											'enum'        => array( 'crop' ),
+											'description' => __( 'Crop type.', 'abilities-catalog' ),
+										),
+										'args' => array(
+											'type'        => 'object',
+											'required'    => array( 'left', 'top', 'width', 'height' ),
+											'additionalProperties' => false,
+											'properties'  => array(
+												'left'   => array(
+													'type' => 'number',
+													'description' => __( 'Horizontal position from the left to begin the crop as a percentage of the image width.', 'abilities-catalog' ),
+												),
+												'top'    => array(
+													'type' => 'number',
+													'description' => __( 'Vertical position from the top to begin the crop as a percentage of the image height.', 'abilities-catalog' ),
+												),
+												'width'  => array(
+													'type' => 'number',
+													'description' => __( 'Width of the crop as a percentage of the image width.', 'abilities-catalog' ),
+												),
+												'height' => array(
+													'type' => 'number',
+													'description' => __( 'Height of the crop as a percentage of the image height.', 'abilities-catalog' ),
+												),
+											),
+											'description' => __( 'Crop arguments.', 'abilities-catalog' ),
+										),
+									),
+								),
+							),
 						),
-						'description' => __( 'Array of image edits ({type, args}). Takes precedence over rotation/crop fields.', 'abilities-catalog' ),
+						'description' => __( 'Array of image edits ({type, args}). Each item is a flip, rotate, or crop modifier. Takes precedence over the deprecated rotation/crop fields.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id', 'src' ),
