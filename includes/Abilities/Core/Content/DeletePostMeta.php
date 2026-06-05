@@ -136,28 +136,30 @@ final class DeletePostMeta implements Ability {
 
 		$allowed = PostMetaKeys::forPostType( $post->post_type );
 
-		foreach ( $keys as $key ) {
-			if ( ! isset( $allowed[ $key ] ) ) {
+		foreach ( $keys as $name ) {
+			if ( ! isset( $allowed[ $name ] ) ) {
 				return new WP_Error(
 					'rest_post_meta_unknown_key',
 					/* translators: %s: meta key. */
-					sprintf( __( 'The meta key "%s" is not registered with show_in_rest for this post type and cannot be deleted.', 'abilities-catalog' ), $key ),
+					sprintf( __( 'The meta key "%s" is not registered with show_in_rest for this post type and cannot be deleted.', 'abilities-catalog' ), $name ),
 					array( 'status' => 400 )
 				);
 			}
 
-			if ( ! current_user_can( 'delete_post_meta', $id, $key ) ) {
+			// The per-key capability is checked against the storage key, matching
+			// core (class-wp-rest-meta-fields.php:238).
+			if ( ! current_user_can( 'delete_post_meta', $id, $allowed[ $name ]['storage_key'] ) ) {
 				return new WP_Error(
 					'rest_cannot_delete_post_meta',
 					/* translators: %s: meta key. */
-					sprintf( __( 'You are not allowed to delete the meta key "%s".', 'abilities-catalog' ), $key ),
+					sprintf( __( 'You are not allowed to delete the meta key "%s".', 'abilities-catalog' ), $name ),
 					array( 'status' => 403 )
 				);
 			}
 		}
 
-		foreach ( $keys as $key ) {
-			delete_post_meta( $id, $key );
+		foreach ( $keys as $name ) {
+			delete_post_meta( $id, $allowed[ $name ]['storage_key'] );
 		}
 
 		return array(

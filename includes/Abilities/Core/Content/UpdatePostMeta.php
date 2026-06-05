@@ -136,32 +136,36 @@ final class UpdatePostMeta implements Ability {
 
 		$allowed = PostMetaKeys::forPostType( $post->post_type );
 
-		foreach ( $values as $key => $value ) {
-			$key = (string) $key;
-			if ( ! isset( $allowed[ $key ] ) ) {
+		foreach ( $values as $name => $value ) {
+			$name = (string) $name;
+			if ( ! isset( $allowed[ $name ] ) ) {
 				return new WP_Error(
 					'rest_post_meta_unknown_key',
 					/* translators: %s: meta key. */
-					sprintf( __( 'The meta key "%s" is not registered with show_in_rest for this post type and cannot be written.', 'abilities-catalog' ), $key ),
+					sprintf( __( 'The meta key "%s" is not registered with show_in_rest for this post type and cannot be written.', 'abilities-catalog' ), $name ),
 					array( 'status' => 400 )
 				);
 			}
 
-			if ( ! current_user_can( 'edit_post_meta', $id, $key ) ) {
+			// The per-key capability is checked against the storage key, matching
+			// core (class-wp-rest-meta-fields.php:283).
+			if ( ! current_user_can( 'edit_post_meta', $id, $allowed[ $name ]['storage_key'] ) ) {
 				return new WP_Error(
 					'rest_cannot_update_post_meta',
 					/* translators: %s: meta key. */
-					sprintf( __( 'You are not allowed to edit the meta key "%s".', 'abilities-catalog' ), $key ),
+					sprintf( __( 'You are not allowed to edit the meta key "%s".', 'abilities-catalog' ), $name ),
 					array( 'status' => 403 )
 				);
 			}
 		}
 
 		$applied = array();
-		foreach ( $values as $key => $value ) {
-			$key = (string) $key;
-			update_post_meta( $id, $key, $value );
-			$applied[ $key ] = get_post_meta( $id, $key, $allowed[ $key ]['single'] );
+		foreach ( $values as $name => $value ) {
+			$name        = (string) $name;
+			$shape       = $allowed[ $name ];
+			$storage_key = $shape['storage_key'];
+			update_post_meta( $id, $storage_key, $value );
+			$applied[ $name ] = PostMetaKeys::castForResponse( get_post_meta( $id, $storage_key, $shape['single'] ), $shape );
 		}
 
 		return array(

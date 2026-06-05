@@ -123,12 +123,14 @@ final class GetPostMeta implements Ability {
 			: array_keys( $allowed );
 
 		$meta = array();
-		foreach ( $requested as $key ) {
-			if ( ! isset( $allowed[ $key ] ) ) {
+		foreach ( $requested as $name ) {
+			if ( ! isset( $allowed[ $name ] ) ) {
 				continue;
 			}
 
-			$meta[ $key ] = get_post_meta( $id, $key, $allowed[ $key ]['single'] );
+			$shape         = $allowed[ $name ];
+			$raw           = get_post_meta( $id, $shape['storage_key'], $shape['single'] );
+			$meta[ $name ] = PostMetaKeys::castForResponse( $raw, $shape );
 		}
 
 		return array(
