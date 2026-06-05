@@ -88,6 +88,78 @@ final class PostTermsTest extends TestCase {
 		$this->assertContains( $this->cat_b, $second['term_ids'] );
 	}
 
+	public function test_attach_replace_mode_swaps_terms(): void {
+		$this->actingAs( 'administrator' );
+		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_b ),
+				'append'   => false,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertNotContains( $this->cat_a, $result['term_ids'] );
+		$this->assertContains( $this->cat_b, $result['term_ids'] );
+	}
+
+	public function test_attach_output_shape(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame(
+			array( 'post_id', 'taxonomy', 'term_ids', 'edit_link' ),
+			array_keys( $result )
+		);
+		$this->assertSame( $this->post_id, $result['post_id'] );
+		$this->assertSame( 'category', $result['taxonomy'] );
+		$this->assertIsArray( $result['term_ids'] );
+		$this->assertContainsOnly( 'int', $result['term_ids'] );
+		$this->assertIsString( $result['edit_link'] );
+	}
+
+	public function test_attach_taxonomy_not_on_post_type_returns_error(): void {
+		$this->actingAs( 'administrator' );
+
+		// Taxonomy exists (so the permission gate passes) but is registered for
+		// pages only, not the post type under test.
+		register_taxonomy(
+			'pages_only_tax',
+			array( 'page' ),
+			array( 'capabilities' => array( 'assign_terms' => 'edit_posts' ) )
+		);
+		$term_id = self::factory()->term->create(
+			array(
+				'taxonomy' => 'pages_only_tax',
+				'slug'     => 'pages-term',
+			)
+		);
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'pages_only_tax',
+				'terms'    => array( $term_id ),
+			)
+		);
+
+		unregister_taxonomy( 'pages_only_tax' );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_taxonomy_invalid', $result->get_error_code() );
+	}
+
 	public function test_attach_missing_term_returns_error(): void {
 		$this->actingAs( 'administrator' );
 
