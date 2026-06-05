@@ -17,7 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T2 destructive write ability: `plugins/activate-plugin`.
  *
  * Wraps `POST /wp/v2/plugins/<plugin>` with `status=active` via `rest_do_request()`,
- * activating an installed plugin. Activating a plugin runs its code, so this ability
+ * activating an installed plugin. This performs site-level activation only; it cannot
+ * network-activate, so on multisite a network-only plugin is rejected by core with
+ * `rest_network_only_plugin`. Activating a plugin runs its code, so this ability
  * is annotated destructive and is exposed to the browser only when the adapter's
  * write AND destructive settings are both on. The `plugin` input is the plugin file
  * path without the `.php` extension (for example `akismet/akismet`); the route is
@@ -42,7 +44,7 @@ final class ActivatePlugin implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Activate Plugin', 'abilities-catalog' ),
-			'description'         => __( 'Activates an installed plugin by its file path. Activating a plugin runs its code.', 'abilities-catalog' ),
+			'description'         => __( 'Activates an installed plugin by its file path (site-level activation only; network activation is not supported). Activating a plugin runs its code.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -50,6 +52,8 @@ final class ActivatePlugin implements Ability {
 					'plugin' => array(
 						'type'        => 'string',
 						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 					),
 				),
 				'required'             => array( 'plugin' ),
@@ -65,7 +69,12 @@ final class ActivatePlugin implements Ability {
 					),
 					'status' => array(
 						'type'        => 'string',
+						'enum'        => array( 'inactive', 'active', 'network-active' ),
 						'description' => __( 'The resulting plugin activation status.', 'abilities-catalog' ),
+					),
+					'name'   => array(
+						'type'        => 'string',
+						'description' => __( 'The plugin name.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -145,6 +154,7 @@ final class ActivatePlugin implements Ability {
 		return array(
 			'plugin' => (string) ( $data['plugin'] ?? $plugin ),
 			'status' => (string) ( $data['status'] ?? '' ),
+			'name'   => (string) ( $data['name'] ?? '' ),
 		);
 	}
 }
