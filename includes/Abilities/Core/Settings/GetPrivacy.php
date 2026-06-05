@@ -34,7 +34,7 @@ final class GetPrivacy implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Privacy Settings', 'abilities-catalog' ),
-			'description'         => __( 'Returns the Privacy Settings screen value: the page ID assigned as the privacy policy page.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the Privacy Settings screen value: the configured privacy policy page ID (0 if unset). A nonzero ID may point to a missing or trashed page.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -43,7 +43,7 @@ final class GetPrivacy implements Ability {
 				'properties'           => array(
 					'page_for_privacy_policy' => array(
 						'type'        => 'integer',
-						'description' => __( 'The page ID set as the privacy policy page; 0 if none.', 'abilities-catalog' ),
+						'description' => __( 'The configured privacy policy page ID (0 if unset). A nonzero ID may point to a missing or trashed page.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -79,7 +79,7 @@ final class GetPrivacy implements Ability {
 	 */
 	public function execute( $input = null ) {
 		return array(
-			'page_for_privacy_policy' => absint( get_option( 'wp_page_for_privacy_policy' ) ),
+			'page_for_privacy_policy' => (int) get_option( 'wp_page_for_privacy_policy' ),
 		);
 	}
 }
