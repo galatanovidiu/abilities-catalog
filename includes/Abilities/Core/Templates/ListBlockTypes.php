@@ -16,11 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `templates/list-block-types`.
  *
  * Wraps `GET /wp/v2/block-types` via `rest_do_request()` and shapes the result.
- * Returns the registered block types available on the site (`core/paragraph`,
- * `core/heading`, and any plugin- or theme-registered blocks), each flattened to
- * its name, title, category, and dynamic flag. Use this to discover which blocks
- * an agent may compose into Gutenberg block markup before creating or updating
- * content. Read-only.
+ * Returns a lightweight overview of the block types registered on the site
+ * (`core/paragraph`, `core/heading`, and any plugin- or theme-registered blocks),
+ * each flattened to its name, title, category, and dynamic flag. Use this to
+ * discover which blocks exist. It does not return block attributes, supports, or
+ * nesting rules, so it is not sufficient on its own to compose attribute-correct
+ * block markup. Read-only.
  *
  * @since 0.5.0
  */
@@ -39,7 +40,7 @@ final class ListBlockTypes implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Block Types', 'abilities-catalog' ),
-			'description'         => __( 'Lists the block types registered on the site (core, plugin, and theme blocks). Use this to discover which blocks exist before composing Gutenberg block markup for new or updated content.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the block types registered on the site (core, plugin, and theme blocks) as a lightweight registry overview: name, title, category, and dynamic flag. Use this to discover which blocks exist. It does not return block attributes, supports, or nesting rules, so it is not sufficient on its own to compose attribute-correct block markup.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -50,7 +51,7 @@ final class ListBlockTypes implements Ability {
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
-							'required'             => array( 'name' ),
+							'required'             => array( 'name', 'title', 'category', 'is_dynamic' ),
 							'properties'           => array(
 								'name'       => array(
 									'type'        => 'string',
