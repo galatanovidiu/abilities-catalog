@@ -33,12 +33,12 @@ final class GetPermalinks implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Permalink Settings', 'abilities-catalog' ),
-			'description'         => __( 'Returns the Permalink Settings screen values: the permalink structure and the category and tag base prefixes.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the stored permalink option values: the permalink structure and the category and tag base prefixes. On a multisite subdirectory main site these may include a "/blog" prefix that the Permalink Settings screen displays separately.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'permalink_structure' ),
+				'required'             => array( 'permalink_structure', 'category_base', 'tag_base' ),
 				'properties'           => array(
 					'permalink_structure' => array(
 						'type'        => 'string',
