@@ -13,8 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `settings/get-reading`.
  *
- * Returns the Reading Settings screen values, read directly from options.
- * Net-new read: no REST route is dispatched.
+ * Returns the stored Reading Settings option values, read directly from options.
+ * These normally match the Reading Settings screen, but the screen's own
+ * normalization guard for `show_on_front` is not re-run here. Net-new read: no
+ * REST route is dispatched.
  *
  * @since 0.1.0
  */
@@ -33,24 +35,25 @@ final class GetReading implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Reading Settings', 'abilities-catalog' ),
-			'description'         => __( 'Returns the Reading Settings screen values: front page display, front and posts page IDs, posts per page and per RSS feed, and the search-engine visibility flag.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the stored Reading Settings option values (which normally match the Reading Settings screen): front page display, front and posts page IDs, posts per page and per RSS feed, and the search-engine visibility flag.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'show_on_front' ),
+				'required'             => array( 'show_on_front', 'page_on_front', 'page_for_posts', 'posts_per_page', 'posts_per_rss', 'blog_public' ),
 				'properties'           => array(
 					'show_on_front'  => array(
 						'type'        => 'string',
+						'enum'        => array( 'posts', 'page' ),
 						'description' => __( 'What to show on the front page: "posts" or "page".', 'abilities-catalog' ),
 					),
 					'page_on_front'  => array(
 						'type'        => 'integer',
-						'description' => __( 'The page ID used as the static front page.', 'abilities-catalog' ),
+						'description' => __( 'The page ID used as the static front page. 0 means no page is assigned.', 'abilities-catalog' ),
 					),
 					'page_for_posts' => array(
 						'type'        => 'integer',
-						'description' => __( 'The page ID used to display the latest posts.', 'abilities-catalog' ),
+						'description' => __( 'The page ID used to display the latest posts. 0 means no page is assigned.', 'abilities-catalog' ),
 					),
 					'posts_per_page' => array(
 						'type'        => 'integer',
