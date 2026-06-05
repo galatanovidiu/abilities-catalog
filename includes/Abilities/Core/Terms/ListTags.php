@@ -35,7 +35,7 @@ final class ListTags implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Tags', 'abilities-catalog' ),
-			'description'         => __( 'Returns post-tag terms, optionally filtered and paginated.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a paginated list of post-tag terms, optionally filtered by search string. Each item is a raw tag term object; the result includes "total" and "total_pages" counts. Use this for the "post_tag" taxonomy; for the "category" taxonomy use terms/list-categories, and for an arbitrary taxonomy use terms/list-terms.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -76,7 +76,7 @@ final class ListTags implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'items' ),
+				'required'             => array( 'items', 'total', 'total_pages' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
