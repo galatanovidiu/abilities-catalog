@@ -76,17 +76,21 @@ final class InstallFontFamily implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'   => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The new font family post ID.', 'abilities-catalog' ),
 					),
-					'slug' => array(
+					'slug'        => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting font family slug.', 'abilities-catalog' ),
 					),
-					'name' => array(
+					'name'        => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting font family name.', 'abilities-catalog' ),
+					),
+					'font_family' => array(
+						'type'        => 'string',
+						'description' => __( 'The stored CSS font-family value, as sanitized by WordPress.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -100,7 +104,7 @@ final class InstallFontFamily implements Ability {
 					'idempotent'  => false,
 				),
 				'show_in_rest' => true,
-				'screen'       => 'site-editor.php',
+				'screen'       => 'font-library.php',
 			),
 		);
 	}
@@ -157,9 +161,10 @@ final class InstallFontFamily implements Ability {
 		$out_settings = is_array( $data['font_family_settings'] ?? null ) ? $data['font_family_settings'] : array();
 
 		return array(
-			'id'   => (int) ( $data['id'] ?? 0 ),
-			'slug' => (string) ( $out_settings['slug'] ?? $slug ),
-			'name' => (string) ( $out_settings['name'] ?? $name ),
+			'id'          => (int) ( $data['id'] ?? 0 ),
+			'slug'        => (string) ( $out_settings['slug'] ?? $slug ),
+			'name'        => (string) ( $out_settings['name'] ?? $name ),
+			'font_family' => (string) ( $out_settings['fontFamily'] ?? $font_family ),
 		);
 	}
 }
