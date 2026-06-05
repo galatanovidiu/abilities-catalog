@@ -50,10 +50,18 @@ final class ListShapeTest extends TestCase {
 
 	public function test_list_pages_returns_shaped_rows(): void {
 		$this->actingAs( 'administrator' );
+		$parent_id = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+			)
+		);
 		self::factory()->post->create(
 			array(
 				'post_type'   => 'page',
 				'post_status' => 'publish',
+				'post_parent' => $parent_id,
+				'menu_order'  => 5,
 			)
 		);
 
@@ -63,7 +71,25 @@ final class ListShapeTest extends TestCase {
 		$this->assertNotEmpty( $result['items'] );
 		foreach ( $result['items'] as $row ) {
 			$this->assertShapedRow( $row );
+			// Page-specific fields must be present on every row.
+			$this->assertArrayHasKey( 'parent', $row );
+			$this->assertIsInt( $row['parent'] );
+			$this->assertArrayHasKey( 'menu_order', $row );
+			$this->assertIsInt( $row['menu_order'] );
+			$this->assertArrayHasKey( 'template', $row );
+			$this->assertIsString( $row['template'] );
 		}
+
+		// The child page exposes its parent and menu order.
+		$child = null;
+		foreach ( $result['items'] as $row ) {
+			if ( $parent_id === $row['parent'] ) {
+				$child = $row;
+				break;
+			}
+		}
+		$this->assertNotNull( $child, 'The child page should report its parent ID.' );
+		$this->assertSame( 5, $child['menu_order'] );
 	}
 
 	public function test_list_cpt_items_excludes_body_and_reports_total(): void {

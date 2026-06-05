@@ -105,6 +105,49 @@ final class ContentListShaper {
 	}
 
 	/**
+	 * Flat summary row for a page REST item.
+	 *
+	 * Extends {@see self::postSummary()} with the page-specific fields the core
+	 * `/wp/v2/pages` route exposes: hierarchy (`parent`), ordering (`menu_order`),
+	 * and the assigned page `template`. Lets an agent read the page tree and
+	 * ordering without a follow-up `content/get-page` per row.
+	 *
+	 * @param array<string,mixed> $item A single item from a REST collection response.
+	 * @return array<string,mixed> The summary row. No content body, no `_links`.
+	 */
+	public static function pageSummary( array $item ): array {
+		return self::postSummary( $item ) + array(
+			'parent'     => (int) ( $item['parent'] ?? 0 ),
+			'menu_order' => (int) ( $item['menu_order'] ?? 0 ),
+			'template'   => (string) ( $item['template'] ?? '' ),
+		);
+	}
+
+	/**
+	 * The `output_schema` item definition matching {@see self::pageSummary()}.
+	 *
+	 * @return array<string,mixed> A JSON-Schema object fragment.
+	 */
+	public static function pageItemSchema(): array {
+		$schema = self::postItemSchema();
+
+		$schema['properties']['parent']     = array(
+			'type'        => 'integer',
+			'description' => __( 'The parent page ID (0 when top level).', 'abilities-catalog' ),
+		);
+		$schema['properties']['menu_order'] = array(
+			'type'        => 'integer',
+			'description' => __( 'The page order value used for sorting.', 'abilities-catalog' ),
+		);
+		$schema['properties']['template']   = array(
+			'type'        => 'string',
+			'description' => __( 'The assigned page template file, or empty for the default.', 'abilities-catalog' ),
+		);
+
+		return $schema;
+	}
+
+	/**
 	 * Flat summary row for a post-revision REST item.
 	 *
 	 * @param array<string,mixed> $item A single revision from a REST collection response.

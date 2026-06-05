@@ -76,6 +76,7 @@ final class ListPages implements Ability {
 					),
 					'orderby'    => array(
 						'type'        => 'string',
+						'enum'        => array( 'author', 'date', 'id', 'include', 'modified', 'parent', 'relevance', 'slug', 'include_slugs', 'title', 'menu_order' ),
 						'description' => __( 'Field to sort by (e.g. "date", "title", "menu_order").', 'abilities-catalog' ),
 					),
 					'order'      => array(
@@ -98,7 +99,7 @@ final class ListPages implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => ContentListShaper::postItemSchema(),
+						'items'       => ContentListShaper::pageItemSchema(),
 						'description' => __( 'The list of pages as flat summary rows. Use content/get-page for a single page body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -192,7 +193,7 @@ final class ListPages implements Ability {
 
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
-		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'postSummary' ), $items ) : array();
+		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'pageSummary' ), $items ) : array();
 
 		return array(
 			'items'       => $rows,
