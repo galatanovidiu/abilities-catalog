@@ -42,9 +42,11 @@ final class UpdatePrivacy implements Ability {
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
+				'required'             => array( 'page_for_privacy_policy' ),
 				'properties'           => array(
 					'page_for_privacy_policy' => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'The page ID to assign as the privacy policy page; 0 to clear it.', 'abilities-catalog' ),
 					),
 				),
@@ -104,11 +106,11 @@ final class UpdatePrivacy implements Ability {
 		}
 
 		if ( array_key_exists( 'page_for_privacy_policy', $input ) ) {
-			update_option( 'wp_page_for_privacy_policy', absint( $input['page_for_privacy_policy'] ) );
+			update_option( 'wp_page_for_privacy_policy', (int) $input['page_for_privacy_policy'] );
 		}
 
 		return array(
-			'page_for_privacy_policy' => absint( get_option( 'wp_page_for_privacy_policy' ) ),
+			'page_for_privacy_policy' => (int) get_option( 'wp_page_for_privacy_policy' ),
 		);
 	}
 }
