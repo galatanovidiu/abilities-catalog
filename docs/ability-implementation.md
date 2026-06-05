@@ -99,7 +99,8 @@ Build the row with a small **domain shaper** under `includes/Support/`, pairing 
 projector with a `*ItemSchema()` closed-schema fragment so the runtime shape and the declared
 schema stay in sync. Existing shapers:
 [`ContentListShaper`](../includes/Support/ContentListShaper.php) (posts, pages, CPT items,
-revisions) and [`CommentListShaper`](../includes/Support/CommentListShaper.php) (comments).
+revisions), [`CommentListShaper`](../includes/Support/CommentListShaper.php) (comments), and
+[`UserListShaper`](../includes/Support/UserListShaper.php) (users).
 A shaper lives outside `includes/Abilities/`, so the Registry never treats it as an ability.
 
 **Permission-gated fields stay gated.** Core hides some fields unless the request runs in
@@ -108,11 +109,9 @@ A shaper lives outside `includes/Abilities/`, so the Registry never treats it as
 such a field **only when the source row carries it** (`array_key_exists`), never fabricate it
 with an empty default — otherwise a `view`-context row would leak the field's existence. Declare
 those fields as optional properties (absent from `required`) so the closed schema still validates
-a `view` row that omits them. `CommentListShaper::commentSummary()` is the reference.
-
-**Known exception (follow-up):** [`ListUsers`](../includes/Abilities/Core/Users/ListUsers.php)
-still returns raw rows with `additionalProperties => true`. Converting it (a `UserListShaper`)
-is tracked as a follow-up and was left out of the list-comments change to keep that diff focused.
+a `view` row that omits them. `CommentListShaper::commentSummary()` is the reference;
+`UserListShaper::userSummary()` applies the same pattern to `username` / `email` / `roles`,
+which core gates to `edit` context.
 
 ## Schema rules that are easy to get wrong
 
