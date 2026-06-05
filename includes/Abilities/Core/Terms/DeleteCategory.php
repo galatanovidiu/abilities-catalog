@@ -22,6 +22,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * calls `wp_delete_term()` directly; it surfaces the REST route's `WP_Error`
  * unchanged.
  *
+ * Category-specific side effects (from `wp-includes/taxonomy.php`): the site's
+ * default category cannot be deleted; child categories are reparented to the
+ * deleted term's parent; and posts left with no category are reassigned to the
+ * default category.
+ *
  * Destructive: registered, but exposed to the browser only when both the write
  * and destructive adapter settings are on. Capability remains the hard guard.
  *
@@ -42,14 +47,14 @@ final class DeleteCategory implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Category', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a category term by ID. Taxonomy terms have no Trash, so this cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a category term by ID. Taxonomy terms have no Trash, so this cannot be undone. The default category cannot be deleted; child categories are reparented to the deleted term\'s parent, and posts left with no category are reassigned to the default category.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The category term ID to permanently delete.', 'abilities-catalog' ),
+						'description' => __( 'The category term ID to permanently delete. Find it via terms/list-categories or terms/get-category.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -59,13 +64,33 @@ final class DeleteCategory implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'         => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the category term was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'              => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted category term ID.', 'abilities-catalog' ),
+					),
+					'previous_name'   => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted category name, from the term as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_slug'   => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted category slug, from the term as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_parent' => array(
+						'type'        => 'integer',
+						'description' => __( 'The deleted category parent term ID (0 if top-level), before deletion.', 'abilities-catalog' ),
+					),
+					'previous_link'   => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted category archive URL as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_count'  => array(
+						'type'        => 'integer',
+						'description' => __( 'The number of objects assigned to the category before deletion.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -123,9 +148,28 @@ final class DeleteCategory implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
 		);
+
+		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
+		if ( isset( $previous['name'] ) ) {
+			$result['previous_name'] = (string) $previous['name'];
+		}
+		if ( isset( $previous['slug'] ) ) {
+			$result['previous_slug'] = (string) $previous['slug'];
+		}
+		if ( isset( $previous['parent'] ) ) {
+			$result['previous_parent'] = (int) $previous['parent'];
+		}
+		if ( isset( $previous['link'] ) ) {
+			$result['previous_link'] = (string) $previous['link'];
+		}
+		if ( isset( $previous['count'] ) ) {
+			$result['previous_count'] = (int) $previous['count'];
+		}
+
+		return $result;
 	}
 }
