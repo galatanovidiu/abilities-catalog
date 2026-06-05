@@ -46,7 +46,7 @@ final class ListCategories implements Ability {
 					),
 					'parent'     => array(
 						'type'        => 'integer',
-						'description' => __( 'Limit results to terms with the given parent term ID.', 'abilities-catalog' ),
+						'description' => __( 'Limit results to terms with the given parent term ID. Pass 0 to return only top-level categories. Discover IDs with terms/list-categories.', 'abilities-catalog' ),
 					),
 					'per_page'   => array(
 						'type'        => 'integer',
