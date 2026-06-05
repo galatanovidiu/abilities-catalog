@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Removes one or more custom fields (meta) from a post, deleting all stored
  * values for each named key. It operates only on meta keys registered with
  * `show_in_rest` for the post type and rejects unknown keys. Wraps core
- * `delete_post_meta()` after a per-key `edit_post_meta` capability check. This is
+ * `delete_post_meta()` after a per-key `delete_post_meta` capability check. This is
  * a data deletion and cannot be undone through this ability; it does not change
  * other post fields. Returns the post `id`, the `deleted` keys, and `edit_link`
  * (the wp-admin editor URL); surface `edit_link` so a human can review the post.
@@ -102,7 +102,7 @@ final class DeletePostMeta implements Ability {
 	 * {@see PostAccess::resolveEditable()} — returning `rest_post_invalid_id` (404)
 	 * for a missing post and `rest_cannot_edit` (403) when the user may not edit it,
 	 * instead of masking both as a single permission error. The per-key
-	 * `edit_post_meta` capability is also enforced in `execute()`.
+	 * `delete_post_meta` capability is also enforced in `execute()`.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool Always true; `execute()` is the server-side guard.
@@ -146,7 +146,7 @@ final class DeletePostMeta implements Ability {
 				);
 			}
 
-			if ( ! current_user_can( 'edit_post_meta', $id, $key ) ) {
+			if ( ! current_user_can( 'delete_post_meta', $id, $key ) ) {
 				return new WP_Error(
 					'rest_cannot_delete_post_meta',
 					/* translators: %s: meta key. */

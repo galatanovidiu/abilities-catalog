@@ -50,12 +50,30 @@ final class PostMetaTest extends TestCase {
 			)
 		);
 
+		// A subtype-less key whose auth_callback allows edit but denies delete.
+		// Registered against object subtype '' so the generic
+		// `auth_post_meta_guarded_meta` filter fires (a CPT subtype would route
+		// to `_for_{subtype}` and exercise the wrong capability path).
+		register_post_meta(
+			'post',
+			'guarded_meta',
+			array(
+				'show_in_rest'  => true,
+				'single'        => true,
+				'type'          => 'string',
+				'auth_callback' => static function ( $allowed, $meta_key, $object_id, $user_id, $cap ) {
+					return 'delete_post_meta' !== $cap; // Allow edit, deny delete.
+				},
+			)
+		);
+
 		$this->post_id = self::factory()->post->create();
 	}
 
 	public function tear_down(): void {
 		unregister_post_meta( 'post', 'subtitle' );
 		unregister_post_meta( 'post', 'internal_flag' );
+		unregister_post_meta( 'post', 'guarded_meta' );
 		parent::tear_down();
 	}
 
@@ -182,6 +200,35 @@ final class PostMetaTest extends TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'subtitle' ), $result['deleted'] );
 		$this->assertSame( '', get_post_meta( $this->post_id, 'subtitle', true ) );
+	}
+
+	public function test_delete_respects_delete_post_meta_capability(): void {
+		$this->actingAs( 'administrator' );
+		update_post_meta( $this->post_id, 'guarded_meta', 'x' );
+
+		// Delete is gated on `delete_post_meta`, which the auth_callback denies.
+		$result = wp_get_ability( 'content/delete-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'keys' => array( 'guarded_meta' ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_delete_post_meta', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+
+		// The same key is editable: update is gated on `edit_post_meta`, which the
+		// auth_callback allows. This proves the divergence is cap-driven, not a
+		// blanket denial.
+		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'meta' => array( 'guarded_meta' => 'y' ),
+			)
+		);
+
+		$this->assertIsArray( $updated );
 	}
 
 	public function test_logged_out_user_is_denied(): void {
