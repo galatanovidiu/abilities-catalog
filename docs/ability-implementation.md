@@ -86,6 +86,34 @@ Copy [`Abilities/Core/Content/GetPost.php`](../includes/Abilities/Core/Content/G
 The Registry refuses any ability whose `meta.annotations.readonly` is not strictly `true`
 unless it is registered through the write path, so a write ability cannot ship by accident.
 
+### List abilities return flat, closed summary rows via a domain shaper
+
+Project-wide rule for any ability that returns a collection (`list-*`, `search-*`): each row
+is a **flat, closed summary** — `output_schema` items declare `additionalProperties => false`
+and a fixed property set, never the raw REST object with `additionalProperties => true`.
+Returning `rest_get_server()->response_to_data()` verbatim leaks REST internals (`_links`,
+`author_avatar_urls`, `meta`, `guid`, `content.raw`, GMT-duplicate dates) and costs thousands
+of tokens per call. The full body lives behind the matching `get-*` ability.
+
+Build the row with a small **domain shaper** under `includes/Support/`, pairing a `*Summary()`
+projector with a `*ItemSchema()` closed-schema fragment so the runtime shape and the declared
+schema stay in sync. Existing shapers:
+[`ContentListShaper`](../includes/Support/ContentListShaper.php) (posts, pages, CPT items,
+revisions) and [`CommentListShaper`](../includes/Support/CommentListShaper.php) (comments).
+A shaper lives outside `includes/Abilities/`, so the Registry never treats it as an ability.
+
+**Permission-gated fields stay gated.** Core hides some fields unless the request runs in
+`edit` context, which it grants only to a user with the matching moderation capability
+(e.g. comment `author_email` / `author_ip` need `moderate_comments`). The shaper must copy
+such a field **only when the source row carries it** (`array_key_exists`), never fabricate it
+with an empty default — otherwise a `view`-context row would leak the field's existence. Declare
+those fields as optional properties (absent from `required`) so the closed schema still validates
+a `view` row that omits them. `CommentListShaper::commentSummary()` is the reference.
+
+**Known exception (follow-up):** [`ListUsers`](../includes/Abilities/Core/Users/ListUsers.php)
+still returns raw rows with `additionalProperties => true`. Converting it (a `UserListShaper`)
+is tracked as a follow-up and was left out of the list-comments change to keep that diff focused.
+
 ## Schema rules that are easy to get wrong
 
 An ability can register and list yet still **fail when executed**, because the input and

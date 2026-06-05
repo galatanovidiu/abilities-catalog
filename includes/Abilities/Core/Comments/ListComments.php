@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Comments;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\CommentListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -112,11 +113,8 @@ final class ListComments implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
-						'description' => __( 'The list of comments.', 'abilities-catalog' ),
+						'items'       => CommentListShaper::commentItemSchema(),
+						'description' => __( 'The list of comments as flat summary rows. Use comments/get-comment for a single comment.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -212,9 +210,10 @@ final class ListComments implements Ability {
 
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
+		$rows    = is_array( $items ) ? array_map( array( CommentListShaper::class, 'commentSummary' ), $items ) : array();
 
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
