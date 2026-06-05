@@ -17,6 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * each post to a clean record of request metadata only. It never reads or
  * exposes any exported personal data (the export payload itself).
  *
+ * Each mapped record carries `id` and the alias `request_id` (same value, the
+ * input name every follow-on privacy ability expects), plus `created`
+ * (site-local datetime) and `created_gmt` (UTC datetime).
+ *
  * This file is discovered by the Registry directory scan but skipped: it is a
  * trait, not an {@see \GalatanOvidiu\AbilitiesCatalog\Contracts\Ability}, so it is
  * never registered as an ability.
@@ -31,7 +35,7 @@ trait QueriesUserRequests {
 	 * @param string $action_name The request action: `export_personal_data` or
 	 *                            `remove_personal_data`.
 	 * @param mixed  $input       The validated ability input (status, page, per_page).
-	 * @return array{items:array<int,array<string,mixed>>,total:int}
+	 * @return array{items:array<int,array{id:int,request_id:int,email:string,status:string,created:string,created_gmt:string,action_name:string}>,total:int}
 	 */
 	private function queryUserRequests( string $action_name, $input ): array {
 		$input    = is_array( $input ) ? $input : array();
@@ -68,9 +72,11 @@ trait QueriesUserRequests {
 
 			$items[] = array(
 				'id'          => (int) $request->ID,
+				'request_id'  => (int) $request->ID,
 				'email'       => (string) $request->email,
 				'status'      => (string) $request->status,
 				'created'     => (string) $post->post_date,
+				'created_gmt' => (string) $post->post_date_gmt,
 				'action_name' => (string) $request->action_name,
 			);
 		}
