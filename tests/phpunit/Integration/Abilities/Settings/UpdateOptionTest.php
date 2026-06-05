@@ -55,6 +55,30 @@ final class UpdateOptionTest extends TestCase {
 		$this->assertStringNotContainsString('active_plugins', $result->get_error_message());
 	}
 
+	public function test_silently_rejected_value_returns_error_not_success(): void {
+		$this->actingAs('administrator');
+
+		$before = get_option('timezone_string');
+
+		// An invalid timezone is reverted by sanitize_option, which registers a
+		// settings error and writes nothing. The ability must surface that as an
+		// error, not report updated => true with the unchanged read-back.
+		$result = wp_get_ability('settings/update-option')->execute(
+			array(
+				'name'  => 'timezone_string',
+				'value' => 'Not/A_Real_Zone',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('webmcp_option_rejected', $result->get_error_code());
+		$this->assertSame(400, $result->get_error_data()['status']);
+		// The stored value is unchanged.
+		$this->assertSame($before, get_option('timezone_string'));
+		// The rejected value must not be echoed back.
+		$this->assertStringNotContainsString('Not/A_Real_Zone', $result->get_error_message());
+	}
+
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs('subscriber');
 

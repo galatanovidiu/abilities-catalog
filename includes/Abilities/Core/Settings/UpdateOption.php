@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Settings;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\AdminIncludes;
 use GalatanOvidiu\AbilitiesCatalog\Support\OptionAllowList;
 use WP_Error;
 
@@ -78,7 +79,7 @@ final class UpdateOption implements Ability {
 					),
 					'value'   => array(
 						'type'        => 'string',
-						'description' => __( 'The stored value after sanitization, read back via get_option.', 'abilities-catalog' ),
+						'description' => __( 'The effective option value as a string, as resolved by get_option (filters and core normalization applied). This may differ from the stored value; for example, gmt_offset is computed from timezone_string when a timezone is set.', 'abilities-catalog' ),
 					),
 					'updated' => array(
 						'type'        => 'boolean',
@@ -130,9 +131,18 @@ final class UpdateOption implements Ability {
 	 *
 	 * Refuses any name not on {@see OptionAllowList::ALLOWED} without echoing the
 	 * rejected name or value. Otherwise writes via `update_option` (which runs the
-	 * option's registered sanitizer) and reads the stored value back. A `false`
-	 * return from `update_option` means the value was unchanged, which is not an
-	 * error, so the stored value is re-read either way.
+	 * option's registered sanitizer) and reads the stored value back.
+	 *
+	 * `update_option` returning `false` is not by itself an error: it also means the
+	 * value was already equal to the stored value (a genuine no-op). But core's
+	 * `sanitize_option` can silently reject a value (for example an invalid
+	 * `timezone_string` or a non-numeric `gmt_offset`): it reverts the value to the
+	 * current stored value, registers a settings error, and writes nothing. To avoid
+	 * a false success signal, this method counts the settings errors registered for
+	 * the option before the write, performs the write, and treats a newly registered
+	 * settings error as a rejection. The settings-error helpers live in
+	 * `wp-admin/includes/template.php`, which is also what makes `sanitize_option`
+	 * record the error in the first place.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The stored option, or a WP_Error.
@@ -151,12 +161,45 @@ final class UpdateOption implements Ability {
 			);
 		}
 
+		// `sanitize_option` only records a rejection through `add_settings_error`,
+		// which lives in an admin-only include not loaded during REST requests.
+		AdminIncludes::load( 'template' );
+
+		$errors_before = $this->countSettingsErrors( $name );
+
 		update_option( $name, $value );
+
+		if ( $this->countSettingsErrors( $name ) > $errors_before ) {
+			return new WP_Error(
+				'webmcp_option_rejected',
+				__( 'The value was rejected by the option sanitizer and was not stored.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
 
 		return array(
 			'name'    => $name,
 			'value'   => (string) get_option( $name ),
 			'updated' => true,
 		);
+	}
+
+	/**
+	 * Counts the settings errors currently registered for the given option name.
+	 *
+	 * On a sanitize rejection, core's `sanitize_option` registers a settings error
+	 * under the option name and reverts the value, so `update_option` stores nothing.
+	 * Comparing the count before and after the write detects that rejection without
+	 * mutating the request-global error array.
+	 *
+	 * @param string $name The option name.
+	 * @return int The number of registered settings errors for the option.
+	 */
+	private function countSettingsErrors( string $name ): int {
+		if ( ! function_exists( 'get_settings_errors' ) ) {
+			return 0;
+		}
+
+		return count( get_settings_errors( $name ) );
 	}
 }
