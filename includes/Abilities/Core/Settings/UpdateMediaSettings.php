@@ -60,17 +60,19 @@ final class UpdateMediaSettings implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Media Settings', 'abilities-catalog' ),
-			'description'         => __( 'Updates Media Settings: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag.', 'abilities-catalog' ),
+			'description'         => __( 'Updates Media Settings: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag (the folder flag is a single-site setting; it is not shown on the Media Settings screen under multisite).', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'thumbnail_size_w'              => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Thumbnail image width in pixels.', 'abilities-catalog' ),
 					),
 					'thumbnail_size_h'              => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Thumbnail image height in pixels.', 'abilities-catalog' ),
 					),
 					'thumbnail_crop'                => array(
@@ -79,18 +81,22 @@ final class UpdateMediaSettings implements Ability {
 					),
 					'medium_size_w'                 => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Medium image maximum width in pixels.', 'abilities-catalog' ),
 					),
 					'medium_size_h'                 => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Medium image maximum height in pixels.', 'abilities-catalog' ),
 					),
 					'large_size_w'                  => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Large image maximum width in pixels.', 'abilities-catalog' ),
 					),
 					'large_size_h'                  => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
 						'description' => __( 'Large image maximum height in pixels.', 'abilities-catalog' ),
 					),
 					'uploads_use_yearmonth_folders' => array(
@@ -102,7 +108,16 @@ final class UpdateMediaSettings implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'thumbnail_size_w' ),
+				'required'             => array(
+					'thumbnail_size_w',
+					'thumbnail_size_h',
+					'thumbnail_crop',
+					'medium_size_w',
+					'medium_size_h',
+					'large_size_w',
+					'large_size_h',
+					'uploads_use_yearmonth_folders',
+				),
 				'properties'           => array(
 					'thumbnail_size_w'              => array(
 						'type'        => 'integer',
