@@ -43,11 +43,12 @@ final class GetTerm implements Ability {
 				'properties'           => array(
 					'taxonomy' => array(
 						'type'        => 'string',
-						'description' => __( 'The taxonomy slug (for example "category" or "post_tag").', 'abilities-catalog' ),
+						'description' => __( 'The taxonomy slug (for example "category" or "post_tag"). Discover slugs via terms/list-taxonomies.', 'abilities-catalog' ),
 					),
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __( 'The term ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The term ID. Discover IDs via terms/list-terms (or terms/list-categories / terms/list-tags).', 'abilities-catalog' ),
 					),
 					'context'  => array(
 						'type'        => 'string',
@@ -149,13 +150,21 @@ final class GetTerm implements Ability {
 	public function execute( $input ) {
 		$input    = is_array( $input ) ? $input : array();
 		$taxonomy = isset( $input['taxonomy'] ) ? (string) $input['taxonomy'] : '';
-		$id       = absint( $input['id'] );
+		$id       = (int) $input['id'];
 		$context  = $input['context'] ?? 'view';
 
 		$tax = get_taxonomy( $taxonomy );
-		if ( ! $tax || ! $tax->show_in_rest ) {
+		if ( ! $tax ) {
 			return new WP_Error(
-				'invalid_taxonomy',
+				'rest_taxonomy_invalid',
+				__( 'Invalid taxonomy.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( ! $tax->show_in_rest ) {
+			return new WP_Error(
+				'rest_taxonomy_not_rest',
 				__( 'The requested taxonomy is not available in the REST API.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
