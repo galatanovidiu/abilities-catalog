@@ -47,7 +47,7 @@ final class CreatePattern implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Pattern', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new user pattern (reusable block, post type "wp_block"). Publishes by default; set status to "draft" to keep it unpublished. Requires the publish capability.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new user pattern (reusable block, post type "wp_block"). Publishes by default; set status to "draft" to keep it unpublished. Returns edit_link (the Site Editor URL) — surface it so a human can open and finish the pattern. Requires the publish capability.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -74,21 +74,25 @@ final class CreatePattern implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'status', 'link' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new pattern (wp_block) post ID.', 'abilities-catalog' ),
 					),
-					'title'  => array(
+					'title'     => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting pattern title.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting pattern status.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The pattern permalink.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The Site Editor URL where a human can open and edit the new pattern.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -130,7 +134,7 @@ final class CreatePattern implements Ability {
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The new pattern's id, title, status, link, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new pattern's id, title, status, link, edit_link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -146,9 +150,13 @@ final class CreatePattern implements Ability {
 			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
-			$request->set_param( 'status', sanitize_key( (string) $input['status'] ) );
-		}
+		// Inject the declared "publish" default when status is omitted/empty: the
+		// Abilities API only applies top-level schema defaults, not nested property
+		// ones, so without this core would silently fall back to "draft".
+		$status = isset( $input['status'] ) && '' !== $input['status']
+			? sanitize_key( (string) $input['status'] )
+			: 'publish';
+		$request->set_param( 'status', $status );
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
@@ -157,16 +165,24 @@ final class CreatePattern implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
+		// The blocks controller exposes title.raw (it unsets title.rendered), so
+		// read raw first to avoid an always-empty title.
 		$title = $data['title'] ?? '';
 		if ( is_array( $title ) ) {
-			$title = $title['rendered'] ?? '';
+			$title = $title['raw'] ?? ( $title['rendered'] ?? '' );
 		}
 
+		$id        = (int) ( $data['id'] ?? 0 );
+		$edit_link = $id > 0
+			? admin_url( 'site-editor.php?postType=wp_block&postId=' . rawurlencode( (string) $id ) . '&canvas=edit' )
+			: '';
+
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'title'  => (string) $title,
-			'status' => (string) ( $data['status'] ?? '' ),
-			'link'   => (string) ( $data['link'] ?? '' ),
+			'id'        => $id,
+			'title'     => (string) $title,
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'edit_link' => $edit_link,
 		);
 	}
 }
