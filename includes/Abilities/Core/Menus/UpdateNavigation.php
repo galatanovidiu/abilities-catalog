@@ -46,7 +46,8 @@ final class UpdateNavigation implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The navigation menu ID to update.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The navigation menu ID to update. Discover IDs with `menus/list-navigation`.', 'abilities-catalog' ),
 					),
 					'title'   => array(
 						'type'        => 'string',
@@ -69,13 +70,21 @@ final class UpdateNavigation implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'status' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The navigation menu ID.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting navigation menu title.', 'abilities-catalog' ),
+					),
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting navigation menu post status.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The site-editor URL for editing the navigation menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -117,15 +126,17 @@ final class UpdateNavigation implements Ability {
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The menu's id and status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The menu's id, title, status, edit link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
 		$id      = absint( $input['id'] );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/navigation/' . $id );
 
+		// Forward whenever the key is present, including '' so the caller can clear
+		// the title or empty the menu markup. Core writes empty strings on update.
 		foreach ( array( 'title', 'content' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
@@ -141,11 +152,21 @@ final class UpdateNavigation implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data        = rest_get_server()->response_to_data( $response, false );
+		$resolved_id = (int) ( $data['id'] ?? $id );
+
+		$title = '';
+		if ( isset( $data['title'] ) ) {
+			$title = is_array( $data['title'] )
+				? (string) ( $data['title']['rendered'] ?? $data['title']['raw'] ?? '' )
+				: (string) $data['title'];
+		}
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? $id ),
-			'status' => (string) ( $data['status'] ?? '' ),
+			'id'        => $resolved_id,
+			'title'     => $title,
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'edit_link' => $resolved_id > 0 ? (string) get_edit_post_link( $resolved_id, 'raw' ) : '',
 		);
 	}
 }
