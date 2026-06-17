@@ -151,29 +151,30 @@ final class UpdateCurrentUser implements Ability {
 	}
 
 	/**
-	 * Permission check: edit access to own account, plus promote for roles.
+	 * Permission check: a logged-in user, plus promote for role changes.
 	 *
-	 * Resolves the target as `get_current_user_id()` and mirrors the users
-	 * controller (`edit_user` on the current user). When the input changes roles,
-	 * the controller also requires `promote_user`; this check enforces that
-	 * branch up front to block self role escalation.
+	 * The target is always the current user, and `edit_user` on oneself is granted to
+	 * every logged-in user, so the object-level mirror is coarsened to the equivalent
+	 * `is_user_logged_in()` floor. The wrapped `POST /wp/v2/users/me` route re-checks
+	 * `edit_user` underneath, so nothing is weakened and a logged-out request is
+	 * denied (the floor is never stricter than core).
+	 *
+	 * The `promote_user` self-escalation guard is KEPT as an explicit object-
+	 * independent extra check: a logged-in user who cannot promote must not raise
+	 * their own roles. The route enforces the same rule (`rest_cannot_edit_roles`),
+	 * so this is defense in depth on the catalog's most sensitive write.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update their own account.
+	 * @return bool True if a user is logged in and may change roles when requested.
 	 */
 	public function hasPermission( $input ): bool {
 		$input = is_array( $input ) ? $input : array();
-		$id    = get_current_user_id();
 
-		if ( $id <= 0 ) {
+		if ( ! is_user_logged_in() ) {
 			return false;
 		}
 
-		if ( ! current_user_can( 'edit_user', $id ) ) {
-			return false;
-		}
-
-		return ! isset( $input['roles'] ) || current_user_can( 'promote_user', $id );
+		return ! isset( $input['roles'] ) || current_user_can( 'promote_user', get_current_user_id() );
 	}
 
 	/**

@@ -15,10 +15,10 @@ use WP_Error;
 /**
  * Exercises the update end-to-end: validated input in, the flat shape
  * (id/name/email/roles, never the password) out, with the edit_user guard
- * enforced by the Abilities API on execute(). Proves a missing object surfaces
- * a WP_Error rather than collapsing to a permission failure, and that the
- * role-escalation guard denies a roles change by a caller who can edit but not
- * promote.
+ * enforced by the wrapped REST route on execute(). Proves a missing object and a
+ * caller who cannot edit each surface the route's specific error rather than the
+ * generic permission collapse, and that the kept role-escalation guard still denies
+ * a roles change by a caller who can edit but not promote.
  */
 final class UpdateUserTest extends TestCase {
 
@@ -76,9 +76,10 @@ final class UpdateUserTest extends TestCase {
 		$this->assertSame( 'renamed@example.com', $user->user_email );
 	}
 
-	public function test_wrong_capability_is_denied(): void {
-		// An author cannot edit another user; the Abilities API blocks execute()
-		// before the REST route runs.
+	public function test_wrong_capability_surfaces_specific_403_and_user_unchanged(): void {
+		// An author cannot edit another user. After coarsening, the logged-in floor
+		// passes and the wrapped route's own guard denies with its specific 403 — the
+		// user is untouched, proving the edit_user guard still holds through the route.
 		$this->actingAs( 'author' );
 
 		$result = wp_get_ability( 'users/update-user' )->execute(
@@ -89,15 +90,16 @@ final class UpdateUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 
 		$user = get_userdata( $this->target );
 		$this->assertSame( 'Target Author', $user->display_name, 'A denied update must not change the user.' );
 	}
 
-	public function test_missing_user_returns_rest_error_not_permission_collapse(): void {
-		// An admin has edit_user broadly, so the request reaches the REST route and
-		// the unknown id surfaces the route's specific error, not a permission error.
+	public function test_missing_user_returns_specific_404_not_permission_collapse(): void {
+		// An admin is logged in, so the request reaches the REST route and the unknown
+		// id surfaces the route's specific 404, not a permission collapse.
 		$this->actingAs( 'administrator' );
 
 		$result = wp_get_ability( 'users/update-user' )->execute(
@@ -108,11 +110,8 @@ final class UpdateUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertNotSame(
-			'ability_invalid_permissions',
-			$result->get_error_code(),
-			'A missing user must surface the route error, not a permission collapse.'
-		);
+		$this->assertSame( 'rest_user_invalid_id', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	public function test_roles_change_without_promote_is_denied(): void {

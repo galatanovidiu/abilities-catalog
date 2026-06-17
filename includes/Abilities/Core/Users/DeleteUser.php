@@ -119,30 +119,24 @@ final class DeleteUser implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_user` on the target user.
+	 * Permission check: the object-independent `delete_users` capability.
 	 *
-	 * Also enforces the data-loss guard at the authorization boundary: the request
-	 * is denied unless `reassign` is a positive integer, names an existing user, and
-	 * differs from the user being deleted. This prevents authorizing a delete that
-	 * would destroy the user's content instead of reassigning it.
+	 * `delete_user` on any object maps to the `delete_users` primitive with no
+	 * self-exception, so `delete_users` is the object-independent floor every
+	 * successful caller holds and requiring it here is never stricter than core. The
+	 * object-level decision and the reassign data-loss guard are enforced in
+	 * `execute()`: the wrapped `DELETE /wp/v2/users/<id>` route re-checks `delete_user`
+	 * (surfacing `rest_user_invalid_id` 404 / `rest_user_cannot_delete` 403), and
+	 * {@see self::isValidReassign()} is re-run before the delete (surfacing a specific
+	 * `webmcp_invalid_reassign` 400). Keeping those checks only here would collapse
+	 * each into the generic denial the Abilities API substitutes for a non-`true`
+	 * return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the user and reassign is valid.
+	 * @return bool True if the current user may delete users.
 	 */
 	public function hasPermission( $input ): bool {
-		$input    = is_array( $input ) ? $input : array();
-		$id       = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-		$reassign = isset( $input['reassign'] ) ? absint( $input['reassign'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( ! $this->isValidReassign( $reassign, $id ) ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_user', $id );
+		return current_user_can( 'delete_users' );
 	}
 
 	/**

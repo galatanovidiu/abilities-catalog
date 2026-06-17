@@ -17,11 +17,11 @@ use WP_Error;
  * content reassigned to another existing account, and the output carries the
  * deleted flag, ids, and the flattened `previous_*` identity snapshot.
  *
- * The invalid-reassign cases assert the CURRENT behavior: hasPermission() still
- * runs the reassign guard, so the Abilities API collapses a bad reassign target
- * into the generic ability_invalid_permissions error before execute() runs. The
- * specific webmcp_invalid_reassign 400 path stays deferred (permission-callback
- * change requiring human sign-off).
+ * The permission_callback is the object-independent delete_users floor; the
+ * object-level guard and the reassign data-loss guard run in execute(), so an
+ * invalid reassign target now surfaces the specific webmcp_invalid_reassign 400 (and
+ * a missing user the route's rest_user_invalid_id 404) instead of the generic
+ * permission collapse — while a caller lacking delete_users is still denied.
  */
 final class DeleteUserTest extends TestCase {
 
@@ -116,7 +116,7 @@ final class DeleteUserTest extends TestCase {
 		$this->assertContains( 'author', $result['previous_roles'] );
 	}
 
-	public function test_missing_user_returns_rest_error(): void {
+	public function test_missing_user_returns_specific_404(): void {
 		$this->actingAs( 'administrator' );
 		$missing_id = 999999;
 
@@ -128,6 +128,8 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_user_invalid_id', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	public function test_non_privileged_user_is_denied(): void {
@@ -146,10 +148,10 @@ final class DeleteUserTest extends TestCase {
 		$this->assertNotFalse( get_userdata( $victim ), 'A denied delete must not remove the user.' );
 	}
 
-	public function test_nonexistent_reassign_target_collapses_to_permission_error(): void {
-		// CURRENT behavior: hasPermission() runs isValidReassign(), so a bad reassign
-		// target is reported as the generic permission error, not the specific 400.
-		// The specific-error path stays deferred.
+	public function test_nonexistent_reassign_target_returns_specific_400_and_user_survives(): void {
+		// After coarsening, the delete_users floor passes and execute() re-runs the
+		// reassign data-loss guard, surfacing the specific 400 instead of the generic
+		// permission collapse. No user is deleted.
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
@@ -161,11 +163,17 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'webmcp_invalid_reassign', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+
+		$data = $result->get_error_data();
+		$this->assertIsArray( $data );
+		$this->assertSame( 400, $data['status'] );
+
 		$this->assertNotFalse( get_userdata( $victim ), 'A rejected delete must not remove the user.' );
 	}
 
-	public function test_reassign_equal_to_id_collapses_to_permission_error(): void {
+	public function test_reassign_equal_to_id_returns_specific_400_and_user_survives(): void {
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
@@ -177,7 +185,12 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'webmcp_invalid_reassign', $result->get_error_code() );
+
+		$data = $result->get_error_data();
+		$this->assertIsArray( $data );
+		$this->assertSame( 400, $data['status'] );
+
 		$this->assertNotFalse( get_userdata( $victim ), 'A rejected delete must not remove the user.' );
 	}
 }

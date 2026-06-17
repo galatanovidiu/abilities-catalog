@@ -71,6 +71,29 @@ final class UpdateCurrentUserTest extends TestCase {
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
+	public function test_self_role_change_without_promote_is_denied(): void {
+		// A subscriber cannot promote themselves. The kept promote_user guard denies a
+		// self roles change up front, and the subscriber's role is unchanged —
+		// coarsening the always-true edit_user(self) mirror must not open
+		// self-escalation. Asserting the generic collapse locks the guard in place
+		// here (dropping it would instead surface the route's rest_cannot_edit_roles).
+		$actor = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		wp_set_current_user( $actor );
+
+		$this->assertFalse( current_user_can( 'promote_user', $actor ), 'Test premise: a subscriber cannot promote.' );
+
+		$result = wp_get_ability( 'users/update-current-user' )->execute(
+			array( 'roles' => array( 'administrator' ) )
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+
+		$user = get_userdata( $actor );
+		$this->assertNotContains( 'administrator', array_values( $user->roles ), 'A denied self role change must not promote the user.' );
+		$this->assertContains( 'subscriber', array_values( $user->roles ) );
+	}
+
 	public function test_duplicate_email_returns_redacted_error_with_stable_code(): void {
 		// Another user already owns the target email. Core rejects the change. The
 		// ability must surface a redacted WP_Error that still carries the original
