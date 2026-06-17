@@ -103,21 +103,18 @@ final class DeleteClassicMenu implements Ability {
 	/**
 	 * Permission check: object-level `delete_term` on the target menu.
 	 *
-	 * Mirrors the menus (terms) REST controller `delete_item_permissions_check`;
-	 * `map_meta_cap` resolves `delete_term` to `edit_theme_options` for `nav_menu`.
+	 * For `nav_menu`, `delete_term` maps to `edit_theme_options` with no owner-vs-others
+	 * split, so this coarse, object-independent check is exactly what core requires —
+	 * never stricter, never weaker. The object decision (and a missing-id 404) is left
+	 * to the wrapped `DELETE /wp/v2/menus/<id>` route, so its specific `rest_term_invalid`
+	 * 404 reaches the caller instead of the generic denial the Abilities API substitutes
+	 * for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the menu.
+	 * @return bool True if the current user can manage nav menus.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_term', $id );
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**

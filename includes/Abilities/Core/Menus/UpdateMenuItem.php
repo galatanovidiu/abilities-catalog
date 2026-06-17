@@ -159,21 +159,18 @@ final class UpdateMenuItem implements Ability {
 	/**
 	 * Permission check mirroring the menu-items (posts) controller update path.
 	 *
-	 * Checks `edit_post` on the menu item ID; `map_meta_cap` resolves it to
-	 * `edit_theme_options` for `nav_menu_item`. The REST route re-checks underneath.
+	 * For `nav_menu_item`, `edit_post` maps to `edit_theme_options` with no
+	 * owner-vs-others split, so this coarse, object-independent check is exactly what
+	 * core requires — never stricter, never weaker. The object decision (and a missing-id
+	 * 404) is left to the wrapped `POST /wp/v2/menu-items/<id>` route, so its specific
+	 * `rest_post_invalid_id` 404 reaches the caller instead of the generic denial the
+	 * Abilities API substitutes for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the menu item.
+	 * @return bool True if the current user can manage nav menus.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $id );
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**

@@ -108,21 +108,18 @@ final class DeleteNavigation implements Ability {
 	/**
 	 * Permission check: object-level `delete_post` on the target navigation.
 	 *
-	 * Mirrors the navigation (posts) REST controller `delete_item_permissions_check`;
-	 * `map_meta_cap` resolves `delete_post` to `edit_theme_options` for `wp_navigation`.
+	 * For `wp_navigation`, `delete_post` maps to `edit_theme_options` with no
+	 * owner-vs-others split, so this coarse, object-independent check is exactly what
+	 * core requires — never stricter, never weaker. The object decision (and a missing-id
+	 * 404) is left to the wrapped `DELETE /wp/v2/navigation/<id>` route, so its specific
+	 * `rest_post_invalid_id` 404 reaches the caller instead of the generic denial the
+	 * Abilities API substitutes for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the navigation menu.
+	 * @return bool True if the current user can manage navigation menus.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**
