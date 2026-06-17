@@ -95,4 +95,17 @@ final class DeleteTagTest extends TestCase {
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 	}
+
+	public function test_missing_tag_id_surfaces_route_404_not_generic(): void {
+		$this->actingAs( 'administrator' );
+
+		// An admin holds delete_post_tags (the coarse guard), so a non-existent id
+		// reaches the route and surfaces its specific 404 instead of the opaque
+		// ability_invalid_permissions the object-level pre-check produced.
+		$result = wp_get_ability( 'terms/delete-tag' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+	}
 }

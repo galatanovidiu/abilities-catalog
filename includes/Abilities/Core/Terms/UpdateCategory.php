@@ -109,22 +109,20 @@ final class UpdateCategory implements Ability {
 	}
 
 	/**
-	 * Permission check mirroring the REST terms controller update path.
+	 * Permission check: coarse `edit_categories`; the route enforces the object.
 	 *
-	 * Object-level `edit_term` on the target term.
+	 * For `category`, `edit_term` maps to `edit_categories` with no owner-vs-others
+	 * split, so this coarse, object-independent check is exactly what core requires —
+	 * never stricter, never weaker. The object decision (and a missing-id 404) is left to
+	 * the wrapped `POST /wp/v2/categories/<id>` route, so its specific `rest_term_invalid`
+	 * 404 reaches the caller instead of the generic denial the Abilities API substitutes
+	 * for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the category.
+	 * @return bool True if the current user can manage categories.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_term', $id );
+		return current_user_can( 'edit_categories' );
 	}
 
 	/**

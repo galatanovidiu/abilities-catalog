@@ -110,22 +110,20 @@ final class DeleteCategory implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_term` on the target term.
+	 * Permission check: coarse `delete_categories`; the route enforces the object.
 	 *
-	 * Mirrors the REST terms controller `delete_item_permissions_check`.
+	 * For `category`, `delete_term` maps to `delete_categories` with no owner-vs-others
+	 * split, so this coarse, object-independent check is exactly what core requires —
+	 * never stricter, never weaker. The object decision (and a missing-id 404) is left to
+	 * the wrapped `DELETE /wp/v2/categories/<id>` route, so its specific
+	 * `rest_term_invalid` 404 reaches the caller instead of the generic denial the
+	 * Abilities API substitutes for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the category term.
+	 * @return bool True if the current user can manage categories.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_term', $id );
+		return current_user_can( 'delete_categories' );
 	}
 
 	/**
