@@ -137,6 +137,30 @@ final class GetUserTest extends TestCase {
 		$this->assertSame(401, $data['status']);
 	}
 
+	public function test_edit_context_on_another_user_without_cap_surfaces_specific_403(): void {
+		// GetUser delegates the object gate to the route. A low-privilege caller asking
+		// for edit context on another user must be denied with the route's specific 403
+		// (the kept object-level edit_user gate), not the generic permission collapse —
+		// and no edit-only field may leak. This locks the guard the coarsening relies on.
+		$subscriber = self::factory()->user->create(array('role' => 'subscriber'));
+		wp_set_current_user($subscriber);
+
+		$result = wp_get_ability('users/get-user')->execute(
+			array(
+				'id'      => $this->known_user_id,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertSame('rest_forbidden_context', $result->get_error_code());
+		$this->assertNotSame('ability_invalid_permissions', $result->get_error_code());
+
+		$data = $result->get_error_data();
+		$this->assertIsArray($data);
+		$this->assertSame(403, $data['status']);
+	}
+
 	public function test_self_view_without_list_users_is_allowed(): void {
 		// A subscriber lacks list_users, but core always lets a user read their own
 		// profile in view context. The old list_users-only guard was stricter than
