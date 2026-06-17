@@ -43,6 +43,32 @@ final class ImageSizesTest extends TestCase {
 		}
 	}
 
+	public function test_list_image_sizes_preserves_positioned_crop(): void {
+		$this->actingAs( 'administrator' );
+
+		add_image_size( 'catalog_positioned_crop', 100, 100, array( 'left', 'top' ) );
+
+		try {
+			$result = wp_get_ability( 'media/list-image-sizes' )->execute();
+			$this->assertIsArray( $result );
+
+			$match = null;
+			foreach ( $result['sizes'] as $size ) {
+				if ( 'catalog_positioned_crop' === $size['name'] ) {
+					$match = $size;
+					break;
+				}
+			}
+
+			$this->assertNotNull( $match, 'The positioned-crop size should be listed.' );
+			$this->assertTrue( $match['crop'], 'A positioned crop is still a hard crop.' );
+			$this->assertSame( 'left', $match['crop_x'] );
+			$this->assertSame( 'top', $match['crop_y'] );
+		} finally {
+			remove_image_size( 'catalog_positioned_crop' );
+		}
+	}
+
 	public function test_regenerate_thumbnails_rebuilds_sizes(): void {
 		$this->actingAs( 'administrator' );
 
@@ -67,6 +93,17 @@ final class ImageSizesTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_not_an_image', $result->get_error_code() );
+	}
+
+	public function test_regenerate_negative_id_is_rejected_by_schema(): void {
+		$this->actingAs( 'administrator' );
+
+		// The minimum: 1 input guard rejects a non-positive id at the schema
+		// boundary, before absint() could retarget it to a different object.
+		$result = wp_get_ability( 'media/regenerate-thumbnails' )->execute( array( 'id' => -3 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_logged_out_user_is_denied(): void {

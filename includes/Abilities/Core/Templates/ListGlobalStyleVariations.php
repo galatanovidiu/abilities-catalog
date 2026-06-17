@@ -19,7 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `rest_do_request()`. Returns the style variations a theme ships (the alternate
  * palettes and type sets a user can switch between in the Site Editor's Styles
  * panel), each with its title and the theme.json-shaped settings and styles it
- * would apply. The `stylesheet` defaults to the active theme. Read-only.
+ * would apply. The core route serves the active theme only — a non-active
+ * `stylesheet` always 404s — so `stylesheet` is an optional explicit active-theme
+ * identifier; leave it empty to resolve the active theme automatically. For a
+ * child theme, the list may include variations inherited from the parent theme.
+ * Read-only.
  *
  * @since 0.5.0
  */
@@ -38,7 +42,7 @@ final class ListGlobalStyleVariations implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Global Style Variations', 'abilities-catalog' ),
-			'description'         => __( 'Lists the style variations a theme provides (alternate palettes and typography sets selectable in the Site Editor Styles panel). Each variation includes its title and the theme.json settings and styles it applies. Defaults to the active theme.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the style variations a theme provides (alternate palettes and typography sets selectable in the Site Editor Styles panel). Each variation includes its title and the theme.json settings and styles it applies. The core route serves the active theme only; any non-active stylesheet returns a 404. For a child theme, the list may include variations inherited from the parent theme.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -46,7 +50,7 @@ final class ListGlobalStyleVariations implements Ability {
 					'stylesheet' => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __( 'The theme stylesheet (directory name). Leave empty to use the active theme.', 'abilities-catalog' ),
+						'description' => __( 'Optional active-theme stylesheet (directory name). The route serves the active theme only, so any non-active value returns a 404. Leave empty to resolve the active theme automatically.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -57,29 +61,38 @@ final class ListGlobalStyleVariations implements Ability {
 				'properties'           => array(
 					'stylesheet' => array(
 						'type'        => 'string',
-						'description' => __( 'The theme stylesheet these variations belong to.', 'abilities-catalog' ),
+						'description' => __( 'The active theme stylesheet used for the request.', 'abilities-catalog' ),
 					),
 					'items'      => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
+							'required'             => array( 'title', 'settings', 'styles' ),
 							'properties'           => array(
-								'title'    => array(
+								'title'       => array(
 									'type'        => 'string',
 									'description' => __( 'The variation title.', 'abilities-catalog' ),
 								),
-								'settings' => array(
+								'slug'        => array(
+									'type'        => 'string',
+									'description' => __( 'The variation slug, a stable identifier. Present when the source theme.json defines it.', 'abilities-catalog' ),
+								),
+								'description' => array(
+									'type'        => 'string',
+									'description' => __( 'The variation description. Present when the source theme.json defines it.', 'abilities-catalog' ),
+								),
+								'settings'    => array(
 									'type'                 => 'object',
 									'additionalProperties' => true,
 									'description'          => __( 'The theme.json-shaped settings the variation applies.', 'abilities-catalog' ),
 								),
-								'styles'   => array(
+								'styles'      => array(
 									'type'                 => 'object',
 									'additionalProperties' => true,
 									'description'          => __( 'The theme.json-shaped styles the variation applies.', 'abilities-catalog' ),
 								),
 							),
-							'additionalProperties' => true,
+							'additionalProperties' => false,
 						),
 						'description' => __( 'The list of style variations.', 'abilities-catalog' ),
 					),
@@ -136,11 +149,22 @@ final class ListGlobalStyleVariations implements Ability {
 		$items = array();
 
 		foreach ( is_array( $data ) ? $data : array() as $variation ) {
-			$items[] = array(
+			$item = array(
 				'title'    => (string) ( $variation['title'] ?? '' ),
 				'settings' => (object) ( is_array( $variation['settings'] ?? null ) ? $variation['settings'] : array() ),
 				'styles'   => (object) ( is_array( $variation['styles'] ?? null ) ? $variation['styles'] : array() ),
 			);
+
+			// `slug` and `description` are optional top-level theme.json keys
+			// (WP_Theme_JSON, 6.3.0+); emit them only when the source defines them.
+			if ( isset( $variation['slug'] ) && is_string( $variation['slug'] ) ) {
+				$item['slug'] = $variation['slug'];
+			}
+			if ( isset( $variation['description'] ) && is_string( $variation['description'] ) ) {
+				$item['description'] = $variation['description'];
+			}
+
+			$items[] = $item;
 		}
 
 		return array(

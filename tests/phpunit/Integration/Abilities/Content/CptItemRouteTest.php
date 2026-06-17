@@ -112,6 +112,17 @@ final class CptItemRouteTest extends TestCase {
 		$this->assertSame( 'After', $result['title'] );
 	}
 
+	public function test_update_cpt_item_points_at_post_editor_screen(): void {
+		$ability = wp_get_ability( 'content/update-cpt-item' );
+
+		$this->assertNotNull( $ability );
+
+		$meta = $ability->get_meta();
+
+		$this->assertArrayHasKey( 'screen', $meta );
+		$this->assertSame( 'post.php?post={id}&action=edit', $meta['screen'] );
+	}
+
 	public function test_delete_resolves_custom_rest_namespace(): void {
 		$this->actingAs( 'administrator' );
 

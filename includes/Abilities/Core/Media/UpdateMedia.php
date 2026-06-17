@@ -46,6 +46,7 @@ final class UpdateMedia implements Ability {
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The attachment (media item) ID to update.', 'abilities-catalog' ),
 					),
 					'title'       => array(
@@ -95,6 +96,14 @@ final class UpdateMedia implements Ability {
 					'description' => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting rendered description.', 'abilities-catalog' ),
+					),
+					'source_url'  => array(
+						'type'        => 'string',
+						'description' => __( 'The direct URL of the media file.', 'abilities-catalog' ),
+					),
+					'post'        => array(
+						'type'        => 'integer',
+						'description' => __( 'The ID of the post the media is attached to, if any.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -168,6 +177,8 @@ final class UpdateMedia implements Ability {
 			'alt_text'    => (string) ( $data['alt_text'] ?? '' ),
 			'caption'     => (string) ( $data['caption']['rendered'] ?? '' ),
 			'description' => (string) ( $data['description']['rendered'] ?? '' ),
+			'source_url'  => (string) ( $data['source_url'] ?? '' ),
+			'post'        => (int) ( $data['post'] ?? 0 ),
 		);
 	}
 }

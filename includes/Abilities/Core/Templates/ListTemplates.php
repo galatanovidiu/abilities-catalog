@@ -53,6 +53,11 @@ final class ListTemplates implements Ability {
 						'default'     => 'view',
 						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
 					),
+					'area'      => array(
+						'type'        => 'string',
+						'enum'        => array( 'header', 'footer', 'sidebar', 'uncategorized' ),
+						'description' => __( 'Template-part area filter ("header", "footer", "sidebar", or "uncategorized"). Applies only when post_type is "wp_template_part"; ignored otherwise.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -64,7 +69,46 @@ final class ListTemplates implements Ability {
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id' ),
+							'properties'           => array(
+								'id'              => array(
+									'type'        => 'string',
+									'description' => __( 'The template id in "theme//slug" form.', 'abilities-catalog' ),
+								),
+								'slug'            => array(
+									'type'        => 'string',
+									'description' => __( 'The template slug.', 'abilities-catalog' ),
+								),
+								'theme'           => array(
+									'type'        => 'string',
+									'description' => __( 'The theme the template belongs to.', 'abilities-catalog' ),
+								),
+								'type'            => array(
+									'type'        => 'string',
+									'description' => __( 'The post type ("wp_template" or "wp_template_part").', 'abilities-catalog' ),
+								),
+								'source'          => array(
+									'type'        => 'string',
+									'description' => __( 'The source: "theme" (file-based) or "custom" (DB override).', 'abilities-catalog' ),
+								),
+								'title'           => array(
+									'type'        => 'string',
+									'description' => __( 'The rendered template title.', 'abilities-catalog' ),
+								),
+								'status'          => array(
+									'type'        => 'string',
+									'description' => __( 'The template status.', 'abilities-catalog' ),
+								),
+								'original_source' => array(
+									'type'        => 'string',
+									'description' => __( 'The original provenance: "theme", "plugin", "site", or "user". Distinguishes a user-created template from a customized one.', 'abilities-catalog' ),
+								),
+								'area'            => array(
+									'type'        => 'string',
+									'description' => __( 'For template parts only: the area ("header", "footer", or "uncategorized").', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 						'description' => __( 'The list of templates or template parts.', 'abilities-catalog' ),
 					),
@@ -103,20 +147,55 @@ final class ListTemplates implements Ability {
 	public function execute( $input ) {
 		$input     = is_array( $input ) ? $input : array();
 		$post_type = $input['post_type'] ?? 'wp_template';
-		$route     = 'wp_template_part' === $post_type ? '/wp/v2/template-parts' : '/wp/v2/templates';
+		$is_part   = 'wp_template_part' === $post_type;
+		$route     = $is_part ? '/wp/v2/template-parts' : '/wp/v2/templates';
 
 		$request = new WP_REST_Request( 'GET', $route );
 		$request->set_param( 'context', $input['context'] ?? 'view' );
+
+		// area is a template-part-only filter; ignore it for the templates route.
+		if ( $is_part && isset( $input['area'] ) && '' !== $input['area'] ) {
+			$request->set_param( 'area', (string) $input['area'] );
+		}
 
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
 			return RestError::from( $response );
 		}
 
-		$items = rest_get_server()->response_to_data( $response, false );
+		$data  = rest_get_server()->response_to_data( $response, false );
+		$items = array();
+
+		foreach ( is_array( $data ) ? $data : array() as $row ) {
+			$title = $row['title'] ?? '';
+			if ( is_array( $title ) ) {
+				$title = $title['rendered'] ?? '';
+			}
+
+			$item = array(
+				'id'     => (string) ( $row['id'] ?? '' ),
+				'slug'   => (string) ( $row['slug'] ?? '' ),
+				'theme'  => (string) ( $row['theme'] ?? '' ),
+				'type'   => (string) ( $row['type'] ?? $post_type ),
+				'source' => (string) ( $row['source'] ?? '' ),
+				'title'  => (string) $title,
+				'status' => (string) ( $row['status'] ?? '' ),
+			);
+
+			// original_source distinguishes user-created from customized
+			// templates; area identifies a template part.
+			if ( isset( $row['original_source'] ) && '' !== $row['original_source'] ) {
+				$item['original_source'] = (string) $row['original_source'];
+			}
+			if ( isset( $row['area'] ) && '' !== $row['area'] ) {
+				$item['area'] = (string) $row['area'];
+			}
+
+			$items[] = $item;
+		}
 
 		return array(
-			'items' => is_array( $items ) ? $items : array(),
+			'items' => $items,
 		);
 	}
 }

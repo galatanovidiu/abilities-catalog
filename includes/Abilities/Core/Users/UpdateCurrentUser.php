@@ -23,6 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ALSO requires `promote_user` on the current user — without it a caller could
  * escalate their own role. The REST route re-checks every capability underneath.
  *
+ * Self-update REST semantics: `/wp/v2/users/me` calls `wp_update_user()` directly
+ * and does NOT use the wp-admin `profile.php` email-confirmation flow. An email
+ * change therefore applies immediately and sends a change-of-email notice. Changing
+ * your own password rotates the password hash, which invalidates the current auth
+ * cookie and can log the calling session out.
+ *
  * Secret-bearing: the input may carry a plaintext `password`. The error path is
  * routed through {@see SecretSafeError::redact()} so a rejected password (or any
  * other submitted value) can never be echoed back to the browser. No input is
@@ -45,7 +51,7 @@ final class UpdateCurrentUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Current User', 'abilities-catalog' ),
-			'description'         => __( 'Updates the currently logged-in user\'s own profile. Changing roles requires the promote capability.', 'abilities-catalog' ),
+			'description'         => __( 'Updates the currently logged-in user\'s own profile. An email change applies immediately (no confirmation step) and changing your own password can log out the current session. Changing roles requires the promote capability.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -90,19 +96,39 @@ final class UpdateCurrentUser implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'    => array(
+					'id'         => array(
 						'type'        => 'integer',
 						'description' => __( 'The user ID.', 'abilities-catalog' ),
 					),
-					'name'  => array(
+					'name'       => array(
 						'type'        => 'string',
 						'description' => __( 'The display name for the user.', 'abilities-catalog' ),
 					),
-					'email' => array(
+					'first_name' => array(
+						'type'        => 'string',
+						'description' => __( 'First name for the user.', 'abilities-catalog' ),
+					),
+					'last_name'  => array(
+						'type'        => 'string',
+						'description' => __( 'Last name for the user.', 'abilities-catalog' ),
+					),
+					'email'      => array(
 						'type'        => 'string',
 						'description' => __( 'The email address for the user.', 'abilities-catalog' ),
 					),
-					'roles' => array(
+					'url'        => array(
+						'type'        => 'string',
+						'description' => __( 'The website URL for the user.', 'abilities-catalog' ),
+					),
+					'locale'     => array(
+						'type'        => 'string',
+						'description' => __( 'Locale for the user.', 'abilities-catalog' ),
+					),
+					'link'       => array(
+						'type'        => 'string',
+						'description' => __( 'The author archive URL for the user.', 'abilities-catalog' ),
+					),
+					'roles'      => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
 						'description' => __( 'Roles assigned to the user.', 'abilities-catalog' ),
@@ -157,7 +183,7 @@ final class UpdateCurrentUser implements Ability {
 	 * is echoed to the caller. The password is never returned on success.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The user's id, name, email, roles, or a redacted error.
+	 * @return array<string,mixed>|\WP_Error The user's id, name, first/last name, email, url, locale, link, roles, or a redacted error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -185,10 +211,15 @@ final class UpdateCurrentUser implements Ability {
 		$data = is_array( $data ) ? $data : array();
 
 		return array(
-			'id'    => (int) ( $data['id'] ?? get_current_user_id() ),
-			'name'  => (string) ( $data['name'] ?? '' ),
-			'email' => (string) ( $data['email'] ?? '' ),
-			'roles' => isset( $data['roles'] ) ? array_map( 'strval', (array) $data['roles'] ) : array(),
+			'id'         => (int) ( $data['id'] ?? get_current_user_id() ),
+			'name'       => (string) ( $data['name'] ?? '' ),
+			'first_name' => (string) ( $data['first_name'] ?? '' ),
+			'last_name'  => (string) ( $data['last_name'] ?? '' ),
+			'email'      => (string) ( $data['email'] ?? '' ),
+			'url'        => (string) ( $data['url'] ?? '' ),
+			'locale'     => (string) ( $data['locale'] ?? '' ),
+			'link'       => (string) ( $data['link'] ?? '' ),
+			'roles'      => isset( $data['roles'] ) ? array_map( 'strval', (array) $data['roles'] ) : array(),
 		);
 	}
 }

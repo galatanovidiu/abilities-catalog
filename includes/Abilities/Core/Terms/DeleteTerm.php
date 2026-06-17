@@ -52,11 +52,12 @@ final class DeleteTerm implements Ability {
 				'properties'           => array(
 					'taxonomy' => array(
 						'type'        => 'string',
-						'description' => __( 'The taxonomy slug (required), e.g. "category" or a custom taxonomy.', 'abilities-catalog' ),
+						'description' => __( 'The taxonomy slug (required), e.g. "category" or a custom taxonomy. Find available slugs via terms/list-taxonomies.', 'abilities-catalog' ),
 					),
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __( 'The term ID to permanently delete (required).', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The term ID to permanently delete (required). Find it via terms/list-terms or terms/get-term.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'taxonomy', 'id' ),
@@ -66,13 +67,37 @@ final class DeleteTerm implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'           => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the term was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'                => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted term ID.', 'abilities-catalog' ),
+					),
+					'previous_taxonomy' => array(
+						'type'        => 'string',
+						'description' => __( 'The taxonomy the deleted term belonged to, before deletion.', 'abilities-catalog' ),
+					),
+					'previous_name'     => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted term name, from the term as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_slug'     => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted term slug, from the term as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_parent'   => array(
+						'type'        => 'integer',
+						'description' => __( 'The deleted term parent ID (0 if top-level), before deletion. Present only for hierarchical taxonomies.', 'abilities-catalog' ),
+					),
+					'previous_link'     => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted term archive URL as it existed before deletion.', 'abilities-catalog' ),
+					),
+					'previous_count'    => array(
+						'type'        => 'integer',
+						'description' => __( 'The number of objects assigned to the term before deletion.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -150,9 +175,31 @@ final class DeleteTerm implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
 		);
+
+		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
+		if ( isset( $previous['taxonomy'] ) ) {
+			$result['previous_taxonomy'] = (string) $previous['taxonomy'];
+		}
+		if ( isset( $previous['name'] ) ) {
+			$result['previous_name'] = (string) $previous['name'];
+		}
+		if ( isset( $previous['slug'] ) ) {
+			$result['previous_slug'] = (string) $previous['slug'];
+		}
+		if ( isset( $previous['parent'] ) ) {
+			$result['previous_parent'] = (int) $previous['parent'];
+		}
+		if ( isset( $previous['link'] ) ) {
+			$result['previous_link'] = (string) $previous['link'];
+		}
+		if ( isset( $previous['count'] ) ) {
+			$result['previous_count'] = (int) $previous['count'];
+		}
+
+		return $result;
 	}
 }

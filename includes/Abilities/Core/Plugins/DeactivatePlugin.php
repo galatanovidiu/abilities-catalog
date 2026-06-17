@@ -59,13 +59,19 @@ final class DeactivatePlugin implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'plugin', 'status' ),
 				'properties'           => array(
-					'plugin' => array(
+					'plugin'          => array(
 						'type'        => 'string',
 						'description' => __( 'The plugin file path.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'status'          => array(
 						'type'        => 'string',
+						'enum'        => array( 'inactive', 'active', 'network-active' ),
 						'description' => __( 'The resulting plugin activation status.', 'abilities-catalog' ),
+					),
+					'previous_status' => array(
+						'type'        => 'string',
+						'enum'        => array( 'inactive', 'active', 'network-active' ),
+						'description' => __( 'The plugin activation status before this request, so a real deactivation can be told apart from an already-inactive no-op.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -119,7 +125,7 @@ final class DeactivatePlugin implements Ability {
 	 * Surfaces any REST error (not found, capability, deactivation failure) unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The plugin file path and resulting status, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The plugin file path, resulting status, and previous status, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input  = is_array( $input ) ? $input : array();
@@ -128,9 +134,12 @@ final class DeactivatePlugin implements Ability {
 		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__( 'A plugin file path is required.', 'abilities-catalog' )
+				__( 'A plugin file path is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
+
+		$previous_status = $this->readStatus( $plugin );
 
 		$request = new WP_REST_Request( 'POST', '/wp/v2/plugins/' . $plugin );
 		$request->set_param( 'status', 'inactive' );
@@ -142,9 +151,39 @@ final class DeactivatePlugin implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return array(
+		$result = array(
 			'plugin' => (string) ( $data['plugin'] ?? $plugin ),
 			'status' => (string) ( $data['status'] ?? '' ),
 		);
+
+		if ( '' !== $previous_status ) {
+			$result['previous_status'] = $previous_status;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Reads the current activation status of a plugin via the core REST GET route.
+	 *
+	 * Used to capture the pre-deactivation status so the caller can tell a real
+	 * deactivation from an already-inactive no-op. Returns an empty string when the
+	 * status cannot be read (for example a missing plugin), letting `execute()`
+	 * surface the authoritative error from the deactivation request instead.
+	 *
+	 * @param string $plugin The plugin file path without the `.php` extension.
+	 * @return string The current status, or an empty string when it cannot be read.
+	 */
+	private function readStatus( string $plugin ): string {
+		$request  = new WP_REST_Request( 'GET', '/wp/v2/plugins/' . $plugin );
+		$response = rest_do_request( $request );
+
+		if ( $response->is_error() ) {
+			return '';
+		}
+
+		$data = rest_get_server()->response_to_data( $response, false );
+
+		return (string) ( $data['status'] ?? '' );
 	}
 }

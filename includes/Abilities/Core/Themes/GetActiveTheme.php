@@ -61,7 +61,8 @@ final class GetActiveTheme implements Ability {
 					),
 					'status'         => array(
 						'type'        => 'string',
-						'description' => __( 'The theme status (e.g. "active").', 'abilities-catalog' ),
+						'enum'        => array( 'active' ),
+						'description' => __( 'The theme status; always "active" for this ability.', 'abilities-catalog' ),
 					),
 					'is_block_theme' => array(
 						'type'        => 'boolean',

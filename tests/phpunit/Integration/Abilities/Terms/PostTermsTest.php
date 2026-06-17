@@ -88,6 +88,78 @@ final class PostTermsTest extends TestCase {
 		$this->assertContains( $this->cat_b, $second['term_ids'] );
 	}
 
+	public function test_attach_replace_mode_swaps_terms(): void {
+		$this->actingAs( 'administrator' );
+		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_b ),
+				'append'   => false,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertNotContains( $this->cat_a, $result['term_ids'] );
+		$this->assertContains( $this->cat_b, $result['term_ids'] );
+	}
+
+	public function test_attach_output_shape(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame(
+			array( 'post_id', 'taxonomy', 'term_ids', 'edit_link' ),
+			array_keys( $result )
+		);
+		$this->assertSame( $this->post_id, $result['post_id'] );
+		$this->assertSame( 'category', $result['taxonomy'] );
+		$this->assertIsArray( $result['term_ids'] );
+		$this->assertContainsOnly( 'int', $result['term_ids'] );
+		$this->assertIsString( $result['edit_link'] );
+	}
+
+	public function test_attach_taxonomy_not_on_post_type_returns_error(): void {
+		$this->actingAs( 'administrator' );
+
+		// Taxonomy exists (so the permission gate passes) but is registered for
+		// pages only, not the post type under test.
+		register_taxonomy(
+			'pages_only_tax',
+			array( 'page' ),
+			array( 'capabilities' => array( 'assign_terms' => 'edit_posts' ) )
+		);
+		$term_id = self::factory()->term->create(
+			array(
+				'taxonomy' => 'pages_only_tax',
+				'slug'     => 'pages-term',
+			)
+		);
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'pages_only_tax',
+				'terms'    => array( $term_id ),
+			)
+		);
+
+		unregister_taxonomy( 'pages_only_tax' );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_taxonomy_invalid', $result->get_error_code() );
+	}
+
 	public function test_attach_missing_term_returns_error(): void {
 		$this->actingAs( 'administrator' );
 
@@ -120,10 +192,87 @@ final class PostTermsTest extends TestCase {
 		$this->assertContains( $this->cat_b, $result['term_ids'] );
 	}
 
+	public function test_detach_output_shape(): void {
+		$this->actingAs( 'administrator' );
+		wp_set_object_terms( $this->post_id, array( $this->cat_a, $this->cat_b ), 'category' );
+
+		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame(
+			array( 'post_id', 'taxonomy', 'term_ids', 'edit_link' ),
+			array_keys( $result )
+		);
+		$this->assertSame( $this->post_id, $result['post_id'] );
+		$this->assertSame( 'category', $result['taxonomy'] );
+		$this->assertIsArray( $result['term_ids'] );
+		$this->assertContainsOnly( 'int', $result['term_ids'] );
+		$this->assertIsString( $result['edit_link'] );
+	}
+
+	public function test_detach_invalid_post_id_is_denied(): void {
+		$this->actingAs( 'administrator' );
+
+		// hasPermission() does object-level work (edit_post on the post), so an
+		// invalid post ID fails the permission gate. WP_Ability::execute()
+		// collapses the non-true permission return into a generic permission
+		// error before the rest_post_invalid_id branch in execute() runs.
+		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+			array(
+				'post_id'  => 999999,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+	}
+
+	public function test_detach_already_absent_term_is_idempotent_no_op(): void {
+		$this->actingAs( 'administrator' );
+		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
+
+		// cat_b is not assigned; detaching it is a successful no-op.
+		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_b ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertContains( $this->cat_a, $result['term_ids'] );
+		$this->assertNotContains( $this->cat_b, $result['term_ids'] );
+	}
+
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $this->post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+	}
+
+	public function test_detach_logged_out_user_is_denied(): void {
+		wp_set_current_user( 0 );
+		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
+
+		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',

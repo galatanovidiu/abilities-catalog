@@ -13,8 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `settings/get-writing`.
  *
- * Returns the Writing Settings screen values, read directly from options.
- * Net-new read: no REST route is dispatched.
+ * Returns the stored Writing Settings option values, read directly from options.
+ * These normally match the Writing Settings screen. Net-new read: no REST route
+ * is dispatched.
  *
  * @since 0.1.0
  */
@@ -33,12 +34,12 @@ final class GetWriting implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Writing Settings', 'abilities-catalog' ),
-			'description'         => __( 'Returns the Writing Settings screen values: default category, default post format, and the smilies conversion flag.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the stored Writing Settings option values (which normally match the Writing Settings screen): default category, default post format, and the smilies conversion flag.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'default_category' ),
+				'required'             => array( 'default_category', 'default_post_format', 'use_smilies' ),
 				'properties'           => array(
 					'default_category'    => array(
 						'type'        => 'integer',
@@ -46,6 +47,7 @@ final class GetWriting implements Ability {
 					),
 					'default_post_format' => array(
 						'type'        => 'string',
+						'enum'        => array( 'standard', 'aside', 'chat', 'gallery', 'link', 'image', 'quote', 'status', 'video', 'audio' ),
 						'description' => __( 'The default post format (e.g. "standard").', 'abilities-catalog' ),
 					),
 					'use_smilies'         => array(
@@ -88,7 +90,7 @@ final class GetWriting implements Ability {
 		return array(
 			'default_category'    => absint( get_option( 'default_category' ) ),
 			'default_post_format' => (string) ( get_option( 'default_post_format' ) ?: 'standard' ),
-			'use_smilies'         => (bool) get_option( 'use_smilies' ),
+			'use_smilies'         => (bool) get_option( 'use_smilies', true ),
 		);
 	}
 }

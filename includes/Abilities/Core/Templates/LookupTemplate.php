@@ -143,7 +143,12 @@ final class LookupTemplate implements Ability {
 		}
 
 		$hierarchy = get_template_hierarchy( $slug, $custom, $prefix );
-		$hierarchy = array_values( array_filter( array_map( 'strval', is_array( $hierarchy ) ? $hierarchy : array() ) ) );
+		$hierarchy = array_values(
+			array_filter(
+				array_map( 'strval', is_array( $hierarchy ) ? $hierarchy : array() ),
+				static fn ( string $value ): bool => '' !== $value
+			)
+		);
 
 		// Map existing block templates by slug for the active theme.
 		$existing = array();

@@ -16,8 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 safe-write ability: `terms/update-term` (generic, keyed by `taxonomy`).
  *
  * Wraps `POST /wp/v2/<rest_base>/<id>` via `rest_do_request()` for any
- * `show_in_rest` taxonomy and returns the updated term's id, name, slug, and
- * taxonomy. The `rest_base` is resolved from the taxonomy object
+ * `show_in_rest` taxonomy and returns the updated term's id, name, slug,
+ * taxonomy, description, and parent. The `rest_base` is resolved from the
+ * taxonomy object
  * (`->rest_base ?: $taxonomy`).
  *
  * The permission check mirrors the REST terms controller update path:
@@ -78,21 +79,29 @@ final class UpdateTerm implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'name', 'slug', 'taxonomy' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The term ID.', 'abilities-catalog' ),
 					),
-					'name'     => array(
+					'name'        => array(
 						'type'        => 'string',
 						'description' => __( 'The term name.', 'abilities-catalog' ),
 					),
-					'slug'     => array(
+					'slug'        => array(
 						'type'        => 'string',
 						'description' => __( 'The term slug.', 'abilities-catalog' ),
 					),
-					'taxonomy' => array(
+					'taxonomy'    => array(
 						'type'        => 'string',
 						'description' => __( 'The taxonomy the term belongs to.', 'abilities-catalog' ),
+					),
+					'description' => array(
+						'type'        => 'string',
+						'description' => __( 'The term description.', 'abilities-catalog' ),
+					),
+					'parent'      => array(
+						'type'        => 'integer',
+						'description' => __( 'The parent term ID (0 when top-level or non-hierarchical).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -141,7 +150,7 @@ final class UpdateTerm implements Ability {
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The updated term's id, name, slug, taxonomy, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The updated term's id, name, slug, taxonomy, description, parent, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input    = is_array( $input ) ? $input : array();
@@ -193,10 +202,12 @@ final class UpdateTerm implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'       => (int) ( $data['id'] ?? $id ),
-			'name'     => (string) ( $data['name'] ?? '' ),
-			'slug'     => (string) ( $data['slug'] ?? '' ),
-			'taxonomy' => (string) ( $data['taxonomy'] ?? $taxonomy ),
+			'id'          => (int) ( $data['id'] ?? $id ),
+			'name'        => (string) ( $data['name'] ?? '' ),
+			'slug'        => (string) ( $data['slug'] ?? '' ),
+			'taxonomy'    => (string) ( $data['taxonomy'] ?? $taxonomy ),
+			'description' => (string) ( $data['description'] ?? '' ),
+			'parent'      => (int) ( $data['parent'] ?? 0 ),
 		);
 	}
 }

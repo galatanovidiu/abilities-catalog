@@ -41,13 +41,14 @@ final class DeleteTheme implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Theme', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes an installed theme by its stylesheet (directory name). The active theme and the parent of the active theme cannot be deleted.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes an installed theme by its stylesheet (directory name). The active theme and the parent of the active theme cannot be deleted. On multisite the removal affects every site in the network.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'stylesheet' => array(
 						'type'        => 'string',
+						'minLength'   => 1,
 						'description' => __( 'The theme directory name (stylesheet) to delete, for example "twentytwentyfour".', 'abilities-catalog' ),
 					),
 				),
@@ -56,7 +57,7 @@ final class DeleteTheme implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'deleted', 'stylesheet' ),
+				'required'             => array( 'deleted', 'stylesheet', 'name' ),
 				'properties'           => array(
 					'deleted'    => array(
 						'type'        => 'boolean',
@@ -65,6 +66,10 @@ final class DeleteTheme implements Ability {
 					'stylesheet' => array(
 						'type'        => 'string',
 						'description' => __( 'The stylesheet (directory name) of the deleted theme.', 'abilities-catalog' ),
+					),
+					'name'       => array(
+						'type'        => 'string',
+						'description' => __( 'The display name of the deleted theme.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -96,7 +101,7 @@ final class DeleteTheme implements Ability {
 	public function hasPermission( $input ): bool {
 		$input = is_array( $input ) ? $input : array();
 
-		if ( empty( $input['stylesheet'] ) ) {
+		if ( '' === ( isset( $input['stylesheet'] ) ? (string) $input['stylesheet'] : '' ) ) {
 			return false;
 		}
 
@@ -120,7 +125,8 @@ final class DeleteTheme implements Ability {
 		if ( '' === $stylesheet ) {
 			return new WP_Error(
 				'webmcp_missing_stylesheet',
-				__( 'A theme stylesheet is required.', 'abilities-catalog' )
+				__( 'A theme stylesheet is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
@@ -142,6 +148,9 @@ final class DeleteTheme implements Ability {
 			);
 		}
 
+		// Capture the display name before deletion; it is unrecoverable afterwards.
+		$name = (string) $theme->get( 'Name' );
+
 		$fs = FilesystemGuard::ensureDirect( get_theme_root( $stylesheet ) );
 		if ( is_wp_error( $fs ) ) {
 			return $fs;
@@ -152,10 +161,18 @@ final class DeleteTheme implements Ability {
 		$result = delete_theme( $stylesheet );
 
 		if ( is_wp_error( $result ) ) {
+			// Core delete failures (fs_unavailable, fs_error, fs_no_themes_dir,
+			// could_not_remove_theme) carry no HTTP status; preserve the code and
+			// message but ensure a status for client branching.
+			$data = $result->get_error_data();
+			if ( ! is_array( $data ) || ! isset( $data['status'] ) ) {
+				$result->add_data( array( 'status' => 500 ) );
+			}
+
 			return $result;
 		}
 
-		if ( false === $result ) {
+		if ( true !== $result ) {
 			return new WP_Error(
 				'webmcp_delete_failed',
 				__( 'The theme could not be deleted.', 'abilities-catalog' ),
@@ -166,6 +183,7 @@ final class DeleteTheme implements Ability {
 		return array(
 			'deleted'    => true,
 			'stylesheet' => $stylesheet,
+			'name'       => $name,
 		);
 	}
 }

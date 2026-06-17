@@ -20,7 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * {@see WP_Debug_Data::debug_data()}, with private values redacted. Core marks
  * sensitive entries with `'private' => true` — both at the section level and at the
  * individual field level. This ability drops any private section and any private
- * field, returning only the label and value of the remaining non-private fields.
+ * field, and skips sections left with no fields. For each surviving non-private
+ * field it returns the label, value, and (when core provides it) the machine-stable
+ * `debug` copy form.
  *
  * @since 0.1.0
  */
@@ -92,7 +94,8 @@ final class GetInfo implements Ability {
 		if ( ! class_exists( 'WP_Debug_Data' ) ) {
 			return new WP_Error(
 				'site_health_unavailable',
-				__( 'Site Health debug data is not available on this installation.', 'abilities-catalog' )
+				__( 'Site Health debug data is not available on this installation.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
@@ -110,12 +113,13 @@ final class GetInfo implements Ability {
 		} catch ( \Throwable $e ) {
 			return new WP_Error(
 				'site_health_info_failed',
-				__( 'Could not collect Site Health debug data.', 'abilities-catalog' )
+				__( 'Could not collect Site Health debug data.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
 		return array(
-			'info' => $this->redact( is_array( $debug_data ) ? $debug_data : array() ),
+			'info' => (object) $this->redact( is_array( $debug_data ) ? $debug_data : array() ),
 		);
 	}
 
@@ -123,7 +127,8 @@ final class GetInfo implements Ability {
 	 * Builds a redacted copy of the debug data.
 	 *
 	 * Drops any section flagged private, then within each remaining section drops any
-	 * field flagged private. Only the label and value of non-private fields survive.
+	 * field flagged private. The label, value, and optional machine-stable `debug`
+	 * value of non-private fields survive. Sections left with no fields are skipped.
 	 *
 	 * @param array<string,mixed> $debug_data The raw debug data sections.
 	 * @return array<string,mixed> The redacted sections.
@@ -150,10 +155,23 @@ final class GetInfo implements Ability {
 					continue;
 				}
 
-				$fields[ $field_name ] = array(
+				$entry = array(
 					'label' => (string) ( $field['label'] ?? $field_name ),
 					'value' => $field['value'] ?? null,
 				);
+
+				// Core's `debug` value is the machine-stable, untranslated copy form
+				// (class-wp-debug-data.php). Surface it when present for agent consumers.
+				if ( isset( $field['debug'] ) ) {
+					$entry['debug'] = $field['debug'];
+				}
+
+				$fields[ $field_name ] = $entry;
+			}
+
+			// Core skips sections with no fields in both the Info UI and `format()`.
+			if ( empty( $fields ) ) {
+				continue;
 			}
 
 			$redacted[ $section_id ] = array(

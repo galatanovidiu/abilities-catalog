@@ -44,22 +44,23 @@ final class GetStatus implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Site Health Status', 'abilities-catalog' ),
-			'description'         => __( 'Runs the cheap direct Site Health tests and lists the asynchronous tests. Does not run live HTTP, loopback, or cron checks.', 'abilities-catalog' ),
+			'description'         => __( 'Runs the direct Site Health tests and lists the asynchronous tests. The direct set includes the REST-availability check, which issues one in-process HTTP request to the site REST API; loopback and cron checks are not run.', 'abilities-catalog' ),
 			'category'            => 'site-health',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array(),
+				'required'             => array( 'direct', 'async', 'summary' ),
 				'properties'           => array(
 					'direct'  => array(
 						'type'        => 'array',
 						'description' => __( 'Results of the direct tests that were run.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
+							'required'             => array( 'test', 'label', 'status' ),
 							'properties'           => array(
 								'test'   => array(
 									'type'        => 'string',
-									'description' => __( 'The test identifier.', 'abilities-catalog' ),
+									'description' => __( 'The direct test identifier.', 'abilities-catalog' ),
 								),
 								'label'  => array(
 									'type'        => 'string',
@@ -67,6 +68,7 @@ final class GetStatus implements Ability {
 								),
 								'status' => array(
 									'type'        => 'string',
+									'enum'        => array( 'good', 'recommended', 'critical' ),
 									'description' => __( 'The test outcome: good, recommended, or critical.', 'abilities-catalog' ),
 								),
 							),
@@ -78,10 +80,11 @@ final class GetStatus implements Ability {
 						'description' => __( 'Asynchronous tests that were listed but not run.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
+							'required'             => array( 'test', 'label' ),
 							'properties'           => array(
 								'test'  => array(
 									'type'        => 'string',
-									'description' => __( 'The test identifier.', 'abilities-catalog' ),
+									'description' => __( 'The runnable test identifier (hyphenated slug).', 'abilities-catalog' ),
 								),
 								'label' => array(
 									'type'        => 'string',
@@ -94,6 +97,7 @@ final class GetStatus implements Ability {
 					'summary' => array(
 						'type'                 => 'object',
 						'description'          => __( 'Count of direct results by status.', 'abilities-catalog' ),
+						'required'             => array( 'good', 'recommended', 'critical' ),
 						'properties'           => array(
 							'good'        => array(
 								'type'        => 'integer',
@@ -143,12 +147,17 @@ final class GetStatus implements Ability {
 	 * @return array<string,mixed>|\WP_Error The status structure, or an error.
 	 */
 	public function execute( $input = null ) {
-		AdminIncludes::load( 'class-wp-site-health' );
+		// Several direct tests call admin-only helpers (get_core_updates,
+		// get_plugins, get_plugin_updates, get_theme_updates) that are not loaded
+		// during a REST request. Without these includes the test callbacks throw and
+		// are silently skipped, dropping core tests from the result.
+		AdminIncludes::load( 'class-wp-site-health', 'plugin', 'update', 'theme', 'file', 'misc' );
 
 		if ( ! class_exists( 'WP_Site_Health' ) ) {
 			return new WP_Error(
 				'site_health_unavailable',
-				__( 'Site Health is not available on this installation.', 'abilities-catalog' )
+				__( 'Site Health is not available on this installation.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
@@ -156,11 +165,18 @@ final class GetStatus implements Ability {
 		if ( ! $site_health instanceof WP_Site_Health ) {
 			return new WP_Error(
 				'site_health_unavailable',
-				__( 'Site Health is not available on this installation.', 'abilities-catalog' )
+				__( 'Site Health is not available on this installation.', 'abilities-catalog' ),
+				array( 'status' => 500 )
 			);
 		}
 
 		$tests = $site_health->get_tests();
+
+		// Mirror core: the HTTPS test is hidden from the async set on development
+		// and local environments (class-wp-site-health.php enqueue path).
+		if ( in_array( wp_get_environment_type(), array( 'development', 'local' ), true ) ) {
+			unset( $tests['async']['https_status'] );
+		}
 
 		$direct  = array();
 		$summary = array(
@@ -179,23 +195,27 @@ final class GetStatus implements Ability {
 
 			$status = (string) ( $result['status'] ?? '' );
 
+			// Core constrains a test status to good|recommended|critical, which the
+			// output schema enforces; skip any out-of-range status from a filter.
+			if ( ! isset( $summary[ $status ] ) ) {
+				continue;
+			}
+
 			$direct[] = array(
 				'test'   => (string) ( $result['test'] ?? $identifier ),
 				'label'  => (string) ( $result['label'] ?? ( $test['label'] ?? $identifier ) ),
 				'status' => $status,
 			);
 
-			if ( ! isset( $summary[ $status ] ) ) {
-				continue;
-			}
-
 			++$summary[ $status ];
 		}
 
 		$async = array();
 		foreach ( ( $tests['async'] ?? array() ) as $key => $test ) {
+			// Core registers async tests under underscored keys, but the runnable
+			// REST routes (and the sibling run-tests ability) use hyphenated slugs.
 			$async[] = array(
-				'test'  => (string) $key,
+				'test'  => str_replace( '_', '-', (string) $key ),
 				'label' => (string) ( $test['label'] ?? $key ),
 			);
 		}
@@ -239,7 +259,10 @@ final class GetStatus implements Ability {
 		}
 
 		try {
-			$result = call_user_func( $callback );
+			// Apply the same filter core's private perform_test() applies, so plugin
+			// and theme adjustments to a test result are reflected.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Applying WordPress core's own site_status_test_result filter, not defining a plugin hook.
+			$result = apply_filters( 'site_status_test_result', call_user_func( $callback ) );
 		} catch ( \Throwable $e ) {
 			return null;
 		}

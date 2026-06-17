@@ -17,8 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/menu-items` via `rest_do_request()` and returns the
  * collection of classic menu items (`nav_menu_item` posts) plus its total
- * counts. Listing menu items requires the `edit` context, so it defaults to
- * `edit`. Read-only.
+ * counts. The catalog gates this behind the admin `edit_theme_options`
+ * capability and defaults to the `edit` context so callers get the richer
+ * item fields. Read-only.
  *
  * @since 0.1.0
  */
@@ -54,8 +55,7 @@ final class ListMenuItems implements Ability {
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'maximum'     => 100,
-						'default'     => 10,
-						'description' => __( 'Number of items to return per page.', 'abilities-catalog' ),
+						'description' => __( 'Number of items to return per page. When omitted, core returns up to 100 items.', 'abilities-catalog' ),
 					),
 					'page'       => array(
 						'type'        => 'integer',
@@ -67,7 +67,7 @@ final class ListMenuItems implements Ability {
 						'type'        => 'string',
 						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'edit',
-						'description' => __( 'Scope of the request. Menu items require "edit" context to be listed.', 'abilities-catalog' ),
+						'description' => __( 'Scope of the request. Defaults to "edit" so richer item fields are returned.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

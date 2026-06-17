@@ -36,7 +36,7 @@ final class ListTaxonomies implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Taxonomies', 'abilities-catalog' ),
-			'description'         => __( 'Returns the registered taxonomies that are exposed in the REST API.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the registered taxonomies that are exposed in the REST API. Use a returned "slug" as the "taxonomy" input to terms/list-terms. The default "view" context returns public taxonomies.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -59,7 +59,33 @@ final class ListTaxonomies implements Ability {
 						'description' => __( 'The registered, REST-exposed taxonomies.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'name', 'slug', 'types', 'hierarchical', 'rest_base' ),
+							'properties'           => array(
+								'name'         => array(
+									'type'        => 'string',
+									'description' => __( 'Human-readable taxonomy label.', 'abilities-catalog' ),
+								),
+								'slug'         => array(
+									'type'        => 'string',
+									'description' => __( 'Taxonomy slug; pass as the "taxonomy" input to terms/list-terms.', 'abilities-catalog' ),
+								),
+								'types'        => array(
+									'type'        => 'array',
+									'description' => __( 'Object types (post types) this taxonomy is registered for.', 'abilities-catalog' ),
+									'items'       => array(
+										'type' => 'string',
+									),
+								),
+								'hierarchical' => array(
+									'type'        => 'boolean',
+									'description' => __( 'Whether the taxonomy is hierarchical (like categories) or flat (like tags).', 'abilities-catalog' ),
+								),
+								'rest_base'    => array(
+									'type'        => 'string',
+									'description' => __( 'REST API base for the taxonomy.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 				),

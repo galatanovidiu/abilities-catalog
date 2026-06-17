@@ -42,13 +42,13 @@ final class GetFontFamily implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The font family post ID.', 'abilities-catalog' ),
+						'description' => __( 'The font family post ID. Discover IDs with `fonts/list-font-families`.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
 						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						'description' => __( 'Scope of the response fields: "view", "edit", or "embed". All output fields are returned in every context.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -64,12 +64,33 @@ final class GetFontFamily implements Ability {
 					),
 					'font_family_settings' => array(
 						'type'                 => 'object',
+						'properties'           => array(
+							'name'       => array(
+								'type'        => 'string',
+								'description' => __( 'The human-readable font family name.', 'abilities-catalog' ),
+							),
+							'slug'       => array(
+								'type'        => 'string',
+								'description' => __( 'The font family slug.', 'abilities-catalog' ),
+							),
+							'fontFamily' => array(
+								'type'        => 'string',
+								'description' => __( 'The CSS font-family value.', 'abilities-catalog' ),
+							),
+							'preview'    => array(
+								'type'        => 'string',
+								'description' => __( 'URL to a preview image of the font family.', 'abilities-catalog' ),
+							),
+						),
 						'additionalProperties' => true,
-						'description'          => __( 'The font family settings (name, font family value, slug).', 'abilities-catalog' ),
+						'description'          => __( 'The font family settings (name, slug, fontFamily, optional preview).', 'abilities-catalog' ),
 					),
 					'font_faces'           => array(
 						'type'        => 'array',
-						'description' => __( 'The font face IDs or objects belonging to this family.', 'abilities-catalog' ),
+						'items'       => array(
+							'type' => 'integer',
+						),
+						'description' => __( 'The font face post IDs belonging to this family.', 'abilities-catalog' ),
 					),
 					'theme_json_version'   => array(
 						'type'        => 'integer',

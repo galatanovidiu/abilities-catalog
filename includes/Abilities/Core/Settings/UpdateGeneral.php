@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Settings;
 
+use DateTimeZone;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_Error;
@@ -54,7 +55,7 @@ final class UpdateGeneral implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update General Settings', 'abilities-catalog' ),
-			'description'         => __( 'Updates General Settings: site title, tagline, timezone, date and time formats, week start, and language. Changing the site URL or admin email is not permitted through this tool.', 'abilities-catalog' ),
+			'description'         => __( 'Updates General Settings: site title, tagline, timezone, date and time formats, week start, and language. The language can only be switched to an already-installed locale. Changing the site URL or admin email is not permitted through this tool.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -81,6 +82,8 @@ final class UpdateGeneral implements Ability {
 					),
 					'start_of_week' => array(
 						'type'        => 'integer',
+						'minimum'     => 0,
+						'maximum'     => 6,
 						'description' => __( 'The day the week starts on (0 = Sunday, 6 = Saturday).', 'abilities-catalog' ),
 					),
 					'language'      => array(
@@ -120,7 +123,7 @@ final class UpdateGeneral implements Ability {
 					),
 					'language'      => array(
 						'type'        => 'string',
-						'description' => __( 'The resulting site locale.', 'abilities-catalog' ),
+						'description' => __( 'The resulting active site locale (e.g. "en_US").', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -172,6 +175,30 @@ final class UpdateGeneral implements Ability {
 			}
 		}
 
+		if ( array_key_exists( 'timezone', $input ) ) {
+			$timezone = (string) $input['timezone'];
+
+			if ( '' !== $timezone && ! in_array( $timezone, timezone_identifiers_list( DateTimeZone::ALL_WITH_BC ), true ) ) {
+				return new WP_Error(
+					'webmcp_invalid_timezone',
+					__( 'The timezone is not a recognized timezone identifier (e.g. "Europe/Berlin").', 'abilities-catalog' ),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
+		if ( array_key_exists( 'language', $input ) ) {
+			$language = (string) $input['language'];
+
+			if ( '' !== $language && ! in_array( $language, get_available_languages(), true ) ) {
+				return new WP_Error(
+					'webmcp_invalid_language',
+					__( 'The locale is not installed. Install the language pack before switching to it; an empty string selects English.', 'abilities-catalog' ),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
 		$request = new WP_REST_Request( 'POST', '/wp/v2/settings' );
 
 		foreach ( array( 'title', 'description', 'timezone', 'date_format', 'time_format', 'language' ) as $field ) {
@@ -200,7 +227,7 @@ final class UpdateGeneral implements Ability {
 			'date_format'   => (string) ( $data['date_format'] ?? '' ),
 			'time_format'   => (string) ( $data['time_format'] ?? '' ),
 			'start_of_week' => absint( $data['start_of_week'] ?? 0 ),
-			'language'      => (string) ( $data['language'] ?? '' ),
+			'language'      => (string) get_locale(),
 		);
 	}
 }

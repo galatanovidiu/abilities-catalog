@@ -48,7 +48,7 @@ final class ListMenuLocations implements Ability {
 						'description' => __( 'The theme\'s registered menu locations.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'required'             => array( 'location', 'description', 'menu_id' ),
+							'required'             => array( 'location', 'description', 'menu_id', 'menu_name' ),
 							'properties'           => array(
 								'location'    => array(
 									'type'        => 'string',
@@ -64,7 +64,7 @@ final class ListMenuLocations implements Ability {
 								),
 								'menu_name'   => array(
 									'type'        => 'string',
-									'description' => __( 'The name of the assigned menu, or an empty string if none.', 'abilities-catalog' ),
+									'description' => __( 'The name of the assigned menu, or an empty string if none. An empty string with a non-zero menu_id means the assigned menu no longer exists (stale assignment).', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,

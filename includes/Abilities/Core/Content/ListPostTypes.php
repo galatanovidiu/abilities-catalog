@@ -74,7 +74,7 @@ final class ListPostTypes implements Ability {
 								),
 								'rest_base'    => array(
 									'type'        => 'string',
-									'description' => __( 'The REST base used in /wp/v2/<rest_base>.', 'abilities-catalog' ),
+									'description' => __( 'The REST base segment for this type\'s collection route; the namespace defaults to wp/v2 but a type may override it.', 'abilities-catalog' ),
 								),
 								'supports'     => array(
 									'type'        => 'array',

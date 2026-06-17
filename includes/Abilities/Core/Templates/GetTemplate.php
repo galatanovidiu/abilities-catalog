@@ -43,6 +43,7 @@ final class GetTemplate implements Ability {
 				'properties'           => array(
 					'id'        => array(
 						'type'        => 'string',
+						'minLength'   => 1,
 						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//index").', 'abilities-catalog' ),
 					),
 					'post_type' => array(
@@ -65,39 +66,47 @@ final class GetTemplate implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'          => array(
+					'id'              => array(
 						'type'        => 'string',
 						'description' => __( 'The template id in "theme//slug" form.', 'abilities-catalog' ),
 					),
-					'slug'        => array(
+					'slug'            => array(
 						'type'        => 'string',
 						'description' => __( 'The template slug.', 'abilities-catalog' ),
 					),
-					'theme'       => array(
+					'theme'           => array(
 						'type'        => 'string',
 						'description' => __( 'The theme the template belongs to.', 'abilities-catalog' ),
 					),
-					'type'        => array(
+					'type'            => array(
 						'type'        => 'string',
 						'description' => __( 'The post type ("wp_template" or "wp_template_part").', 'abilities-catalog' ),
 					),
-					'source'      => array(
+					'source'          => array(
 						'type'        => 'string',
 						'description' => __( 'The source: "theme" (file-based) or "custom" (DB override).', 'abilities-catalog' ),
 					),
-					'title'       => array(
+					'original_source' => array(
+						'type'        => 'string',
+						'description' => __( 'The original provenance: "theme", "plugin", "site", or "user". Distinguishes a user-created template from a customized theme/plugin/site one.', 'abilities-catalog' ),
+					),
+					'area'            => array(
+						'type'        => 'string',
+						'description' => __( 'For template parts only: the area ("header", "footer", or "uncategorized").', 'abilities-catalog' ),
+					),
+					'title'           => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered template title.', 'abilities-catalog' ),
 					),
-					'content'     => array(
+					'content'         => array(
 						'type'        => 'string',
 						'description' => __( 'The raw template block markup.', 'abilities-catalog' ),
 					),
-					'description' => array(
+					'description'     => array(
 						'type'        => 'string',
 						'description' => __( 'The template description.', 'abilities-catalog' ),
 					),
-					'status'      => array(
+					'status'          => array(
 						'type'        => 'string',
 						'description' => __( 'The template status.', 'abilities-catalog' ),
 					),
@@ -160,7 +169,7 @@ final class GetTemplate implements Ability {
 			$content = $content['raw'] ?? ( $content['rendered'] ?? '' );
 		}
 
-		return array(
+		$result = array(
 			'id'          => (string) ( $data['id'] ?? $id ),
 			'slug'        => (string) ( $data['slug'] ?? '' ),
 			'theme'       => (string) ( $data['theme'] ?? '' ),
@@ -171,5 +180,16 @@ final class GetTemplate implements Ability {
 			'description' => (string) ( $data['description'] ?? '' ),
 			'status'      => (string) ( $data['status'] ?? '' ),
 		);
+
+		// original_source distinguishes user-created from customized
+		// theme/plugin/site templates; area identifies a template part.
+		if ( isset( $data['original_source'] ) && '' !== $data['original_source'] ) {
+			$result['original_source'] = (string) $data['original_source'];
+		}
+		if ( isset( $data['area'] ) && '' !== $data['area'] ) {
+			$result['area'] = (string) $data['area'];
+		}
+
+		return $result;
 	}
 }

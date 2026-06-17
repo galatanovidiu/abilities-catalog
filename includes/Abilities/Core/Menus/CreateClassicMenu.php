@@ -17,10 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `POST /wp/v2/menus` via `rest_do_request()` to create a classic menu
  * (`nav_menu` term). The menus controller inherits its create permission from the
- * terms controller, which checks the taxonomy's `edit_terms` capability; for the
- * `nav_menu` taxonomy every term capability maps to `edit_theme_options`. The
- * permission check therefore requires `edit_theme_options`. Optionally assigns
- * theme locations via the controller's `locations` write field. Write annotations
+ * terms controller. Because `nav_menu` is non-hierarchical, the create route checks
+ * the taxonomy's `assign_terms` capability; for the `nav_menu` taxonomy every term
+ * capability maps to `edit_theme_options`. The permission check therefore requires
+ * `edit_theme_options`. Optionally assigns theme locations via the controller's
+ * `locations` write field. Write annotations
  * (`readonly:false, destructive:false, idempotent:false`) route the call as POST.
  *
  * @since 0.3.0
@@ -66,13 +67,18 @@ final class CreateClassicMenu implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'name' ),
 				'properties'           => array(
-					'id'   => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new classic menu term ID.', 'abilities-catalog' ),
 					),
-					'name' => array(
+					'name'      => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting menu name.', 'abilities-catalog' ),
+					),
+					'locations' => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'The theme locations now assigned to the menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -94,8 +100,9 @@ final class CreateClassicMenu implements Ability {
 	/**
 	 * Permission check mirroring the terms controller create path for `nav_menu`.
 	 *
-	 * The terms controller checks the taxonomy's `edit_terms` capability on create;
-	 * for `nav_menu` it maps to `edit_theme_options`. The REST route re-checks.
+	 * `nav_menu` is non-hierarchical, so the terms controller checks the taxonomy's
+	 * `assign_terms` capability on create; for `nav_menu` it maps to
+	 * `edit_theme_options`. The REST route re-checks.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may create the classic menu.
@@ -108,14 +115,14 @@ final class CreateClassicMenu implements Ability {
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The new menu's id and name, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new menu's id, name, and assigned locations, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
 		$request = new WP_REST_Request( 'POST', '/wp/v2/menus' );
 
 		foreach ( array( 'name', 'description' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
@@ -134,8 +141,9 @@ final class CreateClassicMenu implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ( $data['id'] ?? 0 ),
-			'name' => (string) ( $data['name'] ?? '' ),
+			'id'        => (int) ( $data['id'] ?? 0 ),
+			'name'      => (string) ( $data['name'] ?? '' ),
+			'locations' => isset( $data['locations'] ) && is_array( $data['locations'] ) ? array_values( $data['locations'] ) : array(),
 		);
 	}
 }

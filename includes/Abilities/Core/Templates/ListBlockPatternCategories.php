@@ -49,7 +49,22 @@ final class ListBlockPatternCategories implements Ability {
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'name', 'label' ),
+							'properties'           => array(
+								'name'        => array(
+									'type'        => 'string',
+									'description' => __( 'The category slug (e.g. "header"). Use this to match patterns to their category.', 'abilities-catalog' ),
+								),
+								'label'       => array(
+									'type'        => 'string',
+									'description' => __( 'The human-readable category label (e.g. "Headers").', 'abilities-catalog' ),
+								),
+								'description' => array(
+									'type'        => 'string',
+									'description' => __( 'An optional description of the category.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 						'description' => __( 'The list of registered block-pattern categories.', 'abilities-catalog' ),
 					),
@@ -72,8 +87,9 @@ final class ListBlockPatternCategories implements Ability {
 	/**
 	 * Permission check: `edit_posts` (catalog capability for reading pattern categories).
 	 *
-	 * Mirrors the block-pattern-categories controller, whose first gate is
-	 * `edit_posts`; this guard is never weaker than the wrapped REST route.
+	 * Deliberately hardens the read to the catalog `edit_posts` capability. Core's
+	 * controller permits `edit_posts` OR the `edit_posts` cap of any `show_in_rest`
+	 * post type; this coarser guard is never weaker than the wrapped REST route.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read the pattern category registry.
@@ -96,10 +112,24 @@ final class ListBlockPatternCategories implements Ability {
 			return RestError::from( $response );
 		}
 
-		$items = rest_get_server()->response_to_data( $response, false );
+		$data  = rest_get_server()->response_to_data( $response, false );
+		$items = array();
+
+		foreach ( is_array( $data ) ? $data : array() as $row ) {
+			$item = array(
+				'name'  => (string) ( $row['name'] ?? '' ),
+				'label' => (string) ( $row['label'] ?? '' ),
+			);
+
+			if ( isset( $row['description'] ) && '' !== $row['description'] ) {
+				$item['description'] = (string) $row['description'];
+			}
+
+			$items[] = $item;
+		}
 
 		return array(
-			'items' => is_array( $items ) ? $items : array(),
+			'items' => $items,
 		);
 	}
 }

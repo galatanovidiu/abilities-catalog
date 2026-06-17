@@ -51,7 +51,8 @@ final class DeleteMenuItem implements Ability {
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The menu item ID to permanently delete.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The menu item ID to permanently delete. Find item IDs via menus/list-menu-items.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -61,13 +62,21 @@ final class DeleteMenuItem implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'        => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the menu item was permanently deleted.', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted menu item ID.', 'abilities-catalog' ),
+					),
+					'previous_title' => array(
+						'type'        => 'string',
+						'description' => __( 'The label of the menu item that was deleted.', 'abilities-catalog' ),
+					),
+					'previous_menus' => array(
+						'type'        => 'integer',
+						'description' => __( 'The classic menu term ID the deleted item belonged to, or 0 if it was orphaned.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -113,7 +122,7 @@ final class DeleteMenuItem implements Ability {
 	 * no Trash). Any REST error is returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted flag and id, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deleted flag, id, and a snapshot of the destroyed item, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -126,11 +135,26 @@ final class DeleteMenuItem implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
+		$data     = rest_get_server()->response_to_data( $response, false );
+		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
 
-		return array(
+		$result = array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
 			'id'      => $id,
 		);
+
+		if ( isset( $previous['title'] ) ) {
+			$title = $previous['title'];
+			if ( is_array( $title ) ) {
+				$title = $title['rendered'] ?? ( $title['raw'] ?? '' );
+			}
+			$result['previous_title'] = (string) $title;
+		}
+
+		if ( isset( $previous['menus'] ) ) {
+			$result['previous_menus'] = (int) $previous['menus'];
+		}
+
+		return $result;
 	}
 }

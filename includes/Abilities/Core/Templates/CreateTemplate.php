@@ -45,7 +45,7 @@ final class CreateTemplate implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Template', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new site-editor template or template part (post type wp_template / wp_template_part). Returns the new "theme//slug" id, status, and edit_link (the Site Editor URL) — surface edit_link so a human can open and finish the template. Does not change theme files and does not overwrite an existing template — use update-template for that. Send the content field as Gutenberg block markup (e.g. <!-- wp:template-part {"slug":"header"} /-->), not bare HTML.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new site-editor template or template part (post type wp_template / wp_template_part). Template parts are always created in the general (uncategorized) area. Returns the new "theme//slug" id, status, and edit_link (the Site Editor URL) — surface edit_link so a human can open and finish the template. Does not change theme files and does not overwrite an existing template — use update-template for that. Send the content field as Gutenberg block markup (e.g. <!-- wp:template-part {"slug":"header"} /-->), not bare HTML.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -53,7 +53,8 @@ final class CreateTemplate implements Ability {
 					'slug'        => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template slug (e.g. "page-about" or, for a part, "header"). Combined with the active theme to form the "theme//slug" id.', 'abilities-catalog' ),
+						'pattern'     => '[a-zA-Z0-9_\%-]+',
+						'description' => __( 'The template slug (e.g. "page-about" or, for a part, "header"). Only the characters [a-zA-Z0-9_%-] are allowed. Combined with the active theme to form the "theme//slug" id.', 'abilities-catalog' ),
 					),
 					'post_type'   => array(
 						'type'        => 'string',
@@ -143,7 +144,11 @@ final class CreateTemplate implements Ability {
 		$base      = 'wp_template_part' === $post_type ? 'template-parts' : 'templates';
 
 		$request = new WP_REST_Request( 'POST', '/wp/v2/' . $base );
-		$request->set_param( 'slug', sanitize_title( (string) ( $input['slug'] ?? '' ) ) );
+
+		// Pass the slug through unchanged; the REST route owns validation
+		// (pattern `[a-zA-Z0-9_%-]+`, minLength 1). Pre-sanitizing would mask
+		// core's specific validation error.
+		$request->set_param( 'slug', (string) ( $input['slug'] ?? '' ) );
 
 		foreach ( array( 'content', 'title', 'description' ) as $field ) {
 			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
@@ -165,10 +170,16 @@ final class CreateTemplate implements Ability {
 			$title = $title['rendered'] ?? '';
 		}
 
-		$id        = (string) ( $data['id'] ?? '' );
-		$edit_link = '' === $id
+		$id = (string) ( $data['id'] ?? '' );
+
+		// Build the edit link from core's canonical helper so it matches the
+		// registered template `_edit_link` and runs through the
+		// `get_edit_post_link` filter. The create response carries `wp_id` as
+		// an int (the underlying post ID).
+		$wp_id     = (int) ( $data['wp_id'] ?? 0 );
+		$edit_link = 0 === $wp_id
 			? ''
-			: admin_url( 'site-editor.php?postType=' . $post_type . '&postId=' . rawurlencode( $id ) . '&canvas=edit' );
+			: (string) get_edit_post_link( $wp_id, 'raw' );
 
 		return array(
 			'id'        => $id,

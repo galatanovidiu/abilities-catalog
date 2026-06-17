@@ -21,8 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * the route path and is not URL-encoded.
  *
  * Behaviour depends on the template's source (the REST route enforces this):
- * - A customized THEME template (a theme file the user edited) is reverted to the
- *   theme default by deleting the database customization.
+ * - A customized SOURCE-BACKED template (a template provided by the theme, a
+ *   plugin, or the site, that the user then edited) is reverted to its original
+ *   source by deleting the database customization. The `original_source` of the
+ *   returned `previous` snapshot resolves to `theme`, `plugin`, or `site`.
  * - A purely USER-CREATED custom template is removed entirely.
  * - A template that exists only as a theme file (never customized) cannot be
  *   deleted; the route returns "Templates based on theme files can't be removed."
@@ -51,7 +53,7 @@ final class DeleteTemplate implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Template', 'abilities-catalog' ),
-			'description'         => __( 'Deletes a site-editor template or template part by its "theme//slug" id. A customized theme template is reverted to the theme default; a user-created custom template is removed. Templates that exist only as theme files cannot be deleted. This permanently removes the database record and cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Deletes a site-editor template or template part by its "theme//slug" id. A customized source-backed template (provided by the theme, a plugin, or the site) is reverted to its original source; a user-created custom template is removed. Templates that exist only as theme files cannot be deleted. This permanently removes the database record and cannot be undone. Returns the deleted template\'s title, slug, type, and original_source so the caller can confirm which template changed.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -59,7 +61,7 @@ final class DeleteTemplate implements Ability {
 					'id'        => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//single").', 'abilities-catalog' ),
+						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//single"). Discover ids via templates/list-templates or templates/lookup-template.', 'abilities-catalog' ),
 					),
 					'post_type' => array(
 						'type'        => 'string',
@@ -75,13 +77,29 @@ final class DeleteTemplate implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'deleted', 'id' ),
 				'properties'           => array(
-					'deleted' => array(
+					'deleted'         => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the template record was deleted (reverted/removed).', 'abilities-catalog' ),
 					),
-					'id'      => array(
+					'id'              => array(
 						'type'        => 'string',
-						'description' => __( 'The deleted template id in "theme//slug" form.', 'abilities-catalog' ),
+						'description' => __( 'The deleted template id in canonical "theme//slug" form.', 'abilities-catalog' ),
+					),
+					'title'           => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted template title.', 'abilities-catalog' ),
+					),
+					'slug'            => array(
+						'type'        => 'string',
+						'description' => __( 'The deleted template slug.', 'abilities-catalog' ),
+					),
+					'type'            => array(
+						'type'        => 'string',
+						'description' => __( 'The post type of the deleted template: "wp_template" or "wp_template_part".', 'abilities-catalog' ),
+					),
+					'original_source' => array(
+						'type'        => 'string',
+						'description' => __( 'Where the template came from: "theme", "plugin", or "site" for a reverted source-backed template, or "user" for a removed user-created custom template.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -118,17 +136,20 @@ final class DeleteTemplate implements Ability {
 	 * Executes the ability by dispatching the internal REST delete request.
 	 *
 	 * Branches the route on `post_type`. Forces `force=true` so the template
-	 * record is permanently deleted (reverting a customized theme template to its
-	 * theme default, or removing a user-created custom template). Any REST error
-	 * is returned to the caller unchanged.
+	 * record is permanently deleted (reverting a customized source-backed template
+	 * to its original source, or removing a user-created custom template). On
+	 * success the forced-delete response carries a `previous` snapshot; its
+	 * canonical id, title, slug, type, and original_source are flattened into the
+	 * output. Any REST error is returned to the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted flag and id, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deleted flag, canonical id, and
+	 *                                       flattened template snapshot, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input     = is_array( $input ) ? $input : array();
 		$id        = (string) ( $input['id'] ?? '' );
-		$post_type = $input['post_type'] ?? 'wp_template';
+		$post_type = 'wp_template_part' === ( $input['post_type'] ?? 'wp_template' ) ? 'wp_template_part' : 'wp_template';
 		$base      = 'wp_template_part' === $post_type ? 'template-parts' : 'templates';
 
 		// The "theme//slug" id is part of the route path; do not URL-encode the "//".
@@ -142,9 +163,25 @@ final class DeleteTemplate implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
+		// With `force=true` core returns array( 'deleted' => true, 'previous' =>
+		// <prepared item> ). The snapshot carries the canonical id (core's route
+		// sanitizer repairs a single-slash id to "theme//slug") plus title, slug,
+		// type, and original_source — flatten them so the caller can confirm which
+		// template changed and whether it was reverted vs removed.
+		$previous = is_array( $data['previous'] ?? null ) ? $data['previous'] : array();
+
+		$title = $previous['title'] ?? '';
+		if ( is_array( $title ) ) {
+			$title = $title['raw'] ?? ( $title['rendered'] ?? '' );
+		}
+
 		return array(
-			'deleted' => (bool) ( $data['deleted'] ?? false ),
-			'id'      => $id,
+			'deleted'         => (bool) ( $data['deleted'] ?? false ),
+			'id'              => (string) ( $previous['id'] ?? $id ),
+			'title'           => (string) $title,
+			'slug'            => (string) ( $previous['slug'] ?? '' ),
+			'type'            => (string) ( $previous['type'] ?? $post_type ),
+			'original_source' => (string) ( $previous['original_source'] ?? '' ),
 		);
 	}
 }

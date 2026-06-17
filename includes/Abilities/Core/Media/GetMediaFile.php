@@ -42,19 +42,20 @@ final class GetMediaFile implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Media File', 'abilities-catalog' ),
-			'description'         => __( 'Returns the bytes of a media file, base64-encoded. Falls back to the source URL when the file exceeds the inline size limit.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the bytes of a media file, base64-encoded. When the file exceeds the inline size limit, returns a "file_too_large" error whose data carries the source URL to fetch directly.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'   => array(
 						'type'        => 'integer',
-						'description' => __( 'The attachment (media item) ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The attachment (media item) ID. Discover IDs via media/list-media or search/search-content.', 'abilities-catalog' ),
 					),
 					'size' => array(
 						'type'        => 'string',
 						'default'     => 'full',
-						'description' => __( 'Image size name (e.g. "thumbnail", "medium", "full"). Falls back to "full" if the size is unavailable.', 'abilities-catalog' ),
+						'description' => __( 'Image size name (e.g. "thumbnail", "medium", "full"). Discover valid size names via media/list-image-sizes. Falls back to "full" if the size is unavailable.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -136,9 +137,8 @@ final class GetMediaFile implements Ability {
 			);
 		}
 
-		$path   = $this->resolvePath( $id, $size );
-		$width  = 0;
-		$height = 0;
+		$resolved = $this->resolve( $id, $size );
+		$path     = $resolved['path'];
 
 		if ( '' === $path || ! is_readable( $path ) ) {
 			return new WP_Error(
@@ -151,10 +151,15 @@ final class GetMediaFile implements Ability {
 		$filesize = (int) filesize( $path );
 
 		if ( $filesize > self::MAX_INLINE_BYTES ) {
+			$source_url = '' !== $resolved['url'] ? $resolved['url'] : (string) wp_get_attachment_url( $id );
+
 			return new WP_Error(
 				'file_too_large',
 				__( 'File exceeds the 5 MB inline limit; use the source URL instead.', 'abilities-catalog' ),
-				array( 'source_url' => wp_get_attachment_url( $id ) )
+				array(
+					'status'     => 413,
+					'source_url' => $source_url,
+				)
 			);
 		}
 
@@ -168,7 +173,7 @@ final class GetMediaFile implements Ability {
 			);
 		}
 
-		$dimensions = $this->resolveDimensions( $id, $path );
+		$dimensions = $this->resolveDimensions( $id, $path, $resolved );
 		$width      = $dimensions['width'];
 		$height     = $dimensions['height'];
 
@@ -190,41 +195,69 @@ final class GetMediaFile implements Ability {
 	}
 
 	/**
-	 * Resolves the absolute file path for the requested attachment and size.
+	 * Resolves the requested attachment and size to a file path, URL, and the
+	 * selected file's dimensions.
 	 *
 	 * For an intermediate size the metadata path is relative to the uploads
-	 * basedir, so it is joined to that base. Falls back to the original file when
-	 * the size is unavailable.
+	 * basedir, so it is joined to that base; the intermediate also carries its
+	 * own width/height and URL, which describe the selected file (not the
+	 * original). Falls back to the original file when the size is unavailable.
 	 *
 	 * @param int    $id   The attachment ID.
 	 * @param string $size The requested image size name.
-	 * @return string Absolute path, or empty string when unresolvable.
+	 * @return array{path:string,url:string,width:int,height:int} The selected
+	 *         file's absolute path (empty when unresolvable), URL (empty when the
+	 *         original file was selected), and dimensions (0 when not an
+	 *         intermediate).
 	 */
-	private function resolvePath( int $id, string $size ): string {
+	private function resolve( int $id, string $size ): array {
 		if ( 'full' !== $size ) {
 			$intermediate = image_get_intermediate_size( $id, $size );
 			if ( is_array( $intermediate ) && ! empty( $intermediate['path'] ) ) {
 				$uploads = wp_get_upload_dir();
 				$basedir = $uploads['basedir'] ?? '';
 				if ( '' !== $basedir ) {
-					return rtrim( $basedir, '/' ) . '/' . ltrim( (string) $intermediate['path'], '/' );
+					return array(
+						'path'   => rtrim( $basedir, '/' ) . '/' . ltrim( (string) $intermediate['path'], '/' ),
+						'url'    => isset( $intermediate['url'] ) ? (string) $intermediate['url'] : '',
+						'width'  => isset( $intermediate['width'] ) ? (int) $intermediate['width'] : 0,
+						'height' => isset( $intermediate['height'] ) ? (int) $intermediate['height'] : 0,
+					);
 				}
 			}
 		}
 
 		$full = get_attached_file( $id );
 
-		return is_string( $full ) ? $full : '';
+		return array(
+			'path'   => is_string( $full ) ? $full : '',
+			'url'    => '',
+			'width'  => 0,
+			'height' => 0,
+		);
 	}
 
 	/**
-	 * Resolves image dimensions for the file, defaulting to 0 for non-images.
+	 * Resolves image dimensions for the selected file, defaulting to 0 for
+	 * non-images.
 	 *
-	 * @param int    $id   The attachment ID.
-	 * @param string $path The absolute file path.
+	 * When an intermediate size was selected, its own dimensions describe the
+	 * returned bytes and are used directly. Otherwise the original file's
+	 * dimensions come from attachment metadata, falling back to reading the file.
+	 *
+	 * @param int                                                  $id       The attachment ID.
+	 * @param string                                               $path     The absolute file path.
+	 * @param array{path:string,url:string,width:int,height:int} $resolved The resolved file descriptor.
 	 * @return array{width:int,height:int}
 	 */
-	private function resolveDimensions( int $id, string $path ): array {
+	private function resolveDimensions( int $id, string $path, array $resolved ): array {
+		if ( $resolved['width'] > 0 && $resolved['height'] > 0 ) {
+			return array(
+				'width'  => $resolved['width'],
+				'height' => $resolved['height'],
+			);
+		}
+
 		$meta = wp_get_attachment_metadata( $id );
 		if ( is_array( $meta ) && isset( $meta['width'], $meta['height'] ) ) {
 			return array(

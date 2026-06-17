@@ -42,7 +42,8 @@ final class GetClassicMenu implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The classic menu term ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The classic menu term ID. Use menus/list-classic-menus to discover the ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -143,7 +144,7 @@ final class GetClassicMenu implements Ability {
 			'slug'        => (string) ( $data['slug'] ?? '' ),
 			'description' => (string) ( $data['description'] ?? '' ),
 			'count'       => (int) ( $data['count'] ?? 0 ),
-			'meta'        => isset( $data['meta'] ) && is_array( $data['meta'] ) ? $data['meta'] : array(),
+			'meta'        => isset( $data['meta'] ) && is_array( $data['meta'] ) && array() !== $data['meta'] ? $data['meta'] : (object) array(),
 		);
 	}
 }

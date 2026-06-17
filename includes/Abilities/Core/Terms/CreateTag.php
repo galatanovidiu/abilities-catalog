@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 safe-write ability: `terms/create-tag`.
  *
  * Wraps `POST /wp/v2/tags` via `rest_do_request()` and returns the new term's
- * id, name, and slug. The `post_tag` taxonomy is non-hierarchical (no parent),
+ * id, name, slug, and public archive link. The `post_tag` taxonomy is non-hierarchical (no parent),
  * so the permission check mirrors the REST terms controller create path for a
  * non-hierarchical taxonomy: `current_user_can( get_taxonomy('post_tag')->cap->assign_terms )`
  * — NOT `edit_terms`. The REST route re-checks the capability and sanitizes
@@ -76,6 +76,10 @@ final class CreateTag implements Ability {
 						'type'        => 'string',
 						'description' => __( 'The tag slug.', 'abilities-catalog' ),
 					),
+					'link' => array(
+						'type'        => 'string',
+						'description' => __( 'The public tag archive URL.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -115,7 +119,7 @@ final class CreateTag implements Ability {
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -144,6 +148,7 @@ final class CreateTag implements Ability {
 			'id'   => (int) ( $data['id'] ?? 0 ),
 			'name' => (string) ( $data['name'] ?? '' ),
 			'slug' => (string) ( $data['slug'] ?? '' ),
+			'link' => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }

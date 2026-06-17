@@ -41,7 +41,7 @@ final class GetAtAGlance implements Ability {
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'posts', 'pages' ),
+				'required'             => array( 'posts', 'pages', 'comments_approved', 'comments_pending', 'theme', 'wp_version' ),
 				'properties'           => array(
 					'posts'             => array(
 						'type'        => 'integer',
@@ -105,13 +105,14 @@ final class GetAtAGlance implements Ability {
 		$posts    = wp_count_posts( 'post' );
 		$pages    = wp_count_posts( 'page' );
 		$comments = wp_count_comments();
+		$theme    = wp_get_theme();
 
 		return array(
 			'posts'             => (int) ( $posts->publish ?? 0 ),
 			'pages'             => (int) ( $pages->publish ?? 0 ),
 			'comments_approved' => (int) ( $comments->approved ?? 0 ),
 			'comments_pending'  => (int) ( $comments->moderated ?? 0 ),
-			'theme'             => (string) wp_get_theme()->get( 'Name' ),
+			'theme'             => (string) ( $theme->get( 'Name' ) ?: $theme->get_stylesheet() ),
 			'wp_version'        => (string) get_bloginfo( 'version' ),
 		);
 	}

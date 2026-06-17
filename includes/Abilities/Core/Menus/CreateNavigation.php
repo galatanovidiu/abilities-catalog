@@ -41,7 +41,7 @@ final class CreateNavigation implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Navigation Menu', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new block-based navigation menu. The content is serialized block markup. Defaults to published.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new block-based navigation menu. The content is serialized block markup. Created as a draft unless a status is supplied.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -57,8 +57,7 @@ final class CreateNavigation implements Ability {
 					'status'  => array(
 						'type'        => 'string',
 						'enum'        => array( 'draft', 'pending', 'private', 'publish', 'future' ),
-						'default'     => 'publish',
-						'description' => __( 'The navigation menu post status. Defaults to "publish".', 'abilities-catalog' ),
+						'description' => __( 'The navigation menu post status. Created as a draft when omitted.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'title' ),
@@ -68,17 +67,25 @@ final class CreateNavigation implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'status' ),
 				'properties'           => array(
-					'id'     => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The new navigation menu ID.', 'abilities-catalog' ),
 					),
-					'status' => array(
+					'title'     => array(
+						'type'        => 'string',
+						'description' => __( 'The navigation menu title.', 'abilities-catalog' ),
+					),
+					'status'    => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting navigation menu post status.', 'abilities-catalog' ),
 					),
-					'link'   => array(
+					'link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The navigation menu permalink.', 'abilities-catalog' ),
+					),
+					'edit_link' => array(
+						'type'        => 'string',
+						'description' => __( 'The site-editor URL for editing the navigation menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -114,7 +121,7 @@ final class CreateNavigation implements Ability {
 	 * Executes the ability by dispatching the internal REST create request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The new menu's id, status, link, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The new menu's id, title, status, link, edit link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -138,11 +145,23 @@ final class CreateNavigation implements Ability {
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );
+		$id   = (int) ( $data['id'] ?? 0 );
+
+		$title = '';
+		if ( isset( $data['title'] ) ) {
+			$title = is_array( $data['title'] )
+				? (string) ( $data['title']['rendered'] ?? $data['title']['raw'] ?? '' )
+				: (string) $data['title'];
+		}
+
+		$edit_link = $id > 0 ? (string) get_edit_post_link( $id, 'raw' ) : '';
 
 		return array(
-			'id'     => (int) ( $data['id'] ?? 0 ),
-			'status' => (string) ( $data['status'] ?? '' ),
-			'link'   => (string) ( $data['link'] ?? '' ),
+			'id'        => $id,
+			'title'     => $title,
+			'status'    => (string) ( $data['status'] ?? '' ),
+			'link'      => (string) ( $data['link'] ?? '' ),
+			'edit_link' => $edit_link,
 		);
 	}
 }

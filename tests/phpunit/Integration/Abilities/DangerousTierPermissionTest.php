@@ -28,7 +28,7 @@ final class DangerousTierPermissionTest extends TestCase {
 	private const VALID_INPUT = array(
 		'plugins/install-plugin' => array('slug' => 'akismet'),
 		'plugins/update-plugin'  => array('plugin' => 'akismet/akismet.php'),
-		'plugins/delete-plugin'  => array('plugin' => 'akismet/akismet.php'),
+		'plugins/delete-plugin'  => array('plugin' => 'akismet/akismet'),
 		'themes/install-theme'   => array('slug' => 'twentytwentyfour'),
 		'themes/delete-theme'    => array('stylesheet' => 'twentytwentyfour'),
 		'updates/run-update'     => array('type' => 'plugin'),

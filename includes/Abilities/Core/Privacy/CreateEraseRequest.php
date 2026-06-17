@@ -144,15 +144,34 @@ final class CreateEraseRequest implements Ability {
 		if ( $send ) {
 			$sent = wp_send_user_request( (int) $request_id );
 			if ( is_wp_error( $sent ) ) {
+				// The request post already exists at this point. Preserve its ID
+				// (and current status) on the error so the caller can recover and
+				// does not trigger core's duplicate_request check on a naive retry.
+				$created            = wp_get_user_request( (int) $request_id );
+				$data               = (array) $sent->get_error_data();
+				$data['request_id'] = (int) $request_id;
+				$data['status']     = $created ? (string) $created->status : '';
+				$sent->add_data( $data );
+
 				return $sent;
 			}
 		}
 
 		$request = wp_get_user_request( (int) $request_id );
+		if ( ! $request ) {
+			return new WP_Error(
+				'request_lookup_failed',
+				__( 'The erase request was created but could not be loaded.', 'abilities-catalog' ),
+				array(
+					'status'     => 500,
+					'request_id' => (int) $request_id,
+				)
+			);
+		}
 
 		return array(
 			'request_id'  => (int) $request_id,
-			'status'      => $request ? (string) $request->status : '',
+			'status'      => (string) $request->status,
 			'action_name' => 'remove_personal_data',
 		);
 	}

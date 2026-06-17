@@ -121,6 +121,44 @@ final class WriteLinksTest extends TestCase {
 		$this->assertStringContainsString( (string) $post_id, $result['edit_link'] );
 	}
 
+	public function test_update_post_returns_slug_featured_media_and_terms(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create( array( 'post_title' => 'Old' ) );
+
+		$category_id = self::factory()->category->create();
+		$tag_id      = self::factory()->tag->create();
+		$media_id    = self::factory()->attachment->create_upload_object(
+			DIR_TESTDATA . '/images/canola.jpg'
+		);
+
+		$result = wp_get_ability( 'content/update-post' )->execute(
+			array(
+				'id'             => $post_id,
+				'slug'           => 'updated-slug',
+				'categories'     => array( $category_id ),
+				'tags'           => array( $tag_id ),
+				'featured_media' => $media_id,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'updated-slug', $result['slug'] );
+		$this->assertSame( $media_id, $result['featured_media'] );
+		$this->assertSame( array( $category_id ), $result['categories'] );
+		$this->assertSame( array( $tag_id ), $result['tags'] );
+	}
+
+	public function test_update_post_rejects_negative_id_by_schema(): void {
+		$this->actingAs( 'administrator' );
+
+		// The `minimum: 1` input guard rejects a non-positive id at the schema
+		// boundary, before execute() builds a REST path that would coerce -7 to 7.
+		$result = wp_get_ability( 'content/update-post' )->execute( array( 'id' => -7 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
 	public function test_update_page_returns_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 		$page_id = self::factory()->post->create(
@@ -173,9 +211,115 @@ final class WriteLinksTest extends TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( 'To trash', $result['title'] );
 		$this->assertSame( 'trash', $result['status'] );
+		$this->assertSame( 'publish', $result['previous_status'] );
 		// A trashed post cannot be edited (wp-admin returns HTTP 409), so no
 		// edit_link is returned; it would dead-end.
 		$this->assertArrayNotHasKey( 'edit_link', $result );
+	}
+
+	public function test_trash_post_rejects_non_positive_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => -5 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
+	public function test_trash_post_subscriber_is_denied(): void {
+		$this->actingAs( 'subscriber' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'Protected',
+				'post_status' => 'publish',
+			)
+		);
+
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+	}
+
+	public function test_trash_post_missing_object_returns_invalid_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_trash_post_already_trashed_returns_410(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'Twice',
+				'post_status' => 'publish',
+			)
+		);
+
+		wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rest_already_trashed', $result->get_error_code() );
+		$this->assertSame( 410, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_trash_post_when_trash_disabled_returns_501(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'No trash',
+				'post_status' => 'publish',
+			)
+		);
+
+		$filter = static function () {
+			return false;
+		};
+		add_filter( 'rest_post_trashable', $filter );
+
+		try {
+			$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		} finally {
+			remove_filter( 'rest_post_trashable', $filter );
+		}
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rest_trash_not_supported', $result->get_error_code() );
+		$this->assertSame( 501, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_trash_page_returns_title_and_status_without_edit_link(): void {
+		$this->actingAs( 'administrator' );
+		$page_id = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_title'  => 'Page to trash',
+				'post_status' => 'publish',
+			)
+		);
+
+		$result = wp_get_ability( 'content/trash-page' )->execute( array( 'id' => $page_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'Page to trash', $result['title'] );
+		$this->assertSame( 'trash', $result['status'] );
+		// A trashed page cannot be edited (wp-admin returns HTTP 409), so no
+		// edit_link is returned; it would dead-end.
+		$this->assertArrayNotHasKey( 'edit_link', $result );
+	}
+
+	public function test_trash_page_rejects_non_positive_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/trash-page' )->execute( array( 'id' => -12 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_delete_post_echoes_title_without_edit_link(): void {

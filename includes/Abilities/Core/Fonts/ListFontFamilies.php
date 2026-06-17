@@ -57,7 +57,7 @@ final class ListFontFamilies implements Ability {
 						'type'        => 'string',
 						'enum'        => array( 'view', 'edit' ),
 						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						'description' => __( 'Response context passed to the REST query; shapes which fields the response includes.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

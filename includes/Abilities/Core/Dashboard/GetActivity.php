@@ -13,10 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Composed T1 read ability: `dashboard/get-activity`.
  *
- * Mirrors the wp-admin "Activity" dashboard widget. Returns the most recently
- * published posts and the most recent approved comments. Built directly on core
- * query functions (`get_posts()`, `get_comments()`) rather than REST, since this
- * is a net-new composed read with no single REST equivalent.
+ * Returns a subset of the wp-admin "Activity" dashboard widget: the most
+ * recently published posts and the most recent approved comments. Built directly
+ * on core query functions (`get_posts()`, `get_comments()`) rather than REST,
+ * since this is a net-new composed read with no single REST equivalent.
  *
  * @since 0.1.0
  */
@@ -59,7 +59,22 @@ final class GetActivity implements Ability {
 						'description' => __( 'Recently published posts.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id', 'title', 'date' ),
+							'properties'           => array(
+								'id'    => array(
+									'type'        => 'integer',
+									'description' => __( 'Post ID.', 'abilities-catalog' ),
+								),
+								'title' => array(
+									'type'        => 'string',
+									'description' => __( 'Post title.', 'abilities-catalog' ),
+								),
+								'date'  => array(
+									'type'        => 'string',
+									'description' => __( 'Publish date (site timezone).', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 					'comments'  => array(
@@ -67,7 +82,30 @@ final class GetActivity implements Ability {
 						'description' => __( 'Recent approved comments.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id', 'post', 'author', 'date', 'excerpt' ),
+							'properties'           => array(
+								'id'      => array(
+									'type'        => 'integer',
+									'description' => __( 'Comment ID.', 'abilities-catalog' ),
+								),
+								'post'    => array(
+									'type'        => 'integer',
+									'description' => __( 'ID of the post the comment belongs to.', 'abilities-catalog' ),
+								),
+								'author'  => array(
+									'type'        => 'string',
+									'description' => __( 'Comment author name.', 'abilities-catalog' ),
+								),
+								'date'    => array(
+									'type'        => 'string',
+									'description' => __( 'Comment date (site timezone).', 'abilities-catalog' ),
+								),
+								'excerpt' => array(
+									'type'        => 'string',
+									'description' => __( 'Trimmed comment content.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 				),
@@ -101,6 +139,10 @@ final class GetActivity implements Ability {
 	/**
 	 * Executes the ability by reading recent posts and comments.
 	 *
+	 * Comments pass through the same visibility gate wp-admin applies: a user
+	 * who cannot edit the parent post does not see comments on posts that are
+	 * password-protected or that they cannot read.
+	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed> The recent activity lists.
 	 */
@@ -129,27 +171,56 @@ final class GetActivity implements Ability {
 			);
 		}
 
-		$recent_comments = get_comments(
-			array(
-				'number' => $number,
-				'status' => 'approve',
-			)
+		// Mirror core's wp-admin Activity widget visibility gate
+		// (wp-admin/includes/dashboard.php wp_dashboard_recent_comments()): hide
+		// comments on posts the user cannot edit when the post is password-protected
+		// or unreadable by them. Over-fetch and refill so the requested count is
+		// still honored after the gate removes hidden comments.
+		$comments       = array();
+		$comments_count = 0;
+		$query_args     = array(
+			'number' => $number * 5,
+			'offset' => 0,
+			'status' => 'approve',
 		);
-		$recent_comments = is_array( $recent_comments ) ? $recent_comments : array();
 
-		$comments = array();
-		foreach ( $recent_comments as $comment ) {
-			if ( ! $comment instanceof \WP_Comment ) {
-				continue;
+		do {
+			$possible = get_comments( $query_args );
+			if ( empty( $possible ) || ! is_array( $possible ) ) {
+				break;
 			}
-			$comments[] = array(
-				'id'      => (int) $comment->comment_ID,
-				'post'    => (int) $comment->comment_post_ID,
-				'author'  => (string) $comment->comment_author,
-				'date'    => (string) $comment->comment_date,
-				'excerpt' => (string) wp_trim_words( (string) $comment->comment_content ),
-			);
-		}
+
+			foreach ( $possible as $comment ) {
+				if ( ! $comment instanceof \WP_Comment ) {
+					continue;
+				}
+
+				$post_id = (int) $comment->comment_post_ID;
+				if ( ! current_user_can( 'edit_post', $post_id )
+					&& ( post_password_required( $post_id )
+						|| ! current_user_can( 'read_post', $post_id ) )
+				) {
+					// No access to the parent post: hide its comments, as wp-admin does.
+					continue;
+				}
+
+				$comments[]     = array(
+					'id'      => (int) $comment->comment_ID,
+					'post'    => $post_id,
+					'author'  => (string) $comment->comment_author,
+					'date'    => (string) $comment->comment_date,
+					'excerpt' => (string) wp_trim_words( (string) $comment->comment_content ),
+				);
+				$comments_count = count( $comments );
+
+				if ( $comments_count === $number ) {
+					break 2;
+				}
+			}
+
+			$query_args['offset'] += $query_args['number'];
+			$query_args['number']  = $number * 10;
+		} while ( $comments_count < $number );
 
 		return array(
 			'published' => $published,

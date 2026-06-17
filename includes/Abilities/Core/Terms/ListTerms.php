@@ -49,6 +49,10 @@ final class ListTerms implements Ability {
 						'type'        => 'string',
 						'description' => __( 'Limit results to terms matching a search string.', 'abilities-catalog' ),
 					),
+					'parent'   => array(
+						'type'        => 'integer',
+						'description' => __( 'Limit results to terms with the given parent term ID (hierarchical taxonomies only). Pass 0 to return only top-level terms. Discover IDs with terms/list-terms.', 'abilities-catalog' ),
+					),
 					'per_page' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
@@ -82,7 +86,7 @@ final class ListTerms implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'items' ),
+				'required'             => array( 'items', 'total', 'total_pages' ),
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
@@ -155,9 +159,17 @@ final class ListTerms implements Ability {
 		$taxonomy = isset( $input['taxonomy'] ) ? (string) $input['taxonomy'] : '';
 
 		$tax = get_taxonomy( $taxonomy );
-		if ( ! $tax || ! $tax->show_in_rest ) {
+		if ( ! $tax ) {
 			return new WP_Error(
-				'invalid_taxonomy',
+				'rest_taxonomy_invalid',
+				__( 'Invalid taxonomy.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( ! $tax->show_in_rest ) {
+			return new WP_Error(
+				'rest_taxonomy_not_rest',
 				__( 'The requested taxonomy is not available in the REST API.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -167,7 +179,7 @@ final class ListTerms implements Ability {
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/' . $rest_base );
 		$request->set_param( 'context', $input['context'] ?? 'view' );
-		foreach ( array( 'search', 'per_page', 'page', 'orderby', 'order' ) as $param ) {
+		foreach ( array( 'search', 'parent', 'per_page', 'page', 'orderby', 'order' ) as $param ) {
 			if ( ! isset( $input[ $param ] ) ) {
 				continue;
 			}

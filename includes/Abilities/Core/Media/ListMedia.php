@@ -82,6 +82,7 @@ final class ListMedia implements Ability {
 					),
 					'orderby'    => array(
 						'type'        => 'string',
+						'enum'        => array( 'author', 'date', 'id', 'include', 'modified', 'parent', 'relevance', 'slug', 'include_slugs', 'title' ),
 						'description' => __( 'Field to sort by (e.g. "date", "title").', 'abilities-catalog' ),
 					),
 					'order'      => array(

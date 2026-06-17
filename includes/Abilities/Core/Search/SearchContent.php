@@ -20,7 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * post formats. Returns a flattened list (id, title, url, type, subtype) so an
  * agent can find a piece of content by keyword and then read or edit it with the
  * matching ability. Use this when you do not know the id of the content you need.
- * Read-only.
+ *
+ * Core search only surfaces published, public content: published posts of public
+ * `show_in_rest` post types (attachments/media excluded) and terms of public
+ * `show_in_rest` taxonomies. It does not find drafts, pending, private, or trashed
+ * content, nor media. Read-only.
  *
  * @since 0.5.0
  */
@@ -39,7 +43,7 @@ final class SearchContent implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Search Content', 'abilities-catalog' ),
-			'description'         => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Use this to find content when you do not already know its id.', 'abilities-catalog' ),
+			'description'         => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Only published, public content is returned: it does not surface drafts, pending, private, or trashed content, nor media. Use this to find content when you do not already know its id.', 'abilities-catalog' ),
 			'category'            => 'search',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -81,7 +85,7 @@ final class SearchContent implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'items' ),
 				'properties'           => array(
-					'items' => array(
+					'items'       => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
@@ -111,6 +115,14 @@ final class SearchContent implements Ability {
 							'additionalProperties' => false,
 						),
 						'description' => __( 'The list of search matches.', 'abilities-catalog' ),
+					),
+					'total'       => array(
+						'type'        => 'integer',
+						'description' => __( 'The total number of matches across all pages.', 'abilities-catalog' ),
+					),
+					'total_pages' => array(
+						'type'        => 'integer',
+						'description' => __( 'The total number of result pages for the current per_page.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -151,9 +163,11 @@ final class SearchContent implements Ability {
 	public function execute( $input ) {
 		$input = is_array( $input ) ? $input : array();
 
+		$type = isset( $input['type'] ) ? sanitize_key( (string) $input['type'] ) : 'post';
+
 		$request = new WP_REST_Request( 'GET', '/wp/v2/search' );
 		$request->set_param( 'search', (string) ( $input['search'] ?? '' ) );
-		$request->set_param( 'type', isset( $input['type'] ) ? sanitize_key( (string) $input['type'] ) : 'post' );
+		$request->set_param( 'type', $type );
 		$request->set_param( 'subtype', isset( $input['subtype'] ) && '' !== $input['subtype'] ? sanitize_key( (string) $input['subtype'] ) : 'any' );
 		$request->set_param( 'page', isset( $input['page'] ) ? absint( $input['page'] ) : 1 );
 		$request->set_param( 'per_page', isset( $input['per_page'] ) ? absint( $input['per_page'] ) : 10 );
@@ -167,17 +181,32 @@ final class SearchContent implements Ability {
 		$items = array();
 
 		foreach ( is_array( $data ) ? $data : array() as $row ) {
-			$items[] = array(
-				'id'      => $row['id'] ?? 0,
-				'title'   => (string) ( $row['title'] ?? '' ),
-				'url'     => (string) ( $row['url'] ?? '' ),
-				'type'    => (string) ( $row['type'] ?? '' ),
-				'subtype' => (string) ( $row['subtype'] ?? '' ),
+			// Core sets the row `type` to the taxonomy slug for term results
+			// (e.g. `category`), not the search type. Normalize it back to the
+			// requested type so the output matches the declared contract.
+			$item = array(
+				'id'    => $row['id'] ?? 0,
+				'title' => (string) ( $row['title'] ?? '' ),
+				'url'   => (string) ( $row['url'] ?? '' ),
+				'type'  => $type,
 			);
+
+			// Only the post handler sets `subtype` (= post type). Term and
+			// post-format rows omit it, so keep the key absent instead of
+			// inventing an empty string.
+			if ( isset( $row['subtype'] ) ) {
+				$item['subtype'] = (string) $row['subtype'];
+			}
+
+			$items[] = $item;
 		}
 
+		$headers = $response->get_headers();
+
 		return array(
-			'items' => $items,
+			'items'       => $items,
+			'total'       => isset( $headers['X-WP-Total'] ) ? (int) $headers['X-WP-Total'] : count( $items ),
+			'total_pages' => isset( $headers['X-WP-TotalPages'] ) ? (int) $headers['X-WP-TotalPages'] : 1,
 		);
 	}
 }

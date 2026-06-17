@@ -435,6 +435,56 @@ final class PostMetaTest extends TestCase {
 		$this->assertIsBool( $applied['is_featured'] );
 	}
 
+	/**
+	 * A failed write (filter short-circuit or DB error) must surface as a 500
+	 * error, not a success carrying the stale stored value.
+	 */
+	public function test_update_failed_write_returns_database_error(): void {
+		$this->actingAs( 'administrator' );
+
+		// Short-circuit the write so update_post_meta() returns false even though
+		// the new value differs from the stored one.
+		$short_circuit = static function ( $check, $object_id, $meta_key ) {
+			return 'subtitle' === $meta_key ? false : $check;
+		};
+		add_filter( 'update_post_metadata', $short_circuit, 10, 3 );
+
+		$result = wp_get_ability( 'content/update-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'meta' => array( 'subtitle' => 'never written' ),
+			)
+		);
+
+		remove_filter( 'update_post_metadata', $short_circuit, 10 );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_meta_database_error', $result->get_error_code() );
+		$this->assertSame( 500, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+		$this->assertSame( 'subtitle', $result->get_error_data()['key'] ?? null );
+		// Nothing was written.
+		$this->assertSame( '', get_post_meta( $this->post_id, 'subtitle', true ) );
+	}
+
+	/**
+	 * Setting a key to its current value is a no-op for update_post_meta() (it
+	 * returns false), but it is not a failure — the ability must report success.
+	 */
+	public function test_update_unchanged_value_is_success(): void {
+		$this->actingAs( 'administrator' );
+		update_post_meta( $this->post_id, 'subtitle', 'same value' );
+
+		$result = wp_get_ability( 'content/update-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'meta' => array( 'subtitle' => 'same value' ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'same value', ( (array) $result['meta'] )['subtitle'] );
+	}
+
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
@@ -446,5 +496,29 @@ final class PostMetaTest extends TestCase {
 		// rather than the generic "does not have necessary permission" collapse.
 		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
 		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_list_unknown_post_type_returns_invalid_post_type(): void {
+		$this->actingAs( 'administrator' );
+
+		// An unregistered post type passes the permission gate so execute() can
+		// return a specific 400 error instead of a generic permission collapse.
+		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'no_such_type' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'invalid_post_type', $result->get_error_code() );
+		$this->assertSame( 400, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_list_denies_user_without_edit_capability(): void {
+		$this->actingAs( 'subscriber' );
+
+		// A registered type the user cannot edit fails the capability guard, so
+		// core collapses it to the generic permission error — distinct from the
+		// 400 invalid_post_type returned for an unknown type.
+		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'invalid_post_type', $result->get_error_code() );
 	}
 }

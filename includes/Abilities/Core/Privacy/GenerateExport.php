@@ -77,7 +77,7 @@ final class GenerateExport implements Ability {
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of an existing personal-data export request.', 'abilities-catalog' ),
+						'description' => __( 'The ID of an existing personal-data export request. Use `privacy/list-export-requests` to find request IDs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'request_id' ),
@@ -166,6 +166,18 @@ final class GenerateExport implements Ability {
 
 		AdminIncludes::load( 'privacy-tools', 'file' );
 
+		// Pre-flight: core's file generator calls wp_send_json_error() (→ wp_die())
+		// when ZipArchive is missing (wp-admin/includes/privacy-tools.php:311-313),
+		// which would terminate the request instead of returning a WP_Error. Guard
+		// the most common trigger here so the ability can fail cleanly.
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			return new WP_Error(
+				'webmcp_export_unavailable',
+				__( 'The export file cannot be generated because the ZipArchive PHP extension is not available.', 'abilities-catalog' ),
+				array( 'status' => 500 )
+			);
+		}
+
 		$email_address = $request->email;
 		if ( ! is_email( $email_address ) ) {
 			return new WP_Error(
@@ -216,7 +228,22 @@ final class GenerateExport implements Ability {
 
 				$response = call_user_func( $callback, $email_address, $page );
 
-				if ( is_wp_error( $response ) || ! is_array( $response ) || ! isset( $response['done'] ) ) {
+				// Preserve a real exporter WP_Error verbatim, as core does
+				// (wp-admin/includes/ajax-actions.php:5057-5059): keep its code and message.
+				if ( is_wp_error( $response ) ) {
+					return $response;
+				}
+
+				// Mirror core's response-shape checks before processing
+				// (wp-admin/includes/privacy-tools.php:774-787): require `done` and an
+				// array `data`, otherwise the page would pass through unprocessed and the
+				// export could "succeed" while incomplete.
+				if (
+					! is_array( $response )
+					|| ! isset( $response['done'] )
+					|| ! isset( $response['data'] )
+					|| ! is_array( $response['data'] )
+				) {
 					return new WP_Error(
 						'webmcp_export_failed',
 						__( 'The export request could not be processed.', 'abilities-catalog' ),
@@ -243,7 +270,10 @@ final class GenerateExport implements Ability {
 				}
 
 				++$page;
-			} while ( true !== $response['done'] );
+				// Core treats `done` truthily (wp-admin/includes/privacy-tools.php:818):
+				// `$exporter_done = $response['done']`. Match that so an exporter that
+				// returns 1 or '1' for done terminates instead of paging to MAX_PAGES.
+			} while ( ! $response['done'] );
 		}
 
 		wp_privacy_generate_personal_data_export_file( $request_id );

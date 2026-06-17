@@ -15,10 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 read ability: `plugins/list-plugins`.
  *
- * Wraps `GET /wp/v2/plugins` via `rest_do_request()` and returns the list of
- * installed plugins. The plugins route returns a flat list with no pagination
- * headers (`X-WP-Total`), so no total is exposed. Each item is passed through
- * with its native shape; the list schema does not constrain item fields.
+ * Wraps `GET /wp/v2/plugins` via `rest_do_request()` and returns the installed
+ * plugins readable by the current user. Core skips plugins the user cannot read
+ * (and, on multisite, hides network-only plugins without `manage_network_plugins`),
+ * so the result is not an exhaustive inventory. The plugins route returns a flat
+ * list with no pagination headers (`X-WP-Total`), so no total is exposed. Each
+ * item is passed through with its native shape; the list schema does not
+ * constrain item fields.
  *
  * @since 0.1.0
  */
@@ -37,7 +40,7 @@ final class ListPlugins implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Plugins', 'abilities-catalog' ),
-			'description'         => __( 'Returns the list of installed plugins, optionally filtered by search term or activation status.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the installed plugins readable by the current user, optionally filtered by search term or activation status.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',

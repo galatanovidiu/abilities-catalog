@@ -46,7 +46,7 @@ final class ListCptItems implements Ability {
 				'properties'           => array(
 					'post_type' => array(
 						'type'        => 'string',
-						'description' => __( 'The post type slug to list.', 'abilities-catalog' ),
+						'description' => __( 'The post type slug to list. Use content/list-post-types to discover valid slugs.', 'abilities-catalog' ),
 					),
 					'search'    => array(
 						'type'        => 'string',

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 safe-write ability: `terms/update-tag`.
  *
  * Wraps `POST /wp/v2/tags/<id>` via `rest_do_request()` and returns the updated
- * term's id, name, and slug. The permission check mirrors the REST terms
+ * term's id, name, slug, description, and public archive link. The permission check mirrors the REST terms
  * controller update path: object-level `current_user_can('edit_term', $id)`.
  * The REST route re-checks the capability and sanitizes term fields underneath
  * (defense in depth).
@@ -67,17 +67,25 @@ final class UpdateTag implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'name', 'slug' ),
 				'properties'           => array(
-					'id'   => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The tag term ID.', 'abilities-catalog' ),
 					),
-					'name' => array(
+					'name'        => array(
 						'type'        => 'string',
 						'description' => __( 'The tag name.', 'abilities-catalog' ),
 					),
-					'slug' => array(
+					'slug'        => array(
 						'type'        => 'string',
 						'description' => __( 'The tag slug.', 'abilities-catalog' ),
+					),
+					'description' => array(
+						'type'        => 'string',
+						'description' => __( 'The tag description.', 'abilities-catalog' ),
+					),
+					'link'        => array(
+						'type'        => 'string',
+						'description' => __( 'The public tag archive URL.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -119,7 +127,7 @@ final class UpdateTag implements Ability {
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The updated term's id, name, slug, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The updated term's id, name, slug, description, link, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -133,7 +141,8 @@ final class UpdateTag implements Ability {
 		// `isset()` only (prepare_item_for_database) and forwards the empty value,
 		// so an empty `name` reaches wp_update_term's `'' === trim($name)` check
 		// and surfaces its `empty_term_name` error, and an empty `slug` reaches
-		// core, which keeps the existing slug. A `'' !==` guard here would drop
+		// core, which regenerates the slug from the effective `name`. A `'' !==`
+		// guard here would drop
 		// the value and silently no-op, discarding intent and hiding core's error.
 		if ( array_key_exists( 'name', $input ) ) {
 			$request->set_param( 'name', sanitize_text_field( (string) $input['name'] ) );
@@ -155,9 +164,11 @@ final class UpdateTag implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ( $data['id'] ?? $id ),
-			'name' => (string) ( $data['name'] ?? '' ),
-			'slug' => (string) ( $data['slug'] ?? '' ),
+			'id'          => (int) ( $data['id'] ?? $id ),
+			'name'        => (string) ( $data['name'] ?? '' ),
+			'slug'        => (string) ( $data['slug'] ?? '' ),
+			'description' => (string) ( $data['description'] ?? '' ),
+			'link'        => (string) ( $data['link'] ?? '' ),
 		);
 	}
 }

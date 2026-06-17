@@ -65,6 +65,26 @@ final class ListMenuLocationsTest extends TestCase {
 		$this->assertSame( 'Header Menu', $location['menu_name'] );
 	}
 
+	public function test_unassigned_location_reports_zero_id_and_empty_name(): void {
+		$this->actingAs( 'administrator' );
+
+		remove_theme_mod( 'nav_menu_locations' );
+
+		$result   = wp_get_ability( 'menus/list-menu-locations' )->execute();
+		$location = null;
+		foreach ( $result['locations'] as $entry ) {
+			if ( 'ac_primary' === $entry['location'] ) {
+				$location = $entry;
+				break;
+			}
+		}
+
+		$this->assertNotNull( $location );
+		$this->assertArrayHasKey( 'menu_name', $location );
+		$this->assertSame( 0, $location['menu_id'] );
+		$this->assertSame( '', $location['menu_name'] );
+	}
+
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 

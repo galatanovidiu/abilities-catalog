@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T2 write ability: `media/regenerate-thumbnails`.
  *
  * Rebuilds the resized image files (thumbnails and other sub-sizes) for one image
- * attachment from its original file, then refreshes the attachment metadata. Use
+ * attachment from its current attached image file, then refreshes the attachment metadata. Use
  * it after changing registered image sizes or when an image's derivatives are
  * missing. It rewrites only the generated derivatives; the original upload is not
  * changed, so this is non-destructive. Wraps core
@@ -41,13 +41,14 @@ final class RegenerateThumbnails implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Regenerate Thumbnails', 'abilities-catalog' ),
-			'description'         => __( 'Rebuilds the resized image files (thumbnails and other sub-sizes) for an image attachment from its original file and refreshes its metadata. Only the generated derivatives are rewritten; the original upload is preserved. Returns the attachment id, the regenerated sizes, and edit_link — surface edit_link so a human can review the media item.', 'abilities-catalog' ),
+			'description'         => __( 'Rebuilds the resized image files (thumbnails and other sub-sizes) for an image attachment from its current attached image file and refreshes its metadata. Only the generated derivatives are rewritten; the original upload is preserved. Returns the attachment id, the regenerated sizes, and edit_link — surface edit_link so a human can review the media item.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The image attachment ID to regenerate sizes for.', 'abilities-catalog' ),
 					),
 				),

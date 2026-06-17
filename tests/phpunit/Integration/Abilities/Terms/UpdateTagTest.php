@@ -96,6 +96,30 @@ final class UpdateTagTest extends TestCase {
 	}
 
 	/**
+	 * A description-only update must be verifiable from the tool output: the
+	 * result returns the updated `description` and the public archive `link`.
+	 */
+	public function test_description_update_is_returned_in_output(): void {
+		$this->actingAs('administrator');
+
+		$result = wp_get_ability('terms/update-tag')->execute(
+			array(
+				'id'          => $this->term_id,
+				'description' => 'A fresh description.',
+			)
+		);
+
+		$this->assertIsArray($result);
+		$this->assertSame('A fresh description.', $result['description']);
+		$this->assertNotEmpty($result['link']);
+		$this->assertSame(
+			'A fresh description.',
+			get_term($this->term_id, 'post_tag')->description,
+			'The stored description must reflect the update.'
+		);
+	}
+
+	/**
 	 * An omitted `name` means "leave unchanged".
 	 */
 	public function test_omitted_name_leaves_name_unchanged(): void {

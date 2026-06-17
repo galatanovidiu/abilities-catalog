@@ -37,13 +37,14 @@ final class GetUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get User', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single user by ID, including name, slug, roles, and (with edit access) email.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single user by ID. View context returns public fields (name, slug, url, description); edit context also returns email, roles, capabilities, and registered_date.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The user ID.', 'abilities-catalog' ),
 					),
 					'context' => array(

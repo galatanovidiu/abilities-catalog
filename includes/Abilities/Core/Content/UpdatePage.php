@@ -95,7 +95,7 @@ final class UpdatePage implements Ability {
 					),
 					'template'       => array(
 						'type'        => 'string',
-						'description' => __( 'The page template file name.', 'abilities-catalog' ),
+						'description' => __( 'A page-template slug registered by the active theme (not an arbitrary file name). Unknown values are rejected.', 'abilities-catalog' ),
 					),
 					'featured_media' => array(
 						'type'        => 'integer',
@@ -222,7 +222,8 @@ final class UpdatePage implements Ability {
 		}
 
 		if ( isset( $input['menu_order'] ) ) {
-			$request->set_param( 'menu_order', absint( $input['menu_order'] ) );
+			// Core treats menu_order as a signed integer; preserve negatives.
+			$request->set_param( 'menu_order', (int) $input['menu_order'] );
 		}
 
 		if ( ! empty( $input['featured_media'] ) ) {

@@ -128,15 +128,17 @@ final class DeletePlugin implements Ability {
 		if ( '' === $plugin ) {
 			return new WP_Error(
 				'webmcp_missing_plugin',
-				__( 'A plugin file path is required.', 'abilities-catalog' )
+				__( 'A plugin file path is required.', 'abilities-catalog' ),
+				array( 'status' => 400 )
 			);
 		}
 
 		// Validate the plugin path shape before building the route by concatenation:
 		// a single-file slug, or a two-segment "dir/file" path (no extra segments,
-		// traversal, or stray characters). Keeps the input contract explicit rather
-		// than relying solely on the core route regex to reject malformed values.
-		if ( ! preg_match( '#^[a-z0-9-]+(?:/[a-z0-9._-]+)?$#i', $plugin ) ) {
+		// traversal, or stray characters). The charset mirrors the plugins controller
+		// PATTERN `[^./]+(?:/[^./]+)?` (applied to the value before `.php` is appended),
+		// so this rejects nothing core would accept and keeps the input contract explicit.
+		if ( ! preg_match( '#^[^./]+(?:/[^./]+)?$#', $plugin ) ) {
 			return new WP_Error(
 				'webmcp_invalid_plugin',
 				__( 'The plugin path is not a valid plugin file reference.', 'abilities-catalog' ),
@@ -149,23 +151,32 @@ final class DeletePlugin implements Ability {
 			return $fs;
 		}
 
-		AdminIncludes::load( 'plugin', 'class-wp-plugin-dependencies' );
+		AdminIncludes::load( 'plugin' );
 
-		// Directory slug; '.' for single-file plugins.
-		$slug = dirname( plugin_basename( $plugin . '.php' ) );
+		// The route appends ".php"; dependency lookups key on the real plugin file and
+		// convert it to a slug internally (single-file `foo.php` -> `foo`,
+		// `hello.php` -> `hello-dolly`), so pass the file, never a hand-derived slug.
+		$file = plugin_basename( $plugin . '.php' );
 
 		if ( class_exists( '\WP_Plugin_Dependencies' ) ) {
 			\WP_Plugin_Dependencies::initialize();
-			$dependents = \WP_Plugin_Dependencies::get_dependents( $slug );
 
-			if ( ! empty( $dependents ) ) {
+			// Mirror wp-admin: Delete stays available for circular-dependency graphs,
+			// and is refused only when the plugin has dependents and is not part of a
+			// circular dependency.
+			if (
+				\WP_Plugin_Dependencies::has_dependents( $file )
+				&& ! \WP_Plugin_Dependencies::has_circular_dependency( $file )
+			) {
+				$dependent_names = \WP_Plugin_Dependencies::get_dependent_names( $file );
+
 				return new WP_Error(
 					'webmcp_plugin_has_dependents',
 					sprintf(
-						/* translators: 1: plugin slug, 2: comma-separated list of dependent plugins. */
+						/* translators: 1: plugin file path, 2: comma-separated list of dependent plugin names. */
 						__( 'Cannot delete "%1$s": it is required by %2$s.', 'abilities-catalog' ),
-						$slug,
-						implode( ', ', (array) $dependents )
+						$file,
+						implode( ', ', (array) $dependent_names )
 					),
 					array( 'status' => 409 )
 				);

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 safe-write ability: `terms/update-category`.
  *
  * Wraps `POST /wp/v2/categories/<id>` via `rest_do_request()` and returns the
- * updated term's id, name, and slug. The permission check mirrors the REST
+ * updated term's id, name, slug, description, and parent. The permission check mirrors the REST
  * terms controller update path: object-level `current_user_can('edit_term', $id)`.
  * The REST route re-checks the capability and sanitizes term fields underneath
  * (defense in depth).
@@ -45,7 +45,7 @@ final class UpdateCategory implements Ability {
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'integer',
-						'description' => __( 'The category term ID (required).', 'abilities-catalog' ),
+						'description' => __( 'The category term ID (required). Discover IDs via terms/list-categories.', 'abilities-catalog' ),
 					),
 					'name'        => array(
 						'type'        => 'string',
@@ -61,7 +61,7 @@ final class UpdateCategory implements Ability {
 					),
 					'parent'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent category term ID.', 'abilities-catalog' ),
+						'description' => __( 'The parent category term ID. Pass 0 to clear the parent and make the category top-level.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -71,17 +71,25 @@ final class UpdateCategory implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'name', 'slug' ),
 				'properties'           => array(
-					'id'   => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The category term ID.', 'abilities-catalog' ),
 					),
-					'name' => array(
+					'name'        => array(
 						'type'        => 'string',
 						'description' => __( 'The category name.', 'abilities-catalog' ),
 					),
-					'slug' => array(
+					'slug'        => array(
 						'type'        => 'string',
 						'description' => __( 'The category slug.', 'abilities-catalog' ),
+					),
+					'description' => array(
+						'type'        => 'string',
+						'description' => __( 'The category description.', 'abilities-catalog' ),
+					),
+					'parent'      => array(
+						'type'        => 'integer',
+						'description' => __( 'The parent category term ID (0 when top-level).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -123,7 +131,7 @@ final class UpdateCategory implements Ability {
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The updated term's id, name, slug, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The updated term's id, name, slug, description, parent, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -163,9 +171,11 @@ final class UpdateCategory implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ( $data['id'] ?? $id ),
-			'name' => (string) ( $data['name'] ?? '' ),
-			'slug' => (string) ( $data['slug'] ?? '' ),
+			'id'          => (int) ( $data['id'] ?? $id ),
+			'name'        => (string) ( $data['name'] ?? '' ),
+			'slug'        => (string) ( $data['slug'] ?? '' ),
+			'description' => (string) ( $data['description'] ?? '' ),
+			'parent'      => (int) ( $data['parent'] ?? 0 ),
 		);
 	}
 }

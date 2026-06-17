@@ -56,38 +56,34 @@ final class ExportContent implements Ability {
 					'content'    => array(
 						'type'        => 'string',
 						'default'     => 'all',
-						'description' => __( 'What to export: a post type slug, or "all" for everything.', 'abilities-catalog' ),
-					),
-					'post_type'  => array(
-						'type'        => 'string',
-						'description' => __( 'Restrict to a single post type.', 'abilities-catalog' ),
+						'description' => __( 'What to export: a post type slug, or "all" for everything. The remaining filters apply only for specific content types; an unrecognized slug exports all content.', 'abilities-catalog' ),
 					),
 					'start_date' => array(
 						'type'        => 'string',
-						'description' => __( 'Earliest publish date to include (e.g. "2024-01").', 'abilities-catalog' ),
+						'description' => __( 'Earliest publish date to include (e.g. "2024-01"). Applied only when "content" is "post", "page", or "attachment".', 'abilities-catalog' ),
 					),
 					'end_date'   => array(
 						'type'        => 'string',
-						'description' => __( 'Latest publish date to include (e.g. "2024-12").', 'abilities-catalog' ),
+						'description' => __( 'Latest publish date to include (e.g. "2024-12"). Applied only when "content" is "post", "page", or "attachment".', 'abilities-catalog' ),
 					),
 					'author'     => array(
 						'type'        => 'integer',
-						'description' => __( 'Restrict to a single author user ID.', 'abilities-catalog' ),
+						'description' => __( 'Restrict to a single author user ID. Applied only when "content" is "post", "page", or "attachment".', 'abilities-catalog' ),
 					),
 					'category'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Restrict to a single category term ID.', 'abilities-catalog' ),
+						'description' => __( 'Restrict to a single category term ID. Applied only when "content" is "post" and the term exists; otherwise core ignores it.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',
-						'description' => __( 'Restrict to a single post status.', 'abilities-catalog' ),
+						'description' => __( 'Restrict to a single post status. Applied only when "content" is "post" or "page".', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'data', 'length' ),
+				'required'             => array( 'content_type', 'data', 'length' ),
 				'properties'           => array(
 					'content_type' => array(
 						'type'        => 'string',
@@ -182,7 +178,7 @@ final class ExportContent implements Ability {
 		}
 
 		return array(
-			'content_type' => 'text/xml',
+			'content_type' => 'text/xml; charset=' . get_option( 'blog_charset' ),
 			'data'         => $xml,
 			'length'       => $length,
 		);

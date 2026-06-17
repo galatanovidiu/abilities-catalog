@@ -90,6 +90,10 @@ final class CreateTerm implements Ability {
 						'type'        => 'string',
 						'description' => __( 'The taxonomy the term belongs to.', 'abilities-catalog' ),
 					),
+					'parent'   => array(
+						'type'        => 'integer',
+						'description' => __( 'The parent term ID, or 0 when the term has no parent.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -187,6 +191,7 @@ final class CreateTerm implements Ability {
 			'name'     => (string) ( $data['name'] ?? '' ),
 			'slug'     => (string) ( $data['slug'] ?? '' ),
 			'taxonomy' => (string) ( $data['taxonomy'] ?? $taxonomy ),
+			'parent'   => (int) ( $data['parent'] ?? 0 ),
 		);
 	}
 }

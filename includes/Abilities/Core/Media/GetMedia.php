@@ -42,6 +42,7 @@ final class GetMedia implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The attachment (media item) ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
@@ -167,7 +168,7 @@ final class GetMedia implements Ability {
 			'source_url'    => (string) ( $data['source_url'] ?? '' ),
 			'media_type'    => (string) ( $data['media_type'] ?? '' ),
 			'mime_type'     => (string) ( $data['mime_type'] ?? '' ),
-			'media_details' => is_array( $data['media_details'] ?? null ) ? $data['media_details'] : array(),
+			'media_details' => is_array( $data['media_details'] ?? null ) && array() !== $data['media_details'] ? $data['media_details'] : (object) array(),
 			'post'          => (int) ( $data['post'] ?? 0 ),
 		);
 	}

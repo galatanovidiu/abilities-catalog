@@ -45,19 +45,20 @@ final class DeleteNavigation implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Navigation', 'abilities-catalog' ),
-			'description'         => __( 'Deletes a block navigation menu (a wp_navigation post) by ID. By default it is moved to Trash and can be restored; set force to true to delete it permanently. A navigation menu may be used by Navigation blocks across the site, so deleting it affects every place it appears.', 'abilities-catalog' ),
+			'description'         => __( 'Deletes a block navigation menu (a wp_navigation post) by ID. By default it is moved to Trash and can be restored; set force to true to delete it permanently. A navigation menu may be used by Navigation blocks across the site, so deleting it affects every place it appears. The default (force false) path can be rejected: if Trash is disabled site-wide it fails with rest_trash_not_supported (501), and if the menu is already in Trash it fails with rest_already_trashed (410). In those cases set force to true to delete permanently.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'    => array(
 						'type'        => 'integer',
-						'description' => __( 'The navigation menu (wp_navigation post) ID to delete.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The navigation menu (wp_navigation post) ID to delete. Discover it with menus/list-navigation or menus/get-navigation.', 'abilities-catalog' ),
 					),
 					'force' => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __( 'If true, delete permanently (bypass Trash). If false (default), move to Trash.', 'abilities-catalog' ),
+						'description' => __( 'If true, delete permanently (bypass Trash). If false (default), move to Trash; this can fail with rest_trash_not_supported (501) when Trash is disabled site-wide, or rest_already_trashed (410) when the menu is already in Trash.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -78,6 +79,14 @@ final class DeleteNavigation implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'description' => __( 'The deleted navigation menu ID.', 'abilities-catalog' ),
+					),
+					'title'   => array(
+						'type'        => 'string',
+						'description' => __( 'The title of the navigation menu that was deleted or trashed.', 'abilities-catalog' ),
+					),
+					'status'  => array(
+						'type'        => 'string',
+						'description' => __( 'The post status after the operation: "trash" when trashed, or the previous status when permanently deleted.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -123,7 +132,7 @@ final class DeleteNavigation implements Ability {
 	 * the caller unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted/trashed flags and id, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deleted/trashed flags, id, and a snapshot (title, status) of the affected menu, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -142,13 +151,30 @@ final class DeleteNavigation implements Ability {
 		// With force=true the route returns {deleted:true, previous:{…}}.
 		// With force=false it returns the trashed post object (status "trash").
 		$deleted = (bool) ( $data['deleted'] ?? false );
-		$status  = $data['status'] ?? ( $data['previous']['status'] ?? '' );
+		$source  = $deleted && isset( $data['previous'] ) && is_array( $data['previous'] )
+			? $data['previous']
+			: $data;
+		$status  = isset( $source['status'] ) ? (string) $source['status'] : '';
 		$trashed = ! $deleted && 'trash' === $status;
 
-		return array(
+		$result = array(
 			'deleted' => $deleted,
 			'trashed' => $trashed,
 			'id'      => $id,
 		);
+
+		if ( isset( $source['title'] ) ) {
+			$title = $source['title'];
+			if ( is_array( $title ) ) {
+				$title = $title['rendered'] ?? ( $title['raw'] ?? '' );
+			}
+			$result['title'] = (string) $title;
+		}
+
+		if ( '' !== $status ) {
+			$result['status'] = $status;
+		}
+
+		return $result;
 	}
 }

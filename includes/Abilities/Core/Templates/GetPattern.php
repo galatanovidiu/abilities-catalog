@@ -43,7 +43,7 @@ final class GetPattern implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The pattern (wp_block) post ID.', 'abilities-catalog' ),
+						'description' => __( 'The pattern (wp_block) post ID. Discover IDs via templates/list-synced-patterns.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -59,29 +59,33 @@ final class GetPattern implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'       => array(
+					'id'          => array(
 						'type'        => 'integer',
 						'description' => __( 'The pattern post ID.', 'abilities-catalog' ),
 					),
-					'title'    => array(
+					'title'       => array(
 						'type'        => 'string',
 						'description' => __( 'The pattern title.', 'abilities-catalog' ),
 					),
-					'content'  => array(
+					'content'     => array(
 						'type'        => 'string',
 						'description' => __( 'The pattern block markup.', 'abilities-catalog' ),
 					),
-					'status'   => array(
+					'status'      => array(
 						'type'        => 'string',
 						'description' => __( 'The pattern status.', 'abilities-catalog' ),
 					),
-					'date'     => array(
+					'date'        => array(
 						'type'        => 'string',
 						'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
 					),
-					'modified' => array(
+					'modified'    => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
+					),
+					'sync_status' => array(
+						'type'        => 'string',
+						'description' => __( 'The pattern sync status: "partial", "unsynced", or empty for a fully synced pattern.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -139,7 +143,7 @@ final class GetPattern implements Ability {
 
 		$title = $data['title'] ?? '';
 		if ( is_array( $title ) ) {
-			$title = $title['rendered'] ?? '';
+			$title = $title['raw'] ?? ( $title['rendered'] ?? '' );
 		}
 
 		$content = $data['content'] ?? '';
@@ -148,12 +152,13 @@ final class GetPattern implements Ability {
 		}
 
 		return array(
-			'id'       => (int) ( $data['id'] ?? $id ),
-			'title'    => (string) $title,
-			'content'  => (string) $content,
-			'status'   => (string) ( $data['status'] ?? '' ),
-			'date'     => (string) ( $data['date'] ?? '' ),
-			'modified' => (string) ( $data['modified'] ?? '' ),
+			'id'          => (int) ( $data['id'] ?? $id ),
+			'title'       => (string) $title,
+			'content'     => (string) $content,
+			'status'      => (string) ( $data['status'] ?? '' ),
+			'date'        => (string) ( $data['date'] ?? '' ),
+			'modified'    => (string) ( $data['modified'] ?? '' ),
+			'sync_status' => (string) ( $data['wp_pattern_sync_status'] ?? '' ),
 		);
 	}
 }

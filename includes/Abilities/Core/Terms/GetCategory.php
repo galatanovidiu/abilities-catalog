@@ -42,7 +42,8 @@ final class GetCategory implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The category term ID.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The category term ID. Discover IDs with terms/list-categories.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -138,7 +139,7 @@ final class GetCategory implements Ability {
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
+		$id      = (int) $input['id'];
 		$context = $input['context'] ?? 'view';
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/categories/' . $id );

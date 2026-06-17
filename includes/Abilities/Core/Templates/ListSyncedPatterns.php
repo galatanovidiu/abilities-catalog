@@ -16,10 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `templates/list-synced-patterns`.
  *
  * Wraps `GET /wp/v2/blocks` via `rest_do_request()` and shapes the result. A
- * synced pattern is a user-created reusable block stored as a `wp_block` post;
- * editing one updates every place it is inserted. Returns a flattened list
- * (id, title, slug, status, modified) so an agent can find a synced pattern's id
- * and then read it with `templates/get-pattern`. This is the user pattern library,
+ * user pattern is a reusable block stored as a `wp_block` post. The route lists
+ * the whole user pattern library, not just synced ones: a fully synced pattern
+ * updates every place it is inserted, while `partial` and `unsynced` patterns do
+ * not. Returns a flattened list (id, title, slug, status, modified, sync_status)
+ * so an agent can find a pattern's id, tell its sync state apart, and then read
+ * it with `templates/get-pattern`. This is the editable user pattern library,
  * distinct from `templates/list-patterns` (the read-only registered pattern
  * registry). Read-only.
  *
@@ -40,7 +42,7 @@ final class ListSyncedPatterns implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Synced Patterns', 'abilities-catalog' ),
-			'description'         => __( 'Lists the user-created synced patterns (reusable blocks, post type "wp_block"). Returns id, title, slug, and status so the pattern can then be read with the get-pattern ability. This is the editable user pattern library, not the read-only registered pattern registry.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the user pattern library (reusable blocks, post type "wp_block"): synced, partial, and unsynced patterns. Returns id, title, slug, status, and sync_status (empty for fully synced, otherwise "partial" or "unsynced") so the pattern can then be read with the get-pattern ability. This is the editable user pattern library, not the read-only registered pattern registry.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -71,36 +73,48 @@ final class ListSyncedPatterns implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'items' ),
 				'properties'           => array(
-					'items' => array(
+					'items'       => array(
 						'type'        => 'array',
 						'items'       => array(
 							'type'                 => 'object',
 							'required'             => array( 'id', 'title', 'status' ),
 							'properties'           => array(
-								'id'       => array(
+								'id'          => array(
 									'type'        => 'integer',
-									'description' => __( 'The synced pattern (wp_block) post ID.', 'abilities-catalog' ),
+									'description' => __( 'The user pattern (wp_block) post ID.', 'abilities-catalog' ),
 								),
-								'title'    => array(
+								'title'       => array(
 									'type'        => 'string',
-									'description' => __( 'The synced pattern title.', 'abilities-catalog' ),
+									'description' => __( 'The user pattern title.', 'abilities-catalog' ),
 								),
-								'slug'     => array(
+								'slug'        => array(
 									'type'        => 'string',
-									'description' => __( 'The synced pattern slug.', 'abilities-catalog' ),
+									'description' => __( 'The user pattern slug.', 'abilities-catalog' ),
 								),
-								'status'   => array(
+								'status'      => array(
 									'type'        => 'string',
-									'description' => __( 'The synced pattern post status.', 'abilities-catalog' ),
+									'description' => __( 'The user pattern post status.', 'abilities-catalog' ),
 								),
-								'modified' => array(
+								'modified'    => array(
 									'type'        => 'string',
 									'description' => __( 'The last-modified date (site time).', 'abilities-catalog' ),
+								),
+								'sync_status' => array(
+									'type'        => 'string',
+									'description' => __( 'The pattern sync status: empty for a fully synced pattern, otherwise "partial" or "unsynced".', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,
 						),
-						'description' => __( 'The list of synced patterns.', 'abilities-catalog' ),
+						'description' => __( 'The list of user patterns (synced, partial, and unsynced).', 'abilities-catalog' ),
+					),
+					'total'       => array(
+						'type'        => 'integer',
+						'description' => __( 'Total number of user patterns matching the query.', 'abilities-catalog' ),
+					),
+					'total_pages' => array(
+						'type'        => 'integer',
+						'description' => __( 'Total number of pages available.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -154,8 +168,9 @@ final class ListSyncedPatterns implements Ability {
 			return RestError::from( $response );
 		}
 
-		$data  = rest_get_server()->response_to_data( $response, false );
-		$items = array();
+		$data    = rest_get_server()->response_to_data( $response, false );
+		$headers = $response->get_headers();
+		$items   = array();
 
 		foreach ( is_array( $data ) ? $data : array() as $row ) {
 			$title = $row['title'] ?? '';
@@ -164,16 +179,19 @@ final class ListSyncedPatterns implements Ability {
 			}
 
 			$items[] = array(
-				'id'       => (int) ( $row['id'] ?? 0 ),
-				'title'    => (string) $title,
-				'slug'     => (string) ( $row['slug'] ?? '' ),
-				'status'   => (string) ( $row['status'] ?? '' ),
-				'modified' => (string) ( $row['modified'] ?? '' ),
+				'id'          => (int) ( $row['id'] ?? 0 ),
+				'title'       => (string) $title,
+				'slug'        => (string) ( $row['slug'] ?? '' ),
+				'status'      => (string) ( $row['status'] ?? '' ),
+				'modified'    => (string) ( $row['modified'] ?? '' ),
+				'sync_status' => (string) ( $row['wp_pattern_sync_status'] ?? '' ),
 			);
 		}
 
 		return array(
-			'items' => $items,
+			'items'       => $items,
+			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
+			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
 	}
 }

@@ -16,12 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T1 write ability: `content/update-post`.
  *
  * Wraps `POST /wp/v2/posts/<id>` via `rest_do_request()` and returns the post's
- * id, link, status, and modified date. The `permission_callback` encodes the
- * catalog's object-level capabilities — `edit_post` on the target post,
- * `publish_posts` when the requested status would publish, and
- * `edit_others_posts` when reassigning the post to another author. The REST
- * route re-checks every capability underneath (defense in depth) and handles
- * content sanitization.
+ * id, link, status, and modified date. The `permission_callback` enforces the
+ * coarse type-level `edit_posts` capability as the catalog guard, plus
+ * `publish_posts` when the requested status would publish and
+ * `edit_others_posts` when reassigning the post to another author. The
+ * object-level `edit_post` check on the target post is delegated to the wrapped
+ * REST route, which re-checks every capability underneath (defense in depth)
+ * and handles content sanitization.
  *
  * @since 0.2.0
  */
@@ -54,6 +55,7 @@ final class UpdatePost implements Ability {
 				'properties'           => array(
 					'id'             => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The post ID to update.', 'abilities-catalog' ),
 					),
 					'title'          => array(
@@ -75,6 +77,7 @@ final class UpdatePost implements Ability {
 					),
 					'author'         => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'The author user ID. Setting another user requires the edit_others_posts capability.', 'abilities-catalog' ),
 					),
 					'slug'           => array(
@@ -83,20 +86,28 @@ final class UpdatePost implements Ability {
 					),
 					'date'           => array(
 						'type'        => 'string',
+						'format'      => 'date-time',
 						'description' => __( 'The publish date in site time (ISO 8601).', 'abilities-catalog' ),
 					),
 					'categories'     => array(
 						'type'        => 'array',
-						'items'       => array( 'type' => 'integer' ),
+						'items'       => array(
+							'type'    => 'integer',
+							'minimum' => 1,
+						),
 						'description' => __( 'Category term IDs to assign.', 'abilities-catalog' ),
 					),
 					'tags'           => array(
 						'type'        => 'array',
-						'items'       => array( 'type' => 'integer' ),
+						'items'       => array(
+							'type'    => 'integer',
+							'minimum' => 1,
+						),
 						'description' => __( 'Tag term IDs to assign.', 'abilities-catalog' ),
 					),
 					'featured_media' => array(
 						'type'        => 'integer',
+						'minimum'     => 1,
 						'description' => __( 'Attachment ID for the featured image.', 'abilities-catalog' ),
 					),
 				),
@@ -107,27 +118,45 @@ final class UpdatePost implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'status', 'link', 'edit_link' ),
 				'properties'           => array(
-					'id'        => array(
+					'id'             => array(
 						'type'        => 'integer',
 						'description' => __( 'The post ID.', 'abilities-catalog' ),
 					),
-					'title'     => array(
+					'title'          => array(
 						'type'        => 'string',
 						'description' => __( 'The rendered post title.', 'abilities-catalog' ),
 					),
-					'link'      => array(
+					'link'           => array(
 						'type'        => 'string',
 						'description' => __( 'The post permalink.', 'abilities-catalog' ),
 					),
-					'status'    => array(
+					'status'         => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting post status.', 'abilities-catalog' ),
 					),
-					'modified'  => array(
+					'slug'           => array(
+						'type'        => 'string',
+						'description' => __( 'The resulting post slug, after core sanitization and uniquification.', 'abilities-catalog' ),
+					),
+					'modified'       => array(
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
-					'edit_link' => array(
+					'featured_media' => array(
+						'type'        => 'integer',
+						'description' => __( 'The resulting featured image attachment ID, or 0 if none is set.', 'abilities-catalog' ),
+					),
+					'categories'     => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'description' => __( 'The resulting assigned category term IDs.', 'abilities-catalog' ),
+					),
+					'tags'           => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'description' => __( 'The resulting assigned tag term IDs.', 'abilities-catalog' ),
+					),
+					'edit_link'      => array(
 						'type'        => 'string',
 						'description' => __( 'The wp-admin URL to edit the post. Surface this so a human can review the change.', 'abilities-catalog' ),
 					),
@@ -235,13 +264,20 @@ final class UpdatePost implements Ability {
 		$data    = rest_get_server()->response_to_data( $response, false );
 		$post_id = (int) ( $data['id'] ?? $id );
 
+		$categories = is_array( $data['categories'] ?? null ) ? array_map( 'intval', $data['categories'] ) : array();
+		$tags       = is_array( $data['tags'] ?? null ) ? array_map( 'intval', $data['tags'] ) : array();
+
 		return array(
-			'id'        => $post_id,
-			'title'     => (string) ( $data['title']['rendered'] ?? '' ),
-			'link'      => (string) ( $data['link'] ?? '' ),
-			'status'    => (string) ( $data['status'] ?? '' ),
-			'modified'  => (string) ( $data['modified'] ?? '' ),
-			'edit_link' => (string) get_edit_post_link( $post_id, 'raw' ),
+			'id'             => $post_id,
+			'title'          => (string) ( $data['title']['rendered'] ?? '' ),
+			'link'           => (string) ( $data['link'] ?? '' ),
+			'status'         => (string) ( $data['status'] ?? '' ),
+			'slug'           => (string) ( $data['slug'] ?? '' ),
+			'modified'       => (string) ( $data['modified'] ?? '' ),
+			'featured_media' => (int) ( $data['featured_media'] ?? 0 ),
+			'categories'     => $categories,
+			'tags'           => $tags,
+			'edit_link'      => (string) get_edit_post_link( $post_id, 'raw' ),
 		);
 	}
 }

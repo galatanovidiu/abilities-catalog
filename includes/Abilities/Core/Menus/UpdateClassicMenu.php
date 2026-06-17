@@ -47,7 +47,8 @@ final class UpdateClassicMenu implements Ability {
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'integer',
-						'description' => __( 'The classic menu term ID to update.', 'abilities-catalog' ),
+						'minimum'     => 1,
+						'description' => __( 'The classic menu term ID to update. Use menus/list-classic-menus to discover valid menu IDs.', 'abilities-catalog' ),
 					),
 					'name'        => array(
 						'type'        => 'string',
@@ -60,7 +61,7 @@ final class UpdateClassicMenu implements Ability {
 					'locations'   => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Theme location slugs to assign this menu to.', 'abilities-catalog' ),
+						'description' => __( 'Theme location slugs to assign this menu to. This replaces the menu\'s entire set of assigned locations: any location omitted here is cleared. Use menus/list-menu-locations to discover valid location slugs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -70,13 +71,18 @@ final class UpdateClassicMenu implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id', 'name' ),
 				'properties'           => array(
-					'id'   => array(
+					'id'        => array(
 						'type'        => 'integer',
 						'description' => __( 'The classic menu term ID.', 'abilities-catalog' ),
 					),
-					'name' => array(
+					'name'      => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting menu name.', 'abilities-catalog' ),
+					),
+					'locations' => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'The theme locations now assigned to the menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -119,7 +125,7 @@ final class UpdateClassicMenu implements Ability {
 	 * Executes the ability by dispatching the internal REST update request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The menu's id and name, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The menu's id, name, and assigned locations, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
@@ -146,8 +152,9 @@ final class UpdateClassicMenu implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'   => (int) ( $data['id'] ?? $id ),
-			'name' => (string) ( $data['name'] ?? '' ),
+			'id'        => (int) ( $data['id'] ?? $id ),
+			'name'      => (string) ( $data['name'] ?? '' ),
+			'locations' => isset( $data['locations'] ) && is_array( $data['locations'] ) ? array_values( $data['locations'] ) : array(),
 		);
 	}
 }

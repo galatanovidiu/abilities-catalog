@@ -43,7 +43,7 @@ final class InstallPlugin implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Install Plugin', 'abilities-catalog' ),
-			'description'         => __( 'Installs an inactive plugin from the wordpress.org directory by its slug. Installing brings new code onto the site.', 'abilities-catalog' ),
+			'description'         => __( 'Installs an inactive plugin from the wordpress.org directory by its slug (no ZIP, URL, or file path). Requires direct filesystem write access. Installing brings new code onto the site.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -51,6 +51,8 @@ final class InstallPlugin implements Ability {
 					'slug' => array(
 						'type'        => 'string',
 						'description' => __( 'The wordpress.org directory slug, for example "akismet".', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'pattern'     => '^[a-z0-9-]+$',
 					),
 				),
 				'required'             => array( 'slug' ),
@@ -66,6 +68,7 @@ final class InstallPlugin implements Ability {
 					),
 					'status' => array(
 						'type'        => 'string',
+						'enum'        => array( 'inactive', 'active', 'network-active' ),
 						'description' => __( 'The resulting plugin activation status.', 'abilities-catalog' ),
 					),
 					'name'   => array(

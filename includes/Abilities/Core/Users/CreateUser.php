@@ -43,7 +43,7 @@ final class CreateUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create User', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new user account with the given username, email, and password.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new user account with the given username, email, and password. This REST-backed create does NOT send the wp-admin "Send User Notification" email; delivering credentials to the new user is the caller\'s responsibility. Creating a user is not auto-reversible; pair with users/delete-user to undo.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -54,6 +54,7 @@ final class CreateUser implements Ability {
 					),
 					'email'      => array(
 						'type'        => 'string',
+						'format'      => 'email',
 						'description' => __( 'The email address for the user.', 'abilities-catalog' ),
 					),
 					'password'   => array(
@@ -75,10 +76,11 @@ final class CreateUser implements Ability {
 					'roles'      => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Roles to assign to the user.', 'abilities-catalog' ),
+						'description' => __( 'Role slugs to assign to the user. Assignment is limited to roles the current user is allowed to grant; unknown or non-editable roles are rejected. Omit to assign the site default role; pass an empty array for a roleless user.', 'abilities-catalog' ),
 					),
 					'url'        => array(
 						'type'        => 'string',
+						'format'      => 'uri',
 						'description' => __( 'The website URL for the user.', 'abilities-catalog' ),
 					),
 					'locale'     => array(
@@ -153,16 +155,22 @@ final class CreateUser implements Ability {
 		$input   = is_array( $input ) ? $input : array();
 		$request = new WP_REST_Request( 'POST', '/wp/v2/users' );
 
-		// String fields pass through to the REST route, which sanitizes them.
+		// String fields pass through to the REST route, which validates and
+		// sanitizes them. Forward every field that is set, including an explicit
+		// empty string, so core can apply its own rules (an empty password is
+		// rejected with rest_user_invalid_password; an empty locale is allowed).
 		foreach ( array( 'username', 'email', 'password', 'name', 'first_name', 'last_name', 'url', 'locale' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! isset( $input[ $field ] ) ) {
 				continue;
 			}
 
 			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if ( ! empty( $input['roles'] ) && is_array( $input['roles'] ) ) {
+		// Forward roles whenever the key is present and an array, including the
+		// empty array, so a caller can request a roleless user instead of having
+		// core fall back to the default role.
+		if ( isset( $input['roles'] ) && is_array( $input['roles'] ) ) {
 			$request->set_param( 'roles', array_map( 'strval', $input['roles'] ) );
 		}
 

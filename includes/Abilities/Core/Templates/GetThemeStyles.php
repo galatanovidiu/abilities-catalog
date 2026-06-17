@@ -16,11 +16,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `templates/get-theme-styles`.
  *
  * Wraps `GET /wp/v2/global-styles/themes/<stylesheet>` via `rest_do_request()`.
- * Returns the theme-level global styles — the design tokens and styles a theme
- * ships in its `theme.json` (color palette, typography, spacing, element styles).
- * The `stylesheet` defaults to the active theme. This is the theme's baseline,
- * distinct from `templates/get-global-styles`, which returns the user's overrides
- * layered on top. Read-only.
+ * Returns the **active theme's** effective theme-level global settings and styles:
+ * the merged result of core defaults, per-block defaults, and the theme's own
+ * `theme.json` plus classic-theme supports (user overrides excluded). The core
+ * route serves the active theme only — a non-active `stylesheet` always 404s — so
+ * `stylesheet` is an optional explicit active-theme identifier; leave it empty to
+ * resolve the active theme automatically. This is the theme-level baseline,
+ * distinct from `templates/get-global-styles`, which returns the user's raw
+ * override record layered on top. Read-only.
  *
  * @since 0.5.0
  */
@@ -39,7 +42,7 @@ final class GetThemeStyles implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Theme Styles', 'abilities-catalog' ),
-			'description'         => __( 'Returns a theme\'s baseline global styles from its theme.json (color palette, typography, spacing, element styles). Defaults to the active theme. This is the theme default, not the user overrides returned by get-global-styles.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the active theme\'s effective theme-level global settings and styles (color palette, typography, spacing, element styles). The value merges core defaults, per-block defaults, and the theme\'s theme.json plus classic-theme supports; user overrides are excluded. The core route serves the active theme only. This is the theme-level baseline, not the user\'s raw override record returned by get-global-styles.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -47,7 +50,7 @@ final class GetThemeStyles implements Ability {
 					'stylesheet' => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __( 'The theme stylesheet (directory name). Leave empty to use the active theme.', 'abilities-catalog' ),
+						'description' => __( 'Optional active-theme stylesheet (directory name). The route serves the active theme only, so any non-active value returns a 404. Leave empty to resolve the active theme automatically.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -123,8 +126,10 @@ final class GetThemeStyles implements Ability {
 
 		// Cast to objects so empty results serialize as `{}` (matching the
 		// `type: object` schema); an empty PHP array would serialize as `[]`.
+		// Core only ever serves the active theme, so report its canonical
+		// stylesheet rather than echoing the (possibly URL-encoded) input.
 		return array(
-			'stylesheet' => $stylesheet,
+			'stylesheet' => get_stylesheet(),
 			'settings'   => (object) ( is_array( $data['settings'] ?? null ) ? $data['settings'] : array() ),
 			'styles'     => (object) ( is_array( $data['styles'] ?? null ) ? $data['styles'] : array() ),
 		);

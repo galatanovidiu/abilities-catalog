@@ -186,6 +186,30 @@ final class PermissionErrorsTest extends TestCase {
 		$this->assertSpecificError( $result, 'invalid_post_type' );
 	}
 
+	public function test_update_cpt_item_negative_id_fails_validation_without_updating(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_title'  => 'Before',
+			)
+		);
+
+		// A negative id must be rejected by input validation (minimum: 1), never
+		// mapped to a positive post by absint() and silently retargeted.
+		$result = wp_get_ability( 'content/update-cpt-item' )->execute(
+			array(
+				'post_type' => 'post',
+				'id'        => -$post_id,
+				'title'     => 'After',
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+		$this->assertSame( 'Before', get_post( $post_id )->post_title );
+	}
+
 	public function test_get_post_meta_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
@@ -241,5 +265,49 @@ final class PermissionErrorsTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_restore_post_revision_missing_revision_returns_404(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create();
+
+		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+			array(
+				'parent'      => $post_id,
+				'revision_id' => self::MISSING_ID,
+			)
+		);
+
+		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_restore_post_revision_wrong_parent_returns_mismatch(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'   => 'Versioned',
+				'post_content' => 'v1',
+			)
+		);
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'v2',
+			)
+		);
+		$revisions   = wp_get_post_revisions( $post_id );
+		$revision_id = (int) array_key_first( $revisions );
+		$other_post  = self::factory()->post->create();
+
+		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+			array(
+				'parent'      => $other_post,
+				'revision_id' => $revision_id,
+			)
+		);
+
+		$this->assertSpecificError( $result, 'rest_revision_parent_id_mismatch' );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

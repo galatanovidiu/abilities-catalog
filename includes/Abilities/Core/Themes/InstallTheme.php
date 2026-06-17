@@ -44,7 +44,7 @@ final class InstallTheme implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Install Theme', 'abilities-catalog' ),
-			'description'         => __( 'Installs a theme from the wordpress.org directory by its slug. Installing code from the directory changes the site, so this is a dangerous operation.', 'abilities-catalog' ),
+			'description'         => __( 'Installs a theme from the wordpress.org directory by its slug (no ZIP, URL, or file path). Requires direct filesystem write access. Installing code from the directory changes the site, so this is a dangerous operation. On multisite the install affects every site in the network.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -52,6 +52,8 @@ final class InstallTheme implements Ability {
 					'slug' => array(
 						'type'        => 'string',
 						'description' => __( 'The wordpress.org theme directory slug to install, for example "twentytwentyfive".', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'pattern'     => '^[a-z0-9-]+$',
 					),
 				),
 				'required'             => array( 'slug' ),
@@ -145,6 +147,13 @@ final class InstallTheme implements Ability {
 			)
 		);
 		if ( is_wp_error( $api ) ) {
+			// `themes_api()` returns `themes_api_failed` with no HTTP status on an
+			// API/transport failure; backfill one so the caller can branch on it.
+			$data = $api->get_error_data();
+			if ( ! is_array( $data ) || ! isset( $data['status'] ) ) {
+				$api->add_data( array( 'status' => 502 ) );
+			}
+
 			return $api;
 		}
 
@@ -161,15 +170,35 @@ final class InstallTheme implements Ability {
 			static function () use ( $api ) {
 				$upgrader = new \Theme_Upgrader( UpgradeRunner::skin() );
 
-				return $upgrader->install( $api->download_link );
+				$installed = $upgrader->install( $api->download_link );
+				if ( true !== $installed ) {
+					// `install()` returns `false`/`null` or a `WP_Error` on failure;
+					// pass the failure value through so the caller can normalize it.
+					return $installed;
+				}
+
+				// Resolve the canonical installed handle from the extracted package
+				// (`destination_name`), which can differ from the request slug.
+				return $upgrader->theme_info();
 			}
 		);
 
 		if ( is_wp_error( $result ) ) {
-			return $result;
+			// Core's install path can return path-bearing errors such as
+			// `folder_exists` (already installed) or `mkdir_failed_destination`,
+			// where the error data is an absolute filesystem path. Preserve the
+			// stable code and message, strip the path-leaking data, and attach an
+			// explicit HTTP status for client branching.
+			$status = 'folder_exists' === $result->get_error_code() ? 409 : 500;
+
+			return new WP_Error(
+				$result->get_error_code(),
+				$result->get_error_message(),
+				array( 'status' => $status )
+			);
 		}
 
-		if ( true !== $result ) {
+		if ( ! $result instanceof \WP_Theme || ! $result->exists() ) {
 			return new WP_Error(
 				'webmcp_install_failed',
 				__( 'The theme installation did not complete.', 'abilities-catalog' ),
@@ -179,8 +208,8 @@ final class InstallTheme implements Ability {
 
 		return array(
 			'installed'  => true,
-			'stylesheet' => $slug,
-			'name'       => isset( $api->name ) ? (string) $api->name : '',
+			'stylesheet' => (string) $result->get_stylesheet(),
+			'name'       => (string) $result->get( 'Name' ),
 		);
 	}
 }

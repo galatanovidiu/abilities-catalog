@@ -21,13 +21,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  * on a request currently in `request-pending` or `request-failed` state and is
  * a no-op otherwise (wp-includes/user.php:4216).
  *
- * Confirming is normally done by the data subject, not an admin: core fires
- * `_wp_privacy_account_request_confirmed()` from the public `confirmaction`
- * flow in wp-login.php, gated by a per-request key
- * (`wp_validate_user_request_key`), NOT by a capability (wp-login.php:1246).
- * There is no core admin handler that calls this function behind a capability
- * gate. So this ability is an administrative override of the email-key proof,
- * and there is no core admin cap to mirror exactly.
+ * Confirming is normally done by the data subject, not an admin: the public
+ * `confirmaction` flow in wp-login.php fires
+ * `do_action( 'user_request_action_confirmed', $request_id )` (wp-login.php:1276),
+ * gated by a per-request key (`wp_validate_user_request_key`), NOT by a
+ * capability (wp-login.php:1246). `_wp_privacy_account_request_confirmed()` is
+ * one of two handlers wired to that action
+ * (wp-includes/default-filters.php:442-443). This ability calls that handler
+ * directly. There is no core admin handler that confirms a request behind a
+ * capability gate, so this ability is an administrative override of the
+ * email-key proof, and there is no core admin cap to mirror exactly.
  *
  * The cap is therefore floored at the strictest correct guard: the current user
  * must hold `manage_privacy_options` AND the same capability that gates the
@@ -67,7 +70,7 @@ final class ConfirmRequest implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Confirm Request', 'abilities-catalog' ),
-			'description'         => __( 'Administratively confirms a pending personal-data request, setting its status to request-confirmed.', 'abilities-catalog' ),
+			'description'         => __( 'Administratively confirms a personal-data request in request-pending or request-failed state, setting its status to request-confirmed.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -75,7 +78,7 @@ final class ConfirmRequest implements Ability {
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the user_request post to confirm.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the user_request post to confirm. Obtain it from privacy/list-export-requests or privacy/list-erase-requests.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'request_id' ),
@@ -83,15 +86,19 @@ final class ConfirmRequest implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'request_id', 'status' ),
+				'required'             => array( 'request_id', 'status', 'action_name' ),
 				'properties'           => array(
-					'request_id' => array(
+					'request_id'  => array(
 						'type'        => 'integer',
 						'description' => __( 'The confirmed request ID.', 'abilities-catalog' ),
 					),
-					'status'     => array(
+					'status'      => array(
 						'type'        => 'string',
 						'description' => __( 'The resulting request status.', 'abilities-catalog' ),
+					),
+					'action_name' => array(
+						'type'        => 'string',
+						'description' => __( 'The request action name (export_personal_data or remove_personal_data).', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -151,7 +158,7 @@ final class ConfirmRequest implements Ability {
 	 * Executes the ability by confirming the request.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array{request_id:int,status:string}|\WP_Error
+	 * @return array{request_id:int,status:string,action_name:string}|\WP_Error
 	 */
 	public function execute( $input ) {
 		$input      = is_array( $input ) ? $input : array();
@@ -182,13 +189,26 @@ final class ConfirmRequest implements Ability {
 			);
 		}
 
+		switch ( $request->action_name ) {
+			case 'export_personal_data':
+			case 'remove_personal_data':
+				break;
+			default:
+				return new WP_Error(
+					'unsupported_request_type',
+					__( 'This request type cannot be confirmed by this ability.', 'abilities-catalog' ),
+					array( 'status' => 400 )
+				);
+		}
+
 		_wp_privacy_account_request_confirmed( $request_id );
 
 		$updated = wp_get_user_request( $request_id );
 
 		return array(
-			'request_id' => $request_id,
-			'status'     => $updated instanceof WP_User_Request ? (string) $updated->status : '',
+			'request_id'  => $request_id,
+			'status'      => $updated instanceof WP_User_Request ? (string) $updated->status : '',
+			'action_name' => (string) $request->action_name,
 		);
 	}
 }

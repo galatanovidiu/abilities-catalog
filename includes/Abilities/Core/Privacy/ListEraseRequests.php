@@ -15,8 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Lists personal-data erasure requests. These are `user_request` custom-post-type
  * posts whose `post_name` (mapped to `action_name`) is `remove_personal_data`.
- * The ability returns only the request records' metadata — id, email, status,
- * created date, and action name. It never exposes any erased personal data.
+ * The ability returns only the request records' metadata — id (and its
+ * `request_id` alias), email, status, created date (site-local and UTC), and
+ * action name. It never exposes any erased personal data.
  *
  * The capability mirrors the wp-admin Erase Personal Data screen, which gates on
  * both `erase_others_personal_data` and `delete_users`
@@ -70,14 +71,46 @@ final class ListEraseRequests implements Ability {
 			),
 			'output_schema'       => array(
 				'type'                 => 'object',
-				'required'             => array( 'items' ),
+				'required'             => array( 'items', 'total' ),
 				'properties'           => array(
 					'items' => array(
 						'type'        => 'array',
 						'description' => __( 'The erase request records.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'properties'           => array(
+								'id'          => array(
+									'type'        => 'integer',
+									'description' => __( 'The request post ID.', 'abilities-catalog' ),
+								),
+								'request_id'  => array(
+									'type'        => 'integer',
+									'description' => __( 'Alias of id; the identifier follow-on privacy abilities accept as request_id.', 'abilities-catalog' ),
+								),
+								'email'       => array(
+									'type'        => 'string',
+									'description' => __( 'The email address of the data subject.', 'abilities-catalog' ),
+								),
+								'status'      => array(
+									'type'        => 'string',
+									'enum'        => array( 'request-pending', 'request-confirmed', 'request-completed', 'request-failed' ),
+									'description' => __( 'The request status.', 'abilities-catalog' ),
+								),
+								'created'     => array(
+									'type'        => 'string',
+									'description' => __( 'The request creation datetime, site-local timezone.', 'abilities-catalog' ),
+								),
+								'created_gmt' => array(
+									'type'        => 'string',
+									'description' => __( 'The request creation datetime, UTC.', 'abilities-catalog' ),
+								),
+								'action_name' => array(
+									'type'        => 'string',
+									'enum'        => array( 'remove_personal_data' ),
+									'description' => __( 'The request action name.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 					'total' => array(
@@ -117,7 +150,7 @@ final class ListEraseRequests implements Ability {
 	 * Executes the ability by querying `user_request` erase posts.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array{items:array<int,array<string,mixed>>,total:int}
+	 * @return array{items:array<int,array{id:int,request_id:int,email:string,status:string,created:string,created_gmt:string,action_name:string}>,total:int}
 	 */
 	public function execute( $input ) {
 		return $this->queryUserRequests( 'remove_personal_data', $input );

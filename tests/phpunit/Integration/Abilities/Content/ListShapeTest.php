@@ -50,10 +50,18 @@ final class ListShapeTest extends TestCase {
 
 	public function test_list_pages_returns_shaped_rows(): void {
 		$this->actingAs( 'administrator' );
+		$parent_id = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+			)
+		);
 		self::factory()->post->create(
 			array(
 				'post_type'   => 'page',
 				'post_status' => 'publish',
+				'post_parent' => $parent_id,
+				'menu_order'  => 5,
 			)
 		);
 
@@ -63,7 +71,25 @@ final class ListShapeTest extends TestCase {
 		$this->assertNotEmpty( $result['items'] );
 		foreach ( $result['items'] as $row ) {
 			$this->assertShapedRow( $row );
+			// Page-specific fields must be present on every row.
+			$this->assertArrayHasKey( 'parent', $row );
+			$this->assertIsInt( $row['parent'] );
+			$this->assertArrayHasKey( 'menu_order', $row );
+			$this->assertIsInt( $row['menu_order'] );
+			$this->assertArrayHasKey( 'template', $row );
+			$this->assertIsString( $row['template'] );
 		}
+
+		// The child page exposes its parent and menu order.
+		$child = null;
+		foreach ( $result['items'] as $row ) {
+			if ( $parent_id === $row['parent'] ) {
+				$child = $row;
+				break;
+			}
+		}
+		$this->assertNotNull( $child, 'The child page should report its parent ID.' );
+		$this->assertSame( 5, $child['menu_order'] );
 	}
 
 	public function test_list_cpt_items_excludes_body_and_reports_total(): void {
@@ -109,12 +135,24 @@ final class ListShapeTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
+		$this->assertSame( count( $result['items'] ), $result['total'] );
+		$this->assertSame( 1, $result['total_pages'] );
 		foreach ( $result['items'] as $row ) {
 			$this->assertArrayNotHasKey( '_links', $row );
 			$this->assertArrayNotHasKey( 'guid', $row );
 			$this->assertArrayHasKey( 'parent', $row );
 			$this->assertSame( $post_id, $row['parent'] );
 		}
+	}
+
+	public function test_list_post_revisions_negative_parent_returns_404_not_retargeted(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create();
+
+		$result = wp_get_ability( 'content/list-post-revisions' )->execute( array( 'parent' => -$post_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 
 	public function test_list_post_types_reports_supports_as_flat_list(): void {
@@ -135,5 +173,49 @@ final class ListShapeTest extends TestCase {
 		$this->assertContains( 'editor', $post_row['supports'] );
 		// Flat list of feature keys, not the nested REST shape.
 		$this->assertArrayHasKey( 0, $post_row['supports'] );
+	}
+
+	public function test_list_post_types_view_context_returns_shaped_rows(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'content/list-post-types' )->execute( array( 'context' => 'view' ) );
+
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
+		$this->assertSame( count( $result['items'] ), $result['total'] );
+		$this->assertSame( 1, $result['total_pages'] );
+		foreach ( $result['items'] as $row ) {
+			$this->assertArrayHasKey( 'slug', $row );
+			$this->assertIsString( $row['slug'] );
+			$this->assertArrayHasKey( 'name', $row );
+			$this->assertIsString( $row['name'] );
+			$this->assertArrayHasKey( 'hierarchical', $row );
+			$this->assertIsBool( $row['hierarchical'] );
+			$this->assertArrayHasKey( 'rest_base', $row );
+			$this->assertIsString( $row['rest_base'] );
+			$this->assertArrayHasKey( 'supports', $row );
+			$this->assertIsArray( $row['supports'] );
+			$this->assertArrayHasKey( 'taxonomies', $row );
+			$this->assertIsArray( $row['taxonomies'] );
+			$this->assertArrayNotHasKey( '_links', $row );
+		}
+	}
+
+	public function test_list_post_types_view_denied_when_logged_out(): void {
+		wp_set_current_user( 0 );
+
+		$ability = wp_get_ability( 'content/list-post-types' );
+
+		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'view' ) ) );
+	}
+
+	public function test_list_post_types_edit_context_requires_edit_posts(): void {
+		$ability = wp_get_ability( 'content/list-post-types' );
+
+		$this->actingAs( 'subscriber' );
+		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+
+		$this->actingAs( 'editor' );
+		$this->assertTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
 	}
 }

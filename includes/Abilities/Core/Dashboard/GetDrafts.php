@@ -59,7 +59,26 @@ final class GetDrafts implements Ability {
 						'description' => __( 'The current user\'s recent drafts.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
-							'additionalProperties' => true,
+							'required'             => array( 'id', 'title', 'modified' ),
+							'properties'           => array(
+								'id'        => array(
+									'type'        => 'integer',
+									'description' => __( 'Draft post ID.', 'abilities-catalog' ),
+								),
+								'title'     => array(
+									'type'        => 'string',
+									'description' => __( 'Draft title.', 'abilities-catalog' ),
+								),
+								'modified'  => array(
+									'type'        => 'string',
+									'description' => __( 'Last modified date (site timezone).', 'abilities-catalog' ),
+								),
+								'edit_link' => array(
+									'type'        => array( 'string', 'null' ),
+									'description' => __( 'Raw wp-admin edit URL, or null if unavailable.', 'abilities-catalog' ),
+								),
+							),
+							'additionalProperties' => false,
 						),
 					),
 				),
@@ -115,12 +134,12 @@ final class GetDrafts implements Ability {
 
 		$items = array();
 		foreach ( $drafts as $draft ) {
-			$edit_link = get_edit_post_link( $draft->ID );
+			$edit_link = get_edit_post_link( $draft->ID, 'raw' );
 			$items[]   = array(
 				'id'        => (int) $draft->ID,
 				'title'     => (string) get_the_title( $draft->ID ),
 				'modified'  => (string) $draft->post_modified,
-				'edit_link' => null !== $edit_link ? (string) $edit_link : (int) $draft->ID,
+				'edit_link' => null !== $edit_link ? (string) $edit_link : null,
 			);
 		}
 
