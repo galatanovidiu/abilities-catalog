@@ -122,28 +122,22 @@ final class UpdateGlobalStyles implements Ability {
 	}
 
 	/**
-	 * Permission check mirroring the global-styles controller's update gate.
+	 * Permission check: coarse `edit_theme_options` (+ `edit_css` for custom CSS).
 	 *
-	 * Requires object-level `edit_post` on the global-styles post id (as
-	 * `check_update_permission()` does). The wrapped route re-checks `edit_post`
-	 * underneath, but it does NOT re-check `edit_css`: custom CSS is kses-filtered
-	 * (kept only for `edit_css` users, otherwise stripped). So when the input
-	 * carries a `styles.css` key this ability additionally requires `edit_css` —
-	 * an added hard gate, not a duplicate of a route check, never weaker than the
-	 * controller's intent.
+	 * For `wp_global_styles`, `edit_post` maps to `edit_theme_options` with no
+	 * owner-vs-others split, so this coarse, object-independent check is exactly what core
+	 * requires — never stricter, never weaker. The object decision (and a missing-id 404)
+	 * is left to the wrapped `POST /wp/v2/global-styles/<id>` route, which re-checks
+	 * `edit_post` and surfaces its specific error. The route does NOT re-check `edit_css`:
+	 * custom CSS is kses-filtered (kept only for `edit_css` users, otherwise stripped), so
+	 * when the input carries a `styles.css` key this ability keeps the added `edit_css`
+	 * hard gate — never weaker than the controller's intent.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may update the global styles.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( ! current_user_can( 'edit_post', $id ) ) {
+		if ( ! current_user_can( 'edit_theme_options' ) ) {
 			return false;
 		}
 

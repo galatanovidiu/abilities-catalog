@@ -108,25 +108,23 @@ final class DeleteApplicationPassword implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_app_password` on the target user/uuid.
+	 * Permission check: a logged-in user; the route enforces the object.
 	 *
-	 * Mirrors the REST controller's `delete_item_permissions_check`, passing both the
-	 * resolved user ID and the uuid so the meta-capability map can scope the check to
-	 * the specific credential.
+	 * Application passwords are user-scoped, so a logged-in user is the
+	 * object-independent floor every successful caller holds — `delete_app_password`
+	 * is never granted to a logged-out request, so this is never stricter than core.
+	 * The object-level decision (own credentials are allowed, another user requires
+	 * `edit_user`) is enforced by the wrapped
+	 * `DELETE /wp/v2/users/<id>/application-passwords/<uuid>` route's
+	 * `delete_item_permissions_check`, so its specific errors (`rest_user_invalid_id`
+	 * 404, `rest_cannot_delete_application_password` 403) reach the caller instead of
+	 * the generic denial the Abilities API substitutes for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may revoke the application password.
+	 * @return bool True if a user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$user_id = $this->resolveUserId( $input );
-		$uuid    = isset( $input['uuid'] ) ? (string) $input['uuid'] : '';
-
-		if ( $user_id <= 0 || '' === $uuid ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_app_password', $user_id, $uuid );
+		return is_user_logged_in();
 	}
 
 	/**

@@ -81,22 +81,23 @@ final class ListApplicationPasswords implements Ability {
 	}
 
 	/**
-	 * Permission check: the current user may list the target user's app passwords.
+	 * Permission check: a logged-in user; the route enforces the object.
 	 *
-	 * Encodes the catalog object-level capability `list_app_passwords` on the
-	 * resolved user ID.
+	 * Application passwords are user-scoped, so a logged-in user is the
+	 * object-independent floor every successful caller holds — `list_app_passwords`
+	 * is never granted to a logged-out request, so this is never stricter than core.
+	 * The object-level decision (own credentials are allowed, another user requires
+	 * `edit_user`) is enforced by the wrapped
+	 * `GET /wp/v2/users/<id>/application-passwords` route's
+	 * `get_items_permissions_check`, so its specific errors (`rest_user_invalid_id`
+	 * 404, `rest_cannot_list_application_passwords` 403) reach the caller instead of
+	 * the generic denial the Abilities API substitutes for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may list the app passwords.
+	 * @return bool True if a user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$user_id = $this->resolveUserId( $input );
-
-		if ( $user_id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'list_app_passwords', $user_id );
+		return is_user_logged_in();
 	}
 
 	/**

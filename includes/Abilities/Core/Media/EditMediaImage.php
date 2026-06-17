@@ -223,26 +223,21 @@ final class EditMediaImage implements Ability {
 	}
 
 	/**
-	 * Permission check mirroring `edit_media_item_permissions_check`.
+	 * Permission check: coarse `upload_files` capability; the route enforces the object.
 	 *
-	 * Requires `upload_files` AND object-level `edit_post` on the target attachment.
+	 * `upload_files` is the object-independent prerequisite the controller's
+	 * `edit_media_item_permissions_check` requires; it is the floor every successful
+	 * editor holds, so requiring it here is never stricter than core. The object-level
+	 * `edit_post` decision is left to the wrapped `POST /wp/v2/media/<id>/edit` route, so
+	 * its specific errors (`rest_post_invalid_id` 404, `rest_cannot_edit` 403) reach the
+	 * caller instead of one generic denial (the Abilities API swallows a non-`true`
+	 * return and replaces it with a single permission error).
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may edit the image.
+	 * @return bool True if the current user can upload/edit media at all.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( ! current_user_can( 'upload_files' ) ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $id );
+		return current_user_can( 'upload_files' );
 	}
 
 	/**

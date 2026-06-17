@@ -117,20 +117,24 @@ final class DeleteTerm implements Ability {
 	}
 
 	/**
-	 * Permission check: validate the taxonomy is registered and `show_in_rest`, then
-	 * apply object-level `delete_term` on the target term.
+	 * Permission check: coarse, taxonomy-level `delete_terms`; the route enforces the object.
 	 *
-	 * Mirrors the REST terms controller `delete_item_permissions_check`.
+	 * Validates the taxonomy (needed to resolve its cap) and checks the taxonomy's
+	 * object-independent `delete_terms` capability — for a term, `delete_term` maps to
+	 * exactly that cap with no owner-vs-others split, so this is never stricter or weaker
+	 * than core. The object decision (and a missing-id 404) is left to the wrapped
+	 * `DELETE /wp/v2/<rest_base>/<id>` route, so its specific `rest_term_invalid` 404
+	 * reaches the caller instead of the generic denial the Abilities API substitutes for
+	 * a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the term.
+	 * @return bool True if the current user can manage the taxonomy's terms.
 	 */
 	public function hasPermission( $input ): bool {
 		$input    = is_array( $input ) ? $input : array();
 		$taxonomy = isset( $input['taxonomy'] ) ? sanitize_key( (string) $input['taxonomy'] ) : '';
-		$id       = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ( '' === $taxonomy || $id <= 0 || ! taxonomy_exists( $taxonomy ) ) {
+		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
 			return false;
 		}
 
@@ -139,7 +143,7 @@ final class DeleteTerm implements Ability {
 			return false;
 		}
 
-		return current_user_can( 'delete_term', $id );
+		return current_user_can( $taxonomy_obj->cap->delete_terms );
 	}
 
 	/**

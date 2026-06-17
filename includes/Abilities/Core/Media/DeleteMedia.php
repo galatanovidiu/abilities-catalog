@@ -107,22 +107,20 @@ final class DeleteMedia implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `delete_post` on the target attachment.
+	 * Permission check: coarse `delete_posts` capability; the route enforces the object.
 	 *
-	 * Mirrors the attachments REST controller `delete_item_permissions_check`.
+	 * `delete_posts` is the floor every successful deleter holds, so requiring it here
+	 * is never stricter than core. The object-level `delete_post` decision (owner vs
+	 * `delete_others_posts`) is left to the wrapped `DELETE /wp/v2/media/<id>` route, so
+	 * its specific errors (`rest_post_invalid_id` 404, `rest_cannot_delete` 403) reach
+	 * the caller instead of being collapsed into one generic denial — the Abilities API
+	 * swallows a non-`true` return and replaces it with a single permission error.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete the media item.
+	 * @return bool True if the current user can delete attachments at all.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'delete_post', $id );
+		return current_user_can( 'delete_posts' );
 	}
 
 	/**

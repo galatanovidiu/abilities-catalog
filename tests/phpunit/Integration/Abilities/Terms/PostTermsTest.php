@@ -216,13 +216,12 @@ final class PostTermsTest extends TestCase {
 		$this->assertIsString( $result['edit_link'] );
 	}
 
-	public function test_detach_invalid_post_id_is_denied(): void {
+	public function test_detach_invalid_post_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// hasPermission() does object-level work (edit_post on the post), so an
-		// invalid post ID fails the permission gate. WP_Ability::execute()
-		// collapses the non-true permission return into a generic permission
-		// error before the rest_post_invalid_id branch in execute() runs.
+		// With the object-level edit_post check relocated into execute(), an admin who
+		// holds assign_terms reaches execute(), and a non-existent post surfaces the
+		// specific rest_post_invalid_id 404 instead of the generic collapse.
 		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => 999999,
@@ -232,7 +231,70 @@ final class PostTermsTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_attach_invalid_post_id_surfaces_route_404_not_generic(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => 999999,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+	}
+
+	public function test_attach_to_unowned_post_denied_by_execute_403_no_mutation(): void {
+		$owner_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$post_id  = self::factory()->post->create( array( 'post_author' => $owner_id ) );
+
+		// An author holds assign_categories (the coarse floor) but cannot edit another
+		// user's post, so the relocated object guard in execute() denies with a specific
+		// 403 and no term is attached — the guard is not weakened by coarsening.
+		$this->actingAs( 'author' );
+
+		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+			array(
+				'post_id'  => $post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
+		$this->assertNotContains( $this->cat_a, wp_get_object_terms( $post_id, 'category', array( 'fields' => 'ids' ) ) );
+	}
+
+	public function test_detach_from_unowned_post_denied_by_execute_403_no_mutation(): void {
+		$owner_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$post_id  = self::factory()->post->create( array( 'post_author' => $owner_id ) );
+		wp_set_object_terms( $post_id, array( $this->cat_a ), 'category' );
+
+		// An author cannot edit another user's post, so detach is denied at execute()
+		// with a 403 and the existing term assignment is left intact.
+		$this->actingAs( 'author' );
+
+		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+			array(
+				'post_id'  => $post_id,
+				'taxonomy' => 'category',
+				'terms'    => array( $this->cat_a ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
+		$this->assertContains( $this->cat_a, wp_get_object_terms( $post_id, 'category', array( 'fields' => 'ids' ) ) );
 	}
 
 	public function test_detach_already_absent_term_is_idempotent_no_op(): void {

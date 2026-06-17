@@ -51,9 +51,12 @@ final class EditMediaImageTest extends TestCase {
 		$this->assertSame( 'attachment', get_post_type( $attachment_id ) );
 	}
 
-	public function test_missing_attachment_returns_error(): void {
+	public function test_missing_attachment_surfaces_route_error_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
+		// The admin clears the coarse upload_files guard, so a non-existent id now
+		// reaches the route and surfaces its specific error rather than being collapsed
+		// to the opaque ability_invalid_permissions an object-level pre-check produced.
 		$result = wp_get_ability( 'media/edit-media-image' )->execute(
 			array(
 				'id'  => 999999,
@@ -62,6 +65,32 @@ final class EditMediaImageTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+	}
+
+	public function test_author_cannot_edit_other_users_image_route_403(): void {
+		$this->actingAs( 'administrator' );
+
+		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $attachment_id );
+		$src = wp_get_attachment_image_url( $attachment_id, 'full' );
+
+		// A different user who holds upload_files (the coarse floor) but not
+		// edit_others_posts is still denied by the route's object-level edit_post
+		// check — a specific 403, not the generic collapse.
+		$this->actingAs( 'author' );
+
+		$result = wp_get_ability( 'media/edit-media-image' )->execute(
+			array(
+				'id'       => $attachment_id,
+				'src'      => $src,
+				'rotation' => 90,
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
 	}
 
 	public function test_subscriber_is_denied(): void {

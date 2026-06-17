@@ -107,6 +107,33 @@ final class UploadMediaTest extends TestCase {
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
+	public function test_author_uploading_to_unowned_parent_surfaces_route_403_not_generic(): void {
+		$owner_id  = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$parent_id = self::factory()->post->create(
+			array(
+				'post_author' => $owner_id,
+				'post_status' => 'publish',
+			)
+		);
+
+		// The author clears the coarse upload_files guard but cannot edit the supplied
+		// parent (no edit_others_posts), so the route's object-level parent check denies
+		// with a specific 403 instead of the generic collapse.
+		$this->actingAs( 'author' );
+
+		$result = wp_get_ability( 'media/upload-media' )->execute(
+			array(
+				'file'     => self::PNG_BASE64,
+				'filename' => 'pixel.png',
+				'post'     => $parent_id,
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
+	}
+
 	public function test_disallowed_file_type_is_rejected_by_core(): void {
 		$this->actingAs( 'administrator' );
 

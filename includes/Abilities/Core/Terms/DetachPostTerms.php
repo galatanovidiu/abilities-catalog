@@ -104,17 +104,23 @@ final class DetachPostTerms implements Ability {
 	}
 
 	/**
-	 * Permission check: assign capability on the taxonomy plus edit on the post.
+	 * Permission check: coarse `assign_terms` on the taxonomy; the post is guarded in execute().
+	 *
+	 * `assign_terms` is the object-independent taxonomy capability. This ability calls
+	 * `wp_remove_object_terms()` directly (no wrapped route), so the object-level `edit_post`
+	 * check is enforced in {@see self::execute()} where its specific 404/403 reaches the caller
+	 * instead of the generic denial the Abilities API substitutes for a non-`true` return.
+	 * Coarsening without that relocation would let any `assign_terms` holder strip terms from a
+	 * post they cannot edit, so the `edit_post` guard moves into execute() in the same change.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may detach the terms.
+	 * @return bool True if the current user can assign terms in the taxonomy.
 	 */
 	public function hasPermission( $input ): bool {
 		$input    = is_array( $input ) ? $input : array();
-		$post_id  = isset( $input['post_id'] ) ? absint( $input['post_id'] ) : 0;
 		$taxonomy = isset( $input['taxonomy'] ) ? sanitize_key( (string) $input['taxonomy'] ) : '';
 
-		if ( $post_id <= 0 || '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
+		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
 			return false;
 		}
 
@@ -123,7 +129,7 @@ final class DetachPostTerms implements Ability {
 			return false;
 		}
 
-		return current_user_can( $taxonomy_obj->cap->assign_terms ) && current_user_can( 'edit_post', $post_id );
+		return current_user_can( $taxonomy_obj->cap->assign_terms );
 	}
 
 	/**
@@ -140,6 +146,16 @@ final class DetachPostTerms implements Ability {
 
 		if ( ! $post ) {
 			return new WP_Error( 'rest_post_invalid_id', __( 'Invalid post ID.', 'abilities-catalog' ), array( 'status' => 404 ) );
+		}
+
+		// Object-level guard (relocated from permission_callback): only a user who can
+		// edit this post may change its term assignments.
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new WP_Error(
+				'rest_cannot_assign_term',
+				__( 'Sorry, you are not allowed to assign terms on this post.', 'abilities-catalog' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
 		}
 
 		if ( ! taxonomy_exists( $taxonomy ) || ! is_object_in_taxonomy( $post->post_type, $taxonomy ) ) {

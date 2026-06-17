@@ -108,4 +108,29 @@ final class ListApplicationPasswordsTest extends TestCase {
 		$this->assertIsArray( $data );
 		$this->assertSame( 404, $data['status'] );
 	}
+
+	public function test_listing_another_users_passwords_without_cap_surfaces_specific_403(): void {
+		// A subscriber may not list another user's application passwords. After
+		// coarsening, the logged-in floor passes and the wrapped route's own guard
+		// denies with its specific 403 instead of the generic permission collapse.
+		$owner_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		WP_Application_Passwords::create_new_application_password(
+			$owner_id,
+			array( 'name' => 'Owned By Admin' )
+		);
+
+		$this->actingAs( 'subscriber' );
+
+		$result = wp_get_ability( 'users/list-application-passwords' )->execute(
+			array( 'user_id' => $owner_id )
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_list_application_passwords', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+
+		$data = $result->get_error_data();
+		$this->assertIsArray( $data );
+		$this->assertSame( 403, $data['status'] );
+	}
 }

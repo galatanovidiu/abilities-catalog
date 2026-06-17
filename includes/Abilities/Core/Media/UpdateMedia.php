@@ -123,22 +123,20 @@ final class UpdateMedia implements Ability {
 	}
 
 	/**
-	 * Permission check mirroring `update_item_permissions_check`.
+	 * Permission check: coarse `edit_posts` capability; the route enforces the object.
 	 *
-	 * Requires object-level `edit_post` on the target attachment.
+	 * `edit_posts` is the floor every successful editor holds, so requiring it here is
+	 * never stricter than core. The object-level `edit_post` decision (owner vs
+	 * `edit_others_posts`) is left to the wrapped `POST /wp/v2/media/<id>` route, so its
+	 * specific errors (`rest_post_invalid_id` 404, `rest_cannot_edit` 403) reach the
+	 * caller instead of one generic denial (the Abilities API swallows a non-`true`
+	 * return and replaces it with a single permission error).
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the media item.
+	 * @return bool True if the current user can edit posts at all.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $id );
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**

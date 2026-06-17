@@ -117,25 +117,22 @@ final class GetMedia implements Ability {
 	}
 
 	/**
-	 * Permission check: public for view; `edit_post` on the object for edit-context.
+	 * Permission check: delegated to the wrapped REST route.
+	 *
+	 * `media/get-media` reads through `GET /wp/v2/media/<id>`, whose own permission
+	 * check enforces visibility on the object — public access to published (or
+	 * published-parent) attachments, `edit_post` for `edit` context, and denial of
+	 * private items. Doing the object-level check here instead would (a) narrow core
+	 * by blocking the anonymous reads it allows and (b) collapse the route's specific
+	 * errors (`rest_post_invalid_id` 404, `rest_forbidden_context` 403) into one
+	 * opaque permission error, because the Abilities API swallows a non-`true` return
+	 * and replaces it with a single generic denial.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the media item.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-		$context = $input['context'] ?? 'view';
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( 'edit' === $context ) {
-			return current_user_can( 'edit_post', $id );
-		}
-
-		return is_user_logged_in();
+		return true;
 	}
 
 	/**

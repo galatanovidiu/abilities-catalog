@@ -121,20 +121,24 @@ final class UpdateTerm implements Ability {
 	}
 
 	/**
-	 * Permission check mirroring the REST terms controller update path.
+	 * Permission check: coarse, taxonomy-level `edit_terms`; the route enforces the object.
 	 *
-	 * Validates the taxonomy is registered and `show_in_rest`, then applies the
-	 * object-level `edit_term` capability on the target term.
+	 * Validates the taxonomy (needed to resolve its cap) and checks the taxonomy's
+	 * object-independent `edit_terms` capability — for a term, `edit_term` maps to exactly
+	 * that cap with no owner-vs-others split, so this is never stricter or weaker than
+	 * core. The object decision (and a missing-id 404) is left to the wrapped
+	 * `POST /wp/v2/<rest_base>/<id>` route, so its specific `rest_term_invalid` 404 reaches
+	 * the caller instead of the generic denial the Abilities API substitutes for a
+	 * non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the term.
+	 * @return bool True if the current user can manage the taxonomy's terms.
 	 */
 	public function hasPermission( $input ): bool {
 		$input    = is_array( $input ) ? $input : array();
 		$taxonomy = isset( $input['taxonomy'] ) ? sanitize_key( (string) $input['taxonomy'] ) : '';
-		$id       = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) || $id <= 0 ) {
+		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
 			return false;
 		}
 
@@ -143,7 +147,7 @@ final class UpdateTerm implements Ability {
 			return false;
 		}
 
-		return current_user_can( 'edit_term', $id );
+		return current_user_can( $taxonomy_obj->cap->edit_terms );
 	}
 
 	/**

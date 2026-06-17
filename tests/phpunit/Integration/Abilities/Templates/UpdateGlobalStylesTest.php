@@ -165,16 +165,17 @@ final class UpdateGlobalStylesTest extends TestCase {
 		}
 	}
 
-	public function test_invalid_id_surfaces_an_error(): void {
+	public function test_invalid_id_surfaces_route_error_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// A non-existent global-styles post id must not update anything; the call
-		// returns a WP_Error rather than a success array. (The specific error code
-		// for the missing-id case is the deferred permission-contract decision.)
+		// With the coarse edit_theme_options guard, a non-existent id reaches the route,
+		// which returns its specific error instead of the generic ability_invalid_permissions
+		// the object-level pre-check produced (resolving the B2 permission-contract decision).
 		$result = wp_get_ability( 'templates/update-global-styles' )->execute(
 			array( 'id' => 999999 )
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 }

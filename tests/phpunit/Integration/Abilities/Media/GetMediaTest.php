@@ -78,4 +78,61 @@ final class GetMediaTest extends TestCase {
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
+
+	public function test_edit_context_missing_id_surfaces_route_404_not_generic_denial(): void {
+		$this->actingAs( 'administrator' );
+
+		// Object-independent permission_callback: a non-existent id in edit context
+		// reaches the route, which returns its specific invalid-id 404 instead of the
+		// opaque ability_invalid_permissions an object-level pre-check would produce.
+		$result = wp_get_ability( 'media/get-media' )->execute(
+			array(
+				'id'      => 999999,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+	}
+
+	public function test_subscriber_denied_edit_context_gets_route_forbidden_not_generic(): void {
+		$author_id     = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$attachment_id = self::factory()->attachment->create( array( 'post_author' => $author_id ) );
+
+		// A low-privilege user requesting edit context is denied — but by the route's
+		// specific rest_forbidden_context 403, proving the guard is not weakened while
+		// the error is no longer collapsed.
+		$this->actingAs( 'subscriber' );
+
+		$result = wp_get_ability( 'media/get-media' )->execute(
+			array(
+				'id'      => $attachment_id,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_forbidden_context', $result->get_error_code() );
+	}
+
+	public function test_logged_out_can_read_published_attached_media(): void {
+		$parent_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$attachment_id = self::factory()->attachment->create_upload_object(
+			DIR_TESTDATA . '/images/canola.jpg',
+			$parent_id
+		);
+		$this->assertIsInt( $attachment_id );
+
+		// Core allows anonymous reads of an inherit-status attachment whose parent is
+		// published. The ability must not be stricter than core: with an
+		// object-independent permission_callback, the logged-out read succeeds.
+		wp_set_current_user( 0 );
+
+		$result = wp_get_ability( 'media/get-media' )->execute( array( 'id' => $attachment_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( $attachment_id, $result['id'] );
+		$this->assertNotEmpty( $result['source_url'] );
+	}
 }

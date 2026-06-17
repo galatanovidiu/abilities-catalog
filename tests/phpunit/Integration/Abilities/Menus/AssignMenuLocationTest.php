@@ -97,4 +97,22 @@ final class AssignMenuLocationTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 	}
+
+	public function test_missing_menu_id_surfaces_route_404_not_generic(): void {
+		$this->actingAs( 'administrator' );
+
+		// An admin holds edit_theme_options (the coarse guard), so a non-existent menu
+		// reaches the route and surfaces its specific 404 instead of the opaque
+		// ability_invalid_permissions the object-level pre-check produced.
+		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+			array(
+				'menu_id'  => 999999,
+				'location' => 'ac_primary',
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+	}
 }

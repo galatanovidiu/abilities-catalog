@@ -102,20 +102,20 @@ final class GetMediaFile implements Ability {
 	}
 
 	/**
-	 * Permission check: read access to the attachment (object-level).
+	 * Permission check: coarse, object-independent — the object guard is in execute().
+	 *
+	 * This ability has no wrapped REST route (it reads file bytes from disk), so the
+	 * object-level `read_post` check is enforced in {@see self::execute()} where its
+	 * specific 404/403 reaches the caller. Doing it here instead would collapse the
+	 * non-existent-id 404 and the read-denied 403 into one opaque
+	 * `ability_invalid_permissions`, because the Abilities API swallows a non-`true`
+	 * return and replaces it with a single generic denial.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the attachment.
+	 * @return bool Always true; execute() is the server-side object guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'read_post', $id );
+		return true;
 	}
 
 	/**
@@ -134,6 +134,16 @@ final class GetMediaFile implements Ability {
 				'invalid_attachment',
 				__( 'The requested attachment does not exist.', 'abilities-catalog' ),
 				array( 'status' => 404 )
+			);
+		}
+
+		// Object-level guard (relocated from permission_callback): mirror the read
+		// access the attachment requires before returning its bytes.
+		if ( ! current_user_can( 'read_post', $id ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'Sorry, you are not allowed to read this attachment.', 'abilities-catalog' ),
+				array( 'status' => rest_authorization_required_code() )
 			);
 		}
 

@@ -67,15 +67,40 @@ final class GetMediaFileTest extends TestCase {
 		$this->assertSame( basename( (string) $expected['path'] ), $result['filename'] );
 	}
 
-	public function test_missing_attachment_is_rejected(): void {
+	public function test_missing_attachment_surfaces_specific_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// The object-level read_post guard maps a non-existent ID to do_not_allow,
-		// so a missing attachment is rejected at the permission gate.
+		// With the object guard relocated into execute(), a non-existent ID reaches the
+		// explicit attachment check and returns the specific invalid_attachment 404
+		// instead of the opaque ability_invalid_permissions the gate produced before.
 		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'invalid_attachment', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
+
+	public function test_subscriber_cannot_read_private_attachment_gets_403(): void {
+		$owner_id      = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$parent_id     = self::factory()->post->create(
+			array(
+				'post_status' => 'private',
+				'post_author' => $owner_id,
+			)
+		);
+		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg', $parent_id );
+		$this->assertIsInt( $attachment_id );
+
+		// The attachment inherits the private parent's visibility. A subscriber cannot
+		// read it, so the relocated object guard in execute() denies with a specific
+		// 403 — the guard is not weakened by coarsening permission_callback.
+		$this->actingAs( 'subscriber' );
+
+		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_forbidden', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] );
 	}
 
 	public function test_non_attachment_post_returns_404(): void {

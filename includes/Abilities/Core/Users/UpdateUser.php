@@ -133,25 +133,29 @@ final class UpdateUser implements Ability {
 	}
 
 	/**
-	 * Permission check: edit access to the target user, plus promote for roles.
+	 * Permission check: a logged-in user, plus promote for role changes.
 	 *
-	 * Mirrors the users controller's `update_item_permissions_check`
-	 * (`edit_user` on the object). When the input changes roles, the controller
-	 * also requires `promote_user`; this check enforces that branch up front to
-	 * block role escalation through an edit.
+	 * The object-level `edit_user` mirror is coarsened to the logged-in floor: the
+	 * wrapped `POST /wp/v2/users/<id>` route's `update_item_permissions_check`
+	 * re-checks `edit_user` on the object (self-edit needs only login, editing
+	 * another needs `edit_users`), so its specific errors (`rest_user_invalid_id`
+	 * 404, `rest_cannot_edit` 403) reach the caller instead of the generic denial
+	 * the Abilities API substitutes for a non-`true` return. The `is_user_logged_in()`
+	 * floor is never stricter than core, which also denies a logged-out request.
+	 *
+	 * The `promote_user` role-escalation guard is KEPT as an explicit object-
+	 * independent extra check: a caller who can edit a user but cannot promote must
+	 * not change roles. The route enforces the same rule (`rest_cannot_edit_roles`),
+	 * so this is defense in depth on the catalog's most sensitive write.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may update the target user.
+	 * @return bool True if a user is logged in and may change roles when requested.
 	 */
 	public function hasPermission( $input ): bool {
 		$input = is_array( $input ) ? $input : array();
 		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( ! current_user_can( 'edit_user', $id ) ) {
+		if ( ! is_user_logged_in() ) {
 			return false;
 		}
 

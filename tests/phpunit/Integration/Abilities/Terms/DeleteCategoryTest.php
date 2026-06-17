@@ -92,15 +92,35 @@ final class DeleteCategoryTest extends TestCase {
 	}
 
 	/**
-	 * Restriction: even an administrator cannot delete the site's default
-	 * category; the delete_term meta cap maps it to do_not_allow.
+	 * Restriction: even an administrator cannot delete the site's default category.
+	 *
+	 * The coarse permission_callback grants `delete_categories`, but the protection is
+	 * not weakened — the wrapped route refuses to delete the default category, so
+	 * execute() returns an error and the term survives. The specific route error now
+	 * reaches the caller instead of a generic permission denial.
 	 */
 	public function test_default_category_cannot_be_deleted(): void {
 		$this->actingAs( 'administrator' );
 
 		$default_id = (int) get_option( 'default_category' );
-		$ability    = wp_get_ability( 'terms/delete-category' );
 
-		$this->assertFalse( $ability->check_permissions( array( 'id' => $default_id ) ) );
+		$result = wp_get_ability( 'terms/delete-category' )->execute( array( 'id' => $default_id ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotNull( get_term( $default_id, 'category' ) );
+	}
+
+	public function test_missing_category_id_surfaces_route_404_not_generic(): void {
+		$this->actingAs( 'administrator' );
+
+		// An admin holds delete_categories (the coarse guard), so a non-existent id
+		// reaches the route and surfaces its specific 404 instead of the opaque
+		// ability_invalid_permissions the object-level pre-check produced.
+		$result = wp_get_ability( 'terms/delete-category' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 }
