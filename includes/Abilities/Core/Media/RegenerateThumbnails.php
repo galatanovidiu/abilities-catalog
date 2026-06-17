@@ -108,26 +108,20 @@ final class RegenerateThumbnails implements Ability {
 	}
 
 	/**
-	 * Permission check: `upload_files` plus object-level `edit_post` on the attachment.
+	 * Permission check: coarse `upload_files`; the object guard is in execute().
 	 *
-	 * Mirrors the capability the Media Library enforces for editing an attachment.
+	 * `upload_files` is the object-independent floor the Media Library requires. This
+	 * ability calls `wp_generate_attachment_metadata()` directly (no wrapped route), so
+	 * the object-level `edit_post` check is enforced in {@see self::execute()} where its
+	 * specific 404/403 reaches the caller — doing it here would collapse the
+	 * non-existent-id 404 and the not-your-attachment 403 into one opaque
+	 * `ability_invalid_permissions` (the Abilities API swallows a non-`true` return).
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may regenerate the attachment's sizes.
+	 * @return bool True if the current user can use the media library at all.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( ! current_user_can( 'upload_files' ) ) {
-			return false;
-		}
-
-		return current_user_can( 'edit_post', $id );
+		return current_user_can( 'upload_files' );
 	}
 
 	/**
@@ -146,6 +140,16 @@ final class RegenerateThumbnails implements Ability {
 
 		if ( ! $post || 'attachment' !== $post->post_type ) {
 			return new WP_Error( 'rest_post_invalid_id', __( 'Invalid attachment ID.', 'abilities-catalog' ), array( 'status' => 404 ) );
+		}
+
+		// Object-level guard (relocated from permission_callback): only a user who can
+		// edit this attachment may rewrite its derivatives — checked before any work.
+		if ( ! current_user_can( 'edit_post', $id ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'Sorry, you are not allowed to edit this attachment.', 'abilities-catalog' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
 		}
 
 		if ( 0 !== strpos( (string) get_post_mime_type( $id ), 'image/' ) ) {
