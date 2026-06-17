@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\MenuListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -19,7 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * collection of classic menu items (`nav_menu_item` posts) plus its total
  * counts. The catalog gates this behind the admin `edit_theme_options`
  * capability and defaults to the `edit` context so callers get the richer
- * item fields. Read-only.
+ * item fields (notably `menus`). Each row is projected by {@see MenuListShaper}
+ * into a flat, closed summary; the raw REST objects (`_links`, rendered `title`
+ * object, presentation fields) are never returned. Read-only.
  *
  * @since 0.1.0
  */
@@ -78,10 +81,7 @@ final class ListMenuItems implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => MenuListShaper::menuItemSchema(),
 						'description' => __( 'The list of menu items.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -151,8 +151,17 @@ final class ListMenuItems implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = MenuListShaper::menuItemSummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

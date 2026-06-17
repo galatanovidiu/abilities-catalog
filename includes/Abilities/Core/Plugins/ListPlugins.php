@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Plugins;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\PluginListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -19,9 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * plugins readable by the current user. Core skips plugins the user cannot read
  * (and, on multisite, hides network-only plugins without `manage_network_plugins`),
  * so the result is not an exhaustive inventory. The plugins route returns a flat
- * list with no pagination headers (`X-WP-Total`), so no total is exposed. Each
- * item is passed through with its native shape; the list schema does not
- * constrain item fields.
+ * list with no pagination headers (`X-WP-Total`), so no total is exposed. Each row
+ * is projected by {@see PluginListShaper} into a flat, closed summary; the raw
+ * REST fields (rendered `description`, `author`, `requires_*`, `_links`) are never
+ * returned (full detail lives behind `plugins/get-plugin`). The `status` filter
+ * accepts one or more statuses, mirroring the core collection param.
  *
  * @since 0.1.0
  */
@@ -50,9 +53,14 @@ final class ListPlugins implements Ability {
 						'description' => __( 'Limit results to plugins matching a search term.', 'abilities-catalog' ),
 					),
 					'status'  => array(
-						'type'        => 'string',
-						'enum'        => array( 'active', 'inactive' ),
-						'description' => __( 'Limit results to plugins with the given activation status.', 'abilities-catalog' ),
+						'type'        => 'array',
+						'items'       => array(
+							'type' => 'string',
+							'enum' => is_multisite()
+								? array( 'inactive', 'active', 'network-active' )
+								: array( 'inactive', 'active' ),
+						),
+						'description' => __( 'Limit results to one or more activation statuses.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -70,10 +78,7 @@ final class ListPlugins implements Ability {
 					'items' => array(
 						'type'        => 'array',
 						'description' => __( 'The installed plugins.', 'abilities-catalog' ),
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => PluginListShaper::pluginItemSchema(),
 					),
 				),
 				'additionalProperties' => false,
@@ -117,8 +122,8 @@ final class ListPlugins implements Ability {
 		if ( ! empty( $input['search'] ) ) {
 			$request->set_param( 'search', (string) $input['search'] );
 		}
-		if ( ! empty( $input['status'] ) ) {
-			$request->set_param( 'status', (string) $input['status'] );
+		if ( ! empty( $input['status'] ) && is_array( $input['status'] ) ) {
+			$request->set_param( 'status', array_map( 'strval', $input['status'] ) );
 		}
 
 		$response = rest_do_request( $request );
@@ -128,10 +133,17 @@ final class ListPlugins implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		$items = is_array( $data ) ? array_values( $data ) : array();
+		$rows = array();
+		foreach ( is_array( $data ) ? $data : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = PluginListShaper::pluginSummary( $item );
+		}
 
 		return array(
-			'items' => $items,
+			'items' => $rows,
 		);
 	}
 }

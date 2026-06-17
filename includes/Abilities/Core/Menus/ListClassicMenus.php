@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\MenuListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -16,7 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `menus/list-classic-menus`.
  *
  * Wraps `GET /wp/v2/menus` via `rest_do_request()` and returns the collection
- * of classic menus (`nav_menu` terms) plus its total counts. Read-only.
+ * of classic menus (`nav_menu` terms) plus its total counts. Each row is
+ * projected by {@see MenuListShaper} into a flat, closed summary; the raw REST
+ * objects (`_links`, `meta`, `locations`, `auto_add`) are never returned.
+ * Read-only.
  *
  * @since 0.1.0
  */
@@ -68,10 +72,7 @@ final class ListClassicMenus implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => MenuListShaper::classicMenuItemSchema(),
 						'description' => __( 'The list of classic menus.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -135,8 +136,17 @@ final class ListClassicMenus implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = MenuListShaper::classicMenuSummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

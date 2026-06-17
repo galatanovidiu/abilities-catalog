@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Fonts;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\FontListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -17,7 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/font-collections` via `rest_do_request()` and returns the
  * collection plus its total counts. These are remote installable-font catalogs
- * (for example the bundled "google-fonts" collection). Read-only; requires
+ * (for example the bundled "google-fonts" collection). Each row is projected by
+ * {@see FontListShaper} into a flat, closed summary; the heavy `font_families`
+ * catalog, `categories`, and `_links` are never returned. Read-only; requires
  * `edit_theme_options`.
  *
  * @since 0.1.0
@@ -70,10 +73,7 @@ final class ListFontCollections implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => FontListShaper::collectionItemSchema(),
 						'description' => __( 'The list of font collections.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -137,8 +137,17 @@ final class ListFontCollections implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = FontListShaper::collectionSummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

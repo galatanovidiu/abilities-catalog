@@ -99,8 +99,13 @@ Build the row with a small **domain shaper** under `includes/Support/`, pairing 
 projector with a `*ItemSchema()` closed-schema fragment so the runtime shape and the declared
 schema stay in sync. Existing shapers:
 [`ContentListShaper`](../includes/Support/ContentListShaper.php) (posts, pages, CPT items,
-revisions), [`CommentListShaper`](../includes/Support/CommentListShaper.php) (comments), and
-[`UserListShaper`](../includes/Support/UserListShaper.php) (users).
+revisions), [`CommentListShaper`](../includes/Support/CommentListShaper.php) (comments),
+[`UserListShaper`](../includes/Support/UserListShaper.php) (users),
+[`ThemeListShaper`](../includes/Support/ThemeListShaper.php) (themes),
+[`MenuListShaper`](../includes/Support/MenuListShaper.php) (classic menus, menu items,
+navigation), [`MediaListShaper`](../includes/Support/MediaListShaper.php) (media),
+[`FontListShaper`](../includes/Support/FontListShaper.php) (font collections, font families),
+and [`PluginListShaper`](../includes/Support/PluginListShaper.php) (plugins).
 A shaper lives outside `includes/Abilities/`, so the Registry never treats it as an ability.
 
 **Permission-gated fields stay gated.** Core hides some fields unless the request runs in

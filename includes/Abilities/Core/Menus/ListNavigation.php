@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\MenuListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -17,7 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/navigation` via `rest_do_request()` and returns the
  * collection of block-based navigation menus (`wp_navigation` post type) plus
- * its total counts. Read-only.
+ * its total counts. Each row is projected by {@see MenuListShaper} into a flat,
+ * closed summary; the serialized block body (`content`), `_links`, and
+ * GMT-duplicate dates are never returned (the body lives behind
+ * `menus/get-navigation`). Read-only.
  *
  * @since 0.1.0
  */
@@ -69,10 +73,7 @@ final class ListNavigation implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => MenuListShaper::navigationItemSchema(),
 						'description' => __( 'The list of navigation menus.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -136,8 +137,17 @@ final class ListNavigation implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = MenuListShaper::navigationSummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);
