@@ -3,10 +3,10 @@
  * Integration tests for the privacy/generate-export ability.
  *
  * Covers the invalid-request 404 guard, the request_id discovery hint in the
- * input schema, exporter WP_Error pass-through (core parity), and the
- * response-shape validation that requires an array `data` before processing.
- * The happy-path non-empty-ZIP assertion is intentionally omitted: the export
- * finalization path has a known deferred correctness bug.
+ * input schema, exporter WP_Error pass-through (core parity), the response-shape
+ * validation that requires an array `data` before processing, and the happy-path
+ * regression guard that the export archive carries real grouped data (the
+ * single-finalize fix for B11).
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -103,6 +103,58 @@ final class GenerateExportTest extends TestCase {
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'webmcp_export_failed', $result->get_error_code() );
 		$this->assertSame( 500, $result->get_error_data()['status'] );
+	}
+
+	public function test_export_produces_archive_with_real_grouped_data(): void {
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			$this->markTestSkipped( 'ZipArchive is required to assert the generated export archive.' );
+		}
+
+		$this->actingAs( 'administrator' );
+
+		$email = 'subject@example.com';
+		self::factory()->user->create(
+			array(
+				'role'       => 'subscriber',
+				'user_email' => $email,
+			)
+		);
+		$request_id = $this->createExportRequest( $email );
+
+		$result = ( new GenerateExport() )->execute( array( 'request_id' => $request_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertTrue( $result['generated'] );
+		$this->assertSame( $request_id, $result['request_id'] );
+		$this->assertIsString( $result['status'] );
+
+		// Locate the archive core wrote for this request.
+		$archive_name = get_post_meta( $request_id, '_export_file_name', true );
+		$this->assertIsString( $archive_name );
+		$this->assertNotSame( '', $archive_name );
+
+		$archive_path = wp_privacy_exports_dir() . $archive_name;
+		$this->assertFileExists( $archive_path );
+		$this->assertGreaterThan( 0, (int) filesize( $archive_path ) );
+
+		// The archive must carry the grouped report, not the null payload the
+		// double-finalize bug produced: with the grouped meta deleted, core wrote
+		// `{"...":null}` and reported success anyway.
+		$zip = new \ZipArchive();
+		$this->assertTrue( true === $zip->open( $archive_path ) );
+		$json = $zip->getFromName( 'export.json' );
+		$zip->close();
+
+		$this->assertIsString( $json );
+		$decoded = json_decode( $json, true );
+		$this->assertIsArray( $decoded );
+
+		// export.json is `{ "Personal Data Export for <email>": { <groups> } }`.
+		$payload = reset( $decoded );
+		$this->assertIsArray( $payload, 'export.json payload must be a non-null group map.' );
+		$this->assertArrayHasKey( 'about', $payload, 'The core "About" group is always present on a real export.' );
+
+		wp_delete_file( $archive_path );
 	}
 
 	public function test_subscriber_is_denied(): void {

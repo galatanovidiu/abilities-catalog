@@ -223,7 +223,7 @@ All write entries must be consumer-gated; capability is the hard guard.
 - **privacy/create-erase-request** — W · net-new · T2 (high-sensitivity). Cap: `erase_others_personal_data`. Creation not destructive; the erase EXECUTION is.
 - **privacy/list-export-requests**, **list-erase-requests** — R · net-new (query `user_request` posts) · T1.
 - **privacy/confirm-request**, **cancel-request** — W · net-new · T2. Cap `manage_options` (NEEDS VERIFICATION — no dedicated cap). cancel deletes the request record (D!), not user data.
-- **privacy/generate-export** — W · D! · net-new · **T3 (dangerous)**. Cap: `export_others_personal_data`. Builds the export archive for a confirmed request. In: request_id. Out: request_id, status, export_url.
+- **privacy/generate-export** — W · D! · net-new · **T3 (dangerous)**. Cap: `export_others_personal_data`. Builds the export archive for a confirmed request (finalized once by core; never returns the file path or URL). In: request_id. Out: request_id, status, generated.
 - **GAP — erase execution (`privacy/run-erase`)** still NOT built (deliberate). Erase execution is irreversible and batched (AJAX-paginated); unsafe for a single agent-driven call. It stays human-only in wp-admin.
 
 ## Dashboard — namespace `dashboard`  (read-only, composed)
