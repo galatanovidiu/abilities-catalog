@@ -98,11 +98,24 @@ final class GetPatternTest extends TestCase {
 
 		$ability = wp_get_ability( 'templates/get-pattern' );
 
-		// The object-level read_post guard rejects a subscriber: wp_block maps
-		// its read cap to edit_posts, which a subscriber lacks.
+		// The coarse edit_posts guard rejects a subscriber: wp_block maps its read cap
+		// to edit_posts, which a subscriber lacks, so they cannot read reusable blocks.
 		$this->assertFalse( $ability->check_permissions( array( 'id' => $id ) ) );
 
 		$result = $ability->execute( array( 'id' => $id ) );
 		$this->assertInstanceOf( WP_Error::class, $result );
+	}
+
+	public function test_missing_pattern_id_surfaces_route_404_not_generic(): void {
+		$this->actingAs( 'administrator' );
+
+		// An admin holds edit_posts (the coarse guard), so a non-existent id reaches the
+		// route and surfaces its specific 404 instead of the opaque generic denial the
+		// object-level read_post pre-check produced.
+		$result = wp_get_ability( 'templates/get-pattern' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 }

@@ -104,20 +104,21 @@ final class GetPattern implements Ability {
 	}
 
 	/**
-	 * Permission check: object-level `read_post` on the requested pattern id.
+	 * Permission check: coarse `edit_posts`; the route enforces the object.
+	 *
+	 * Reusable blocks (`wp_block`) are editor constructs, not public — core maps their
+	 * `read` capability to `edit_posts`, so `edit_posts` is the floor every reader holds
+	 * and requiring it here is never stricter than core. The object-level decision
+	 * (a private block needs `read_private_blocks`; a missing id is a 404) is left to the
+	 * wrapped `GET /wp/v2/blocks/<id>` route, so its specific `rest_post_invalid_id` 404
+	 * reaches the caller instead of the generic denial the Abilities API substitutes for
+	 * a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the pattern.
+	 * @return bool True if the current user can read reusable blocks.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'read_post', $id );
+		return current_user_can( 'edit_posts' );
 	}
 
 	/**
