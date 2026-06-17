@@ -118,9 +118,11 @@ final class DeleteApplicationPasswordTest extends TestCase {
 		$this->assertSame(404, $data['status']);
 	}
 
-	public function test_wrong_capability_is_denied(): void {
-		// An author lacks edit_users on another user's credential; the Abilities API
-		// blocks execute() before the REST route runs.
+	public function test_wrong_capability_surfaces_specific_403_and_credential_survives(): void {
+		// An author lacks edit_user on another user's credential. After coarsening, the
+		// logged-in floor passes and the wrapped route's own delete guard denies the
+		// revoke with its specific 403 — the credential is untouched, proving the
+		// object-level guard still holds.
 		$owner_id = self::factory()->user->create(array('role' => 'administrator'));
 
 		[, $item] = WP_Application_Passwords::create_new_application_password(
@@ -138,7 +140,13 @@ final class DeleteApplicationPasswordTest extends TestCase {
 		);
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertSame('rest_cannot_delete_application_password', $result->get_error_code());
+		$this->assertNotSame('ability_invalid_permissions', $result->get_error_code());
+
+		$data = $result->get_error_data();
+		$this->assertIsArray($data);
+		$this->assertSame(403, $data['status']);
+
 		$this->assertNotNull(
 			WP_Application_Passwords::get_user_application_password($owner_id, $item['uuid']),
 			'The credential must survive a denied revoke.'

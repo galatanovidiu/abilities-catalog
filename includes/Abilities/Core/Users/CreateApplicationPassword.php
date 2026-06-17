@@ -107,22 +107,23 @@ final class CreateApplicationPassword implements Ability {
 	}
 
 	/**
-	 * Permission check: the current user may create an app password for the target.
+	 * Permission check: a logged-in user; the route enforces the object.
 	 *
-	 * Encodes the controller's object-level `create_app_password` capability on
-	 * the resolved user ID.
+	 * Application passwords are user-scoped, so a logged-in user is the
+	 * object-independent floor every successful caller holds — `create_app_password`
+	 * is never granted to a logged-out request, so this is never stricter than core.
+	 * The object-level decision (own credentials are allowed, another user requires
+	 * `edit_user`, and the feature must be available) is enforced by the wrapped
+	 * `POST /wp/v2/users/<id>/application-passwords` route's
+	 * `create_item_permissions_check`, so its specific errors (`rest_user_invalid_id`
+	 * 404, `rest_cannot_create_application_passwords` 403) reach the caller instead of
+	 * the generic denial the Abilities API substitutes for a non-`true` return.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may create the application password.
+	 * @return bool True if a user is logged in.
 	 */
 	public function hasPermission( $input ): bool {
-		$user_id = $this->resolveUserId( $input );
-
-		if ( $user_id <= 0 ) {
-			return false;
-		}
-
-		return current_user_can( 'create_app_password', $user_id );
+		return is_user_logged_in();
 	}
 
 	/**

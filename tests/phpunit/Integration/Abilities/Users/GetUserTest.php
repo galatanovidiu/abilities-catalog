@@ -119,12 +119,36 @@ final class GetUserTest extends TestCase {
 		$this->assertNotSame('ability_invalid_permissions', $result->get_error_code());
 	}
 
-	public function test_logged_out_user_is_denied(): void {
+	public function test_logged_out_view_of_postless_user_surfaces_specific_403(): void {
+		// After coarsening, the wrapped route's own guard runs. A logged-out caller
+		// viewing a user with no published posts is still denied (the guard is not
+		// weakened), but now with the route's specific authorization error instead of
+		// the generic permission collapse.
 		wp_set_current_user(0);
 
 		$result = wp_get_ability('users/get-user')->execute(array('id' => $this->known_user_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertSame('rest_user_cannot_view', $result->get_error_code());
+		$this->assertNotSame('ability_invalid_permissions', $result->get_error_code());
+
+		$data = $result->get_error_data();
+		$this->assertIsArray($data);
+		$this->assertSame(401, $data['status']);
+	}
+
+	public function test_self_view_without_list_users_is_allowed(): void {
+		// A subscriber lacks list_users, but core always lets a user read their own
+		// profile in view context. The old list_users-only guard was stricter than
+		// core; coarsening to the route restores the self-read to match core.
+		$subscriber = self::factory()->user->create(array('role' => 'subscriber'));
+		wp_set_current_user($subscriber);
+
+		$this->assertFalse(current_user_can('list_users'), 'Test premise: a subscriber lacks list_users.');
+
+		$result = wp_get_ability('users/get-user')->execute(array('id' => $subscriber));
+
+		$this->assertIsArray($result, 'A user must be able to read their own profile in view context.');
+		$this->assertSame($subscriber, $result['id']);
 	}
 }

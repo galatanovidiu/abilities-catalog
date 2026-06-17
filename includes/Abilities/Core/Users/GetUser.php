@@ -72,28 +72,25 @@ final class GetUser implements Ability {
 	}
 
 	/**
-	 * Permission check: read access to the requested user.
+	 * Permission check: delegated to the wrapped REST route.
 	 *
-	 * For `edit` context the catalog requires `edit_user` on the object. For
-	 * `view` context, listing-level `list_users` is required.
+	 * `users/get-user` reads through `GET /wp/v2/users/<id>`, whose own
+	 * `get_item_permissions_check` enforces visibility on the object — self is always
+	 * readable, a public author with published posts is viewable, `list_users` or
+	 * `edit_user` widens access, and `edit` context requires `edit_user`. Doing the
+	 * object-level check here instead would (a) narrow core by requiring `list_users`
+	 * for every view (blocking the self and public-author reads core allows) and
+	 * (b) collapse the route's specific errors (`rest_user_invalid_id` 404,
+	 * `rest_forbidden_context` / `rest_user_cannot_view` 403) into one opaque
+	 * permission error, because the Abilities API swallows a non-`true` return and
+	 * replaces it with a single generic denial. Private fields (email, roles) stay
+	 * gated: the route only serves them in `edit` context to a capable caller.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the requested user.
+	 * @return bool Always true; the wrapped route is the server-side guard.
 	 */
 	public function hasPermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-		$context = $input['context'] ?? 'view';
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		if ( 'edit' === $context ) {
-			return current_user_can( 'edit_user', $id );
-		}
-
-		return current_user_can( 'list_users' );
+		return true;
 	}
 
 	/**
