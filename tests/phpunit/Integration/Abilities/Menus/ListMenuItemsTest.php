@@ -19,6 +19,24 @@ use WP_Error;
  */
 final class ListMenuItemsTest extends TestCase {
 
+	/**
+	 * The full set of keys a summary row may carry.
+	 *
+	 * @var string[]
+	 */
+	private const ROW_KEYS = array(
+		'id',
+		'title',
+		'status',
+		'type',
+		'object',
+		'object_id',
+		'url',
+		'menu_order',
+		'parent',
+		'menus',
+	);
+
 	public function test_ability_is_registered(): void {
 		$ability = wp_get_ability( 'menus/list-menu-items' );
 
@@ -60,6 +78,29 @@ final class ListMenuItemsTest extends TestCase {
 		$this->assertCount( 2, $result['items'] );
 		foreach ( $result['items'] as $item ) {
 			$this->assertSame( (int) $menu_a, $item['menus'] );
+		}
+	}
+
+	public function test_rows_are_flat_and_closed(): void {
+		$this->actingAs( 'administrator' );
+		$menu_id = wp_create_nav_menu( 'Header Menu' );
+		$this->seedItem( $menu_id, 'Home', 'https://example.com/home' );
+
+		$result = wp_get_ability( 'menus/list-menu-items' )->execute( array() );
+
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
+
+		// items must be a plain list, not a keyed map.
+		$this->assertSame( array_keys( $result['items'] ), range( 0, count( $result['items'] ) - 1 ) );
+
+		foreach ( $result['items'] as $row ) {
+			// Exactly the declared flat set, in order: no _links, no nested objects.
+			$this->assertSame( self::ROW_KEYS, array_keys( $row ) );
+			$this->assertIsInt( $row['id'] );
+			$this->assertIsString( $row['title'] );
+			$this->assertIsString( $row['type'] );
+			$this->assertIsInt( $row['menus'] );
 		}
 	}
 

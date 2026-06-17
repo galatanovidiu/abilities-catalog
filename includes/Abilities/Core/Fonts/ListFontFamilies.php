@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Fonts;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\FontListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -16,7 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `fonts/list-font-families`.
  *
  * Wraps `GET /wp/v2/font-families` via `rest_do_request()` and returns the
- * collection plus its total counts. Read-only; requires `edit_theme_options`.
+ * collection plus its total counts. Each row is projected by {@see FontListShaper}
+ * into a flat, closed summary: the descriptive fields are flattened out of
+ * `font_family_settings` and the faces are reduced to a count (the full settings
+ * and face IDs live behind `fonts/get-font-family`). Read-only; requires
+ * `edit_theme_options`.
  *
  * @since 0.1.0
  */
@@ -68,10 +73,7 @@ final class ListFontFamilies implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => FontListShaper::fontFamilyItemSchema(),
 						'description' => __( 'The list of font families.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -135,8 +137,17 @@ final class ListFontFamilies implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = FontListShaper::fontFamilySummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

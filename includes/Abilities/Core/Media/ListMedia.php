@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Media;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\MediaListShaper;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_REST_Request;
 
@@ -16,7 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `media/list-media`.
  *
  * Wraps `GET /wp/v2/media` via `rest_do_request()` and returns the collection
- * plus its total counts. Read-only; REST enforces per-row visibility underneath.
+ * plus its total counts. Each row is projected by {@see MediaListShaper} into a
+ * flat, closed summary; the heavy raw fields (`media_details`, `meta`,
+ * `class_list`, `_links`) are never returned (file bytes live behind
+ * `media/get-media-file`). The `media_type` and `mime_type` filters accept one or
+ * more values, mirroring the core collection params. Read-only; REST enforces
+ * per-row visibility underneath.
  *
  * @since 0.1.0
  */
@@ -45,13 +51,17 @@ final class ListMedia implements Ability {
 						'description' => __( 'Limit results to those matching a search term.', 'abilities-catalog' ),
 					),
 					'media_type' => array(
-						'type'        => 'string',
-						'enum'        => array( 'image', 'video', 'text', 'application', 'audio' ),
-						'description' => __( 'Limit results to a media type.', 'abilities-catalog' ),
+						'type'        => 'array',
+						'items'       => array(
+							'type' => 'string',
+							'enum' => array( 'image', 'video', 'text', 'application', 'audio' ),
+						),
+						'description' => __( 'Limit results to one or more media types.', 'abilities-catalog' ),
 					),
 					'mime_type'  => array(
-						'type'        => 'string',
-						'description' => __( 'Limit results to a MIME type (e.g. "image/png").', 'abilities-catalog' ),
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Limit results to one or more MIME types (e.g. "image/png").', 'abilities-catalog' ),
 					),
 					'parent'     => array(
 						'type'        => 'array',
@@ -105,10 +115,7 @@ final class ListMedia implements Ability {
 				'properties'           => array(
 					'items'       => array(
 						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'additionalProperties' => true,
-						),
+						'items'       => MediaListShaper::mediaItemSchema(),
 						'description' => __( 'The list of media items.', 'abilities-catalog' ),
 					),
 					'total'       => array(
@@ -169,11 +176,11 @@ final class ListMedia implements Ability {
 		if ( isset( $input['search'] ) ) {
 			$request->set_param( 'search', (string) $input['search'] );
 		}
-		if ( isset( $input['media_type'] ) ) {
-			$request->set_param( 'media_type', (string) $input['media_type'] );
+		if ( ! empty( $input['media_type'] ) && is_array( $input['media_type'] ) ) {
+			$request->set_param( 'media_type', array_map( 'strval', $input['media_type'] ) );
 		}
-		if ( isset( $input['mime_type'] ) ) {
-			$request->set_param( 'mime_type', (string) $input['mime_type'] );
+		if ( ! empty( $input['mime_type'] ) && is_array( $input['mime_type'] ) ) {
+			$request->set_param( 'mime_type', array_map( 'strval', $input['mime_type'] ) );
 		}
 		if ( ! empty( $input['parent'] ) && is_array( $input['parent'] ) ) {
 			$request->set_param( 'parent', array_map( 'absint', $input['parent'] ) );
@@ -205,8 +212,17 @@ final class ListMedia implements Ability {
 		$items   = rest_get_server()->response_to_data( $response, false );
 		$headers = $response->get_headers();
 
+		$rows = array();
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$rows[] = MediaListShaper::mediaSummary( $item );
+		}
+
 		return array(
-			'items'       => is_array( $items ) ? $items : array(),
+			'items'       => $rows,
 			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
 			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
 		);

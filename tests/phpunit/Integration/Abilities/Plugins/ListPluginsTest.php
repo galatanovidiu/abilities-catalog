@@ -18,6 +18,19 @@ use WP_Error;
  */
 final class ListPluginsTest extends TestCase {
 
+	/**
+	 * The full set of keys a summary row may carry.
+	 *
+	 * @var string[]
+	 */
+	private const ROW_KEYS = array(
+		'plugin',
+		'status',
+		'name',
+		'version',
+		'network_only',
+	);
+
 	public function test_ability_is_registered(): void {
 		$this->assertNotNull( wp_get_ability( 'plugins/list-plugins' ) );
 	}
@@ -43,6 +56,39 @@ final class ListPluginsTest extends TestCase {
 			range( 0, count( $result['items'] ) - 1 ),
 			'items must be a flat numeric array, not keyed by plugin file.'
 		);
+	}
+
+	public function test_rows_are_flat_and_closed(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'plugins/list-plugins' )->execute( array() );
+
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
+
+		foreach ( $result['items'] as $row ) {
+			// Exactly the declared flat set, in order: no _links, no rendered description object.
+			$this->assertSame( self::ROW_KEYS, array_keys( $row ) );
+			$this->assertArrayNotHasKey( '_links', $row );
+			$this->assertIsString( $row['plugin'] );
+			$this->assertIsString( $row['status'] );
+			$this->assertIsString( $row['name'] );
+			$this->assertIsBool( $row['network_only'] );
+		}
+	}
+
+	public function test_status_array_input_filters_to_active(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'plugins/list-plugins' )->execute(
+			array( 'status' => array( 'active' ) )
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'items', $result );
+		foreach ( $result['items'] as $row ) {
+			$this->assertSame( 'active', $row['status'] );
+		}
 	}
 
 	public function test_subscriber_is_denied(): void {
