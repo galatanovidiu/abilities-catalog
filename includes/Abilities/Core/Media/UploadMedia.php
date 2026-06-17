@@ -154,29 +154,21 @@ final class UploadMedia implements Ability {
 	}
 
 	/**
-	 * Permission check mirroring `create_item_permissions_check`.
+	 * Permission check: coarse `upload_files` capability; the route enforces the parent.
 	 *
-	 * Requires `upload_files`; additionally object-level `edit_post` on the parent
-	 * when a `post` is supplied.
+	 * `upload_files` is the object-independent capability the controller's
+	 * `create_item_permissions_check` requires. When a `post` parent is supplied, the
+	 * same wrapped `POST /wp/v2/media` route re-checks object-level `edit_post` on that
+	 * parent, so the conditional parent check here is redundant — and doing it here
+	 * collapses the route's specific `rest_cannot_edit` 403 / invalid-parent error into
+	 * one generic denial (the Abilities API swallows a non-`true` return). Leaving it to
+	 * the route surfaces the specific error.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may upload the media item.
+	 * @return bool True if the current user can upload files at all.
 	 */
 	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		if ( ! current_user_can( 'upload_files' ) ) {
-			return false;
-		}
-
-		if ( ! empty( $input['post'] ) ) {
-			$post = absint( $input['post'] );
-			if ( $post <= 0 || ! current_user_can( 'edit_post', $post ) ) {
-				return false;
-			}
-		}
-
-		return true;
+		return current_user_can( 'upload_files' );
 	}
 
 	/**
