@@ -156,7 +156,7 @@ final class DeactivatePlugin implements Ability {
 			'status' => (string) ( $data['status'] ?? '' ),
 		);
 
-		if ( null !== $previous_status ) {
+		if ( '' !== $previous_status ) {
 			$result['previous_status'] = $previous_status;
 		}
 
@@ -167,23 +167,23 @@ final class DeactivatePlugin implements Ability {
 	 * Reads the current activation status of a plugin via the core REST GET route.
 	 *
 	 * Used to capture the pre-deactivation status so the caller can tell a real
-	 * deactivation from an already-inactive no-op. Returns null when the status
-	 * cannot be read (for example a missing plugin), letting `execute()` surface the
-	 * authoritative error from the deactivation request instead.
+	 * deactivation from an already-inactive no-op. Returns an empty string when the
+	 * status cannot be read (for example a missing plugin), letting `execute()`
+	 * surface the authoritative error from the deactivation request instead.
 	 *
 	 * @param string $plugin The plugin file path without the `.php` extension.
-	 * @return string|null The current status, or null when it cannot be read.
+	 * @return string The current status, or an empty string when it cannot be read.
 	 */
-	private function readStatus( string $plugin ): ?string {
+	private function readStatus( string $plugin ): string {
 		$request  = new WP_REST_Request( 'GET', '/wp/v2/plugins/' . $plugin );
 		$response = rest_do_request( $request );
 
 		if ( $response->is_error() ) {
-			return null;
+			return '';
 		}
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
-		return isset( $data['status'] ) ? (string) $data['status'] : null;
+		return (string) ( $data['status'] ?? '' );
 	}
 }
