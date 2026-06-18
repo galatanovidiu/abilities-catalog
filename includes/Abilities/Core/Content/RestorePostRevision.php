@@ -25,6 +25,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * annotations are therefore `readonly:false, destructive:false, idempotent:false`
  * so the run controller routes the call as POST.
  *
+ * That non-destructive guarantee only holds while revisions are enabled. When
+ * `wp_revisions_enabled()` is false, `wp_save_post_revision()` bails
+ * (revision.php) and no recovery revision is written, so a restore would overwrite
+ * the current content with no way back. The ability refuses that exact case —
+ * revisions disabled and the target is not an autosave — mirroring core's own
+ * wp-admin restore guard (wp-admin/revision.php:52), so every restore it performs
+ * stays recoverable and the `destructive:false` classification stays honest.
+ *
  * Security note: `wp_restore_post_revision()` performs NO capability check of its
  * own. The `permission_callback` here is the only authorization guard. It mirrors
  * the catalog capability for editing the parent post — object-level
@@ -132,6 +140,8 @@ final class RestorePostRevision implements Ability {
 	 * target is not a revision. Distinct failures surface distinct core-mirroring
 	 * codes: `rest_post_invalid_id` (404) for a bad/non-revision ID,
 	 * `rest_revision_parent_id_mismatch` (404) for a wrong-parent revision,
+	 * `rest_revisions_disabled` (409) when revisions are off and the target is not an
+	 * autosave (the unrecoverable case core also refuses),
 	 * `rest_no_fields_to_restore` (409) for the `false` no-op, and a generic
 	 * `rest_restore_failed` (500) for a genuinely unexpected result.
 	 *
@@ -176,6 +186,21 @@ final class RestorePostRevision implements Ability {
 				'rest_cannot_edit',
 				__( 'Sorry, you are not allowed to edit this post.', 'abilities-catalog' ),
 				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		// Data-loss guard. When revisions are disabled, restoring overwrites the
+		// current content and wp_save_post_revision() writes no recovery revision, so
+		// the operation is unrecoverable despite the destructive:false classification.
+		// Refuse the same case core's wp-admin restore refuses (wp-admin/revision.php:52):
+		// revisions off AND the target is not an autosave. Autosaves remain restorable,
+		// matching core.
+		$post = get_post( $parent );
+		if ( $post instanceof WP_Post && ! wp_revisions_enabled( $post ) && ! wp_is_post_autosave( $revision ) ) {
+			return new WP_Error(
+				'rest_revisions_disabled',
+				__( 'Revisions are disabled for this post, so restoring would overwrite the current content with no recovery point.', 'abilities-catalog' ),
+				array( 'status' => 409 )
 			);
 		}
 
