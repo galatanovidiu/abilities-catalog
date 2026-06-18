@@ -129,15 +129,21 @@ final class UpdateClassicMenu implements Ability {
 		$id      = absint( $input['id'] );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/menus/' . $id );
 
+		// Forward whenever the key is present, including '' so the caller can clear
+		// the menu description. Core writes empty strings on update.
 		foreach ( array( 'name', 'description' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
 			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if ( ! empty( $input['locations'] ) && is_array( $input['locations'] ) ) {
+		// Deliberate divergence from CreateClassicMenu (which keeps `! empty`): an
+		// update has an existing location set to clear, and the schema documents that
+		// `locations` replaces the whole set. Forward [] so the caller can clear all
+		// assigned locations. Do not "fix" this back to `! empty`.
+		if ( array_key_exists( 'locations', $input ) && is_array( $input['locations'] ) ) {
 			$request->set_param( 'locations', array_map( 'sanitize_key', $input['locations'] ) );
 		}
 

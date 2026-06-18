@@ -26,6 +26,17 @@ final class CreateNavigationTest extends TestCase {
 		$this->assertSame( 'menus/create-navigation', $ability->get_name() );
 	}
 
+	/**
+	 * 'future' was non-functional: the ability accepts no date input, so a future
+	 * status degrades to publish. It is dropped from the enum (B7).
+	 */
+	public function test_status_enum_excludes_future(): void {
+		$enum = wp_get_ability( 'menus/create-navigation' )->get_input_schema()['properties']['status']['enum'];
+
+		$this->assertNotContains( 'future', $enum );
+		$this->assertSame( array( 'draft', 'pending', 'private', 'publish' ), $enum );
+	}
+
 	public function test_admin_creates_navigation(): void {
 		$this->actingAs( 'administrator' );
 

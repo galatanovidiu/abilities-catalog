@@ -107,8 +107,8 @@ final class UpdatePost implements Ability {
 					),
 					'featured_media' => array(
 						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => __( 'Attachment ID for the featured image.', 'abilities-catalog' ),
+						'minimum'     => 0,
+						'description' => __( 'Attachment ID for the featured image, or 0 to detach the current one.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -227,13 +227,21 @@ final class UpdatePost implements Ability {
 		$request = new WP_REST_Request( 'POST', '/wp/v2/posts/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them
-		// (content via wp_kses_post, etc.). Control fields are sanitized here.
-		foreach ( array( 'title', 'content', 'excerpt', 'slug', 'date' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+		// (content via wp_kses_post, etc.). Forward whenever the key is present,
+		// including '' so the caller can blank a title or excerpt. Core writes
+		// empty strings on update.
+		foreach ( array( 'title', 'content', 'excerpt', 'slug' ) as $field ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
 			$request->set_param( $field, (string) $input[ $field ] );
+		}
+
+		// An empty date string is invalid input: core resets the publish date only
+		// on date=null, which a date-time string schema cannot express. Skip ''.
+		if ( ! empty( $input['date'] ) ) {
+			$request->set_param( 'date', (string) $input['date'] );
 		}
 
 		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
@@ -244,12 +252,15 @@ final class UpdatePost implements Ability {
 			$request->set_param( 'author', absint( $input['author'] ) );
 		}
 
-		if ( ! empty( $input['featured_media'] ) ) {
+		// Forward whenever present, including 0 so the caller can detach the
+		// current featured image.
+		if ( array_key_exists( 'featured_media', $input ) ) {
 			$request->set_param( 'featured_media', absint( $input['featured_media'] ) );
 		}
 
+		// Forward whenever present, including [] so the caller can clear all terms.
 		foreach ( array( 'categories', 'tags' ) as $taxonomy_field ) {
-			if ( empty( $input[ $taxonomy_field ] ) || ! is_array( $input[ $taxonomy_field ] ) ) {
+			if ( ! array_key_exists( $taxonomy_field, $input ) || ! is_array( $input[ $taxonomy_field ] ) ) {
 				continue;
 			}
 

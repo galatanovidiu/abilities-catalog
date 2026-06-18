@@ -16,7 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `menus/get-classic-menu`.
  *
  * Wraps `GET /wp/v2/menus/<id>` via `rest_do_request()` and shapes the response
- * into a flat field set for a single classic menu (`nav_menu` term). Read-only.
+ * into a flat field set for a single classic menu (`nav_menu` term). Adds the
+ * menu's assigned theme `locations` and its `auto_add` flag as top-level fields.
+ * Read-only.
  *
  * @since 0.1.0
  */
@@ -82,7 +84,16 @@ final class GetClassicMenu implements Ability {
 					'meta'        => array(
 						'type'                 => 'object',
 						'additionalProperties' => true,
-						'description'          => __( 'The menu meta, including assigned locations.', 'abilities-catalog' ),
+						'description'          => __( 'The menu meta.', 'abilities-catalog' ),
+					),
+					'locations'   => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Theme location slugs this menu is currently assigned to.', 'abilities-catalog' ),
+					),
+					'auto_add'    => array(
+						'type'        => 'boolean',
+						'description' => __( 'Whether new top-level pages are automatically added to this menu.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -138,13 +149,18 @@ final class GetClassicMenu implements Ability {
 
 		$data = rest_get_server()->response_to_data( $response, false );
 
+		// The REST menus response never emits `count`; derive it from the term object.
+		$menu_obj = wp_get_nav_menu_object( $id );
+
 		return array(
 			'id'          => (int) ( $data['id'] ?? $id ),
 			'name'        => (string) ( $data['name'] ?? '' ),
 			'slug'        => (string) ( $data['slug'] ?? '' ),
 			'description' => (string) ( $data['description'] ?? '' ),
-			'count'       => (int) ( $data['count'] ?? 0 ),
+			'count'       => $menu_obj ? (int) $menu_obj->count : 0,
 			'meta'        => isset( $data['meta'] ) && is_array( $data['meta'] ) && array() !== $data['meta'] ? $data['meta'] : (object) array(),
+			'locations'   => isset( $data['locations'] ) && is_array( $data['locations'] ) ? array_values( $data['locations'] ) : array(),
+			'auto_add'    => (bool) ( $data['auto_add'] ?? false ),
 		);
 	}
 }

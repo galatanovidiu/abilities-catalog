@@ -59,7 +59,7 @@ final class UpdateNavigation implements Ability {
 					),
 					'status'  => array(
 						'type'        => 'string',
-						'enum'        => array( 'draft', 'pending', 'private', 'publish', 'future' ),
+						'enum'        => array( 'draft', 'pending', 'private', 'publish' ),
 						'description' => __( 'The navigation menu post status.', 'abilities-catalog' ),
 					),
 				),

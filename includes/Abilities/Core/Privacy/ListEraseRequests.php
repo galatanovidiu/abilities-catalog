@@ -42,7 +42,7 @@ final class ListEraseRequests implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Erase Requests', 'abilities-catalog' ),
-			'description'         => __( 'Lists personal-data erasure requests with their status and metadata. Does not expose erased data.', 'abilities-catalog' ),
+			'description'         => __( 'Lists personal-data erasure requests with their status and metadata. Does not expose erased data. Statuses reflect stored values; this read does not run wp-admin\'s expired-request cleanup, so a long-pending request may still show request-pending here.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',

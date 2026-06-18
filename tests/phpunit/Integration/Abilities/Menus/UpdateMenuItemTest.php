@@ -83,6 +83,38 @@ final class UpdateMenuItemTest extends TestCase {
 		}
 	}
 
+	public function test_empty_title_clears_the_custom_label(): void {
+		$this->actingAs( 'administrator' );
+
+		// A post_type item allows an empty title (core falls back to the linked
+		// post's title), so '' actually clears the stored custom label rather than
+		// being rejected the way a custom-type item's required title would be.
+		$linked_post_id = self::factory()->post->create( array( 'post_title' => 'Linked Post' ) );
+		$menu_id        = wp_create_nav_menu( 'Header Menu ' . wp_generate_uuid4() );
+		$item_id        = (int) wp_update_nav_menu_item(
+			$menu_id,
+			0,
+			array(
+				'menu-item-title'     => 'Custom Label',
+				'menu-item-type'      => 'post_type',
+				'menu-item-object'    => 'post',
+				'menu-item-object-id' => $linked_post_id,
+				'menu-item-status'    => 'publish',
+			)
+		);
+		$this->assertSame( 'Custom Label', get_post( $item_id )->post_title );
+
+		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+			array(
+				'id'    => $item_id,
+				'title' => '',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( '', get_post( $item_id )->post_title );
+	}
+
 	public function test_non_publish_status_is_coerced_to_draft(): void {
 		$this->actingAs( 'administrator' );
 		$item_id = $this->makeItem();

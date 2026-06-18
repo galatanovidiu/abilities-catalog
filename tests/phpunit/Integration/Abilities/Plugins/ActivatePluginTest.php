@@ -55,6 +55,16 @@ final class ActivatePluginTest extends TestCase {
 		$this->assertSame( 'active', $result['status'] );
 	}
 
+	/**
+	 * Re-activating an already-active plugin is a no-op returning the same state, so
+	 * the ability is classified idempotent (the no-op above is what that declares).
+	 */
+	public function test_idempotent_annotation_is_true(): void {
+		$annotations = wp_get_ability( 'plugins/activate-plugin' )->get_meta()['annotations'];
+
+		$this->assertTrue( $annotations['idempotent'] );
+	}
+
 	public function test_missing_plugin_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 

@@ -63,14 +63,19 @@ final class AssignMenuLocation implements Ability {
 				'type'                 => 'object',
 				'required'             => array( 'id' ),
 				'properties'           => array(
-					'id'        => array(
+					'id'                 => array(
 						'type'        => 'integer',
 						'description' => __( 'The classic menu term ID.', 'abilities-catalog' ),
 					),
-					'locations' => array(
+					'locations'          => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
 						'description' => __( 'The theme locations now assigned to the menu.', 'abilities-catalog' ),
+					),
+					'previous_locations' => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => __( 'Theme location slugs this menu held before the call. Empty if it held none. Any menu previously at the target location was displaced.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -114,12 +119,22 @@ final class AssignMenuLocation implements Ability {
 	 * returns an error for an unregistered location.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The menu's id and assigned locations, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The menu's id, the assigned locations, and the locations it held before the call, or the REST error.
 	 */
 	public function execute( $input ) {
 		$input    = is_array( $input ) ? $input : array();
 		$id       = absint( $input['menu_id'] );
 		$location = (string) ( $input['location'] ?? '' );
+
+		// Capture the menu's locations before the write so the result reflects pre-write state.
+		$previous = array_keys(
+			array_filter(
+				get_nav_menu_locations(),
+				static function ( $assigned_id ) use ( $id ) {
+					return (int) $assigned_id === $id;
+				}
+			)
+		);
 
 		$request = new WP_REST_Request( 'POST', '/wp/v2/menus/' . $id );
 		$request->set_param( 'locations', array( $location ) );
@@ -132,8 +147,9 @@ final class AssignMenuLocation implements Ability {
 		$data = rest_get_server()->response_to_data( $response, false );
 
 		return array(
-			'id'        => (int) ( $data['id'] ?? $id ),
-			'locations' => isset( $data['locations'] ) && is_array( $data['locations'] ) ? array_values( $data['locations'] ) : array(),
+			'id'                 => (int) ( $data['id'] ?? $id ),
+			'locations'          => isset( $data['locations'] ) && is_array( $data['locations'] ) ? array_values( $data['locations'] ) : array(),
+			'previous_locations' => $previous,
 		);
 	}
 }

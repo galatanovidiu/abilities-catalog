@@ -97,8 +97,8 @@ final class GetMedia implements Ability {
 						'description'          => __( 'Media-specific metadata (dimensions, sizes, etc.).', 'abilities-catalog' ),
 					),
 					'post'          => array(
-						'type'        => 'integer',
-						'description' => __( 'The ID of the post the media is attached to, if any.', 'abilities-catalog' ),
+						'type'        => array( 'integer', 'null' ),
+						'description' => __( 'The ID of the post the media is attached to, or null if unattached.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -166,7 +166,7 @@ final class GetMedia implements Ability {
 			'media_type'    => (string) ( $data['media_type'] ?? '' ),
 			'mime_type'     => (string) ( $data['mime_type'] ?? '' ),
 			'media_details' => is_array( $data['media_details'] ?? null ) && array() !== $data['media_details'] ? $data['media_details'] : (object) array(),
-			'post'          => (int) ( $data['post'] ?? 0 ),
+			'post'          => isset( $data['post'] ) ? (int) $data['post'] : null,
 		);
 	}
 }
