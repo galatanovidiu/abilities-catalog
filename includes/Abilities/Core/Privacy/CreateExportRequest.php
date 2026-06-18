@@ -15,12 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * T2 non-destructive write ability: `privacy/create-export-request`.
  *
  * Creates a personal-data export request for an email address by wrapping the
- * core function `wp_create_user_request($email, 'export_personal_data')`. The
- * request is created as `request-pending`. When `send_confirmation_email` is
- * true, it then calls `wp_send_user_request($request_id)` to email the data
- * subject the confirmation link, mirroring the wp-admin "send confirmation
- * email" path in `_wp_personal_data_handle_actions()`
- * (wp-admin/includes/privacy-tools.php).
+ * core function `wp_create_user_request()`. The `send_confirmation_email` flag
+ * maps 1:1 to the wp-admin confirmation-email checkbox in
+ * `_wp_personal_data_handle_actions()` (wp-admin/includes/privacy-tools.php):
+ * when true, the request is created as `request-pending` and
+ * `wp_send_user_request($request_id)` emails the data subject the confirmation
+ * link; when false (the default), the request is created already
+ * `request-confirmed` with no email, so it is immediately actionable instead of
+ * stranded without a confirmation key.
  *
  * This is net-new: there is no REST route for creating user requests, so the
  * ability wraps the core function directly. The core function validates the
@@ -46,7 +48,7 @@ final class CreateExportRequest implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Export Request', 'abilities-catalog' ),
-			'description'         => __( 'Creates a personal-data export request for an email address. Optionally emails the data subject a confirmation link.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a personal-data export request for an email address. When send_confirmation_email is true, creates a pending request and emails the data subject a confirmation link; when false (the default), creates an already-confirmed request with no email.', 'abilities-catalog' ),
 			'category'            => 'privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -59,7 +61,7 @@ final class CreateExportRequest implements Ability {
 					'send_confirmation_email' => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __( 'When true, emails the data subject a confirmation link after creating the request. Defaults to false.', 'abilities-catalog' ),
+						'description' => __( 'When true, creates a pending request and emails the data subject a confirmation link. When false (the default), creates the request already confirmed, with no email.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'email' ),
@@ -120,9 +122,10 @@ final class CreateExportRequest implements Ability {
 	 * @return array{request_id:int,status:string,action_name:string}|\WP_Error
 	 */
 	public function execute( $input ) {
-		$input = is_array( $input ) ? $input : array();
-		$email = isset( $input['email'] ) ? sanitize_email( (string) $input['email'] ) : '';
-		$send  = ! empty( $input['send_confirmation_email'] );
+		$input  = is_array( $input ) ? $input : array();
+		$email  = isset( $input['email'] ) ? sanitize_email( (string) $input['email'] ) : '';
+		$send   = ! empty( $input['send_confirmation_email'] );
+		$status = $send ? 'pending' : 'confirmed';
 
 		if ( '' === $email ) {
 			return new WP_Error(
@@ -132,7 +135,10 @@ final class CreateExportRequest implements Ability {
 			);
 		}
 
-		$request_id = wp_create_user_request( $email, 'export_personal_data' );
+		// Mirror wp-admin: send=true creates a pending request and mails the
+		// confirmation link; send=false creates an already-confirmed request so
+		// it is actionable rather than stranded without a confirmation key.
+		$request_id = wp_create_user_request( $email, 'export_personal_data', array(), $status );
 		if ( is_wp_error( $request_id ) ) {
 			return $request_id;
 		}
