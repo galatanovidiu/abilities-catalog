@@ -67,7 +67,8 @@ final class UpdateMedia implements Ability {
 					),
 					'post'        => array(
 						'type'        => 'integer',
-						'description' => __( 'The ID of the post to attach the media to.', 'abilities-catalog' ),
+						'minimum'     => 0,
+						'description' => __( 'The ID of the post to attach the media to, or 0 to detach it.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -150,15 +151,19 @@ final class UpdateMedia implements Ability {
 		$id      = absint( $input['id'] );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/media/' . $id );
 
+		// Forward whenever the key is present, including '' so the caller can clear
+		// a caption, description, or alt text. Core writes empty strings on update.
 		foreach ( array( 'title', 'caption', 'description', 'alt_text' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
 			$request->set_param( $field, (string) $input[ $field ] );
 		}
 
-		if ( ! empty( $input['post'] ) ) {
+		// Forward whenever present, including 0 so the caller can detach the
+		// attachment from its parent post.
+		if ( array_key_exists( 'post', $input ) ) {
 			$request->set_param( 'post', absint( $input['post'] ) );
 		}
 
