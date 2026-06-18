@@ -87,7 +87,8 @@ final class UpdatePage implements Ability {
 					),
 					'parent'         => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent page ID.', 'abilities-catalog' ),
+						'minimum'     => 0,
+						'description' => __( 'The parent page ID, or 0 to detach the current parent.', 'abilities-catalog' ),
 					),
 					'menu_order'     => array(
 						'type'        => 'integer',
@@ -99,7 +100,8 @@ final class UpdatePage implements Ability {
 					),
 					'featured_media' => array(
 						'type'        => 'integer',
-						'description' => __( 'Attachment ID for the featured image.', 'abilities-catalog' ),
+						'minimum'     => 0,
+						'description' => __( 'Attachment ID for the featured image, or 0 to detach the current one.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -200,13 +202,21 @@ final class UpdatePage implements Ability {
 		$request = new WP_REST_Request( 'POST', '/wp/v2/pages/' . $id );
 
 		// String fields pass through to the REST route, which sanitizes them
-		// (content via wp_kses_post, etc.). Control fields are sanitized here.
-		foreach ( array( 'title', 'content', 'excerpt', 'slug', 'date', 'template' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+		// (content via wp_kses_post, etc.). Forward whenever the key is present,
+		// including '' so the caller can blank a title or excerpt. Core writes
+		// empty strings on update.
+		foreach ( array( 'title', 'content', 'excerpt', 'slug', 'template' ) as $field ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 
 			$request->set_param( $field, (string) $input[ $field ] );
+		}
+
+		// An empty date string is invalid input: core resets the publish date only
+		// on date=null, which a date-time string schema cannot express. Skip ''.
+		if ( ! empty( $input['date'] ) ) {
+			$request->set_param( 'date', (string) $input['date'] );
 		}
 
 		if ( isset( $input['status'] ) && '' !== $input['status'] ) {
@@ -217,7 +227,8 @@ final class UpdatePage implements Ability {
 			$request->set_param( 'author', absint( $input['author'] ) );
 		}
 
-		if ( ! empty( $input['parent'] ) ) {
+		// Forward whenever present, including 0 so the caller can detach the parent.
+		if ( array_key_exists( 'parent', $input ) ) {
 			$request->set_param( 'parent', absint( $input['parent'] ) );
 		}
 
@@ -226,7 +237,9 @@ final class UpdatePage implements Ability {
 			$request->set_param( 'menu_order', (int) $input['menu_order'] );
 		}
 
-		if ( ! empty( $input['featured_media'] ) ) {
+		// Forward whenever present, including 0 so the caller can detach the
+		// current featured image.
+		if ( array_key_exists( 'featured_media', $input ) ) {
 			$request->set_param( 'featured_media', absint( $input['featured_media'] ) );
 		}
 

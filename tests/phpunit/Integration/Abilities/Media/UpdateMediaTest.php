@@ -69,6 +69,25 @@ final class UpdateMediaTest extends TestCase {
 		$this->assertSame( $post_id, $result['post'] );
 	}
 
+	public function test_zero_post_detaches_the_attachment_parent(): void {
+		$this->actingAs( 'administrator' );
+
+		$post_id       = self::factory()->post->create();
+		$attachment_id = self::factory()->attachment->create( array( 'post_parent' => $post_id ) );
+		$this->assertSame( $post_id, (int) get_post( $attachment_id )->post_parent );
+
+		$result = wp_get_ability( 'media/update-media' )->execute(
+			array(
+				'id'   => $attachment_id,
+				'post' => 0,
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 0, $result['post'] );
+		$this->assertSame( 0, (int) get_post( $attachment_id )->post_parent );
+	}
+
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
