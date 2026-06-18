@@ -21,6 +21,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * input name every follow-on privacy ability expects), plus `created`
  * (site-local datetime) and `created_gmt` (UTC datetime).
  *
+ * The query reflects the stored post status verbatim. It deliberately does NOT
+ * run core's `_wp_personal_data_cleanup_requests()` (wp-admin/includes/privacy-tools.php),
+ * which the wp-admin Export/Erase screens run before listing to transition expired
+ * `request-pending` rows to `request-failed` — that function writes (`wp_update_post`),
+ * which would make these `readonly` reads mutate. So a long-pending request may
+ * still show `request-pending` here where wp-admin would show `request-failed`; the
+ * request's true current status is whatever `wp_get_user_request()` returns, and
+ * confirm/cancel/generate act on that.
+ *
  * This file is discovered by the Registry directory scan but skipped: it is a
  * trait, not an {@see \GalatanOvidiu\AbilitiesCatalog\Contracts\Ability}, so it is
  * never registered as an ability.
