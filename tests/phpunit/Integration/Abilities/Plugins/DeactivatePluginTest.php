@@ -57,6 +57,16 @@ final class DeactivatePluginTest extends TestCase {
 		$this->assertSame( 'inactive', $result['previous_status'] );
 	}
 
+	/**
+	 * Re-deactivating an already-inactive plugin is a no-op returning the same state,
+	 * so the ability is classified idempotent (the no-op above is what that declares).
+	 */
+	public function test_idempotent_annotation_is_true(): void {
+		$annotations = wp_get_ability( 'plugins/deactivate-plugin' )->get_meta()['annotations'];
+
+		$this->assertTrue( $annotations['idempotent'] );
+	}
+
 	public function test_missing_plugin_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 
