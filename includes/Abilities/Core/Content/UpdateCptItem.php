@@ -7,6 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
 use WP_Error;
+use WP_REST_Posts_Controller;
 use WP_REST_Request;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,6 +16,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * T2 write ability: `content/update-cpt-item` (generic, keyed by `post_type`).
+ *
+ * Restricts `post_type` to **post-like updatable** types via a controller-aware
+ * allow-test (see {@see UpdateCptItem::isPostLikeCreatable()}): the type must be
+ * `show_in_rest`, its REST controller must be exactly `WP_REST_Posts_Controller`
+ * (not a subclass), and its collection route must expose a `POST` handler. Any
+ * other registered type is rejected up-front with a stable `unsupported_post_type`
+ * (400) error, before route resolution — instead of failing late on a no-route
+ * (`wp_global_styles`), upload-contract (`attachment`), or different-update-contract
+ * (`wp_navigation`) path. This is because `show_in_rest` does not guarantee a
+ * post-like update route: subclasses such as global-styles, attachment, menu
+ * items, blocks, and font families share the route shape but not the update
+ * contract, and templates use a different identifier scheme.
  *
  * Resolves the type's REST item route via `rest_get_route_for_post_type_items()`
  * (honoring a custom `rest_namespace`) and wraps `POST <route>/<id>` via
@@ -40,6 +53,18 @@ final class UpdateCptItem implements Ability {
 	 * @var string[]
 	 */
 	private const PUBLISH_STATUSES = array( 'publish', 'future', 'private' );
+
+	/**
+	 * Post types that use the base posts controller but are not plain updatable posts.
+	 *
+	 * `wp_navigation` is served by the exact `WP_REST_Posts_Controller` and exposes a
+	 * collection `POST` route, so the controller-class and route checks alone would
+	 * admit it. A navigation menu is not a generic title/content/excerpt/status post,
+	 * so it is excluded explicitly to keep this ability to plain post-like content.
+	 *
+	 * @var string[]
+	 */
+	private const NON_POST_LIKE_TYPES = array( 'wp_navigation' );
 
 	/**
 	 * {@inheritDoc}
@@ -216,6 +241,14 @@ final class UpdateCptItem implements Ability {
 			);
 		}
 
+		if ( ! $this->isPostLikeCreatable( $post_type ) ) {
+			return new WP_Error(
+				'unsupported_post_type',
+				__( 'The requested post type is not a post-like updatable type. Font, global-styles, template, navigation, and attachment types use a different update contract and are not supported by this ability. Use the dedicated fonts/* and templates/* abilities for those.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
 		$items_route = rest_get_route_for_post_type_items( $post_type );
 		if ( '' === $items_route ) {
 			return new WP_Error(
@@ -262,5 +295,73 @@ final class UpdateCptItem implements Ability {
 			'type'      => (string) ( $data['type'] ?? $post_type ),
 			'edit_link' => (string) get_edit_post_link( $item_id, 'raw' ),
 		);
+	}
+
+	/**
+	 * Tests whether a post type accepts a post-like collection update.
+	 *
+	 * A type passes only when all of the following hold:
+	 *
+	 * 1. It is registered and `show_in_rest`.
+	 * 2. Its REST controller is exactly `WP_REST_Posts_Controller` — not a subclass.
+	 *    Core subclasses (`WP_REST_Attachments_Controller`,
+	 *    `WP_REST_Menu_Items_Controller`, `WP_REST_Blocks_Controller`,
+	 *    `WP_REST_Global_Styles_Controller`, `WP_REST_Font_Families_Controller`,
+	 *    `WP_REST_Font_Faces_Controller`) share the route shape but use a different
+	 *    update contract, so an `instanceof` check would wrongly admit them.
+	 *    `WP_REST_Templates_Controller` does not extend the posts controller at all.
+	 * 3. Its registered collection route actually exposes a `POST` (CREATABLE)
+	 *    handler. `wp_global_styles` uses the posts controller but registers no
+	 *    collection-create route, so this rejects it even though it would otherwise
+	 *    pass the class check on older cores.
+	 * 4. It is not in {@see UpdateCptItem::NON_POST_LIKE_TYPES} (e.g. `wp_navigation`,
+	 *    which uses the base controller but is not a plain updatable post).
+	 *
+	 * @param string $post_type The post type slug.
+	 * @return bool True when the type accepts a post-like collection update.
+	 */
+	private function isPostLikeCreatable( string $post_type ): bool {
+		if ( in_array( $post_type, self::NON_POST_LIKE_TYPES, true ) ) {
+			return false;
+		}
+
+		$obj = get_post_type_object( $post_type );
+		if ( ! $obj || empty( $obj->show_in_rest ) ) {
+			return false;
+		}
+
+		$controller = $obj->get_rest_controller();
+		if ( ! $controller || WP_REST_Posts_Controller::class !== get_class( $controller ) ) {
+			return false;
+		}
+
+		return $this->hasCollectionCreateRoute( $post_type );
+	}
+
+	/**
+	 * Tests whether the type's REST collection route exposes a POST handler.
+	 *
+	 * @param string $post_type The post type slug.
+	 * @return bool True when a CREATABLE handler is registered on the collection route.
+	 */
+	private function hasCollectionCreateRoute( string $post_type ): bool {
+		$route = rest_get_route_for_post_type_items( $post_type );
+		if ( '' === $route ) {
+			return false;
+		}
+
+		$routes = rest_get_server()->get_routes();
+		if ( ! isset( $routes[ $route ] ) ) {
+			return false;
+		}
+
+		foreach ( $routes[ $route ] as $handler ) {
+			$methods = isset( $handler['methods'] ) ? (array) $handler['methods'] : array();
+			if ( ! empty( $methods['POST'] ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
