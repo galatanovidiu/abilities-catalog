@@ -218,4 +218,26 @@ final class ListShapeTest extends TestCase {
 		$this->actingAs( 'editor' );
 		$this->assertTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
 	}
+
+	public function test_list_post_types_edit_context_allows_per_type_editor(): void {
+		// A REST-enabled CPT with its own capability set. A user who can edit this
+		// type but lacks the global edit_posts must still pass the edit-context check,
+		// mirroring core's per-type iteration in
+		// WP_REST_Post_Types_Controller::get_items_permissions_check().
+		register_post_type(
+			'ac_book',
+			array(
+				'show_in_rest'    => true,
+				'capability_type' => 'ac_book',
+				'map_meta_cap'    => true,
+			)
+		);
+
+		$this->actingAs( 'subscriber' );
+		// Mutate the live current user: wp_set_current_user short-circuits for the same id.
+		wp_get_current_user()->add_cap( 'edit_ac_books' );
+
+		$this->assertFalse( current_user_can( 'edit_posts' ), 'The subscriber must lack the global edit_posts cap for this test to be meaningful.' );
+		$this->assertTrue( wp_get_ability( 'content/list-post-types' )->check_permissions( array( 'context' => 'edit' ) ) );
+	}
 }
