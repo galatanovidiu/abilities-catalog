@@ -123,6 +123,27 @@ final class DomainToolHandlerTest extends TestCase {
 	}
 
 	/**
+	 * A present-but-non-object `input` folds into a 400 error instead of being dropped.
+	 *
+	 * @return void
+	 */
+	public function test_non_object_input_is_a_folded_error(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = $this->handler->handle(
+			array(
+				'action'  => 'execute',
+				'ability' => 'content/get-post',
+				'input'   => 'not-an-object',
+			)
+		);
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'abilities_catalog_mcp_invalid_input', $result->get_error_code() );
+		$this->assertStringContainsString( 'status: 400', $result->get_error_message() );
+	}
+
+	/**
 	 * A denied execute folds into an error whose message keeps the code and status.
 	 *
 	 * @return void

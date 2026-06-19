@@ -69,6 +69,9 @@ final class DomainMap {
 	/**
 	 * Returns the curated domain slugs, in tool order.
 	 *
+	 * This is the seam for registering one MCP tool per domain: the server iterates
+	 * these slugs to build the tools, so the order here is the order an agent sees.
+	 *
 	 * @return list<string> The domain slugs.
 	 */
 	public function domains(): array {

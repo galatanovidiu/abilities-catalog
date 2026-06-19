@@ -155,31 +155,36 @@ final class DomainRouter {
 		}
 
 		if ( ! wp_has_ability( $ability ) ) {
-			return new WP_Error(
-				'abilities_catalog_mcp_unknown_ability',
-				sprintf(
-					/* translators: %s: ability name. */
-					__( 'Ability "%s" is not registered.', 'abilities-catalog' ),
-					$ability
-				),
-				array( 'status' => 404 )
-			);
+			return $this->notRegistered( $ability );
 		}
 
 		$resolved = wp_get_ability( $ability );
 		if ( ! $resolved instanceof WP_Ability ) {
-			return new WP_Error(
-				'abilities_catalog_mcp_unknown_ability',
-				sprintf(
-					/* translators: %s: ability name. */
-					__( 'Ability "%s" is not registered.', 'abilities-catalog' ),
-					$ability
-				),
-				array( 'status' => 404 )
-			);
+			return $this->notRegistered( $ability );
 		}
 
 		return $resolved;
+	}
+
+	/**
+	 * Builds the "ability is not registered" error.
+	 *
+	 * One definition for one outcome, shared by the `wp_has_ability()` guard and the
+	 * defensive post-resolve check.
+	 *
+	 * @param string $ability The full ability name.
+	 * @return \WP_Error The not-registered error.
+	 */
+	private function notRegistered( string $ability ): WP_Error {
+		return new WP_Error(
+			'abilities_catalog_mcp_unknown_ability',
+			sprintf(
+				/* translators: %s: ability name. */
+				__( 'Ability "%s" is not registered.', 'abilities-catalog' ),
+				$ability
+			),
+			array( 'status' => 404 )
+		);
 	}
 
 	/**

@@ -26,9 +26,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * mode the gate cannot — "enabled but the adapter vendor bundle is absent" — and
  * turns it into a loud-but-safe admin notice instead of a fatal.
  *
- * Phase 1 stands up an empty server: it proves the wiring (the REST endpoint
- * appears when enabled, the adapter's default server is suppressed) without yet
- * registering any domain tools. Later phases fill the `$tools` array.
+ * The server registers one curated tool per domain — currently the `content`
+ * domain, with the remaining curated domains added later. Each domain tool routes
+ * its `list` / `describe` / `execute` actions through a {@see DomainRouter}; the
+ * REST endpoint appears only when the gate is on, and the adapter's own default
+ * server is suppressed so only this server is exposed.
  *
  * @since 0.2.0
  */
@@ -114,7 +116,7 @@ final class Server {
 	}
 
 	/**
-	 * Creates the (Phase 1: empty) custom server on `mcp_adapter_init`.
+	 * Creates the custom server, with its curated domain tools, on `mcp_adapter_init`.
 	 *
 	 * `create_server()` returns the adapter on success or a `WP_Error`; it never
 	 * throws. A failure is logged under WP_DEBUG and otherwise swallowed so a server
@@ -154,9 +156,9 @@ final class Server {
 	/**
 	 * Builds the domain tools to register on the server.
 	 *
-	 * Phase 1 of the catalog's MCP rollout exposes the `content` domain only; later
-	 * phases add the rest of the curated domains. A tool the adapter rejects is
-	 * logged and skipped rather than aborting the whole server.
+	 * Currently exposes the `content` domain only; the remaining curated domains are
+	 * added later. A tool the adapter rejects is logged and skipped rather than
+	 * aborting the whole server.
 	 *
 	 * @return list<\WP\MCP\Domain\Tools\McpTool> The domain tools to register.
 	 */

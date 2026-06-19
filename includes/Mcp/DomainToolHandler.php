@@ -71,13 +71,21 @@ final class DomainToolHandler {
 
 		switch ( $action ) {
 			case 'list':
+				// Wrap in an object: the adapter mirrors a success result verbatim into
+				// MCP structuredContent, which must be a JSON object — the bare list that
+				// list() returns would serialize as a JSON array and violate that.
 				return array( 'abilities' => $this->router->list( $this->domain ) );
 
 			case 'describe':
 				return $this->fold( $this->router->describe( $this->domain, $this->abilityName( $args ) ) );
 
 			case 'execute':
-				return $this->fold( $this->router->execute( $this->domain, $this->abilityName( $args ), $this->input( $args ) ) );
+				$input = $this->input( $args );
+				if ( is_wp_error( $input ) ) {
+					return $this->fold( $input );
+				}
+
+				return $this->fold( $this->router->execute( $this->domain, $this->abilityName( $args ), $input ) );
 
 			default:
 				return $this->fold(
@@ -105,13 +113,31 @@ final class DomainToolHandler {
 	}
 
 	/**
-	 * Reads the `input` argument as an array.
+	 * Reads the `input` argument as an array, or errors when it is the wrong type.
+	 *
+	 * Absent or null input means "no arguments" and defaults to an empty array. A
+	 * present-but-non-object `input` is a caller mistake the adapter never catches
+	 * (it does not validate arguments against the schema), so it is reported here
+	 * rather than silently dropped — otherwise the ability would wrongly report its
+	 * own arguments as missing.
 	 *
 	 * @param array<string,mixed> $args The tool arguments.
-	 * @return array<string,mixed> The ability input, or an empty array when absent.
+	 * @return array<string,mixed>|\WP_Error The ability input, or a 400 `WP_Error` for a non-object.
 	 */
-	private function input( array $args ): array {
-		return is_array( $args['input'] ?? null ) ? $args['input'] : array();
+	private function input( array $args ) {
+		if ( ! array_key_exists( 'input', $args ) || null === $args['input'] ) {
+			return array();
+		}
+
+		if ( ! is_array( $args['input'] ) ) {
+			return new WP_Error(
+				'abilities_catalog_mcp_invalid_input',
+				__( 'The "input" argument must be an object.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		return $args['input'];
 	}
 
 	/**
