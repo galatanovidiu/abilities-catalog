@@ -101,15 +101,17 @@ final class ServerTest extends TestCase {
 			'create_server() should have stored our server (i.e. returned no WP_Error).'
 		);
 
-		// The server exposes one curated tool per domain, not flat ability tools.
+		// The server exposes one curated tool per domain, not flat ability tools, plus
+		// the one cross-cutting skills tool.
 		$tools = $server->get_tools();
 		foreach ( self::CURATED_DOMAINS as $slug ) {
 			$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered.', $slug ) );
 		}
+		$this->assertArrayHasKey( 'skills', $tools, 'The cross-cutting skills tool should be registered.' );
 		$this->assertCount(
-			count( self::CURATED_DOMAINS ),
+			count( self::CURATED_DOMAINS ) + 1,
 			$tools,
-			'The server should expose exactly the curated domain tools (no skills tool yet).'
+			'The server should expose exactly the curated domain tools plus the skills tool.'
 		);
 
 		// Each curated domain carries its own hand-written blurb, never the generic
@@ -145,5 +147,25 @@ final class ServerTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $post_id, $result['id'] );
+
+		// End-to-end skills round-trip: the skills tool lists its recipes and serves
+		// one body. list/get need no ability capability, only the shared floor.
+		$skills = $server->get_mcp_tool( 'skills' );
+		$this->assertInstanceOf( McpTool::class, $skills );
+
+		$listed = $skills->execute( array( 'action' => 'list' ) );
+		$this->assertIsArray( $listed );
+		$this->assertArrayHasKey( 'skills', $listed );
+		$this->assertContains( 'create-content', array_column( $listed['skills'], 'id' ) );
+
+		$recipe = $skills->execute(
+			array(
+				'action' => 'get',
+				'id'     => 'create-content',
+			)
+		);
+		$this->assertIsArray( $recipe );
+		$this->assertSame( 'create-content', $recipe['id'] );
+		$this->assertNotEmpty( $recipe['body'] );
 	}
 }

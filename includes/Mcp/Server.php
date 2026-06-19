@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
 use WP\MCP\Core\McpAdapter;
+use WP\MCP\Domain\Tools\McpTool;
 use WP\MCP\Transport\HttpTransport;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -155,22 +156,25 @@ final class Server {
 	}
 
 	/**
-	 * Builds one domain tool per slug the map lists.
+	 * Builds the curated domain tools plus the cross-cutting skills tool.
 	 *
 	 * Iterates the {@see DomainMap} so the curated domains and any a third party
-	 * opens through the `abilities_catalog_mcp_domain_map` filter are all exposed. A
-	 * tool the adapter rejects is logged and skipped rather than aborting the whole
-	 * server, so one bad domain never costs the others. Before building, it asks the
-	 * map to warn about any registered ability no domain owns (so it cannot be
-	 * silently unexposed).
+	 * opens through the `abilities_catalog_mcp_domain_map` filter are all exposed, then
+	 * appends the one {@see SkillsTool} that serves task recipes across domains. A tool
+	 * the adapter rejects is logged and skipped rather than aborting the whole server,
+	 * so one bad tool never costs the others. Before building, it asks the map to warn
+	 * about any registered ability no domain owns (so it cannot be silently unexposed).
 	 *
-	 * @return list<\WP\MCP\Domain\Tools\McpTool> The domain tools to register.
+	 * The domain tools and the skills tool share the same coarse permission floor.
+	 *
+	 * @return list<\WP\MCP\Domain\Tools\McpTool> The tools to register.
 	 */
 	private function tools(): array {
 		$map = new DomainMap();
 		$map->reportUnmapped( array_map( 'strval', array_keys( wp_get_abilities() ) ) );
 
-		$factory = new DomainToolFactory( new DomainRouter( $map ), $this->toolPermission() );
+		$permission = $this->toolPermission();
+		$factory    = new DomainToolFactory( new DomainRouter( $map ), $permission );
 
 		$tools = array();
 		foreach ( $map->domains() as $domain ) {
@@ -184,7 +188,71 @@ final class Server {
 			$tools[] = $tool;
 		}
 
+		$skills = $this->skillsTool( $permission );
+		if ( is_wp_error( $skills ) ) {
+			self::log( 'Failed to build the "skills" tool: ' . $skills->get_error_message() );
+
+			return $tools;
+		}
+
+		$tools[] = $skills;
+
 		return $tools;
+	}
+
+	/**
+	 * Builds the cross-cutting skills tool.
+	 *
+	 * The skills tool is not a domain — it serves lazily-loaded, agent-invocable task
+	 * recipes that span several domains (spec §10). It shares the domain tools' coarse
+	 * permission floor; like every `execute`, a recipe's value still depends on the
+	 * abilities it points at, each of which keeps its own capability gate.
+	 *
+	 * @param callable $permission The shared coarse permission floor.
+	 * @return \WP\MCP\Domain\Tools\McpTool|\WP_Error The skills tool, or a `WP_Error` when the adapter rejects the config.
+	 */
+	private function skillsTool( callable $permission ) {
+		$registry = new SkillsRegistry();
+
+		return McpTool::fromArray(
+			array(
+				'name'        => 'skills',
+				'description' => $this->skillsDescription( $registry ),
+				'inputSchema' => SkillsTool::inputSchema(),
+				'handler'     => array( new SkillsTool( $registry ), 'handle' ),
+				'permission'  => $permission,
+			)
+		);
+	}
+
+	/**
+	 * The hand-written description for the skills tool, with a live skill index.
+	 *
+	 * A short capability blurb, then a one-line index of the registered skills (id —
+	 * when-to-use) so a small set is discoverable with zero round trips, then the
+	 * shared action protocol. The index is read from the registry's {@see
+	 * SkillsRegistry::list()}, so third-party skills added through the
+	 * `abilities_catalog_mcp_skills` filter appear here too — without building any
+	 * recipe body.
+	 *
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\SkillsRegistry $registry The skills registry.
+	 * @return string The tool description.
+	 */
+	private function skillsDescription( SkillsRegistry $registry ): string {
+		$blurb = __( 'Task recipes that teach multi-ability workflows spanning several domains, e.g. authoring coherent Gutenberg content. Each recipe is procedural guidance that points you at the read abilities for live data; it does not embed that data.', 'abilities-catalog' );
+
+		$entries = array();
+		foreach ( $registry->list() as $skill ) {
+			$entries[] = sprintf( '%s — %s', $skill['id'], $skill['when_to_use'] );
+		}
+
+		$index = empty( $entries ) ? '' : ' ' . sprintf(
+			/* translators: %s: a list of "skill-id — when to use it" entries, separated by "; ". */
+			__( 'Available skills: %s.', 'abilities-catalog' ),
+			implode( '; ', $entries )
+		);
+
+		return $blurb . $index . ' ' . __( 'Call "list" to see all skills, "get" with an id for the full recipe.', 'abilities-catalog' );
 	}
 
 	/**
