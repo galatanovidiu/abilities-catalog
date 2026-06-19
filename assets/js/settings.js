@@ -9,7 +9,7 @@
 ( function ( wp ) {
 	'use strict';
 
-	if ( ! wp || ! wp.element || ! wp.components || ! wp.apiFetch ) {
+	if ( ! wp || ! wp.element || ! wp.components || ! wp.apiFetch || ! wp.i18n ) {
 		return;
 	}
 
@@ -17,6 +17,7 @@
 	var Fragment = wp.element.Fragment;
 	var useState = wp.element.useState;
 	var useEffect = wp.element.useEffect;
+	var useRef = wp.element.useRef;
 	var apiFetch = wp.apiFetch;
 	var __ = wp.i18n.__;
 	var sprintf = wp.i18n.sprintf;
@@ -151,6 +152,32 @@
 	}
 
 	/**
+	 * Copies text via a temporary textarea, for contexts without the async Clipboard API.
+	 *
+	 * `navigator.clipboard` is undefined on a non-secure context (plain-HTTP wp-admin,
+	 * common on local and intranet installs), so this is the fallback that still works there.
+	 *
+	 * @param {string} text The text to copy.
+	 * @return {boolean} Whether the copy succeeded.
+	 */
+	function fallbackCopy( text ) {
+		try {
+			var area = document.createElement( 'textarea' );
+			area.value = text;
+			area.style.position = 'fixed';
+			area.style.opacity = '0';
+			document.body.appendChild( area );
+			area.focus();
+			area.select();
+			var done = document.execCommand( 'copy' );
+			document.body.removeChild( area );
+			return done;
+		} catch ( e ) {
+			return false;
+		}
+	}
+
+	/**
 	 * The settings app.
 	 *
 	 * @return {Object} The root element.
@@ -180,6 +207,10 @@
 		var copied = copiedHook[ 0 ];
 		var setCopied = copiedHook[ 1 ];
 
+		// Monotonic id of the latest save, so an out-of-order response from an earlier
+		// save never overwrites the newer optimistic state.
+		var seqRef = useRef( 0 );
+
 		useEffect( function () {
 			apiFetch( { path: REST_PATH } )
 				.then( function ( data ) {
@@ -199,14 +230,30 @@
 		 * @return {void}
 		 */
 		function save( payload ) {
+			seqRef.current += 1;
+			var seq = seqRef.current;
+
+			// Apply a server snapshot only if no newer save has started since — and never
+			// leave a promise unhandled (the same outage that fails the POST can fail the
+			// recovery GET, the exact case AGENTS.JS warns about).
+			var reconcile = function ( fresh ) {
+				if ( seq === seqRef.current ) {
+					setState( fresh );
+				}
+			};
+
 			apiFetch( { path: REST_PATH, method: 'POST', data: payload } )
 				.then( function ( fresh ) {
-					setState( fresh );
+					reconcile( fresh );
 					flash( __( 'Saved.', 'abilities-catalog' ) );
 				} )
 				.catch( function ( err ) {
 					flash( ( err && err.message ) || __( 'Save failed.', 'abilities-catalog' ) );
-					return apiFetch( { path: REST_PATH } ).then( setState );
+					return apiFetch( { path: REST_PATH } )
+						.then( reconcile )
+						.catch( function () {
+							flash( __( 'Could not confirm the saved state — reload to be sure.', 'abilities-catalog' ) );
+						} );
 				} );
 		}
 
@@ -249,15 +296,33 @@
 		}
 
 		function copyEndpoint() {
-			if ( ! navigator.clipboard ) {
-				return;
-			}
-			navigator.clipboard.writeText( state.endpoint ).then( function () {
+			var text = state.endpoint;
+			var ok = function () {
 				setCopied( true );
 				window.setTimeout( function () {
 					setCopied( false );
 				}, 1500 );
-			} );
+			};
+			var fail = function () {
+				flash( __( 'Copy is unavailable here — select the endpoint and copy it manually.', 'abilities-catalog' ) );
+			};
+
+			if ( navigator.clipboard && navigator.clipboard.writeText ) {
+				navigator.clipboard.writeText( text ).then( ok, function () {
+					if ( fallbackCopy( text ) ) {
+						ok();
+					} else {
+						fail();
+					}
+				} );
+				return;
+			}
+
+			if ( fallbackCopy( text ) ) {
+				ok();
+			} else {
+				fail();
+			}
 		}
 
 		if ( loading ) {
@@ -397,9 +462,13 @@
 			domain.abilities.length
 		);
 
+		// Fold the search state into the key so the panel remounts (and re-reads
+		// initialOpen) when search toggles on or off — PanelBody is uncontrolled and
+		// reads initialOpen only at mount, so matching domains auto-open while searching
+		// and collapse again when the query is cleared.
 		return el(
 			PanelBody,
-			{ key: domain.slug, title: title, initialOpen: !! query },
+			{ key: domain.slug + ':' + ( query ? 'q' : '' ), title: title, initialOpen: !! query },
 			el(
 				'div',
 				{ style: { display: 'flex', gap: '8px', marginBottom: '8px' } },

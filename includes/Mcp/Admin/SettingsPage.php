@@ -92,6 +92,11 @@ final class SettingsPage {
 			true
 		);
 
+		// The app wraps every string in wp.i18n with the plugin text domain; without this
+		// the React half of the screen would stay English on every locale while the PHP
+		// half translates.
+		wp_set_script_translations( self::SCRIPT_HANDLE, 'abilities-catalog' );
+
 		wp_enqueue_style( 'wp-components' );
 	}
 }
