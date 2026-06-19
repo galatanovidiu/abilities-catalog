@@ -33,6 +33,7 @@
 	var Notice = c.Notice;
 	var Snackbar = c.Snackbar;
 	var Spinner = c.Spinner;
+	var Modal = c.Modal;
 
 	var REST_PATH = '/abilities-catalog/v1/exposure';
 
@@ -207,6 +208,12 @@
 		var copied = copiedHook[ 0 ];
 		var setCopied = copiedHook[ 1 ];
 
+		// The pending "enable all" confirmation, or null. Set only when the bulk would
+		// turn on destructive or dangerous abilities, so the admin sees the risk first.
+		var pendingHook = useState( null );
+		var pendingEnable = pendingHook[ 0 ];
+		var setPendingEnable = pendingHook[ 1 ];
+
 		// Monotonic id of the latest save, so an out-of-order response from an earlier
 		// save never overwrites the newer optimistic state.
 		var seqRef = useRef( 0 );
@@ -282,17 +289,75 @@
 			save( { abilities: changes } );
 		}
 
-		function bulkDomain( domain, value ) {
-			var query = search.trim().toLowerCase();
-			var changes = {};
-			matchingAbilities( domain, query ).forEach( function ( ability ) {
-				changes[ ability.name ] = value;
-			} );
-			if ( Object.keys( changes ).length === 0 ) {
+		// All bulk actions operate on what is currently shown: with no search that is
+		// every ability in scope (so "Enable all" means all), and while searching it is
+		// the matches (so you can act on a search result).
+		function applyBulkNames( names, value ) {
+			if ( names.length === 0 ) {
 				return;
 			}
+			var changes = {};
+			names.forEach( function ( name ) {
+				changes[ name ] = value;
+			} );
 			setState( applyLocal( state, changes ) );
 			save( { abilities: changes } );
+		}
+
+		function shownNames( domains ) {
+			var query = search.trim().toLowerCase();
+			var names = [];
+			domains.forEach( function ( domain ) {
+				matchingAbilities( domain, query ).forEach( function ( ability ) {
+					names.push( ability.name );
+				} );
+			} );
+			return names;
+		}
+
+		function bulkDomain( domain, value ) {
+			applyBulkNames( shownNames( [ domain ] ), value );
+		}
+
+		function bulkAll( value ) {
+			applyBulkNames( shownNames( state.domains ), value );
+		}
+
+		// Enabling in bulk needs a guard: confirm first when the shown set turns on any
+		// destructive or dangerous ability (the deny-by-default gate exists exactly to keep
+		// those off by accident). A read-only-only set enables straight away.
+		function requestEnableAll() {
+			var query = search.trim().toLowerCase();
+			var names = [];
+			var dangerous = 0;
+			var destructive = 0;
+			state.domains.forEach( function ( domain ) {
+				matchingAbilities( domain, query ).forEach( function ( ability ) {
+					names.push( ability.name );
+					if ( ability.dangerous ) {
+						dangerous++;
+					} else if ( ability.destructive ) {
+						destructive++;
+					}
+				} );
+			} );
+
+			if ( names.length === 0 ) {
+				return;
+			}
+
+			if ( dangerous === 0 && destructive === 0 ) {
+				applyBulkNames( names, true );
+				return;
+			}
+
+			setPendingEnable( { names: names, total: names.length, dangerous: dangerous, destructive: destructive } );
+		}
+
+		function confirmEnableAll() {
+			var names = pendingEnable.names;
+			setPendingEnable( null );
+			applyBulkNames( names, true );
 		}
 
 		function copyEndpoint() {
@@ -355,13 +420,27 @@
 				} )
 			),
 			el(
-				'p',
-				{ style: { color: '#50575e' } },
-				sprintf(
-					/* translators: 1: number of enabled abilities, 2: total abilities. */
-					__( '%1$d of %2$d abilities enabled.', 'abilities-catalog' ),
-					state.enabled_count,
-					state.total_count
+				'div',
+				{ style: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', margin: '4px 0 12px' } },
+				el(
+					'span',
+					{ style: { color: '#50575e' } },
+					sprintf(
+						/* translators: 1: number of enabled abilities, 2: total abilities. */
+						__( '%1$d of %2$d abilities enabled.', 'abilities-catalog' ),
+						state.enabled_count,
+						state.total_count
+					)
+				),
+				el(
+					Button,
+					{ variant: 'secondary', size: 'small', onClick: requestEnableAll },
+					__( 'Enable all', 'abilities-catalog' )
+				),
+				el(
+					Button,
+					{ variant: 'tertiary', size: 'small', onClick: function () { bulkAll( false ); } },
+					__( 'Disable all', 'abilities-catalog' )
 				)
 			),
 			el(
@@ -371,6 +450,7 @@
 					return domainPanel( domain, query, toggleAbility, bulkDomain );
 				} )
 			),
+			pendingEnable ? enableAllModal( pendingEnable, confirmEnableAll, function () { setPendingEnable( null ); } ) : null,
 			notice
 				? el(
 						'div',
@@ -440,6 +520,53 @@
 	}
 
 	/**
+	 * Renders the "enable all" confirmation modal.
+	 *
+	 * Shown only when the bulk would turn on destructive or dangerous abilities, so the
+	 * warning always describes a real risk.
+	 *
+	 * @param {Object}   pending   The pending bulk: { total, dangerous, destructive }.
+	 * @param {Function} onConfirm Confirm handler.
+	 * @param {Function} onCancel  Cancel handler.
+	 * @return {Object} The modal element.
+	 */
+	function enableAllModal( pending, onConfirm, onCancel ) {
+		return el(
+			Modal,
+			{ title: __( 'Enable all shown abilities?', 'abilities-catalog' ), onRequestClose: onCancel },
+			el(
+				'p',
+				null,
+				sprintf(
+					/* translators: %d: number of abilities. */
+					__( 'This enables %d abilities for execution over MCP.', 'abilities-catalog' ),
+					pending.total
+				)
+			),
+			el(
+				Notice,
+				{ status: 'warning', isDismissible: false },
+				sprintf(
+					/* translators: 1: dangerous count, 2: destructive count. */
+					__( 'Includes %1$d dangerous and %2$d destructive abilities (for example installing plugins or themes) that any authenticated agent could then run over the network.', 'abilities-catalog' ),
+					pending.dangerous,
+					pending.destructive
+				)
+			),
+			el(
+				'div',
+				{ style: { display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' } },
+				el( Button, { variant: 'tertiary', onClick: onCancel }, __( 'Cancel', 'abilities-catalog' ) ),
+				el(
+					Button,
+					{ variant: 'primary', isDestructive: pending.dangerous > 0, onClick: onConfirm },
+					__( 'Enable all', 'abilities-catalog' )
+				)
+			)
+		);
+	}
+
+	/**
 	 * Renders one domain's collapsible panel.
 	 *
 	 * @param {Object}   domain        The domain.
@@ -497,7 +624,14 @@
 							el( 'strong', null, ability.label || ability.name ),
 							RiskBadge( ability )
 						),
-						help: ability.name,
+						help: el(
+							Fragment,
+							null,
+							el( 'code', { style: { fontSize: '11px', color: '#646970' } }, ability.name ),
+							ability.description
+								? el( 'div', { style: { marginTop: '2px', color: '#50575e' } }, ability.description )
+								: null
+						),
 					} )
 				);
 			} )
