@@ -24,12 +24,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  * any transport. {@see DomainToolHandler} is the thin shim that adapts these
  * methods to the MCP tool result shape.
  *
- * The router adds no authorization of its own. `execute()` dispatches through the
- * `WP_Ability` wrapper, whose `execute()` runs the ability's own
- * `permission_callback` and input/output validation — that is the hard guard.
- * `list` and `describe` return unfiltered metadata by design (it is
- * low-sensitivity; the per-ability permission checks are input-aware and often
- * defer to a wrapped REST route, so filtering here would mislead).
+ * Capability is the hard guard: `execute()` dispatches through the `WP_Ability`
+ * wrapper, whose `execute()` runs the ability's own `permission_callback` and
+ * input/output validation. Ahead of it sits the coarser, owner-controlled exposure
+ * gate ({@see ExposurePolicy}): `execute()` refuses a disabled ability before
+ * dispatch. The gate hides nothing — `list` still reports every ability (each
+ * carrying an `enabled` flag) and `describe` still returns its full schema, so an
+ * agent can learn a disabled ability and ask a human to enable it. `list` and
+ * `describe` return unfiltered metadata otherwise (it is low-sensitivity; the
+ * per-ability permission checks are input-aware and often defer to a wrapped REST
+ * route, so filtering here would mislead).
  *
  * @since 0.2.0
  */
@@ -43,21 +47,32 @@ final class DomainRouter {
 	private DomainMap $map;
 
 	/**
+	 * The exposure gate that says which abilities may be executed.
+	 *
+	 * @var \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy
+	 */
+	private ExposurePolicy $policy;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap $map The ability -> domain taxonomy.
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap       $map    The ability -> domain taxonomy.
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy  $policy The per-ability exposure gate.
 	 */
-	public function __construct( DomainMap $map ) {
-		$this->map = $map;
+	public function __construct( DomainMap $map, ExposurePolicy $policy ) {
+		$this->map    = $map;
+		$this->policy = $policy;
 	}
 
 	/**
 	 * Lists every registered ability mapped to the domain, with its flags.
 	 *
-	 * The lazy ability index for the domain. Returns unfiltered metadata.
+	 * The lazy ability index for the domain. Returns unfiltered metadata; each entry
+	 * carries an `enabled` flag so the agent knows which abilities `execute` will run
+	 * and which the owner has gated off.
 	 *
 	 * @param string $domain The domain slug.
-	 * @return list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool}>
+	 * @return list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool,enabled:bool}>
 	 *         One summary per ability, in registration order.
 	 */
 	public function list( string $domain ): array {
@@ -95,7 +110,7 @@ final class DomainRouter {
 		return array(
 			'name'          => $ability,
 			'label'         => $resolved->get_label(),
-			'description'   => $resolved->get_description(),
+			'description'   => $this->describeDescription( $ability, $resolved->get_description() ),
 			'input_schema'  => $resolved->get_input_schema(),
 			'output_schema' => $resolved->get_output_schema(),
 			'annotations'   => $this->annotations( $resolved ),
@@ -117,6 +132,10 @@ final class DomainRouter {
 		$resolved = $this->requireMember( $domain, $ability );
 		if ( is_wp_error( $resolved ) ) {
 			return $resolved;
+		}
+
+		if ( ! $this->policy->allows( $ability ) ) {
+			return $this->disabled( $ability );
 		}
 
 		return $resolved->execute( $input );
@@ -190,9 +209,14 @@ final class DomainRouter {
 	/**
 	 * Builds the `list` summary for one ability.
 	 *
+	 * The `description` is the raw ability description (so the settings page can reuse
+	 * the index without the disabled note); the `enabled` flag carries the gate state.
+	 * The longer "disabled" note is appended only by {@see describe()}, the call an agent
+	 * makes to study how to use the ability.
+	 *
 	 * @param string      $name    The ability name.
 	 * @param \WP_Ability $ability The ability.
-	 * @return array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool}
+	 * @return array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool,enabled:bool}
 	 */
 	private function summarize( string $name, WP_Ability $ability ): array {
 		$annotations = $this->annotations( $ability );
@@ -204,6 +228,52 @@ final class DomainRouter {
 			'readonly'    => true === ( $annotations['readonly'] ?? null ),
 			'destructive' => true === ( $annotations['destructive'] ?? null ),
 			'dangerous'   => true === ( $annotations['dangerous'] ?? null ),
+			'enabled'     => $this->policy->allows( $name ),
+		);
+	}
+
+	/**
+	 * Appends the "currently disabled" note to a `describe` description when gated off.
+	 *
+	 * An enabled ability returns its description unchanged. A disabled one gets a short
+	 * note so the agent reading the schema knows the call will be refused until a human
+	 * enables it — the gate informs rather than hides.
+	 *
+	 * @param string $ability     The full ability name.
+	 * @param string $description The ability's own description.
+	 * @return string The description, with the disabled note appended when gated off.
+	 */
+	private function describeDescription( string $ability, string $description ): string {
+		if ( $this->policy->allows( $ability ) ) {
+			return $description;
+		}
+
+		return trim(
+			$description . ' ' . __( 'Note: this ability is currently disabled for the MCP server and cannot be executed until an administrator enables it on the MCP server settings page.', 'abilities-catalog' )
+		);
+	}
+
+	/**
+	 * Builds the "ability is disabled" error for the exposure gate.
+	 *
+	 * Returned by {@see execute()} before dispatch when the owner has not enabled the
+	 * ability. It names the ability and points at the settings page, since the agent's
+	 * only recourse is to ask a human to enable it. Status 403: the request is
+	 * well-formed and the ability exists, but the server refuses to run it.
+	 *
+	 * @param string $ability The full ability name.
+	 * @return \WP_Error The disabled error.
+	 */
+	private function disabled( string $ability ): WP_Error {
+		return new WP_Error(
+			'abilities_catalog_mcp_ability_disabled',
+			sprintf(
+				/* translators: 1: ability name, 2: settings page URL. */
+				__( 'Ability "%1$s" is disabled for the MCP server. An administrator can enable it on the MCP server settings page: %2$s', 'abilities-catalog' ),
+				$ability,
+				abilities_catalog_mcp_settings_url()
+			),
+			array( 'status' => 403 )
 		);
 	}
 

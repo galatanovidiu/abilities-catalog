@@ -41,6 +41,10 @@ final class ServerTest extends TestCase {
 	public function set_up(): void {
 		parent::set_up();
 
+		// The exposure gate is deny-by-default; enable the one ability the end-to-end
+		// execute round-trip runs so the gate lets it through to the capability check.
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'content/get-post' ) );
+
 		if ( ! class_exists( McpAdapter::class ) ) {
 			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
 			if ( is_readable( $autoload ) ) {
@@ -60,6 +64,7 @@ final class ServerTest extends TestCase {
 	 */
 	public function tear_down(): void {
 		remove_filter( 'mcp_adapter_create_default_server', '__return_false' );
+		delete_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION );
 		parent::tear_down();
 	}
 

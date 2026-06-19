@@ -11,29 +11,56 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 
 use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainRouter;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * Exercises list / describe / execute against the registered content abilities,
- * including the low-privilege execute denial that proves capability is the guard.
+ * including the low-privilege execute denial that proves capability is the guard and
+ * the deny-by-default exposure gate that refuses an ability the owner has not enabled.
  */
 final class DomainRouterTest extends TestCase {
 
 	/**
-	 * The router under test, bound to the real domain map.
+	 * A router whose exposure gate enables nothing (the shipped deny-by-default state).
 	 *
 	 * @var \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainRouter
 	 */
 	private DomainRouter $router;
 
 	/**
-	 * Builds a fresh router for each test.
+	 * Builds a fresh deny-by-default router for each test.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
-		$this->router = new DomainRouter( new DomainMap() );
+		$this->router = $this->routerWith( array() );
+	}
+
+	/**
+	 * Clears the exposure option so each test starts from the shipped default.
+	 *
+	 * @return void
+	 */
+	public function tear_down(): void {
+		delete_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION );
+		parent::tear_down();
+	}
+
+	/**
+	 * Builds a router whose exposure gate enables exactly the given abilities.
+	 *
+	 * The gate reads the option once on first use, so the option must be set before the
+	 * policy resolves; building a fresh policy here guarantees that.
+	 *
+	 * @param list<string> $enabled The ability names to enable.
+	 * @return \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainRouter The router.
+	 */
+	private function routerWith( array $enabled ): DomainRouter {
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, $enabled );
+
+		return new DomainRouter( new DomainMap(), new ExposurePolicy() );
 	}
 
 	/**
@@ -54,9 +81,26 @@ final class DomainRouterTest extends TestCase {
 			$this->assertArrayHasKey( 'readonly', $item );
 			$this->assertArrayHasKey( 'destructive', $item );
 			$this->assertArrayHasKey( 'dangerous', $item );
+			$this->assertArrayHasKey( 'enabled', $item );
 		}
 
 		$this->assertTrue( $this->itemNamed( $items, 'content/get-post' )['readonly'] );
+	}
+
+	/**
+	 * list reports each ability's exposure state, hiding none.
+	 *
+	 * The gate is deny-by-default, so an enabled ability reads `enabled: true` while the
+	 * rest stay `false` — and both still appear in the index.
+	 *
+	 * @return void
+	 */
+	public function test_list_marks_each_ability_enabled_state(): void {
+		$router = $this->routerWith( array( 'content/get-post' ) );
+		$items  = $router->list( 'content' );
+
+		$this->assertTrue( $this->itemNamed( $items, 'content/get-post' )['enabled'] );
+		$this->assertFalse( $this->itemNamed( $items, 'content/create-post' )['enabled'] );
 	}
 
 	/**
@@ -157,6 +201,24 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
+	 * describe appends the "disabled" note for a gated-off ability, and omits it once enabled.
+	 *
+	 * describe never refuses — the agent must still be able to study a disabled ability —
+	 * so the note in the description is how the gate state reaches the agent there.
+	 *
+	 * @return void
+	 */
+	public function test_describe_notes_disabled_state(): void {
+		$gated = $this->router->describe( 'content', 'content/get-post' );
+		$this->assertIsArray( $gated );
+		$this->assertStringContainsString( 'currently disabled', $gated['description'] );
+
+		$enabled = $this->routerWith( array( 'content/get-post' ) )->describe( 'content', 'content/get-post' );
+		$this->assertIsArray( $enabled );
+		$this->assertStringNotContainsString( 'currently disabled', $enabled['description'] );
+	}
+
+	/**
 	 * describe refuses an ability that belongs to a different domain.
 	 *
 	 * @return void
@@ -201,21 +263,46 @@ final class DomainRouterTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_title' => 'Hello' ) );
 
-		$result = $this->router->execute( 'content', 'content/get-post', array( 'id' => $post_id ) );
+		$router = $this->routerWith( array( 'content/get-post' ) );
+		$result = $router->execute( 'content', 'content/get-post', array( 'id' => $post_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $post_id, $result['id'] );
 	}
 
 	/**
+	 * execute refuses an ability the owner has not enabled, before any capability check.
+	 *
+	 * Deny-by-default: even an administrator gets the gate error, which names the ability
+	 * and points at the settings page so a human can enable it.
+	 *
+	 * @return void
+	 */
+	public function test_execute_refuses_disabled_ability(): void {
+		$this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create();
+
+		$result = $this->router->execute( 'content', 'content/get-post', array( 'id' => $post_id ) );
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'abilities_catalog_mcp_ability_disabled', $result->get_error_code() );
+		$this->assertStringContainsString( 'options-general.php?page=abilities-catalog-mcp', $result->get_error_message() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
+	}
+
+	/**
 	 * execute denies a user without the ability's capability (capability is the guard).
+	 *
+	 * The ability is enabled first so the gate lets the call through to the capability
+	 * check — the exposure gate sits in front of, never replaces, the capability guard.
 	 *
 	 * @return void
 	 */
 	public function test_execute_denies_low_privilege_user(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = $this->router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
+		$router = $this->routerWith( array( 'content/create-post' ) );
+		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
 
 		$this->assertWPError( $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

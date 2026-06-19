@@ -174,7 +174,7 @@ final class Server {
 		$map->reportUnmapped( array_map( 'strval', array_keys( wp_get_abilities() ) ) );
 
 		$permission = $this->toolPermission();
-		$factory    = new DomainToolFactory( new DomainRouter( $map ), $permission );
+		$factory    = new DomainToolFactory( new DomainRouter( $map, new ExposurePolicy() ), $permission );
 
 		$tools = array();
 		foreach ( $map->domains() as $domain ) {

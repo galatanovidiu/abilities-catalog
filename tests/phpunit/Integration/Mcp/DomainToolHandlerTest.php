@@ -12,6 +12,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainRouter;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainToolHandler;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
@@ -31,11 +32,26 @@ final class DomainToolHandlerTest extends TestCase {
 	/**
 	 * Builds a content-domain handler over the real router for each test.
 	 *
+	 * The exposure gate is deny-by-default, so the abilities these tests execute are
+	 * enabled here; the gate's own behavior is covered by {@see DomainRouterTest}. The
+	 * shim under test is unaffected by which abilities are enabled.
+	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
-		$this->handler = new DomainToolHandler( new DomainRouter( new DomainMap() ), 'content' );
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'content/get-post', 'content/create-post' ) );
+		$this->handler = new DomainToolHandler( new DomainRouter( new DomainMap(), new ExposurePolicy() ), 'content' );
+	}
+
+	/**
+	 * Clears the exposure option after each test.
+	 *
+	 * @return void
+	 */
+	public function tear_down(): void {
+		delete_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION );
+		parent::tear_down();
 	}
 
 	/**
