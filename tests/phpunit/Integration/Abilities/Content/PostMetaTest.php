@@ -109,6 +109,20 @@ final class PostMetaTest extends TestCase {
 			)
 		);
 
+		// Gap (e): a multi-value key (single => false). Core REST stores one row per
+		// array element; update_post_meta() would collapse them into a single
+		// serialized row.
+		register_post_meta(
+			'post',
+			'color_tags',
+			array(
+				'show_in_rest' => true,
+				'single'       => false,
+				'type'         => 'string',
+				'description'  => 'Multiple color tags.',
+			)
+		);
+
 		$this->post_id = self::factory()->post->create();
 	}
 
@@ -119,6 +133,7 @@ final class PostMetaTest extends TestCase {
 		unregister_meta_key( 'post', 'objectwide_note', '' );
 		unregister_post_meta( 'post', 'aliased_storage_key' );
 		unregister_post_meta( 'post', 'is_featured' );
+		unregister_post_meta( 'post', 'color_tags' );
 		parent::tear_down();
 	}
 
@@ -483,6 +498,86 @@ final class PostMetaTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'same value', ( (array) $result['meta'] )['subtitle'] );
+	}
+
+	/**
+	 * A `single => false` key stores one row per array element. update-post-meta
+	 * must write N separate rows — not one serialized-array row — so the value
+	 * round-trips correctly (the corruption this guards against).
+	 */
+	public function test_update_multi_value_meta_stores_separate_rows(): void {
+		$this->actingAs( 'administrator' );
+
+		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'meta' => array( 'color_tags' => array( 'red', 'green', 'blue' ) ),
+			)
+		);
+
+		$this->assertIsArray( $updated );
+
+		// Stored as three separate rows, not one serialized array.
+		$this->assertSame(
+			array( 'red', 'green', 'blue' ),
+			get_post_meta( $this->post_id, 'color_tags', false )
+		);
+
+		// The applied value echoes the list, not a nested array.
+		$this->assertSame( array( 'red', 'green', 'blue' ), ( (array) $updated['meta'] )['color_tags'] );
+
+		// Round-trips through get-post-meta as a list.
+		$got = wp_get_ability( 'content/get-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'keys' => array( 'color_tags' ),
+			)
+		);
+		$this->assertSame( array( 'red', 'green', 'blue' ), ( (array) $got['meta'] )['color_tags'] );
+	}
+
+	/**
+	 * Re-writing a multi-value key replaces the row set: removed values disappear,
+	 * added values appear, and unchanged values remain.
+	 */
+	public function test_update_multi_value_meta_replaces_row_set(): void {
+		$this->actingAs( 'administrator' );
+
+		add_post_meta( $this->post_id, 'color_tags', 'red' );
+		add_post_meta( $this->post_id, 'color_tags', 'green' );
+
+		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'meta' => array( 'color_tags' => array( 'green', 'yellow' ) ),
+			)
+		);
+
+		$this->assertIsArray( $updated );
+		$this->assertSame(
+			array( 'green', 'yellow' ),
+			get_post_meta( $this->post_id, 'color_tags', false )
+		);
+	}
+
+	/**
+	 * An empty array clears a multi-value key (all rows removed).
+	 */
+	public function test_update_multi_value_meta_empty_array_clears(): void {
+		$this->actingAs( 'administrator' );
+
+		add_post_meta( $this->post_id, 'color_tags', 'red' );
+		add_post_meta( $this->post_id, 'color_tags', 'green' );
+
+		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+			array(
+				'id'   => $this->post_id,
+				'meta' => array( 'color_tags' => array() ),
+			)
+		);
+
+		$this->assertIsArray( $updated );
+		$this->assertSame( array(), get_post_meta( $this->post_id, 'color_tags', false ) );
 	}
 
 	public function test_logged_out_user_is_denied(): void {
