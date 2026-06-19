@@ -63,6 +63,18 @@ add_action(
 	static function (): void {
 		( new Registry() )->register();
 
+		// The Abilities API ships with WordPress 7.0; without it the MCP layer has
+		// nothing to expose, so skip all of it (the catalog above already no-ops).
+		if ( ! function_exists( 'wp_register_ability' ) ) {
+			return;
+		}
+
+		// The MCP server's settings page and its exposure REST API are always
+		// available — independent of whether the server is on — so a site can turn the
+		// server on and gate its abilities from one screen in wp-admin.
+		Mcp\Admin\SettingsPage::register();
+		Mcp\Admin\ExposureController::register();
+
 		// The catalog is the catalog; the MCP server is an optional, off-by-default
 		// consumer of it. Boot it only when the gate is on.
 		if ( ! abilities_catalog_mcp_is_enabled() ) {
