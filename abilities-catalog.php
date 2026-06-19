@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Abilities Catalog
  * Plugin URI:        https://github.com/galatanovidiu/abilities-catalog
- * Description:       Registers WordPress wp-admin features as Abilities API abilities. Platform-agnostic: it only registers abilities and does not touch any browser bridge. A WebMCP adapter (or any Abilities API consumer) can expose them as tools.
+ * Description:       Registers WordPress wp-admin features as Abilities API abilities, plus an optional, off-by-default built-in MCP server that exposes them as curated domain tools. Consumer-agnostic: the catalog works standalone, and any Abilities API consumer can expose the abilities.
  * Version:           0.1.0
  * Requires at least: 7.0
  * Requires PHP:      8.1
@@ -53,9 +53,34 @@ spl_autoload_register(
 	}
 );
 
+// Always-loaded boot gate for the optional MCP server. Defines the global
+// `abilities_catalog_mcp_is_enabled()` helper; it carries no adapter dependency,
+// so the catalog stays standalone whether the server is on or off.
+require_once __DIR__ . '/includes/Mcp/Enable.php';
+
 add_action(
 	'plugins_loaded',
 	static function (): void {
 		( new Registry() )->register();
+
+		// The Abilities API ships with WordPress 7.0; without it the MCP layer has
+		// nothing to expose, so skip all of it (the catalog above already no-ops).
+		if ( ! function_exists( 'wp_register_ability' ) ) {
+			return;
+		}
+
+		// The MCP server's settings page and its exposure REST API are always
+		// available — independent of whether the server is on — so a site can turn the
+		// server on and gate its abilities from one screen in wp-admin.
+		Mcp\Admin\SettingsPage::register();
+		Mcp\Admin\ExposureController::register();
+
+		// The catalog is the catalog; the MCP server is an optional, off-by-default
+		// consumer of it. Boot it only when the gate is on.
+		if ( ! abilities_catalog_mcp_is_enabled() ) {
+			return;
+		}
+
+		Mcp\Server::boot();
 	}
 );

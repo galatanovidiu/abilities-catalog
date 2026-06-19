@@ -12,5 +12,5 @@ Thumbs.db
 /tests/_output/*
 !/tests/_output/.gitkeep
 
-# Composer lock is not committed for this plugin (dev-only dependencies)
-/composer.lock
+# composer.lock IS committed: the plugin now has runtime deps (mcp-adapter,
+# jetpack-autoloader), and the CI release build runs `composer install --no-dev`.

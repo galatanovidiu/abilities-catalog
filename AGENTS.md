@@ -4,8 +4,11 @@
 
 Register a coherent, complete-enough catalog of WordPress **abilities** for core WP 7.0 wp-admin,
 on top of the core Abilities API. This plugin is **consumer-agnostic**: it defines abilities and
-their risk classification. It does not surface them to any agent or UI — that is a consumer's job
-(an in-browser agent, a server-side MCP client, or none). It works standalone.
+their risk classification. The catalog surfaces them to no agent or UI — that is a consumer's job
+(an in-browser agent, a server-side MCP client, or none) — **except** for one optional,
+**off-by-default** consumer it now ships: a built-in **MCP server** (`includes/Mcp/`) that, when
+enabled, exposes the catalog as curated domain tools. The catalog still works standalone and is
+unaffected when the server is off.
 
 ## Docs
 
@@ -24,7 +27,7 @@ their risk classification. It does not surface them to any agent or UI — that 
 
 ## Current state
 
-- Registers the full catalog — **161 abilities across 18 domains** (76 read-only, 8 dangerous-tier).
+- Registers the full catalog — **160 abilities across 18 domains** (76 read-only, 8 dangerous-tier).
   By build order: the **T1 read** abilities (L2), **T1 safe writes** (L3),
   **T2 standard writes** (L4), the **T3 dangerous tier** (L5, 8 abilities), the **L6
   catalog-gap abilities** (5): `content/create-cpt-item`, `content/update-cpt-item`,
@@ -80,3 +83,18 @@ their risk classification. It does not surface them to any agent or UI — that 
 - **Consumer-provided hooks.** The Registry contributes dangerous ability names to an
   `abilities_catalog_dangerous_tools` filter and screen templates to an `abilities_catalog_screen_links`
   filter — hooks a consumer provides; the catalog only populates them when present.
+- **Optional built-in MCP server.** `includes/Mcp/` is an off-by-default consumer of the catalog,
+  gated by the `ABILITIES_CATALOG_MCP_ENABLED` constant or the `abilities_catalog_mcp_enabled` option
+  (flipped from **Settings → MCP Server**, `Mcp\Admin\SettingsPage`). When on, it exposes **11 curated
+  domain tools** (`list` / `describe` / `execute`, mapped by `Mcp\DomainMap`) plus a cross-cutting
+  **`skills`** tool (lazy task recipes), built on `wordpress/mcp-adapter` (loaded via the Jetpack
+  Autoloader from `vendor/`, which is git-ignored). Capability is still the hard guard — every `execute`
+  runs the ability's own `permission_callback` — and on top of it sits an owner-controlled
+  **exposure gate** (`Mcp\ExposurePolicy`, deny-by-default): every ability is disabled until enabled on
+  the settings page, and `execute` refuses a disabled one (with a link to the page), but `list` and
+  `describe` still show it so an agent can learn it. The settings page is a no-build React app on core
+  `wp-element`/`wp-components`, backed by the `Mcp\Admin\ExposureController` REST route
+  (`abilities-catalog/v1/exposure`, `manage_options`); both register whenever the Abilities API is
+  present, independent of the server's enable flag. It is extensible without editing this plugin
+  (`abilities_catalog_mcp_domain_map`, `abilities_catalog_mcp_skills`, `abilities_catalog_mcp_tools`,
+  and `abilities_catalog_mcp_tool_permission` filters). Off by default; the catalog is unaffected when off.
