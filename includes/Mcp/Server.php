@@ -192,12 +192,97 @@ final class Server {
 		if ( is_wp_error( $skills ) ) {
 			self::log( 'Failed to build the "skills" tool: ' . $skills->get_error_message() );
 
-			return $tools;
+			return self::mergeCustomTools( $tools, $this->customTools( $tools ) );
 		}
 
 		$tools[] = $skills;
 
-		return $tools;
+		return self::mergeCustomTools( $tools, $this->customTools( $tools ) );
+	}
+
+	/**
+	 * Runs the `abilities_catalog_mcp_tools` filter so a third party can ship a whole tool.
+	 *
+	 * @param list<\WP\MCP\Domain\Tools\McpTool> $tools The curated domain tools plus the skills tool.
+	 * @return mixed The filter result (validated by {@see mergeCustomTools()}).
+	 */
+	private function customTools( array $tools ) {
+		/**
+		 * Filters the MCP tools the server registers.
+		 *
+		 * Append `McpTool` instances to ship a whole custom tool (spec §12). On a name
+		 * collision with a curated tool, the custom tool wins and a `_doing_it_wrong()`
+		 * notice fires; names must otherwise be unique, since the adapter silently drops
+		 * duplicates. Preserve the entries already present — replacing the array drops the
+		 * curated domain and skills tools.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param list<\WP\MCP\Domain\Tools\McpTool> $tools The curated domain tools plus the skills tool.
+		 */
+		return apply_filters( 'abilities_catalog_mcp_tools', $tools );
+	}
+
+	/**
+	 * Merges third-party custom tools onto the curated set, deduplicated by name.
+	 *
+	 * The escape hatch from spec §12: registration is construction-only, so a custom tool
+	 * has to ride in the same `$tools` array. A later entry wins a name collision (the
+	 * adapter would otherwise silently drop the duplicate); when the name it overwrites is
+	 * a curated tool, a `_doing_it_wrong()` notice records the override. A non-`McpTool`
+	 * value is skipped, and a non-array filter result falls back to the curated set, so a
+	 * misbehaving filter never breaks the server. Public and pure (it does not read the
+	 * filter) so the merge rules are testable without booting a server.
+	 *
+	 * @param list<\WP\MCP\Domain\Tools\McpTool> $curated  The curated domain + skills tools.
+	 * @param mixed                              $filtered The `abilities_catalog_mcp_tools` filter result.
+	 * @return list<\WP\MCP\Domain\Tools\McpTool> The merged, name-deduplicated tools.
+	 */
+	public static function mergeCustomTools( array $curated, $filtered ): array {
+		if ( ! is_array( $filtered ) ) {
+			return $curated;
+		}
+
+		$curated_names = array();
+		foreach ( $curated as $tool ) {
+			$curated_names[ self::toolName( $tool ) ] = true;
+		}
+
+		$by_name = array();
+		foreach ( $filtered as $tool ) {
+			if ( ! $tool instanceof McpTool ) {
+				self::log( 'Ignoring a non-McpTool value contributed to the abilities_catalog_mcp_tools filter.' );
+
+				continue;
+			}
+
+			$name = self::toolName( $tool );
+			if ( isset( $by_name[ $name ], $curated_names[ $name ] ) ) {
+				_doing_it_wrong(
+					__METHOD__,
+					sprintf(
+						/* translators: %s: tool name. */
+						esc_html__( 'A custom MCP tool named "%s" replaced the curated tool of the same name.', 'abilities-catalog' ),
+						esc_html( $name )
+					),
+					'0.2.0'
+				);
+			}
+
+			$by_name[ $name ] = $tool;
+		}
+
+		return array_values( $by_name );
+	}
+
+	/**
+	 * Returns an MCP tool's registered name.
+	 *
+	 * @param \WP\MCP\Domain\Tools\McpTool $tool The tool.
+	 * @return string The tool name.
+	 */
+	private static function toolName( McpTool $tool ): string {
+		return $tool->get_protocol_dto()->getName();
 	}
 
 	/**
