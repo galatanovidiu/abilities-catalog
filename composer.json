@@ -17,6 +17,7 @@
 		},
 		"sort-packages": true,
 		"allow-plugins": {
+			"automattic/jetpack-autoloader": true,
 			"dealerdirect/phpcodesniffer-composer-installer": true,
 			"phpstan/extension-installer": true
 		}
@@ -27,7 +28,9 @@
 		}
 	},
 	"require": {
-		"php": "^8.1"
+		"php": "^8.1",
+		"automattic/jetpack-autoloader": "^5.0",
+		"wordpress/mcp-adapter": "^0.5.0"
 	},
 	"require-dev": {
 		"automattic/vipwpcs": "^3.0",

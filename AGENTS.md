@@ -24,7 +24,7 @@ their risk classification. It does not surface them to any agent or UI — that 
 
 ## Current state
 
-- Registers the full catalog — **161 abilities across 18 domains** (76 read-only, 8 dangerous-tier).
+- Registers the full catalog — **160 abilities across 18 domains** (76 read-only, 8 dangerous-tier).
   By build order: the **T1 read** abilities (L2), **T1 safe writes** (L3),
   **T2 standard writes** (L4), the **T3 dangerous tier** (L5, 8 abilities), the **L6
   catalog-gap abilities** (5): `content/create-cpt-item`, `content/update-cpt-item`,
