@@ -72,8 +72,10 @@ Either define a constant in `wp-config.php` (the zero-UI path):
 define( 'ABILITIES_CATALOG_MCP_ENABLED', true );
 ```
 
-…or set the option `abilities_catalog_mcp_enabled` to a truthy value. The constant
-wins over the option. The server is off until one of these is set.
+…or set the option `abilities_catalog_mcp_enabled` to a truthy value, or flip the
+toggle on the settings page at **Settings → MCP Server**. The constant wins over the
+option (the settings toggle is shown locked when the constant is defined). The server
+is off until one of these is set.
 
 ### Install the adapter
 
@@ -102,17 +104,28 @@ auth — an **Application Password** for a remote agent, or cookie + nonce
 same-origin. The endpoint runs **as the authenticated user**, so capability gating
 is per-user.
 
+### Exposure (the per-ability gate)
+
+The server is a **gate, not a firehose**. Every ability is **disabled by default**:
+a connected agent can still `list` and `describe` it — so it learns the ability
+exists and how to call it — but `execute` is refused until an administrator enables
+it. Enable abilities on **Settings → MCP Server**, where they are grouped by domain
+with read / write / destructive / dangerous badges; each toggle saves on the spot.
+The `execute` error for a disabled ability names it and links back to that page.
+
+Two independent guards run on every `execute`: this exposure gate, and the ability's
+own `permission_callback` (the capability check). A disabled ability is refused even
+for an administrator; an enabled one still enforces its capability — capability stays
+the hard guard.
+
 ### Security note
 
-In this phase the server exposes the **whole catalog**, capability-gated only —
-there is no risk-tier exclusion. That is deliberate, and it has a sharp edge: an
-administrator's Application Password can reach dangerous abilities (for example
-`plugins/install`, which is RCE-equivalent) over the network, with no human in the
-loop. The mitigations are: the server is **off by default**, this note, and a later
-per-ability settings gate. Each `execute` still runs the ability's own
-`permission_callback` — capability stays the hard guard — but enable the server
-only when you accept that any user reaching the endpoint can do anything their
-capabilities allow.
+Enabling a write or dangerous ability grants network reach to it: an administrator's
+Application Password can then drive an enabled `plugins/install` (which is
+RCE-equivalent) over the network with no human in the loop. The defenses are layered
+— the server is **off by default**, every ability is **disabled by default**,
+capability stays the hard guard on each call, and the settings page surfaces each
+ability's risk tier before you enable it. Enable only what an agent genuinely needs.
 
 ## Architecture
 
@@ -125,6 +138,8 @@ abilities-catalog/
     Support/                     # safety pipeline for the dangerous tier
     Abilities/<Group>/<Domain>/  # one class per ability
     Mcp/                         # the optional, off-by-default MCP server (loads vendor/ only when on)
+      Admin/                     # the settings page + exposure REST API (always available in wp-admin)
+  assets/js/                     # the no-build React settings app (core wp-element/wp-components)
 ```
 
 `GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`. The catalog has no Composer
