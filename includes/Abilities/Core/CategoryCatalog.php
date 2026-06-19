@@ -40,7 +40,7 @@ final class CategoryCatalog implements CategoryProvider {
 			'connectors'  => array(
 				'slug'        => 'connectors',
 				'label'       => __( 'Connectors', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read configured AI provider connectors (never exposing API keys).', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read registered connectors (AI providers and other types, such as spam filtering), never exposing API keys.', 'abilities-catalog' ),
 			),
 			'content'     => array(
 				'slug'        => 'content',
