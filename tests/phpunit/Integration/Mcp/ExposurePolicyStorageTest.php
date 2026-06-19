@@ -43,23 +43,21 @@ final class ExposurePolicyStorageTest extends TestCase {
 	}
 
 	/**
-	 * save validates against the registry and a fresh policy honors the stored set.
+	 * persist writes the set verbatim and a fresh policy reads it back.
+	 *
+	 * It does not prune against the registry — that pruning is applyValidatedChanges' job —
+	 * so a name whose plugin is not currently active is still stored and honored.
 	 *
 	 * @return void
 	 */
-	public function test_save_validates_and_is_read_back(): void {
-		$known = array_map( 'strval', array_keys( wp_get_abilities() ) );
+	public function test_persist_round_trips_without_pruning(): void {
+		$stored = ExposurePolicy::persist( array( 'content/get-post', 'third-party/feature', 'content/get-post' ) );
 
-		$stored = ExposurePolicy::save(
-			array( 'content/get-post', 'plugins/forged-name' ),
-			$known
-		);
-
-		$this->assertSame( array( 'content/get-post' ), $stored, 'A forged name must not be stored.' );
+		$this->assertSame( array( 'content/get-post', 'third-party/feature' ), $stored, 'persist dedupes but keeps an unregistered name.' );
 
 		$policy = new ExposurePolicy();
 		$this->assertTrue( $policy->allows( 'content/get-post' ) );
-		$this->assertFalse( $policy->allows( 'plugins/forged-name' ) );
+		$this->assertTrue( $policy->allows( 'third-party/feature' ) );
 		$this->assertFalse( $policy->allows( 'content/create-post' ) );
 	}
 

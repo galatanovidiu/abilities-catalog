@@ -122,4 +122,57 @@ final class ExposurePolicyTest extends TestCase {
 
 		$this->assertSame( array( 'content/get-post' ), $result );
 	}
+
+	/**
+	 * applyValidatedChanges enables a known ability and drops a forged enable.
+	 *
+	 * @return void
+	 */
+	public function test_apply_validated_changes_drops_unknown_enable(): void {
+		$known = array( 'content/get-post', 'media/list-media' );
+
+		$result = ExposurePolicy::applyValidatedChanges(
+			array(),
+			array(
+				'content/get-post'    => true,
+				'plugins/forged-name' => true,
+			),
+			$known
+		);
+
+		$this->assertSame( array( 'content/get-post' ), $result );
+	}
+
+	/**
+	 * applyValidatedChanges never prunes an enabled ability the change set does not mention,
+	 * even when that ability is not currently registered (its plugin is inactive).
+	 *
+	 * @return void
+	 */
+	public function test_apply_validated_changes_keeps_untouched_unregistered_ability(): void {
+		$known = array( 'content/get-post' );
+
+		$result = ExposurePolicy::applyValidatedChanges(
+			array( 'third-party/feature' ),
+			array( 'content/get-post' => true ),
+			$known
+		);
+
+		$this->assertSame( array( 'third-party/feature', 'content/get-post' ), $result );
+	}
+
+	/**
+	 * applyValidatedChanges honors a disable even for a name not in the registry.
+	 *
+	 * @return void
+	 */
+	public function test_apply_validated_changes_allows_disabling_unregistered(): void {
+		$result = ExposurePolicy::applyValidatedChanges(
+			array( 'third-party/feature', 'content/get-post' ),
+			array( 'third-party/feature' => false ),
+			array( 'content/get-post' )
+		);
+
+		$this->assertSame( array( 'content/get-post' ), $result );
+	}
 }

@@ -148,19 +148,67 @@ final class ExposurePolicy {
 	}
 
 	/**
-	 * Persists an enabled set after dropping any name that is not a registered ability.
+	 * Applies a partial change set to the current set, validating only what is enabled.
 	 *
-	 * The settings page hands user-submitted names; this is the single write seam, so the
-	 * option name lives in one place and a stale or forged name can never be stored. The
-	 * caller supplies the known ability names (typically `array_keys( wp_get_abilities() )`)
-	 * to keep this class free of the registry.
+	 * The settings page sends one toggle (or a per-domain bulk) at a time. An ability being
+	 * ENABLED must be a registered one, so a forged or stale name to enable is dropped;
+	 * disabling is always honored; and an ability the change set does not mention keeps its
+	 * state. That last rule is the point: an enabled ability whose plugin is momentarily
+	 * inactive (so it is absent from `$known`) is left untouched rather than pruned, so a
+	 * later unrelated toggle never silently discards the owner's saved choice.
 	 *
-	 * @param list<string> $enabled The candidate enabled ability names.
-	 * @param list<string> $known   The registered ability names to validate against.
+	 * @param list<string>       $current The currently enabled ability names.
+	 * @param array<string,bool> $changes Ability name => desired enabled state.
+	 * @param list<string>       $known   The registered ability names to validate enables against.
+	 * @return list<string> The resulting enabled ability names.
+	 */
+	public static function applyValidatedChanges( array $current, array $changes, array $known ): array {
+		$enabling = array();
+		foreach ( $changes as $name => $on ) {
+			if ( ! $on ) {
+				continue;
+			}
+
+			$enabling[] = (string) $name;
+		}
+
+		$valid_enables = array_fill_keys( self::sanitize( $enabling, $known ), true );
+
+		$applied = array();
+		foreach ( $changes as $name => $on ) {
+			$name = (string) $name;
+			if ( $on && ! isset( $valid_enables[ $name ] ) ) {
+				continue;
+			}
+
+			$applied[ $name ] = (bool) $on;
+		}
+
+		return self::applyChanges( $current, $applied );
+	}
+
+	/**
+	 * Persists an enabled set verbatim (deduplicated), without pruning against the registry.
+	 *
+	 * The single write seam, so the option name lives in one place. It deliberately does
+	 * NOT drop names absent from the registry — validating only what a request changes is
+	 * {@see applyValidatedChanges()}'s job, and re-pruning the whole set on every write is
+	 * exactly what would discard a temporarily-unregistered ability the owner enabled.
+	 *
+	 * @param list<string> $enabled The enabled ability names.
 	 * @return list<string> The set actually stored.
 	 */
-	public static function save( array $enabled, array $known ): array {
-		$stored = self::sanitize( $enabled, $known );
+	public static function persist( array $enabled ): array {
+		$set = array();
+		foreach ( $enabled as $name ) {
+			if ( ! is_string( $name ) ) {
+				continue;
+			}
+
+			$set[ $name ] = true;
+		}
+
+		$stored = array_map( 'strval', array_keys( $set ) );
 
 		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, $stored );
 

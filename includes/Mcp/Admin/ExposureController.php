@@ -139,8 +139,8 @@ final class ExposureController {
 			}
 
 			$known = array_map( 'strval', array_keys( wp_get_abilities() ) );
-			$next  = ExposurePolicy::applyChanges( ExposurePolicy::stored(), $changes );
-			ExposurePolicy::save( $next, $known );
+			$next  = ExposurePolicy::applyValidatedChanges( ExposurePolicy::stored(), $changes, $known );
+			ExposurePolicy::persist( $next );
 		}
 
 		return rest_ensure_response( self::state() );
