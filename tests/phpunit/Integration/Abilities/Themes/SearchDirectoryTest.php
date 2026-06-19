@@ -164,6 +164,21 @@ final class SearchDirectoryTest extends TestCase {
 		$this->assertSame( array( 'status' => 418 ), $result->get_error_data() );
 	}
 
+	public function test_wp_error_with_raw_body_data_gets_status_and_hides_body(): void {
+		$this->actingAs( 'administrator' );
+		// A real themes_api() transport failure carries the raw remote body (a
+		// string) as error data and no HTTP status. The old null-only check missed
+		// this, leaking the body and leaving the response status-less.
+		$this->stubThemesApi( new WP_Error( 'themes_api_failed', 'An unexpected error occurred.', '<html>500 Internal Server Error</html>' ) );
+
+		$result = wp_get_ability( 'themes/search-directory' )->execute( array( 'search' => 'twenty' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'themes_api_failed', $result->get_error_code() );
+		// The active data is now the clean status array; the raw body no longer leaks.
+		$this->assertSame( array( 'status' => 502 ), $result->get_error_data() );
+	}
+
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
