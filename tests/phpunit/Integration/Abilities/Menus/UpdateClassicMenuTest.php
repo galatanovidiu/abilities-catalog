@@ -75,6 +75,33 @@ final class UpdateClassicMenuTest extends TestCase {
 		$this->assertSame( (int) $menu_id, (int) $locations['ac_primary'] );
 	}
 
+	public function test_empty_locations_array_clears_all_locations(): void {
+		$this->actingAs( 'administrator' );
+		$menu_id = wp_create_nav_menu( 'Header Menu' );
+
+		wp_get_ability( 'menus/update-classic-menu' )->execute(
+			array(
+				'id'        => $menu_id,
+				'locations' => array( 'ac_primary' ),
+			)
+		);
+		$assigned = get_nav_menu_locations();
+		$this->assertSame( (int) $menu_id, (int) ( $assigned['ac_primary'] ?? 0 ) );
+
+		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+			array(
+				'id'        => $menu_id,
+				'locations' => array(),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( array(), $result['locations'] );
+
+		$locations = get_nav_menu_locations();
+		$this->assertArrayNotHasKey( 'ac_primary', $locations );
+	}
+
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );

@@ -19,11 +19,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Wraps `POST /wp/v2/plugins/<plugin>` with `status=inactive` via `rest_do_request()`,
  * deactivating an active plugin. Deactivating changes which code runs on the site, so
  * this ability is annotated destructive and is exposed to the browser only when the
- * adapter's write AND destructive settings are both on. The `plugin` input is the
- * plugin file path without the `.php` extension (for example `akismet/akismet`); the
- * route is built by concatenation so the slash is preserved and the plugins
- * controller's `sanitize_plugin_param()` appends `.php`. The outer `/run` call is POST
- * (status update, not a delete) and the internal REST request is POST too.
+ * adapter's write AND destructive settings are both on. This performs site-level
+ * deactivation only; it cannot network-deactivate, so on multisite a network-active
+ * plugin is refused by core with `rest_cannot_manage_network_plugins` (network
+ * deactivation is out of scope). The `plugin` input is the plugin file path without
+ * the `.php` extension (for example `akismet/akismet`); the route is built by
+ * concatenation so the slash is preserved and the plugins controller's
+ * `sanitize_plugin_param()` appends `.php`. The outer `/run` call is POST (status
+ * update, not a delete) and the internal REST request is POST too.
  *
  * @since 0.3.0
  */
@@ -42,7 +45,7 @@ final class DeactivatePlugin implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Deactivate Plugin', 'abilities-catalog' ),
-			'description'         => __( 'Deactivates an active plugin by its file path.', 'abilities-catalog' ),
+			'description'         => __( 'Deactivates an active plugin by its file path (site-level deactivation only; network deactivation is not supported).', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -82,7 +85,7 @@ final class DeactivatePlugin implements Ability {
 				'annotations'  => array(
 					'readonly'    => false,
 					'destructive' => true,
-					'idempotent'  => false,
+					'idempotent'  => true,
 				),
 				'show_in_rest' => true,
 				'screen'       => 'plugins.php',

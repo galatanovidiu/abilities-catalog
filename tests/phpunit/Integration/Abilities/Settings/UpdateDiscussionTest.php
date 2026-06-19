@@ -120,6 +120,16 @@ final class UpdateDiscussionTest extends TestCase {
 		}
 	}
 
+	/**
+	 * Writing the same discussion settings twice is a no-op (update_option
+	 * short-circuits on an unchanged value), so the ability is idempotent (B6/B15).
+	 */
+	public function test_idempotent_annotation_is_true(): void {
+		$annotations = ( new UpdateDiscussion() )->args()['meta']['annotations'];
+
+		$this->assertTrue( $annotations['idempotent'] );
+	}
+
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 

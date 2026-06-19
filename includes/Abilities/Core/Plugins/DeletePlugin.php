@@ -92,9 +92,10 @@ final class DeletePlugin implements Ability {
 	/**
 	 * Permission check mirroring the plugins controller's delete gate.
 	 *
-	 * Requires the `delete_plugins` capability, matching
-	 * `delete_item_permissions_check()`. Returns false when the required `plugin`
-	 * input is missing.
+	 * Requires both `activate_plugins` and `delete_plugins`, matching
+	 * `delete_item_permissions_check()` (the plugins controller checks
+	 * `activate_plugins` first, then `delete_plugins`). Returns false when the
+	 * required `plugin` input is missing.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may delete plugins.
@@ -104,6 +105,10 @@ final class DeletePlugin implements Ability {
 		$plugin = isset( $input['plugin'] ) ? (string) $input['plugin'] : '';
 
 		if ( '' === $plugin ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return false;
 		}
 

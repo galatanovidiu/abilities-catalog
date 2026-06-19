@@ -31,14 +31,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  * performs no capability check, so the `permission_callback` is the hard
  * authorization guard.
  *
- * The cap branches on the request action type, mirroring the same per-type
- * gating that {@see ConfirmRequest} encodes. The current user must hold
- * `manage_privacy_options` AND the per-type screen cap:
+ * The `permission_callback` floors at the object-independent capability
+ * `manage_privacy_options`. The per-type screen cap is enforced in `execute()`
+ * after the existence check, mirroring the B2 coarse-guard pattern
+ * ({@see \GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Terms\AttachPostTerms},
+ * {@see \GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Users\DeleteUser}), so the
+ * specific 404 (missing/non-`user_request` ID) and per-type 403 reach the caller
+ * instead of the generic `ability_invalid_permissions` the Abilities API
+ * substitutes when `permission_callback` returns a non-`true` value. The per-type
+ * caps are:
  *   - `export_personal_data` → `export_others_personal_data`
  *     (wp-admin/export-personal-data.php:12)
  *   - `remove_personal_data` → `erase_others_personal_data` AND `delete_users`
  *     (wp-admin/erase-personal-data.php:12)
- * Unknown or missing requests are denied.
  *
  * @since 0.4.0
  */
@@ -100,17 +105,17 @@ final class CancelRequest implements Ability {
 	}
 
 	/**
-	 * Permission check: branches on the request action type.
+	 * Permission check: the object-independent `manage_privacy_options` floor.
 	 *
-	 * Loads the request and floors the cap at `manage_privacy_options` plus the
-	 * per-type screen cap (export → `export_others_personal_data`; erase →
-	 * `erase_others_personal_data` AND `delete_users`), exactly as
-	 * {@see ConfirmRequest} does. Unknown or missing requests are denied. The
-	 * wrapped core function performs no capability check, so this is the hard
-	 * authorization guard.
+	 * Every successful caller holds `manage_privacy_options` (core maps the
+	 * per-type `*_others_personal_data` caps to the same `manage_options` /
+	 * `manage_network` primitive), so this coarse floor is never weaker than core.
+	 * The per-type cap (and the missing-request 404) is enforced in `execute()`,
+	 * keeping this guard object-independent so the specific error surfaces instead
+	 * of the generic denial. The wrapped core function performs no capability check.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may delete this request.
+	 * @return bool True if the current user may manage privacy requests.
 	 */
 	public function hasPermission( $input ): bool {
 		$input      = is_array( $input ) ? $input : array();
@@ -119,23 +124,7 @@ final class CancelRequest implements Ability {
 			return false;
 		}
 
-		if ( ! current_user_can( 'manage_privacy_options' ) ) {
-			return false;
-		}
-
-		$request = wp_get_user_request( $request_id );
-		if ( ! $request instanceof WP_User_Request ) {
-			return false;
-		}
-
-		switch ( $request->action_name ) {
-			case 'export_personal_data':
-				return current_user_can( 'export_others_personal_data' );
-			case 'remove_personal_data':
-				return current_user_can( 'erase_others_personal_data' ) && current_user_can( 'delete_users' );
-			default:
-				return false;
-		}
+		return current_user_can( 'manage_privacy_options' );
 	}
 
 	/**
@@ -163,6 +152,28 @@ final class CancelRequest implements Ability {
 				'invalid_request',
 				__( 'No personal-data request found for that ID.', 'abilities-catalog' ),
 				array( 'status' => 404 )
+			);
+		}
+
+		// Per-type authorization, relocated from permission_callback so the 404
+		// above is reachable on the routed path. Mirror the wp-admin screen caps;
+		// an unknown action type is denied (matching the old default:false gate).
+		switch ( $request->action_name ) {
+			case 'export_personal_data':
+				$allowed = current_user_can( 'export_others_personal_data' );
+				break;
+			case 'remove_personal_data':
+				$allowed = current_user_can( 'erase_others_personal_data' ) && current_user_can( 'delete_users' );
+				break;
+			default:
+				$allowed = false;
+		}
+
+		if ( ! $allowed ) {
+			return new WP_Error(
+				'rest_cannot_delete',
+				__( 'Sorry, you are not allowed to cancel this request.', 'abilities-catalog' ),
+				array( 'status' => rest_authorization_required_code() )
 			);
 		}
 

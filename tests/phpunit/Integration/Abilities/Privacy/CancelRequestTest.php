@@ -34,6 +34,19 @@ final class CancelRequestTest extends TestCase {
 		return $request_id;
 	}
 
+	/**
+	 * Creates an erase-type user_request record and returns its ID.
+	 *
+	 * @param string $email Email address for the request.
+	 * @return int The created user_request post ID.
+	 */
+	private function createEraseRequest( string $email = 'erase@example.com' ): int {
+		$request_id = wp_create_user_request( $email, 'remove_personal_data' );
+		$this->assertIsInt( $request_id );
+
+		return $request_id;
+	}
+
 	public function test_deleting_a_request_returns_request_id_and_cancelled(): void {
 		$this->actingAs( 'administrator' );
 		$request_id = $this->createExportRequest();
@@ -49,28 +62,55 @@ final class CancelRequestTest extends TestCase {
 		$this->assertNull( get_post( $request_id ) );
 	}
 
-	public function test_missing_request_id_is_denied_by_permission_gate(): void {
+	public function test_missing_request_id_surfaces_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// The permission gate loads the request first and denies when it does
-		// not resolve to a user_request, so execute()'s own 404 branch is never
-		// reached through the wrapped path.
+		// The coarse permission gate now floors at manage_privacy_options only, so
+		// execute()'s specific 404 reaches the caller instead of the generic
+		// ability_invalid_permissions the object-level pre-check used to produce.
 		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'invalid_request', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
-	public function test_non_user_request_post_is_denied_by_permission_gate(): void {
+	public function test_non_user_request_post_surfaces_404_and_is_untouched(): void {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_type' => 'post' ) );
 
 		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => $post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'invalid_request', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
 		// The unrelated post is untouched.
 		$this->assertNotNull( get_post( $post_id ) );
+	}
+
+	/**
+	 * A caller who clears the manage_privacy_options floor but lacks the per-type
+	 * cap (delete_users for an erase request) gets the relocated 403, and the
+	 * record survives. Proves the per-type guard is preserved in execute().
+	 */
+	public function test_erase_request_without_delete_users_is_denied_in_execute(): void {
+		$request_id = $this->createEraseRequest();
+
+		// manage_options grants manage_privacy_options + erase_others_personal_data
+		// (core remaps both to manage_options), but NOT delete_users.
+		$this->actingAs( 'subscriber' );
+		wp_get_current_user()->add_cap( 'manage_options' );
+
+		$this->assertTrue( current_user_can( 'manage_privacy_options' ) );
+		$this->assertFalse( current_user_can( 'delete_users' ) );
+
+		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => $request_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( rest_authorization_required_code(), $result->get_error_data()['status'] );
+		// The record survives the denied cancel.
+		$this->assertNotNull( get_post( $request_id ) );
 	}
 
 	public function test_subscriber_is_denied(): void {

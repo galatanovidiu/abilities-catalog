@@ -86,6 +86,15 @@ Copy [`Abilities/Core/Content/GetPost.php`](../includes/Abilities/Core/Content/G
 The Registry refuses any ability whose `meta.annotations.readonly` is not strictly `true`
 unless it is registered through the write path, so a write ability cannot ship by accident.
 
+**Settings reads (B13 domain decision).** All `settings/get-*` abilities are net-new reads
+that call `get_option()` directly and cast each field to its schema type; they deliberately do
+NOT dispatch `GET /wp/v2/settings`. On a normal install the values match core REST, and the
+per-field defaults (e.g. `use_smilies`, `avatar_default`) and casts are applied in each
+`execute()`. This was reviewed (B13) and kept direct for consistency with the rest of the
+catalog (the `/wp/v2/settings` route would only cover the registered subset, forcing a split
+sourcing model inside one family). Revalidate this decision before converting any getter to
+REST dispatch — do not re-litigate it per-getter.
+
 ### List abilities return flat, closed summary rows via a domain shaper
 
 Project-wide rule for any ability that returns a collection (`list-*`, `search-*`): each row

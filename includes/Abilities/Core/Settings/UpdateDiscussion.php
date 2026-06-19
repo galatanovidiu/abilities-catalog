@@ -220,7 +220,7 @@ final class UpdateDiscussion implements Ability {
 				'annotations'  => array(
 					'readonly'    => false,
 					'destructive' => false,
-					'idempotent'  => false,
+					'idempotent'  => true,
 				),
 				'show_in_rest' => true,
 				'screen'       => 'options-discussion.php',
