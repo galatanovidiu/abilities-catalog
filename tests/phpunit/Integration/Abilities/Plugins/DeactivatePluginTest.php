@@ -76,16 +76,25 @@ final class DeactivatePluginTest extends TestCase {
 		$this->assertSame( 'rest_plugin_not_found', $result->get_error_code() );
 	}
 
-	public function test_empty_plugin_is_rejected(): void {
+	public function test_empty_plugin_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
 		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => '' ) );
 
+		// The schema now carries minLength:1, so an empty value is a deterministic
+		// input error (it previously fell through to execute() with a vaguer code).
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertContains(
-			$result->get_error_code(),
-			array( 'ability_invalid_input', 'ability_invalid_permissions', 'webmcp_missing_plugin' )
-		);
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
+	public function test_malformed_plugin_path_is_rejected_by_schema(): void {
+		$this->actingAs( 'administrator' );
+
+		// The plugin-path pattern rejects a traversal-shaped value before execute().
+		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => '../evil' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_subscriber_is_denied(): void {
