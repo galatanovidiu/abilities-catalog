@@ -1,0 +1,216 @@
+<?php
+/**
+ * Transport-agnostic list / describe / execute logic for a domain.
+ *
+ * @package AbilitiesCatalog
+ */
+
+declare(strict_types=1);
+
+namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
+
+use WP_Ability;
+use WP_Error;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Answers the three domain-tool actions against the live ability registry.
+ *
+ * This is the deep module behind every domain tool. It takes plain arguments and
+ * returns plain data or a `WP_Error`; it knows nothing about MCP, the adapter, or
+ * any transport. {@see DomainToolHandler} is the thin shim that adapts these
+ * methods to the MCP tool result shape.
+ *
+ * The router adds no authorization of its own. `execute()` dispatches through the
+ * `WP_Ability` wrapper, whose `execute()` runs the ability's own
+ * `permission_callback` and input/output validation — that is the hard guard.
+ * `list` and `describe` return unfiltered metadata by design (it is
+ * low-sensitivity; the per-ability permission checks are input-aware and often
+ * defer to a wrapped REST route, so filtering here would mislead).
+ *
+ * @since 0.2.0
+ */
+final class DomainRouter {
+
+	/**
+	 * The taxonomy that says which ability belongs to which domain.
+	 *
+	 * @var \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap
+	 */
+	private DomainMap $map;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap $map The ability -> domain taxonomy.
+	 */
+	public function __construct( DomainMap $map ) {
+		$this->map = $map;
+	}
+
+	/**
+	 * Lists every registered ability mapped to the domain, with its flags.
+	 *
+	 * The lazy ability index for the domain. Returns unfiltered metadata.
+	 *
+	 * @param string $domain The domain slug.
+	 * @return list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool}>
+	 *         One summary per ability, in registration order.
+	 */
+	public function list( string $domain ): array {
+		$items = array();
+
+		foreach ( wp_get_abilities() as $name => $ability ) {
+			if ( ! $ability instanceof WP_Ability ) {
+				continue;
+			}
+
+			if ( $this->map->domainOf( (string) $name ) !== $domain ) {
+				continue;
+			}
+
+			$items[] = $this->summarize( (string) $name, $ability );
+		}
+
+		return $items;
+	}
+
+	/**
+	 * Describes one ability's schemas and annotations.
+	 *
+	 * @param string $domain  The domain slug the ability must belong to.
+	 * @param string $ability The full ability name.
+	 * @return array{name:string,label:string,description:string,input_schema:array<string,mixed>,output_schema:array<string,mixed>,annotations:array<string,mixed>}|\WP_Error
+	 *         The description, or a `WP_Error` when the ability is missing or out of domain.
+	 */
+	public function describe( string $domain, string $ability ) {
+		$resolved = $this->requireMember( $domain, $ability );
+		if ( is_wp_error( $resolved ) ) {
+			return $resolved;
+		}
+
+		return array(
+			'name'          => $ability,
+			'label'         => $resolved->get_label(),
+			'description'   => $resolved->get_description(),
+			'input_schema'  => $resolved->get_input_schema(),
+			'output_schema' => $resolved->get_output_schema(),
+			'annotations'   => $this->annotations( $resolved ),
+		);
+	}
+
+	/**
+	 * Runs one ability through its `WP_Ability` wrapper.
+	 *
+	 * The wrapper enforces the ability's `permission_callback` and input/output
+	 * validation, so a caller without the capability gets a `WP_Error` here.
+	 *
+	 * @param string              $domain  The domain slug the ability must belong to.
+	 * @param string              $ability The full ability name.
+	 * @param array<string,mixed> $input   Arguments for the ability.
+	 * @return mixed|\WP_Error The ability's result, or a `WP_Error` (out of domain, or from the ability).
+	 */
+	public function execute( string $domain, string $ability, array $input ) {
+		$resolved = $this->requireMember( $domain, $ability );
+		if ( is_wp_error( $resolved ) ) {
+			return $resolved;
+		}
+
+		return $resolved->execute( $input );
+	}
+
+	/**
+	 * Resolves an ability that must exist and belong to the domain.
+	 *
+	 * Guards `wp_get_ability()` with `wp_has_ability()` so an unknown name returns
+	 * a clean error instead of tripping core's `_doing_it_wrong` notice.
+	 *
+	 * @param string $domain  The domain slug.
+	 * @param string $ability The full ability name.
+	 * @return \WP_Ability|\WP_Error The ability, or a `WP_Error` describing why it is unavailable.
+	 */
+	private function requireMember( string $domain, string $ability ) {
+		if ( '' === $ability ) {
+			return new WP_Error(
+				'abilities_catalog_mcp_missing_ability',
+				__( 'This action needs an "ability" name.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( $this->map->domainOf( $ability ) !== $domain ) {
+			return new WP_Error(
+				'abilities_catalog_mcp_unknown_ability',
+				sprintf(
+					/* translators: 1: ability name, 2: domain slug. */
+					__( 'Ability "%1$s" is not part of the "%2$s" domain.', 'abilities-catalog' ),
+					$ability,
+					$domain
+				),
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( ! wp_has_ability( $ability ) ) {
+			return new WP_Error(
+				'abilities_catalog_mcp_unknown_ability',
+				sprintf(
+					/* translators: %s: ability name. */
+					__( 'Ability "%s" is not registered.', 'abilities-catalog' ),
+					$ability
+				),
+				array( 'status' => 404 )
+			);
+		}
+
+		$resolved = wp_get_ability( $ability );
+		if ( ! $resolved instanceof WP_Ability ) {
+			return new WP_Error(
+				'abilities_catalog_mcp_unknown_ability',
+				sprintf(
+					/* translators: %s: ability name. */
+					__( 'Ability "%s" is not registered.', 'abilities-catalog' ),
+					$ability
+				),
+				array( 'status' => 404 )
+			);
+		}
+
+		return $resolved;
+	}
+
+	/**
+	 * Builds the `list` summary for one ability.
+	 *
+	 * @param string      $name    The ability name.
+	 * @param \WP_Ability $ability The ability.
+	 * @return array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool}
+	 */
+	private function summarize( string $name, WP_Ability $ability ): array {
+		$annotations = $this->annotations( $ability );
+
+		return array(
+			'name'        => $name,
+			'label'       => $ability->get_label(),
+			'description' => $ability->get_description(),
+			'readonly'    => true === ( $annotations['readonly'] ?? null ),
+			'destructive' => true === ( $annotations['destructive'] ?? null ),
+			'dangerous'   => true === ( $annotations['dangerous'] ?? null ),
+		);
+	}
+
+	/**
+	 * Returns an ability's annotations, always as an array.
+	 *
+	 * @param \WP_Ability $ability The ability.
+	 * @return array<string,mixed> The annotations, or an empty array when absent.
+	 */
+	private function annotations( WP_Ability $ability ): array {
+		$annotations = $ability->get_meta()['annotations'] ?? array();
+
+		return is_array( $annotations ) ? $annotations : array();
+	}
+}
