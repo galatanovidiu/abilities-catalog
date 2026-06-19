@@ -124,7 +124,7 @@ final class SwitchTheme implements Ability {
 
 		if ( '' === $stylesheet ) {
 			return new WP_Error(
-				'webmcp_missing_stylesheet',
+				'abilities_catalog_missing_stylesheet',
 				__( 'A theme stylesheet is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -133,7 +133,7 @@ final class SwitchTheme implements Ability {
 		$theme = wp_get_theme( $stylesheet );
 		if ( ! $theme->exists() ) {
 			return new WP_Error(
-				'webmcp_theme_not_found',
+				'abilities_catalog_theme_not_found',
 				/* translators: %s: theme stylesheet. */
 				sprintf( __( 'No installed theme found for stylesheet "%s".', 'abilities-catalog' ), $stylesheet ),
 				array( 'status' => 404 )

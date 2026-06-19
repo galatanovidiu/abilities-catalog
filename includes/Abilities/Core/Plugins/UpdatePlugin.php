@@ -152,7 +152,7 @@ final class UpdatePlugin implements Ability {
 
 		if ( '' === $plugin ) {
 			return new WP_Error(
-				'webmcp_missing_plugin',
+				'abilities_catalog_missing_plugin',
 				__( 'A plugin file path is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -165,7 +165,7 @@ final class UpdatePlugin implements Ability {
 		$all = get_plugins();
 		if ( ! isset( $all[ $file ] ) ) {
 			return new WP_Error(
-				'webmcp_plugin_not_found',
+				'abilities_catalog_plugin_not_found',
 				__( 'The requested plugin is not installed.', 'abilities-catalog' ),
 				array( 'status' => 404 )
 			);
@@ -216,7 +216,7 @@ final class UpdatePlugin implements Ability {
 
 		if ( false === $result || null === $result ) {
 			return new WP_Error(
-				'webmcp_update_failed',
+				'abilities_catalog_update_failed',
 				__( 'The plugin update did not complete.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);
@@ -234,7 +234,7 @@ final class UpdatePlugin implements Ability {
 
 			if ( is_wp_error( $reactivation ) ) {
 				return new WP_Error(
-					'webmcp_plugin_reactivation_failed',
+					'abilities_catalog_plugin_reactivation_failed',
 					sprintf(
 						/* translators: 1: plugin version, 2: underlying error message. */
 						__( 'The plugin updated to version %1$s but could not be reactivated: %2$s', 'abilities-catalog' ),

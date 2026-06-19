@@ -155,7 +155,7 @@ final class UpdateOption implements Ability {
 
 		if ( ! OptionAllowList::isAllowed( $name ) ) {
 			return new WP_Error(
-				'webmcp_option_not_allowed',
+				'abilities_catalog_option_not_allowed',
 				__( 'That option name is not on the allow-list and cannot be written.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);
@@ -171,7 +171,7 @@ final class UpdateOption implements Ability {
 
 		if ( $this->countSettingsErrors( $name ) > $errors_before ) {
 			return new WP_Error(
-				'webmcp_option_rejected',
+				'abilities_catalog_option_rejected',
 				__( 'The value was rejected by the option sanitizer and was not stored.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);

@@ -50,7 +50,7 @@ final class UpdateOptionTest extends TestCase {
 		);
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('webmcp_option_not_allowed', $result->get_error_code());
+		$this->assertSame('abilities_catalog_option_not_allowed', $result->get_error_code());
 		// The rejected name and value must not be echoed back.
 		$this->assertStringNotContainsString('active_plugins', $result->get_error_message());
 	}
@@ -71,7 +71,7 @@ final class UpdateOptionTest extends TestCase {
 		);
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('webmcp_option_rejected', $result->get_error_code());
+		$this->assertSame('abilities_catalog_option_rejected', $result->get_error_code());
 		$this->assertSame(400, $result->get_error_data()['status']);
 		// The stored value is unchanged.
 		$this->assertSame($before, get_option('timezone_string'));

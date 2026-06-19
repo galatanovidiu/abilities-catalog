@@ -92,7 +92,7 @@ final class RegistryTest extends TestCase {
 	}
 
 	public function test_dangerous_tools_filter_lists_only_dangerous_abilities(): void {
-		$tools = apply_filters('webmcp_dangerous_tools', array());
+		$tools = apply_filters('abilities_catalog_dangerous_tools', array());
 
 		$this->assertIsArray($tools);
 
@@ -109,7 +109,7 @@ final class RegistryTest extends TestCase {
 	}
 
 	public function test_screen_links_filter_excludes_readonly_abilities(): void {
-		$links = apply_filters('webmcp_screen_links', array());
+		$links = apply_filters('abilities_catalog_screen_links', array());
 
 		$this->assertIsArray($links);
 

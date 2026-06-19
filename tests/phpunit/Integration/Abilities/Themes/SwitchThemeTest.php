@@ -124,7 +124,7 @@ final class SwitchThemeTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_theme_not_found', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_theme_not_found', $result->get_error_code() );
 		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
@@ -151,7 +151,7 @@ final class SwitchThemeTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertNotSame( 'webmcp_theme_not_found', $result->get_error_code() );
+		$this->assertNotSame( 'abilities_catalog_theme_not_found', $result->get_error_code() );
 		$this->assertIsArray( $result->get_error_data() );
 		$this->assertSame( 422, $result->get_error_data()['status'] );
 		// The site stays on its original theme.

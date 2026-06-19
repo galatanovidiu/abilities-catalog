@@ -75,7 +75,7 @@ final class UploadMediaTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_file_too_large', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_file_too_large', $result->get_error_code() );
 		$this->assertSame( 413, $result->get_error_data()['status'] );
 	}
 
@@ -90,7 +90,7 @@ final class UploadMediaTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_file', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_file', $result->get_error_code() );
 	}
 
 	public function test_subscriber_is_denied(): void {

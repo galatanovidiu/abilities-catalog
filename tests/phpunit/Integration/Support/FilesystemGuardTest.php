@@ -38,7 +38,7 @@ final class FilesystemGuardTest extends TestCase {
 		}
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('webmcp_fs_not_writable', $result->get_error_code());
+		$this->assertSame('abilities_catalog_fs_not_writable', $result->get_error_code());
 		$this->assertSame(503, $result->get_error_data()['status']);
 		// The message must not leak any path or credential detail.
 		$this->assertStringNotContainsString('/', $result->get_error_message());

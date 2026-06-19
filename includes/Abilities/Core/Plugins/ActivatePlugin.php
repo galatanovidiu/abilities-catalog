@@ -136,7 +136,7 @@ final class ActivatePlugin implements Ability {
 
 		if ( '' === $plugin ) {
 			return new WP_Error(
-				'webmcp_missing_plugin',
+				'abilities_catalog_missing_plugin',
 				__( 'A plugin file path is required.', 'abilities-catalog' )
 			);
 		}

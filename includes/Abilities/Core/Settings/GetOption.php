@@ -132,7 +132,7 @@ final class GetOption implements Ability {
 
 		if ( ! ReadableOptionAllowList::isAllowed( $name ) ) {
 			return new WP_Error(
-				'webmcp_option_not_readable',
+				'abilities_catalog_option_not_readable',
 				__( 'That option name is not on the read allow-list and cannot be read.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);
@@ -142,7 +142,7 @@ final class GetOption implements Ability {
 
 		if ( null !== $value && false !== $value && ! is_scalar( $value ) ) {
 			return new WP_Error(
-				'webmcp_option_not_scalar',
+				'abilities_catalog_option_not_scalar',
 				__( 'That option does not resolve to a scalar value and cannot be returned as a string.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);

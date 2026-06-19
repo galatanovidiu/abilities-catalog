@@ -34,7 +34,7 @@ final class SourceValidatorTest extends TestCase {
 		$result = SourceValidator::slug($raw);
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('webmcp_invalid_slug', $result->get_error_code());
+		$this->assertSame('abilities_catalog_invalid_slug', $result->get_error_code());
 	}
 
 	/**

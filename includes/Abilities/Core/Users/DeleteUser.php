@@ -128,7 +128,7 @@ final class DeleteUser implements Ability {
 	 * `execute()`: the wrapped `DELETE /wp/v2/users/<id>` route re-checks `delete_user`
 	 * (surfacing `rest_user_invalid_id` 404 / `rest_user_cannot_delete` 403), and
 	 * {@see self::isValidReassign()} is re-run before the delete (surfacing a specific
-	 * `webmcp_invalid_reassign` 400). Keeping those checks only here would collapse
+	 * `abilities_catalog_invalid_reassign` 400). Keeping those checks only here would collapse
 	 * each into the generic denial the Abilities API substitutes for a non-`true`
 	 * return.
 	 *
@@ -156,7 +156,7 @@ final class DeleteUser implements Ability {
 
 		if ( $id <= 0 ) {
 			return new WP_Error(
-				'webmcp_invalid_user',
+				'abilities_catalog_invalid_user',
 				__( 'A valid user ID is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -164,7 +164,7 @@ final class DeleteUser implements Ability {
 
 		if ( ! $this->isValidReassign( $reassign, $id ) ) {
 			return new WP_Error(
-				'webmcp_invalid_reassign',
+				'abilities_catalog_invalid_reassign',
 				__( 'The reassign target must be a positive ID of an existing user different from the user being deleted.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);

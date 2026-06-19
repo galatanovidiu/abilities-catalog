@@ -183,7 +183,7 @@ final class UploadMedia implements Ability {
 
 		if ( '' === $filename ) {
 			return new WP_Error(
-				'webmcp_invalid_filename',
+				'abilities_catalog_invalid_filename',
 				__( 'A valid filename is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -192,7 +192,7 @@ final class UploadMedia implements Ability {
 		$file = $input['file'] ?? '';
 		if ( ! is_string( $file ) || '' === $file ) {
 			return new WP_Error(
-				'webmcp_missing_file',
+				'abilities_catalog_missing_file',
 				__( 'A base64-encoded file is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -268,7 +268,7 @@ final class UploadMedia implements Ability {
 	 */
 	private function tooLargeError( int $max_bytes ): WP_Error {
 		return new WP_Error(
-			'webmcp_file_too_large',
+			'abilities_catalog_file_too_large',
 			sprintf(
 				/* translators: %s: maximum allowed size in bytes. */
 				__( 'The uploaded file exceeds the maximum allowed size of %s bytes.', 'abilities-catalog' ),
@@ -288,7 +288,7 @@ final class UploadMedia implements Ability {
 		$decoded = base64_decode( $file, true );
 		if ( false === $decoded || '' === $decoded ) {
 			return new WP_Error(
-				'webmcp_invalid_file',
+				'abilities_catalog_invalid_file',
 				__( 'The file could not be decoded. It must be valid base64.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);

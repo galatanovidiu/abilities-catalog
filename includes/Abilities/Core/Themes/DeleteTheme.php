@@ -124,7 +124,7 @@ final class DeleteTheme implements Ability {
 
 		if ( '' === $stylesheet ) {
 			return new WP_Error(
-				'webmcp_missing_stylesheet',
+				'abilities_catalog_missing_stylesheet',
 				__( 'A theme stylesheet is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -133,7 +133,7 @@ final class DeleteTheme implements Ability {
 		$theme = wp_get_theme( $stylesheet );
 		if ( ! $theme->exists() ) {
 			return new WP_Error(
-				'webmcp_theme_not_found',
+				'abilities_catalog_theme_not_found',
 				/* translators: %s: theme stylesheet. */
 				sprintf( __( 'No installed theme found for stylesheet "%s".', 'abilities-catalog' ), $stylesheet ),
 				array( 'status' => 404 )
@@ -142,7 +142,7 @@ final class DeleteTheme implements Ability {
 
 		if ( $stylesheet === get_stylesheet() || $stylesheet === get_template() ) {
 			return new WP_Error(
-				'webmcp_theme_in_use',
+				'abilities_catalog_theme_in_use',
 				__( 'Cannot delete the active theme or the parent of the active theme.', 'abilities-catalog' ),
 				array( 'status' => 409 )
 			);
@@ -174,7 +174,7 @@ final class DeleteTheme implements Ability {
 
 		if ( true !== $result ) {
 			return new WP_Error(
-				'webmcp_delete_failed',
+				'abilities_catalog_delete_failed',
 				__( 'The theme could not be deleted.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);

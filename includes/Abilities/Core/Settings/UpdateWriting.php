@@ -118,7 +118,7 @@ final class UpdateWriting implements Ability {
 		$known = array( 'default_category', 'default_post_format', 'use_smilies' );
 		if ( array() === array_intersect( $known, array_keys( $input ) ) ) {
 			return new \WP_Error(
-				'webmcp_no_fields',
+				'abilities_catalog_no_fields',
 				__( 'Provide at least one Writing Setting to update.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);

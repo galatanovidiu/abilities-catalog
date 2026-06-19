@@ -32,7 +32,7 @@ final class FilesystemGuard {
 	 *
 	 * Returns `true` only when the filesystem method is `'direct'` and
 	 * `WP_Filesystem()` initializes without credentials. Otherwise returns a generic
-	 * `webmcp_fs_not_writable` error. The error message is a fixed string and never
+	 * `abilities_catalog_fs_not_writable` error. The error message is a fixed string and never
 	 * includes any credential or path detail.
 	 *
 	 * @param string $context Optional target path used to detect the filesystem method.
@@ -67,7 +67,7 @@ final class FilesystemGuard {
 	 */
 	private static function error(): \WP_Error {
 		return new \WP_Error(
-			'webmcp_fs_not_writable',
+			'abilities_catalog_fs_not_writable',
 			__( 'The filesystem is not directly writable, so this operation cannot run over WebMCP. It requires direct filesystem access (no credential prompt).', 'abilities-catalog' ),
 			array( 'status' => 503 )
 		);

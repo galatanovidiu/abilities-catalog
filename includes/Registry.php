@@ -72,16 +72,16 @@ final class Registry {
 
 		// Contribute the dangerous-tools catalog the adapter reads for its per-ability
 		// opt-in. Added after discover() so $this->abilities is populated.
-		add_filter( 'webmcp_dangerous_tools', array( $this, 'contributeDangerousTools' ) );
+		add_filter( 'abilities_catalog_dangerous_tools', array( $this, 'contributeDangerousTools' ) );
 
 		// Contribute the screen-link map the adapter reads to deep-link a write
 		// entry to the wp-admin screen it touched. Added after discover() so
 		// $this->abilities is populated.
-		add_filter( 'webmcp_screen_links', array( $this, 'contributeScreenLinks' ) );
+		add_filter( 'abilities_catalog_screen_links', array( $this, 'contributeScreenLinks' ) );
 	}
 
 	/**
-	 * Contributes the registered dangerous abilities to the `webmcp_dangerous_tools` map.
+	 * Contributes the registered dangerous abilities to the `abilities_catalog_dangerous_tools` map.
 	 *
 	 * Iterates the discovered abilities and adds each one whose
 	 * `meta.annotations.dangerous` is exactly `true`, keyed by ability name with its
@@ -106,7 +106,7 @@ final class Registry {
 	}
 
 	/**
-	 * Contributes the registered abilities' screen templates to the `webmcp_screen_links` map.
+	 * Contributes the registered abilities' screen templates to the `abilities_catalog_screen_links` map.
 	 *
 	 * Iterates the discovered abilities and adds each one that declares a
 	 * non-empty string `meta.screen`, keyed by ability name with the
