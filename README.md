@@ -110,8 +110,11 @@ The server is a **gate, not a firehose**. Every ability is **disabled by default
 a connected agent can still `list` and `describe` it — so it learns the ability
 exists and how to call it — but `execute` is refused until an administrator enables
 it. Enable abilities on **Settings → MCP Server**, where they are grouped by domain
-with read / write / destructive / dangerous badges; each toggle saves on the spot.
-The `execute` error for a disabled ability names it and links back to that page.
+with read / write / destructive / dangerous badges and each ability's description;
+each toggle saves on the spot. Per-domain and catalog-wide **Enable all / Disable
+all** are available too — enabling a set that includes a destructive or dangerous
+ability asks for confirmation first. The `execute` error for a disabled ability names
+it and links back to that page.
 
 Two independent guards run on every `execute`: this exposure gate, and the ability's
 own `permission_callback` (the capability check). A disabled ability is refused even
