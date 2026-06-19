@@ -42,10 +42,65 @@ final class GetNavigationTest extends TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( (int) $nav_id, $result['id'] );
 		$this->assertSame( 'Primary Navigation', $result['title'] );
-		$this->assertArrayHasKey( 'content', $result );
+		// content is the raw serialized block markup (the documented contract), not
+		// rendered HTML: the stored block comment is present and no <ul> wrapper is.
+		$this->assertStringContainsString( '<!-- wp:page-list', $result['content'] );
+		$this->assertStringNotContainsString( '<ul', $result['content'] );
 		$this->assertArrayHasKey( 'status', $result );
 		$this->assertArrayHasKey( 'date', $result );
 		$this->assertArrayHasKey( 'modified', $result );
+	}
+
+	public function test_content_round_trips_into_update_navigation(): void {
+		$this->actingAs( 'administrator' );
+
+		$markup = '<!-- wp:navigation-link {"label":"Home","url":"/"} /-->';
+		$nav_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'wp_navigation',
+				'post_status'  => 'publish',
+				'post_title'   => 'Round Trip',
+				'post_content' => $markup,
+			)
+		);
+
+		// Read returns the serialized markup...
+		$read = wp_get_ability( 'menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
+		$this->assertSame( $markup, $read['content'] );
+
+		// ...which writes back through update-navigation unchanged.
+		$updated = wp_get_ability( 'menus/update-navigation' )->execute(
+			array(
+				'id'      => $nav_id,
+				'content' => $read['content'],
+			)
+		);
+		$this->assertIsArray( $updated );
+		$this->assertStringContainsString( 'wp:navigation-link', get_post( $nav_id )->post_content );
+	}
+
+	public function test_view_context_returns_rendered_html(): void {
+		$this->actingAs( 'administrator' );
+
+		$nav_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'wp_navigation',
+				'post_status'  => 'publish',
+				'post_title'   => 'Rendered',
+				'post_content' => '<!-- wp:page-list /-->',
+			)
+		);
+
+		// The view context still yields rendered HTML (no serialized block comment).
+		$result = wp_get_ability( 'menus/get-navigation' )->execute(
+			array(
+				'id'      => $nav_id,
+				'context' => 'view',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertStringNotContainsString( '<!-- wp:', $result['content'] );
 	}
 
 	public function test_output_contains_edit_link(): void {
