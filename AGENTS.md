@@ -1,100 +1,134 @@
 # AGENTS.md — abilities-catalog
 
-## Project goal
+WordPress plugin (WP 7.0+) that registers wp-admin features as **abilities** on the
+core Abilities API, each tagged with a risk classification. It is
+**consumer-agnostic**: it defines abilities, it does not surface them to any agent or
+UI — that is a consumer's job. It also ships one optional, **off-by-default** consumer
+of its own: a built-in MCP server (`includes/Mcp/`).
 
-Register a coherent, complete-enough catalog of WordPress **abilities** for core WP 7.0 wp-admin,
-on top of the core Abilities API. This plugin is **consumer-agnostic**: it defines abilities and
-their risk classification. The catalog surfaces them to no agent or UI — that is a consumer's job
-(an in-browser agent, a server-side MCP client, or none) — **except** for one optional,
-**off-by-default** consumer it now ships: a built-in **MCP server** (`includes/Mcp/`) that, when
-enabled, exposes the catalog as curated domain tools. The catalog still works standalone and is
-unaffected when the server is off.
+## Commands
 
-## Docs
+Static checks run on the host. Tests run in Docker via `wp-env`.
 
-- [docs/ability-catalog.md](docs/ability-catalog.md) — the build plan: every core WP 7.0 wp-admin
-  ability, grouped by domain, classified (read / write / destructive / dangerous), tiered into a
-  build order, with the gating *principle* (the consumer must gate writes). Read before adding tools.
-- [docs/ability-implementation.md](docs/ability-implementation.md) — how abilities are built: the
-  per-ability class pattern, the Registry, and the dangerous-tier safety pipeline. Read before
-  adding abilities.
-- [docs/schema-constraints.md](docs/schema-constraints.md) — input/output schema rules that make an
-  ability execute (not just register). Read before authoring or debugging an ability's schema.
-- [docs/testing.md](docs/testing.md) — the TDD workflow: how to run PHPUnit in wp-env, the
-  red-green-refactor loop, and where tests live. Read before adding or changing an ability;
-  new abilities are built test-first.
-- `.hyper/loops/` (local, gitignored) — L1/L2/L5 build history.
+```bash
+composer lint        # phpcs (.phpcs.xml.dist)
+composer format      # phpcbf — auto-fix what phpcs can
+composer phpstan     # phpstan (phpstan.neon.dist)
+```
 
-## Current state
+Tests need Docker running:
 
-- Registers the full catalog — **160 abilities across 18 domains** (76 read-only, 8 dangerous-tier).
-  By build order: the **T1 read** abilities (L2), **T1 safe writes** (L3),
-  **T2 standard writes** (L4), the **T3 dangerous tier** (L5, 8 abilities), the **L6
-  catalog-gap abilities** (5): `content/create-cpt-item`, `content/update-cpt-item`,
-  `menus/delete-menu-item` (permanent — no Trash, `destructive`), `fonts/delete-font-family`,
-  `settings/get-option` (read-gated by `Support/ReadableOptionAllowList`), and the **L7
-  authoring-context + completeness abilities** (13): six reads
-  (`templates/list-block-types`, `list-block-pattern-categories`, `list-synced-patterns`,
-  `get-theme-styles`, `list-global-style-variations`, and the new **Search** domain's
-  `search/search-content`), four writes (`templates/create-template`,
-  `templates/delete-template` (`destructive`), `menus/delete-classic-menu` (`destructive`),
-  `menus/delete-navigation` (`destructive`)), and three discovery abilities
-  (`templates/lookup-template` (pure core); `plugins/search-directory` and
-  `themes/search-directory` — outbound wp.org call, `readonly`, gated on
-  `install_plugins`/`install_themes`), and the **L8 per-object completeness abilities** (9):
-  post-meta CRUD (`content/get-post-meta`, `content/update-post-meta`,
-  `content/delete-post-meta` (`destructive`), `content/list-post-meta-keys`) — all gated to
-  registered `show_in_rest` meta keys via `Support/PostMetaKeys`; post↔term assignment
-  (`terms/attach-post-terms`, `terms/detach-post-terms`) — resolve existing terms via
-  `Support/TermResolver`, never create; the `menus/list-menu-locations` read; and the media
-  size abilities (`media/list-image-sizes` read, `media/regenerate-thumbnails` write).
-- Abilities are organized into top-level **groups** under `includes/Abilities/<Group>/`. The
-  core WP catalog lives in `includes/Abilities/Core/<Domain>/`; non-core add-ons get their own
-  sibling group (e.g. `includes/Abilities/Woo/`). One PHP class per ability. The `Registry`
-  scans `includes/Abilities/` recursively (any depth) and registers each ability on
-  `wp_abilities_api_init`. Categories are contributed **per group** by a class implementing
-  `Contracts\CategoryProvider` (the Core group's is `Abilities\Core\CategoryCatalog`); the Registry
-  discovers providers in the same scan and registers their categories on
-  `wp_abilities_api_categories_init`. Each ability links to its category by slug via
-  `args()['category']`. No Composer step, no shared manifest, no shared category file. Adding a
-  group means a new folder plus its own `CategoryProvider`; adding a domain or ability to an
-  existing group edits only that group's folder.
-- **T3 dangerous tier** runs behind the server-side safety pipeline in `includes/Support/`:
-  `FilesystemGuard` (direct-or-fail), `SourceValidator` (wp.org-slug-only source), `OptionAllowList`
-  (deny-by-default for `settings/update-option`), `UpgraderLock`, `UpgradeRunner`. Scope: plugin/theme
-  install·update·delete, `updates/run-update` (plugin/theme/translation only — **core update excluded**),
-  `settings/update-option` (allow-list), `privacy/generate-export`.
-- **Deferred (deliberate):** core update; `privacy/run-erase` execution (irreversible + batched,
-  human-only in wp-admin).
-- Verified server-side (consumer-agnostic):
-  `wp --user=admin eval '... wp_get_ability("content/get-post")->execute(["id"=>1]) ...'`.
+```bash
+npm run wp-env:test start    # boot the WP 7.0 test env (.wp-env.test.json, port 8890)
+npm run test:php:setup       # composer install inside the container (first run only)
+npm run test:php             # full suite (unit + integration)
+```
 
-## Key facts to not get wrong
+Run one test while iterating (replace the filter):
 
-- **Capability is the hard guard.** Every ability's `permission_callback` enforces the catalog
-  capability server-side, regardless of any consumer-side gating. This is non-negotiable.
-- **Classification, not enforcement.** The catalog marks `readonly` / `destructive` / `idempotent`
-  / `dangerous` in `meta.annotations`. Whether and how those are surfaced is the consumer's concern.
-  Never document this plugin as requiring a specific consumer.
-- **Wrap, don't reimplement.** `execute_callback` wraps a core function or an internal REST route
-  (`rest_do_request`); return a `WP_Error` on failure.
-- **Schema gotchas are real** — empty `array()` → `[]`, no-input pattern, all-optional default,
-  object-output cast, admin includes for net-new reads. See docs/schema-constraints.md.
-- **Consumer-provided hooks.** The Registry contributes dangerous ability names to an
-  `abilities_catalog_dangerous_tools` filter and screen templates to an `abilities_catalog_screen_links`
-  filter — hooks a consumer provides; the catalog only populates them when present.
-- **Optional built-in MCP server.** `includes/Mcp/` is an off-by-default consumer of the catalog,
-  gated by the `ABILITIES_CATALOG_MCP_ENABLED` constant or the `abilities_catalog_mcp_enabled` option
-  (flipped from **Settings → MCP Server**, `Mcp\Admin\SettingsPage`). When on, it exposes **11 curated
-  domain tools** (`list` / `describe` / `execute`, mapped by `Mcp\DomainMap`) plus a cross-cutting
-  **`skills`** tool (lazy task recipes), built on `wordpress/mcp-adapter` (loaded via the Jetpack
-  Autoloader from `vendor/`, which is git-ignored). Capability is still the hard guard — every `execute`
-  runs the ability's own `permission_callback` — and on top of it sits an owner-controlled
-  **exposure gate** (`Mcp\ExposurePolicy`, deny-by-default): every ability is disabled until enabled on
-  the settings page, and `execute` refuses a disabled one (with a link to the page), but `list` and
-  `describe` still show it so an agent can learn it. The settings page is a no-build React app on core
-  `wp-element`/`wp-components`, backed by the `Mcp\Admin\ExposureController` REST route
-  (`abilities-catalog/v1/exposure`, `manage_options`); both register whenever the Abilities API is
-  present, independent of the server's enable flag. It is extensible without editing this plugin
-  (`abilities_catalog_mcp_domain_map`, `abilities_catalog_mcp_skills`, `abilities_catalog_mcp_tools`,
-  and `abilities_catalog_mcp_tool_permission` filters). Off by default; the catalog is unaffected when off.
+```bash
+npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/abilities-catalog/ \
+  vendor/bin/phpunit -c phpunit.xml.dist --no-coverage --filter GetComment
+```
+
+If Docker/wp-env is not available locally, run phpcs and phpstan on the host and let
+CI run the integration suite (`.github/workflows/test.yml`).
+
+## How an ability is built
+
+- One PHP class per ability, one file, under `includes/Abilities/<Group>/<Domain>/`.
+  The core WP catalog is the `Core` group; a non-core add-on gets a sibling group
+  (e.g. `Woo/`).
+- `Registry` scans `includes/Abilities/` recursively and registers each ability on
+  `wp_abilities_api_init` via `wp_register_ability()`. No manifest, no extra build step.
+- Ability names are `domain/verb-noun` — e.g. `plugins/list-plugins`,
+  `comments/approve-comment`.
+- Each group declares its categories in a class implementing
+  `Contracts\CategoryProvider` (Core's is `Abilities\Core\CategoryCatalog`), registered
+  on `wp_abilities_api_categories_init`. An ability links to its category by slug in
+  `args()['category']`.
+- **Wrap, don't reimplement.** `execute_callback` wraps a core function or an internal
+  REST route (`rest_do_request`) and returns `WP_Error` on failure. Do not reimplement
+  core behavior.
+- Adding a group = new folder + its own `CategoryProvider`. Adding a domain or ability
+  to an existing group edits only that folder.
+
+Build abilities test-first. A test mirrors its class path:
+`includes/Abilities/Core/Comments/GetComment.php` →
+`tests/phpunit/Integration/Abilities/Comments/GetCommentTest.php`.
+`tests/phpunit/Integration/RegistryTest.php` is a standing guard — every ability must
+register and every write must be classified. Keep it green.
+
+## Schema gotchas (these make an ability *execute*, not just register)
+
+The cause of most "registers but won't run" bugs:
+
+- An empty schema must serialize as a JSON object — cast `(object) array()`, never
+  `array()` (which encodes to `[]`).
+- A no-input ability still needs the canonical no-input input schema; an all-optional
+  schema needs a default.
+- Object outputs must be cast so they serialize as objects, not arrays.
+- A net-new read that calls admin-only code must `require` the needed
+  `wp-admin/includes/*.php` first.
+
+## Safety model (do not weaken)
+
+- **Capability is the hard guard.** Every ability's `permission_callback` enforces its
+  capability server-side with `current_user_can()`, independent of any consumer-side
+  gating. Non-negotiable. A write that omits its risk annotation is treated as unsafe
+  and is not registered (RegistryTest enforces this).
+- **Classification, not enforcement.** Abilities tag `readonly` / `destructive` /
+  `idempotent` / `dangerous` in `meta.annotations`. How those are surfaced is the
+  consumer's concern. Never document this plugin as requiring a specific consumer.
+- **Dangerous tier** (plugin/theme install·update·delete, option writes, update runs,
+  privacy export) runs behind the guards in `includes/Support/`: filesystem guard,
+  source validation (wp.org slugs only), option allow-list (deny-by-default), upgrader
+  lock. Core update and irreversible erase execution are deliberately excluded.
+- The Registry contributes dangerous ability names to the
+  `abilities_catalog_dangerous_tools` filter and screen templates to
+  `abilities_catalog_screen_links` — hooks a consumer provides; the catalog only fills
+  them when present.
+- Standard WordPress rules apply (nonces, sanitize-in / escape-out, `$wpdb->prepare`);
+  secrets come from constants or env, never committed.
+
+## Optional MCP server (`includes/Mcp/`)
+
+Off by default; the catalog is unaffected when off. Enabled by the
+`ABILITIES_CATALOG_MCP_ENABLED` constant or the `abilities_catalog_mcp_enabled` option
+(toggle at **Settings → MCP Server**). Built on `wordpress/mcp-adapter`, loaded via the
+Jetpack Autoloader from `vendor/` (git-ignored; a release build ships it). If enabled
+without `vendor/`, the plugin shows an admin notice and keeps working — it does not
+fatal.
+
+- Exposes curated **domain tools** (`list` / `describe` / `execute`, mapped by
+  `Mcp\DomainMap`) plus a cross-cutting `skills` tool — not flat per-ability tools.
+- On top of the capability guard sits an owner-controlled **exposure gate**
+  (`Mcp\ExposurePolicy`, deny-by-default): every ability is disabled until enabled on
+  the settings page. `execute` refuses a disabled ability; `list` / `describe` still
+  show it so an agent can learn it. Capability stays the hard guard on every `execute`.
+- The settings page and its exposure REST route (`abilities-catalog/v1/exposure`,
+  `manage_options`) register whenever the Abilities API is present, independent of the
+  server enable flag. The page is a no-build React app on core
+  `wp-element` / `wp-components`.
+- Extensible without editing this plugin: filters `abilities_catalog_mcp_domain_map`,
+  `abilities_catalog_mcp_skills`, `abilities_catalog_mcp_tools`,
+  `abilities_catalog_mcp_tool_permission`.
+
+## Architecture
+
+```
+abilities-catalog.php              # plugin header + no-build PSR-4 autoloader + bootstrap
+includes/
+  Registry.php                     # discovers, categorizes, registers abilities
+  Contracts/                       # Ability + CategoryProvider contracts
+  Abilities/<Group>/<Domain>/      # one class per ability
+  Support/                         # safety pipeline for the dangerous tier
+  Mcp/                             # optional, off-by-default MCP server (loads vendor/ only when on)
+    Admin/                         # settings page + exposure REST API (always in wp-admin)
+assets/js/                         # no-build React settings app
+tests/phpunit/{Unit,Integration}/  # Unit = no DB; Integration = real WordPress
+docs/                              # user-facing documentation
+```
+
+`GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`. The catalog has no build step;
+only the optional MCP server pulls `vendor/` (via the Jetpack Autoloader) when enabled.
