@@ -53,6 +53,8 @@ final class DeactivatePlugin implements Ability {
 					'plugin' => array(
 						'type'        => 'string',
 						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
+						'minLength'   => 1,
+						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 					),
 				),
 				'required'             => array( 'plugin' ),

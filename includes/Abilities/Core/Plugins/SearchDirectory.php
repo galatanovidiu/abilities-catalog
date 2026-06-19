@@ -189,9 +189,15 @@ final class SearchDirectory implements Ability {
 		);
 
 		if ( is_wp_error( $result ) ) {
-			// Preserve the stable core error code (e.g. `plugins_api_failed`) and any
-			// data. Core's error carries no HTTP status, so add 502 only when absent.
-			if ( null === $result->get_error_data() ) {
+			// Preserve the stable core error code (e.g. `plugins_api_failed`).
+			// plugins_api() returns its error with the raw remote body (a string) as
+			// data and no HTTP status, so replace the data with a clean 502 unless it
+			// already carries a status array. The earlier `null === get_error_data()`
+			// check missed the string case, leaving the raw body exposed and the
+			// response status-less. add_data() also hides the raw body behind the
+			// clean array.
+			$data = $result->get_error_data();
+			if ( ! is_array( $data ) || ! isset( $data['status'] ) ) {
 				$result->add_data( array( 'status' => 502 ) );
 			}
 			return $result;

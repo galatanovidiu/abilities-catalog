@@ -106,6 +106,9 @@ final class UpdateReadingTest extends TestCase {
 		$this->assertIsArray( $result );
 		// Core's sanitizer keeps -1 ("show all"); absint() would have made it 1.
 		$this->assertSame( -1, (int) get_option( 'posts_per_rss' ) );
+		// The returned value must also be -1, not absint(-1) === 1: the read-back
+		// must mirror the write path so the response reports the real stored value.
+		$this->assertSame( -1, $result['posts_per_rss'] );
 	}
 
 	public function test_non_rest_only_input_skips_rest_dispatch(): void {

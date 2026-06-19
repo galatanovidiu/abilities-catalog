@@ -83,6 +83,16 @@ final class ActivatePluginTest extends TestCase {
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
+	public function test_malformed_plugin_path_is_rejected_by_schema(): void {
+		$this->actingAs( 'administrator' );
+
+		// The plugin-path pattern rejects a traversal-shaped value before execute().
+		$result = wp_get_ability( 'plugins/activate-plugin' )->execute( array( 'plugin' => '../evil' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+	}
+
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
