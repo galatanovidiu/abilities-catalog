@@ -17,8 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Produces a WXR (WordPress eXtended RSS) export of site content via the core
  * `export_wp()` function. This is the classic content export, not the Site Editor
- * ZIP export. `export_wp()` echoes the XML directly, so the ability captures it
- * with output buffering and returns it inline.
+ * ZIP export. `export_wp()` echoes the XML directly and also sends file-download
+ * headers (`Content-Disposition: attachment`, `Content-Type: text/xml`), so the
+ * ability captures the body with output buffering and strips those leaked headers
+ * — returning the XML inline in the response instead of forcing a download.
  *
  * Inline transport has a hard 5 MB size cap: a larger export returns a
  * `WP_Error` with HTTP 413 rather than a giant payload. The XML is not mutated;
@@ -160,9 +162,36 @@ final class ExportContent implements Ability {
 			unset( $args[ $key ] );
 		}
 
+		// export_wp() unconditionally sends file-download headers via header() and
+		// echoes the WXR. Two problems for a consumer-agnostic ability:
+		//   1. Over a real REST request the header() calls (Content-Disposition:
+		//      attachment, Content-Type: text/xml) are NOT captured by output
+		//      buffering, so they leak onto the JSON response and force a download.
+		//   2. Under a non-HTTP SAPI (WP-CLI, PHPUnit) the headers are already
+		//      "sent", so each header() call raises a warning.
+		// Swallow only that header warning for the duration of the call, capture the
+		// body with output buffering, then strip the leaked download headers while
+		// they can still be removed (an HTTP request, before the body is flushed).
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler -- scoped, restored immediately below; the only safe way to tolerate export_wp()'s unconditional header() call under a non-HTTP SAPI.
+		set_error_handler(
+			static function ( $errno, $errstr ) {
+				return false !== stripos( (string) $errstr, 'headers already sent' )
+					|| false !== stripos( (string) $errstr, 'Cannot modify header information' );
+			},
+			E_WARNING
+		);
+
 		ob_start();
 		export_wp( $args );
 		$xml = (string) ob_get_clean();
+
+		restore_error_handler();
+
+		if ( ! headers_sent() ) {
+			header_remove( 'Content-Description' );
+			header_remove( 'Content-Disposition' );
+			header_remove( 'Content-Type' );
+		}
 
 		$length = strlen( $xml );
 

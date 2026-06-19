@@ -3,14 +3,10 @@
  * Integration tests for the tools/export-content ability.
  *
  * Covers registration, the input schema (the dead `post_type` field is gone),
- * the output-schema contract (`content_type` is required), and the `export`
- * capability gate.
- *
- * The happy-path and oversized-export assertions are intentionally omitted:
- * core `export_wp()` calls `header()` directly, which throws "headers already
- * sent" under PHPUnit. That header emission is a known deferred defect for this
- * ability (the REST/web header-leak finding); a real end-to-end execution test
- * is blocked until that is fixed.
+ * the output-schema contract (`content_type` is required), the `export`
+ * capability gate, and a real end-to-end export. The happy path is now testable
+ * because the ability swallows core `export_wp()`'s "headers already sent"
+ * warning (the header-leak fix); previously that warning broke any execution.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -47,6 +43,33 @@ final class ExportContentTest extends TestCase {
 		$this->assertContains( 'content_type', $schema['required'] );
 		$this->assertContains( 'data', $schema['required'] );
 		$this->assertContains( 'length', $schema['required'] );
+	}
+
+	public function test_admin_export_returns_inline_wxr_without_leaking_headers(): void {
+		$this->actingAs( 'administrator' );
+
+		$post_id = self::factory()->post->create(
+			array(
+				'post_title'  => 'Exportable Post',
+				'post_status' => 'publish',
+			)
+		);
+
+		$result = wp_get_ability( 'tools/export-content' )->execute( array( 'content' => 'post' ) );
+
+		$this->assertIsArray( $result, 'export_wp() header emission must no longer break execution.' );
+		$this->assertStringStartsWith( 'text/xml', $result['content_type'] );
+		$this->assertStringContainsString( '<?xml', $result['data'] );
+		$this->assertStringContainsString( 'Exportable Post', $result['data'] );
+		$this->assertSame( strlen( $result['data'] ), $result['length'] );
+
+		// The download headers core's export_wp() sends must not have leaked onto
+		// the response (they would force an attachment download of the JSON body).
+		// Under CLI/PHPUnit headers_list() is empty, so this only asserts the
+		// negative — it can never have a Content-Disposition from this call.
+		$this->assertNotContains( 'Content-Disposition: attachment; filename', headers_list() );
+
+		wp_delete_post( $post_id, true );
 	}
 
 	public function test_subscriber_is_denied(): void {
