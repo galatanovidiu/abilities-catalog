@@ -53,9 +53,22 @@ spl_autoload_register(
 	}
 );
 
+// Always-loaded boot gate for the optional MCP server. Defines the global
+// `abilities_catalog_mcp_is_enabled()` helper; it carries no adapter dependency,
+// so the catalog stays standalone whether the server is on or off.
+require_once __DIR__ . '/includes/Mcp/Enable.php';
+
 add_action(
 	'plugins_loaded',
 	static function (): void {
 		( new Registry() )->register();
+
+		// The catalog is the catalog; the MCP server is an optional, off-by-default
+		// consumer of it. Boot it only when the gate is on.
+		if ( ! abilities_catalog_mcp_is_enabled() ) {
+			return;
+		}
+
+		Mcp\Server::boot();
 	}
 );
