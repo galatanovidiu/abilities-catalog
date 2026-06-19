@@ -204,8 +204,11 @@ final class UpdateReading implements Ability {
 			'show_on_front'  => (string) ( get_option( 'show_on_front' ) ?? '' ),
 			'page_on_front'  => absint( get_option( 'page_on_front' ) ),
 			'page_for_posts' => absint( get_option( 'page_for_posts' ) ),
-			'posts_per_page' => absint( get_option( 'posts_per_page' ) ),
-			'posts_per_rss'  => absint( get_option( 'posts_per_rss' ) ),
+			// Plain (int), not absint: posts_per_page / posts_per_rss accept the -1
+			// "show all" sentinel that the write path above preserves. absint() would
+			// collapse a stored -1 to 1, misreporting the value just written.
+			'posts_per_page' => (int) get_option( 'posts_per_page' ),
+			'posts_per_rss'  => (int) get_option( 'posts_per_rss' ),
 			'blog_public'    => (bool) get_option( 'blog_public' ),
 		);
 	}

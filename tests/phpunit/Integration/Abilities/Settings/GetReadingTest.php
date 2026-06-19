@@ -49,7 +49,8 @@ final class GetReadingTest extends TestCase {
 		// Default front-page display is the latest posts.
 		$this->assertSame( 'posts', $result['show_on_front'] );
 
-		// Page IDs and counts are integers (via absint).
+		// Page IDs are non-negative (via absint); counts are plain ints (the -1
+		// "show all" sentinel must survive, so they are cast with (int), not absint).
 		$this->assertIsInt( $result['page_on_front'] );
 		$this->assertIsInt( $result['page_for_posts'] );
 		$this->assertIsInt( $result['posts_per_page'] );
@@ -57,6 +58,17 @@ final class GetReadingTest extends TestCase {
 
 		// Search-engine visibility is a boolean.
 		$this->assertIsBool( $result['blog_public'] );
+	}
+
+	public function test_show_all_sentinel_is_not_collapsed(): void {
+		$this->actingAs( 'administrator' );
+
+		update_option( 'posts_per_rss', -1 );
+
+		$result = wp_get_ability( 'settings/get-reading' )->execute();
+
+		// absint() would report 1 here; (int) keeps the stored -1 ("show all").
+		$this->assertSame( -1, $result['posts_per_rss'] );
 	}
 
 	public function test_subscriber_is_denied(): void {
