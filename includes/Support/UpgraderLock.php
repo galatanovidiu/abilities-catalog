@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Plugin/theme install, update, and delete must not overlap. This wraps core's
  * static `WP_Upgrader::create_lock()` / `release_lock()` (available since WordPress
- * 4.5) under a single named lock so a second concurrent WebMCP upgrade fails fast
+ * 4.5) under a single named lock so a second concurrent headless upgrade fails fast
  * with a 409 instead of corrupting an in-progress operation.
  *
  * This is NOT under `includes/Abilities/`, so the Registry never treats it as an

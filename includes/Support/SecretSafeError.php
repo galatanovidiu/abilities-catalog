@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The Abilities run controller forwards an ability's `WP_Error` straight to the
  * client without applying the output schema, so a wrapped REST controller's error
  * — whose message or `data.params`/`data.details` may reflect submitted input —
- * would otherwise be echoed verbatim to the in-browser AI agent (and the model).
+ * would otherwise be echoed verbatim to the consumer (and any model behind it).
  * For abilities that carry a secret (user password, application-password
  * plaintext, connector API key), that is a credential-leak path.
  *

@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/plugins/<plugin>` via `rest_do_request()` and shapes the
  * response into a flat field set. The `plugin` input is the plugin file path
- * without the `.php` extension (for example `webmcp-adapter/webmcp-adapter`);
+ * without the `.php` extension (for example `akismet/akismet`);
  * the route is built by concatenation so the slash inside the path is preserved
  * and not URL-encoded.
  *
@@ -47,7 +47,7 @@ final class GetPlugin implements Ability {
 					'plugin' => array(
 						'type'        => 'string',
 						'pattern'     => '^[^./]+(?:/[^./]+)?$',
-						'description' => __( 'The plugin file path without the .php extension, for example "webmcp-adapter/webmcp-adapter".', 'abilities-catalog' ),
+						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'plugin' ),
