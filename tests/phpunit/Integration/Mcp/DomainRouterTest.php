@@ -271,6 +271,26 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
+	 * execute runs a no-input ability called with an empty argument object.
+	 *
+	 * A no-input ability declares an empty `input_schema`, and core then rejects any
+	 * non-null input with `ability_missing_input_schema`. MCP clients send `{}` for a
+	 * no-argument call, which reaches the router as an empty array. The router must
+	 * normalize that empty array to `null` so the call dispatches instead of erroring.
+	 *
+	 * @return void
+	 */
+	public function test_execute_runs_no_input_ability_with_empty_arguments(): void {
+		$this->actingAs( 'administrator' );
+
+		$router = $this->routerWith( array( 'dashboard/get-at-a-glance' ) );
+		$result = $router->execute( 'dashboard', 'dashboard/get-at-a-glance', array() );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'wp_version', $result );
+	}
+
+	/**
 	 * execute refuses an ability the owner has not enabled, before any capability check.
 	 *
 	 * Deny-by-default: even an administrator gets the gate error, which names the ability

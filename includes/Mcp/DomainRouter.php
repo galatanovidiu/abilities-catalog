@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
+use WP\MCP\Domain\Utils\AbilityArgumentNormalizer;
 use WP_Ability;
 use WP_Error;
 
@@ -123,6 +124,13 @@ final class DomainRouter {
 	 * The wrapper enforces the ability's `permission_callback` and input/output
 	 * validation, so a caller without the capability gets a `WP_Error` here.
 	 *
+	 * A no-input ability declares an empty `input_schema`, and core's
+	 * `WP_Ability::validate_input()` then rejects any non-null input with
+	 * `ability_missing_input_schema`. MCP clients send `{}` for a no-argument call,
+	 * which arrives here as an empty array, so the empty array is normalized to
+	 * `null` before dispatch (the same normalization the adapter applies on its own
+	 * ability-wrap path; ours is handler-backed, so it bypasses that).
+	 *
 	 * @param string              $domain  The domain slug the ability must belong to.
 	 * @param string              $ability The full ability name.
 	 * @param array<string,mixed> $input   Arguments for the ability.
@@ -138,7 +146,7 @@ final class DomainRouter {
 			return $this->disabled( $ability );
 		}
 
-		return $resolved->execute( $input );
+		return $resolved->execute( AbilityArgumentNormalizer::normalize( $resolved, $input ) );
 	}
 
 	/**
