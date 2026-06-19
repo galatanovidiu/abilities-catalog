@@ -17,7 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/navigation/<id>` via `rest_do_request()` and shapes the
  * response into a flat field set. The block-based navigation menu stores its
- * items as serialized blocks inside `content`. Read-only.
+ * items as serialized blocks inside `content`; this ability returns that raw
+ * serialized markup (not rendered HTML) so it matches the field's documented
+ * contract and round-trips into `menus/update-navigation`, the same shape
+ * `templates/get-template` and `templates/get-pattern` return. The raw form is an
+ * edit-context REST field, which this ability's `edit_theme_options` gate
+ * authorizes — so the request defaults to the `edit` context. Read-only.
  *
  * @since 0.1.0
  */
@@ -49,8 +54,8 @@ final class GetNavigation implements Ability {
 					'context' => array(
 						'type'        => 'string',
 						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						'default'     => 'edit',
+						'description' => __( 'Scope of the request. Defaults to "edit", which returns the raw serialized block markup for `content` (round-trippable into update-navigation); "view" returns the rendered HTML instead.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -133,7 +138,7 @@ final class GetNavigation implements Ability {
 	public function execute( $input ) {
 		$input   = is_array( $input ) ? $input : array();
 		$id      = absint( $input['id'] );
-		$context = $input['context'] ?? 'view';
+		$context = $input['context'] ?? 'edit';
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/navigation/' . $id );
 		$request->set_param( 'context', $context );
@@ -161,12 +166,18 @@ final class GetNavigation implements Ability {
 	 * Coerces a `wp_navigation` field that may be a string or a
 	 * `raw`/`rendered` object into a single string.
 	 *
-	 * @param mixed $value The raw field value from the REST response.
+	 * Prefers the `raw` (stored) form over `rendered`, matching
+	 * `templates/get-template` and `templates/get-pattern`: for `content` the `raw`
+	 * form is the serialized block markup, for `title` the stored title. `raw` is an
+	 * edit-context field (this ability's default context); `rendered` is the
+	 * fallback used under the `view` context.
+	 *
+	 * @param mixed $value The field value from the REST response.
 	 * @return string The string representation of the field.
 	 */
 	private function coerceField( $value ): string {
 		if ( is_array( $value ) ) {
-			return (string) ( $value['rendered'] ?? $value['raw'] ?? '' );
+			return (string) ( $value['raw'] ?? $value['rendered'] ?? '' );
 		}
 
 		return (string) $value;
