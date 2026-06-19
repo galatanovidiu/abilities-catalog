@@ -165,23 +165,38 @@ final class UpdatePostMeta implements Ability {
 			$shape       = $allowed[ $name ];
 			$storage_key = $shape['storage_key'];
 
-			// `update_post_meta()` returns false both when the new value equals the
-			// stored value (a legitimate no-op) and when the write actually fails
-			// (a DB error or an `update_post_metadata` filter short-circuit). Detect
-			// the no-op up front so only a real failure becomes an error, matching
-			// core REST (class-wp-rest-meta-fields.php:382-414).
-			$is_noop = $value === get_post_meta( $id, $storage_key, true );
-			$result  = update_post_meta( $id, $storage_key, $value );
-			if ( false === $result && ! $is_noop ) {
-				return new WP_Error(
-					'rest_meta_database_error',
-					/* translators: %s: meta key. */
-					sprintf( __( 'Could not update the meta key "%s".', 'abilities-catalog' ), $name ),
-					array(
-						'status' => 500,
-						'key'    => $name,
-					)
-				);
+			if ( $shape['single'] ) {
+				// `update_post_meta()` returns false both when the new value equals the
+				// stored value (a legitimate no-op) and when the write actually fails
+				// (a DB error or an `update_post_metadata` filter short-circuit). Detect
+				// the no-op up front so only a real failure becomes an error, matching
+				// core REST (class-wp-rest-meta-fields.php:382-414).
+				$is_noop = $value === get_post_meta( $id, $storage_key, true );
+				$result  = update_post_meta( $id, $storage_key, $value );
+				if ( false === $result && ! $is_noop ) {
+					return $this->databaseError( $name );
+				}
+			} else {
+				// A `single => false` key stores one row per array element.
+				// `update_post_meta()` would collapse the whole array into a single
+				// serialized row, so replace the row set instead: clear the key, then
+				// add each value back as its own row (the registered `sanitize_callback`
+				// runs inside `add_post_meta()`). This matches core REST's multi-value
+				// result (class-wp-rest-meta-fields.php::update_multi_meta_value()).
+				$new_values = is_array( $value ) ? array_values( $value ) : array( $value );
+
+				delete_post_meta( $id, $storage_key );
+				if ( array() !== get_post_meta( $id, $storage_key, false ) ) {
+					// The clear was short-circuited (e.g. a `delete_post_metadata`
+					// filter); fail rather than append to stale rows and report success.
+					return $this->databaseError( $name );
+				}
+
+				foreach ( $new_values as $single_value ) {
+					if ( false === add_post_meta( $id, $storage_key, $single_value, false ) ) {
+						return $this->databaseError( $name );
+					}
+				}
 			}
 
 			$applied[ $name ] = PostMetaKeys::castForResponse( get_post_meta( $id, $storage_key, $shape['single'] ), $shape );
@@ -191,6 +206,24 @@ final class UpdatePostMeta implements Ability {
 			'id'        => $id,
 			'meta'      => (object) $applied,
 			'edit_link' => (string) get_edit_post_link( $id, 'raw' ),
+		);
+	}
+
+	/**
+	 * Builds the standard 500 database-error response for a meta key.
+	 *
+	 * @param string $name The public meta key name that failed to write.
+	 * @return \WP_Error The database error, carrying the key and a 500 status.
+	 */
+	private function databaseError( string $name ): WP_Error {
+		return new WP_Error(
+			'rest_meta_database_error',
+			/* translators: %s: meta key. */
+			sprintf( __( 'Could not update the meta key "%s".', 'abilities-catalog' ), $name ),
+			array(
+				'status' => 500,
+				'key'    => $name,
+			)
 		);
 	}
 }
