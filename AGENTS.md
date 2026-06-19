@@ -77,7 +77,6 @@ their risk classification. It does not surface them to any agent or UI — that 
   (`rest_do_request`); return a `WP_Error` on failure.
 - **Schema gotchas are real** — empty `array()` → `[]`, no-input pattern, all-optional default,
   object-output cast, admin includes for net-new reads. See docs/schema-constraints.md.
-- **Consumer-provided hooks.** The Registry contributes dangerous ability names to a
-  `webmcp_dangerous_tools` filter and screen templates to a `webmcp_screen_links` filter — hooks a
-  consumer provides; the catalog only populates them when present. The names carry a consumer prefix
-  for historical reasons; a neutral rename is tracked (backlog B9).
+- **Consumer-provided hooks.** The Registry contributes dangerous ability names to an
+  `abilities_catalog_dangerous_tools` filter and screen templates to an `abilities_catalog_screen_links`
+  filter — hooks a consumer provides; the catalog only populates them when present.

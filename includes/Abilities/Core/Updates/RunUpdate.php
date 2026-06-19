@@ -154,7 +154,7 @@ final class RunUpdate implements Ability {
 
 		if ( ! in_array( $type, array( 'plugin', 'theme', 'translation' ), true ) ) {
 			return new WP_Error(
-				'webmcp_unsupported_update_type',
+				'abilities_catalog_unsupported_update_type',
 				__( 'Only plugin, theme, and translation updates are supported. Core updates are not supported by this ability.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -315,7 +315,7 @@ final class RunUpdate implements Ability {
 	 * failure in any of the three upgraders). Without this check those collapse to
 	 * an empty `results` map, indistinguishable from "nothing to update". A top-level
 	 * `WP_Error` is returned unchanged so its code and status survive; a `false`
-	 * result becomes a generic `webmcp_update_failed` error. A normal per-target
+	 * result becomes a generic `abilities_catalog_update_failed` error. A normal per-target
 	 * array yields `null` (no top-level failure).
 	 *
 	 * @param mixed $result The raw `bulk_upgrade()` return value.
@@ -331,7 +331,7 @@ final class RunUpdate implements Ability {
 		}
 
 		return new WP_Error(
-			'webmcp_update_failed',
+			'abilities_catalog_update_failed',
 			__( 'The update could not be run. The filesystem may be unavailable or the upgrader could not start.', 'abilities-catalog' ),
 			array( 'status' => 500 )
 		);

@@ -104,7 +104,7 @@ final class UpdateWritingTest extends TestCase {
 		$result = $ability->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_no_fields', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_no_fields', $result->get_error_code() );
 	}
 
 	public function test_subscriber_is_denied(): void {

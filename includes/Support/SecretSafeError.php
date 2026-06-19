@@ -42,7 +42,7 @@ final class SecretSafeError {
 	 */
 	public static function redact( WP_Error $error ): WP_Error {
 		$code   = $error->get_error_code();
-		$code   = is_string( $code ) && '' !== $code ? $code : 'webmcp_write_failed';
+		$code   = is_string( $code ) && '' !== $code ? $code : 'abilities_catalog_write_failed';
 		$data   = $error->get_error_data();
 		$status = is_array( $data ) && isset( $data['status'] ) ? (int) $data['status'] : 500;
 

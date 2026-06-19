@@ -68,7 +68,7 @@ final class RunUpdateTest extends TestCase {
 		$result = ( new RunUpdate() )->execute( array( 'type' => 'core' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_unsupported_update_type', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_unsupported_update_type', $result->get_error_code() );
 		$this->assertSame( 400, $result->get_error_data()['status'] );
 	}
 
@@ -78,7 +78,7 @@ final class RunUpdateTest extends TestCase {
 		$result = ( new RunUpdate() )->execute( array( 'type' => 'nonsense' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_unsupported_update_type', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_unsupported_update_type', $result->get_error_code() );
 		$this->assertSame( 400, $result->get_error_data()['status'] );
 	}
 }

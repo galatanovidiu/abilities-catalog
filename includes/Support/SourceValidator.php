@@ -39,7 +39,7 @@ final class SourceValidator {
 
 		if ( '' === $slug || 1 !== preg_match( '/^[a-z0-9-]+$/', $slug ) ) {
 			return new \WP_Error(
-				'webmcp_invalid_slug',
+				'abilities_catalog_invalid_slug',
 				__( 'Only a wordpress.org directory slug is accepted (lowercase letters, numbers, hyphens). URLs, ZIP files, and file paths are not allowed.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);

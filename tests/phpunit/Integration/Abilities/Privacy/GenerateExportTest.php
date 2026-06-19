@@ -43,7 +43,7 @@ final class GenerateExportTest extends TestCase {
 		$result = ( new GenerateExport() )->execute( array( 'request_id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_export_request', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_export_request', $result->get_error_code() );
 		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
@@ -101,7 +101,7 @@ final class GenerateExportTest extends TestCase {
 		remove_filter( 'wp_privacy_personal_data_exporters', $filter );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_export_failed', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_export_failed', $result->get_error_code() );
 		$this->assertSame( 500, $result->get_error_data()['status'] );
 	}
 

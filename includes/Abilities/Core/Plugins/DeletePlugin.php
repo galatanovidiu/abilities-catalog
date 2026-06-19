@@ -132,7 +132,7 @@ final class DeletePlugin implements Ability {
 
 		if ( '' === $plugin ) {
 			return new WP_Error(
-				'webmcp_missing_plugin',
+				'abilities_catalog_missing_plugin',
 				__( 'A plugin file path is required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -145,7 +145,7 @@ final class DeletePlugin implements Ability {
 		// so this rejects nothing core would accept and keeps the input contract explicit.
 		if ( ! preg_match( '#^[^./]+(?:/[^./]+)?$#', $plugin ) ) {
 			return new WP_Error(
-				'webmcp_invalid_plugin',
+				'abilities_catalog_invalid_plugin',
 				__( 'The plugin path is not a valid plugin file reference.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
@@ -176,7 +176,7 @@ final class DeletePlugin implements Ability {
 				$dependent_names = \WP_Plugin_Dependencies::get_dependent_names( $file );
 
 				return new WP_Error(
-					'webmcp_plugin_has_dependents',
+					'abilities_catalog_plugin_has_dependents',
 					sprintf(
 						/* translators: 1: plugin file path, 2: comma-separated list of dependent plugin names. */
 						__( 'Cannot delete "%1$s": it is required by %2$s.', 'abilities-catalog' ),

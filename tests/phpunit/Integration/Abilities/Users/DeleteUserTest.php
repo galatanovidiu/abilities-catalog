@@ -19,7 +19,7 @@ use WP_Error;
  *
  * The permission_callback is the object-independent delete_users floor; the
  * object-level guard and the reassign data-loss guard run in execute(), so an
- * invalid reassign target now surfaces the specific webmcp_invalid_reassign 400 (and
+ * invalid reassign target now surfaces the specific abilities_catalog_invalid_reassign 400 (and
  * a missing user the route's rest_user_invalid_id 404) instead of the generic
  * permission collapse — while a caller lacking delete_users is still denied.
  */
@@ -163,7 +163,7 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_reassign', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_reassign', $result->get_error_code() );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 
 		$data = $result->get_error_data();
@@ -185,7 +185,7 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_reassign', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_reassign', $result->get_error_code() );
 
 		$data = $result->get_error_data();
 		$this->assertIsArray( $data );

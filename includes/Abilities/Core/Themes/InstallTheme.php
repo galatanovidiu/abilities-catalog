@@ -159,7 +159,7 @@ final class InstallTheme implements Ability {
 
 		if ( empty( $api->download_link ) ) {
 			return new WP_Error(
-				'webmcp_theme_not_found',
+				'abilities_catalog_theme_not_found',
 				__( 'No wordpress.org theme found for that slug.', 'abilities-catalog' ),
 				array( 'status' => 404 )
 			);
@@ -200,7 +200,7 @@ final class InstallTheme implements Ability {
 
 		if ( ! $result instanceof \WP_Theme || ! $result->exists() ) {
 			return new WP_Error(
-				'webmcp_install_failed',
+				'abilities_catalog_install_failed',
 				__( 'The theme installation did not complete.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);

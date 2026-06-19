@@ -91,7 +91,7 @@ final class UpdateGeneralTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_timezone', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_timezone', $result->get_error_code() );
 		$this->assertSame( $before, get_option( 'timezone_string' ) );
 	}
 
@@ -105,7 +105,7 @@ final class UpdateGeneralTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_language', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_language', $result->get_error_code() );
 		$this->assertSame( $before, get_option( 'WPLANG' ) );
 	}
 
@@ -122,7 +122,7 @@ final class UpdateGeneralTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_field_forbidden', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_field_forbidden', $result->get_error_code() );
 		$this->assertSame( $before, get_option( 'admin_email' ) );
 	}
 

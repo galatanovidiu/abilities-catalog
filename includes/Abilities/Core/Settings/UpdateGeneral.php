@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Security: the site URL (`url`/`home`/`siteurl`), the admin email
  * (`email`/`admin_email`), and the WordPress install URL are deliberately
  * excluded. If the input names any of those keys, the ability writes nothing and
- * returns a `webmcp_field_forbidden` error. Changing the site URL or admin email
+ * returns an `abilities_catalog_field_forbidden` error. Changing the site URL or admin email
  * through an automated tool can lock the administrator out of the site.
  *
  * @since 0.3.0
@@ -168,7 +168,7 @@ final class UpdateGeneral implements Ability {
 		foreach ( self::FORBIDDEN_KEYS as $forbidden ) {
 			if ( array_key_exists( $forbidden, $input ) ) {
 				return new WP_Error(
-					'webmcp_field_forbidden',
+					'abilities_catalog_field_forbidden',
 					__( 'Changing the site URL or admin email is not permitted through this tool.', 'abilities-catalog' ),
 					array( 'status' => 400 )
 				);
@@ -180,7 +180,7 @@ final class UpdateGeneral implements Ability {
 
 			if ( '' !== $timezone && ! in_array( $timezone, timezone_identifiers_list( DateTimeZone::ALL_WITH_BC ), true ) ) {
 				return new WP_Error(
-					'webmcp_invalid_timezone',
+					'abilities_catalog_invalid_timezone',
 					__( 'The timezone is not a recognized timezone identifier (e.g. "Europe/Berlin").', 'abilities-catalog' ),
 					array( 'status' => 400 )
 				);
@@ -192,7 +192,7 @@ final class UpdateGeneral implements Ability {
 
 			if ( '' !== $language && ! in_array( $language, get_available_languages(), true ) ) {
 				return new WP_Error(
-					'webmcp_invalid_language',
+					'abilities_catalog_invalid_language',
 					__( 'The locale is not installed. Install the language pack before switching to it; an empty string selects English.', 'abilities-catalog' ),
 					array( 'status' => 400 )
 				);

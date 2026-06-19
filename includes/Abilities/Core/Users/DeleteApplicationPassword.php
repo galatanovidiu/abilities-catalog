@@ -142,7 +142,7 @@ final class DeleteApplicationPassword implements Ability {
 
 		if ( $user_id <= 0 || '' === $uuid ) {
 			return new WP_Error(
-				'webmcp_invalid_application_password',
+				'abilities_catalog_invalid_application_password',
 				__( 'A valid user ID and application-password UUID are required.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);

@@ -53,7 +53,7 @@ final class UpdatePluginTest extends TestCase {
 		$result = wp_get_ability( 'plugins/update-plugin' )->execute( array( 'plugin' => 'does-not-exist/does-not-exist' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_plugin_not_found', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_plugin_not_found', $result->get_error_code() );
 	}
 
 	public function test_output_schema_exposes_versions_and_reactivated(): void {

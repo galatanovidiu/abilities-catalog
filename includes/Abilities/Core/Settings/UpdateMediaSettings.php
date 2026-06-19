@@ -190,7 +190,7 @@ final class UpdateMediaSettings implements Ability {
 		// Defense in depth: update_option() does not re-check the capability.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error(
-				'webmcp_forbidden',
+				'abilities_catalog_forbidden',
 				__( 'You are not allowed to update media settings.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);

@@ -146,7 +146,7 @@ final class UpdateReading implements Ability {
 		// Defense in depth: update_option() does not re-check the capability.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error(
-				'webmcp_forbidden',
+				'abilities_catalog_forbidden',
 				__( 'You are not allowed to update reading settings.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);
@@ -160,7 +160,7 @@ final class UpdateReading implements Ability {
 
 			if ( ! in_array( $show_on_front, array( 'posts', 'page' ), true ) ) {
 				return new \WP_Error(
-					'webmcp_invalid_show_on_front',
+					'abilities_catalog_invalid_show_on_front',
 					__( 'The front page display must be "posts" or "page".', 'abilities-catalog' ),
 					array( 'status' => 400 )
 				);

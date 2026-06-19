@@ -71,7 +71,7 @@ final class DeletePluginTest extends TestCase {
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertContains(
 			$result->get_error_code(),
-			array( 'ability_invalid_input', 'ability_invalid_permissions', 'webmcp_missing_plugin' )
+			array( 'ability_invalid_input', 'ability_invalid_permissions', 'abilities_catalog_missing_plugin' )
 		);
 	}
 }

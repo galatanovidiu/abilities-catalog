@@ -109,7 +109,7 @@ final class DeleteThemeTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_theme_not_found', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_theme_not_found', $result->get_error_code() );
 		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
@@ -121,7 +121,7 @@ final class DeleteThemeTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_theme_in_use', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_theme_in_use', $result->get_error_code() );
 		$this->assertSame( 409, $result->get_error_data()['status'] );
 	}
 

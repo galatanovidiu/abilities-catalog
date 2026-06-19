@@ -86,7 +86,7 @@ final class UpdateDiscussionTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_avatar_default', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_avatar_default', $result->get_error_code() );
 		// The invalid value must not have been written.
 		$this->assertSame( $before, get_option( 'avatar_default' ) );
 	}

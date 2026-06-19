@@ -50,7 +50,7 @@ final class GetOptionTest extends TestCase {
 		);
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('webmcp_option_not_readable', $result->get_error_code());
+		$this->assertSame('abilities_catalog_option_not_readable', $result->get_error_code());
 		// The rejected name must not be echoed back.
 		$this->assertStringNotContainsString('active_plugins', $result->get_error_message());
 	}
@@ -95,6 +95,6 @@ final class GetOptionTest extends TestCase {
 		}
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('webmcp_option_not_scalar', $result->get_error_code());
+		$this->assertSame('abilities_catalog_option_not_scalar', $result->get_error_code());
 	}
 }

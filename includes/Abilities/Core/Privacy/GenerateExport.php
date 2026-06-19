@@ -165,7 +165,7 @@ final class GenerateExport implements Ability {
 		$request = wp_get_user_request( $request_id );
 		if ( ! $request || 'export_personal_data' !== $request->action_name ) {
 			return new WP_Error(
-				'webmcp_invalid_export_request',
+				'abilities_catalog_invalid_export_request',
 				__( 'No personal-data export request was found for that ID.', 'abilities-catalog' ),
 				array( 'status' => 404 )
 			);
@@ -179,7 +179,7 @@ final class GenerateExport implements Ability {
 		// the most common trigger here so the ability can fail cleanly.
 		if ( ! class_exists( 'ZipArchive' ) ) {
 			return new WP_Error(
-				'webmcp_export_unavailable',
+				'abilities_catalog_export_unavailable',
 				__( 'The export file cannot be generated because the ZipArchive PHP extension is not available.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);
@@ -188,7 +188,7 @@ final class GenerateExport implements Ability {
 		$email_address = $request->email;
 		if ( ! is_email( $email_address ) ) {
 			return new WP_Error(
-				'webmcp_export_failed',
+				'abilities_catalog_export_failed',
 				__( 'The export request could not be processed.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);
@@ -198,7 +198,7 @@ final class GenerateExport implements Ability {
 		$exporters = apply_filters( 'wp_privacy_personal_data_exporters', array() );
 		if ( ! is_array( $exporters ) ) {
 			return new WP_Error(
-				'webmcp_export_failed',
+				'abilities_catalog_export_failed',
 				__( 'The export request could not be processed.', 'abilities-catalog' ),
 				array( 'status' => 500 )
 			);
@@ -275,7 +275,7 @@ final class GenerateExport implements Ability {
 
 			if ( ! is_array( $exporter ) || ! isset( $exporter['callback'] ) || ! is_callable( $exporter['callback'] ) ) {
 				return new WP_Error(
-					'webmcp_export_failed',
+					'abilities_catalog_export_failed',
 					__( 'The export request could not be processed.', 'abilities-catalog' ),
 					array( 'status' => 500 )
 				);
@@ -287,7 +287,7 @@ final class GenerateExport implements Ability {
 			do {
 				if ( ++$pages_total > self::MAX_PAGES ) {
 					return new WP_Error(
-						'webmcp_export_capped',
+						'abilities_catalog_export_capped',
 						__( 'The export was stopped because it exceeded the maximum number of pages.', 'abilities-catalog' ),
 						array( 'status' => 500 )
 					);
@@ -312,7 +312,7 @@ final class GenerateExport implements Ability {
 					|| ! is_array( $response['data'] )
 				) {
 					return new WP_Error(
-						'webmcp_export_failed',
+						'abilities_catalog_export_failed',
 						__( 'The export request could not be processed.', 'abilities-catalog' ),
 						array( 'status' => 500 )
 					);
@@ -330,7 +330,7 @@ final class GenerateExport implements Ability {
 
 				if ( is_wp_error( $response ) || ! is_array( $response ) || ! isset( $response['done'] ) ) {
 					return new WP_Error(
-						'webmcp_export_failed',
+						'abilities_catalog_export_failed',
 						__( 'The export request could not be processed.', 'abilities-catalog' ),
 						array( 'status' => 500 )
 					);

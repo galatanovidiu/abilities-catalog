@@ -253,7 +253,7 @@ final class UpdateDiscussion implements Ability {
 		// Defense in depth: update_option() does not re-check the capability.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error(
-				'webmcp_forbidden',
+				'abilities_catalog_forbidden',
 				__( 'You are not allowed to update discussion settings.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);
@@ -268,7 +268,7 @@ final class UpdateDiscussion implements Ability {
 
 			if ( ! in_array( $avatar_default, $allowed, true ) ) {
 				return new \WP_Error(
-					'webmcp_invalid_avatar_default',
+					'abilities_catalog_invalid_avatar_default',
 					__( 'The provided avatar_default is not a recognized default avatar.', 'abilities-catalog' ),
 					array( 'status' => 400 )
 				);

@@ -170,7 +170,7 @@ Capability remains the hard server-side guard underneath, regardless of any cons
 **Consumer discovery by name.** Some consumers cannot read custom annotation keys (for example
 a browser client whose ability store keeps only `readonly`/`destructive`/`idempotent`), so they
 cannot see `annotations.dangerous`. For those consumers the Registry contributes every dangerous
-ability name to the `webmcp_dangerous_tools` filter — a hook a consumer provides and the catalog
+ability name to the `abilities_catalog_dangerous_tools` filter — a hook a consumer provides and the catalog
 populates when present. `Registry::contributeDangerousTools()` discovers these automatically: it
 iterates every registered ability and includes the ones whose `meta.annotations.dangerous` is
 exactly `true`. So just set `dangerous: true` on the new ability — there is no list to edit and no

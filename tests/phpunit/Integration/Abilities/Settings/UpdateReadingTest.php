@@ -91,7 +91,7 @@ final class UpdateReadingTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_invalid_show_on_front', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_invalid_show_on_front', $result->get_error_code() );
 		$this->assertSame( $before, get_option( 'show_on_front' ) );
 	}
 
@@ -143,6 +143,6 @@ final class UpdateReadingTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'webmcp_forbidden', $result->get_error_code() );
+		$this->assertSame( 'abilities_catalog_forbidden', $result->get_error_code() );
 	}
 }

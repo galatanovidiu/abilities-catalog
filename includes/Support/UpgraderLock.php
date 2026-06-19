@@ -28,7 +28,7 @@ final class UpgraderLock {
 	 *
 	 * @var string
 	 */
-	private const LOCK = 'webmcp_t3_update';
+	private const LOCK = 'abilities_catalog_t3_update';
 
 	/**
 	 * Acquires the shared upgrader lock.
@@ -41,7 +41,7 @@ final class UpgraderLock {
 
 		if ( ! \WP_Upgrader::create_lock( self::LOCK ) ) {
 			return new \WP_Error(
-				'webmcp_update_locked',
+				'abilities_catalog_update_locked',
 				__( 'Another update is already in progress. Try again in a moment.', 'abilities-catalog' ),
 				array( 'status' => 409 )
 			);

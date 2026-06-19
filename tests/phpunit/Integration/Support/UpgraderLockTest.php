@@ -35,7 +35,7 @@ final class UpgraderLockTest extends TestCase {
 		$second = UpgraderLock::acquire();
 
 		$this->assertInstanceOf(WP_Error::class, $second);
-		$this->assertSame('webmcp_update_locked', $second->get_error_code());
+		$this->assertSame('abilities_catalog_update_locked', $second->get_error_code());
 		$this->assertSame(409, $second->get_error_data()['status']);
 	}
 
