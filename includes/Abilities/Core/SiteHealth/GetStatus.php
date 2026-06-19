@@ -44,7 +44,7 @@ final class GetStatus implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Site Health Status', 'abilities-catalog' ),
-			'description'         => __( 'Runs the direct Site Health tests and lists the asynchronous tests. The direct set includes the REST-availability check, which issues one in-process HTTP request to the site REST API; loopback and cron checks are not run.', 'abilities-catalog' ),
+			'description'         => __( 'Runs the direct Site Health tests and lists the asynchronous tests. The direct set includes the scheduled-events (cron) check and the REST-availability check, which issues one in-process HTTP request to the site REST API. Asynchronous tests (such as the loopback check) are listed but not run.', 'abilities-catalog' ),
 			'category'            => 'site-health',
 			'input_schema'        => array(),
 			'output_schema'       => array(
