@@ -13,6 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Mcp\Server;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Core\McpServer;
+use WP\MCP\Domain\Tools\McpTool;
 
 /**
  * Proves the Phase 1 boot wiring against a really-booted adapter.
@@ -56,12 +57,15 @@ final class ServerTest extends TestCase {
 	}
 
 	/**
-	 * Booting registers the server's REST route, suppresses the adapter's default
-	 * server, and stores a real McpServer (so `create_server()` did not error).
+	 * Booting registers the REST route, suppresses the default server, exposes the
+	 * curated content domain tool, and runs an ability end-to-end through it.
+	 *
+	 * The adapter is a process-wide singleton with no reset, so this boots exactly
+	 * once and asserts the whole wiring in one method.
 	 *
 	 * @return void
 	 */
-	public function test_booting_registers_route_and_suppresses_default_server(): void {
+	public function test_booting_wires_content_tool_route_and_suppresses_default_server(): void {
 		( new Server() )->register();
 
 		// Rebuild the REST server so the adapter's init chain runs against a fresh
@@ -89,5 +93,30 @@ final class ServerTest extends TestCase {
 			$server,
 			'create_server() should have stored our server (i.e. returned no WP_Error).'
 		);
+
+		// The server exposes the curated content domain tool, not flat ability tools.
+		$this->assertArrayHasKey( 'content', $server->get_tools() );
+
+		$tool = $server->get_mcp_tool( 'content' );
+		$this->assertInstanceOf( McpTool::class, $tool );
+
+		// The shared permission floor refuses a logged-out caller.
+		wp_set_current_user( 0 );
+		$this->assertFalse( $tool->check_permission( array( 'action' => 'list' ) ) );
+
+		// End-to-end execute: adapter McpTool -> DomainToolHandler -> DomainRouter -> ability.
+		$admin   = $this->actingAs( 'administrator' );
+		$post_id = self::factory()->post->create( array( 'post_author' => $admin ) );
+
+		$result = $tool->execute(
+			array(
+				'action'  => 'execute',
+				'ability' => 'content/get-post',
+				'input'   => array( 'id' => $post_id ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( $post_id, $result['id'] );
 	}
 }

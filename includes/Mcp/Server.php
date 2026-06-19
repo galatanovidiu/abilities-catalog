@@ -138,7 +138,7 @@ final class Server {
 			array( HttpTransport::class ),
 			null,
 			null,
-			array(),
+			$this->tools(),
 			array(),
 			array(),
 			static fn (): bool => is_user_logged_in()
@@ -149,6 +149,62 @@ final class Server {
 		}
 
 		self::log( 'MCP server creation failed: ' . $result->get_error_message() );
+	}
+
+	/**
+	 * Builds the domain tools to register on the server.
+	 *
+	 * Phase 1 of the catalog's MCP rollout exposes the `content` domain only; later
+	 * phases add the rest of the curated domains. A tool the adapter rejects is
+	 * logged and skipped rather than aborting the whole server.
+	 *
+	 * @return list<\WP\MCP\Domain\Tools\McpTool> The domain tools to register.
+	 */
+	private function tools(): array {
+		$factory = new DomainToolFactory( new DomainRouter( new DomainMap() ), $this->toolPermission() );
+
+		$tools   = array();
+		$content = $factory->forDomain( 'content', $this->contentDescription() );
+		if ( is_wp_error( $content ) ) {
+			self::log( 'Failed to build the "content" domain tool: ' . $content->get_error_message() );
+
+			return $tools;
+		}
+
+		$tools[] = $content;
+
+		return $tools;
+	}
+
+	/**
+	 * Resolves the coarse permission floor every domain tool shares.
+	 *
+	 * This is not the real authorization gate — every `execute` still runs the
+	 * target ability's own `permission_callback`. It is a filterable "may this user
+	 * reach the server at all" floor; it defaults to any logged-in user.
+	 *
+	 * @return callable The permission floor, `fn(array $args): bool|WP_Error`.
+	 */
+	private function toolPermission(): callable {
+		/**
+		 * Filters the coarse permission floor every domain tool shares.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param callable $permission A `fn(array $args): bool|WP_Error` floor. Default: any logged-in user.
+		 */
+		$permission = apply_filters( 'abilities_catalog_mcp_tool_permission', static fn (): bool => is_user_logged_in() );
+
+		return is_callable( $permission ) ? $permission : static fn (): bool => is_user_logged_in();
+	}
+
+	/**
+	 * The hand-written capability blurb for the content domain tool (spec §6).
+	 *
+	 * @return string The tool description.
+	 */
+	private function contentDescription(): string {
+		return __( 'Manage content — full CRUD on posts, pages and all custom post types; categories and tags; comments; post meta and revisions; content search. Call "list" to see abilities, "describe" for a schema, "execute" to run one.', 'abilities-catalog' );
 	}
 
 	/**
