@@ -60,6 +60,73 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
+	 * Every curated domain lists a non-empty, correctly-scoped set of abilities.
+	 *
+	 * This is the per-domain coverage check: each of the 11 tools owns real abilities,
+	 * and `list` never leaks one that belongs to another domain.
+	 *
+	 * @dataProvider curatedDomains
+	 *
+	 * @param string $domain The curated domain slug.
+	 * @return void
+	 */
+	public function test_each_domain_lists_only_its_own_abilities( string $domain ): void {
+		$map   = new DomainMap();
+		$items = $this->router->list( $domain );
+
+		$this->assertNotEmpty( $items, sprintf( 'Domain "%s" should list at least one ability.', $domain ) );
+
+		foreach ( $items as $item ) {
+			$this->assertSame(
+				$domain,
+				$map->domainOf( $item['name'] ),
+				sprintf( 'Ability "%s" listed under "%s" maps to a different domain.', $item['name'], $domain )
+			);
+		}
+	}
+
+	/**
+	 * Every registered ability is owned by exactly one domain.
+	 *
+	 * The coverage invariant: an ability whose prefix is not in the map would be
+	 * exposed by no domain tool. This fails the moment someone adds an ability under a
+	 * new prefix without mapping it.
+	 *
+	 * @return void
+	 */
+	public function test_every_registered_ability_maps_to_a_domain(): void {
+		$names    = array_map( 'strval', array_keys( wp_get_abilities() ) );
+		$unmapped = ( new DomainMap() )->unmapped( $names );
+
+		$this->assertSame(
+			array(),
+			$unmapped,
+			'Every registered ability must map to a domain; unmapped: ' . implode( ', ', $unmapped )
+		);
+	}
+
+	/**
+	 * The 11 curated domain slugs, one per data row.
+	 *
+	 * @return array<string,array{0:string}>
+	 */
+	public static function curatedDomains(): array {
+		return array(
+			'content'     => array( 'content' ),
+			'media'       => array( 'media' ),
+			'appearance'  => array( 'appearance' ),
+			'design'      => array( 'design' ),
+			'plugins'     => array( 'plugins' ),
+			'users'       => array( 'users' ),
+			'settings'    => array( 'settings' ),
+			'tools'       => array( 'tools' ),
+			'site-health' => array( 'site-health' ),
+			'updates'     => array( 'updates' ),
+			'dashboard'   => array( 'dashboard' ),
+		);
+	}
+
+	/**
 	 * list never leaks an ability from another domain.
 	 *
 	 * @return void

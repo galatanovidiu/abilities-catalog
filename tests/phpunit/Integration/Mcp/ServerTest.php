@@ -27,6 +27,13 @@ use WP\MCP\Domain\Tools\McpTool;
 final class ServerTest extends TestCase {
 
 	/**
+	 * The curated domain slugs the server must expose as tools, in spec order.
+	 *
+	 * @var list<string>
+	 */
+	private const CURATED_DOMAINS = array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard' );
+
+	/**
 	 * Loads the adapter bundle, or skips the suite when it is not installed.
 	 *
 	 * @return void
@@ -57,15 +64,15 @@ final class ServerTest extends TestCase {
 	}
 
 	/**
-	 * Booting registers the REST route, suppresses the default server, exposes the
-	 * curated content domain tool, and runs an ability end-to-end through it.
+	 * Booting registers the REST route, suppresses the default server, exposes every
+	 * curated domain tool, and runs an ability end-to-end through one of them.
 	 *
 	 * The adapter is a process-wide singleton with no reset, so this boots exactly
 	 * once and asserts the whole wiring in one method.
 	 *
 	 * @return void
 	 */
-	public function test_booting_wires_content_tool_route_and_suppresses_default_server(): void {
+	public function test_booting_wires_domain_tools_route_and_suppresses_default_server(): void {
 		( new Server() )->register();
 
 		// Rebuild the REST server so the adapter's init chain runs against a fresh
@@ -94,8 +101,28 @@ final class ServerTest extends TestCase {
 			'create_server() should have stored our server (i.e. returned no WP_Error).'
 		);
 
-		// The server exposes the curated content domain tool, not flat ability tools.
-		$this->assertArrayHasKey( 'content', $server->get_tools() );
+		// The server exposes one curated tool per domain, not flat ability tools.
+		$tools = $server->get_tools();
+		foreach ( self::CURATED_DOMAINS as $slug ) {
+			$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered.', $slug ) );
+		}
+		$this->assertCount(
+			count( self::CURATED_DOMAINS ),
+			$tools,
+			'The server should expose exactly the curated domain tools (no skills tool yet).'
+		);
+
+		// Each curated domain carries its own hand-written blurb, never the generic
+		// "third-party domain" fallback — a forgotten case would ship that fallback as
+		// a real tool's routing description.
+		foreach ( self::CURATED_DOMAINS as $slug ) {
+			$description = $server->get_mcp_tool( $slug )->get_protocol_dto()->getDescription();
+			$this->assertStringNotContainsString(
+				'another plugin contributed',
+				(string) $description,
+				sprintf( 'The "%s" domain tool is missing its curated description (it fell back to the generic blurb).', $slug )
+			);
+		}
 
 		$tool = $server->get_mcp_tool( 'content' );
 		$this->assertInstanceOf( McpTool::class, $tool );
