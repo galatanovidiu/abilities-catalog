@@ -219,6 +219,43 @@ final class SkillsRegistryTest extends TestCase {
 	}
 
 	/**
+	 * A non-string title or when_to_use degrades cleanly, with no PHP warning or fatal.
+	 *
+	 * PHPUnit converts warnings to exceptions here, so a clean run proves the
+	 * `(string)` cast is never reached for a non-string value (an array would warn, an
+	 * object would fatal).
+	 *
+	 * @return void
+	 */
+	public function test_non_string_title_or_when_to_use_is_skipped(): void {
+		add_filter(
+			'abilities_catalog_mcp_skills',
+			static function ( array $skills ): array {
+				$skills['acme/arraytitle'] = array(
+					'title'       => array( 'not', 'a', 'string' ),
+					'when_to_use' => 'When the title is wrong',
+					'body'        => 'b',
+				);
+				$skills['acme/arraywhen'] = array(
+					'title'       => 'Fine title',
+					'when_to_use' => array( 'also', 'wrong' ),
+					'body'        => 'b',
+				);
+
+				return $skills;
+			}
+		);
+		$registry = new SkillsRegistry();
+
+		$ids = array_column( $registry->list(), 'id' );
+		$this->assertNotContains( 'acme/arraytitle', $ids );
+		$this->assertNotContains( 'acme/arraywhen', $ids );
+
+		$this->assertSame( 'abilities_catalog_mcp_unknown_skill', $registry->get( 'acme/arraytitle' )->get_error_code() );
+		$this->assertSame( 'abilities_catalog_mcp_unknown_skill', $registry->get( 'acme/arraywhen' )->get_error_code() );
+	}
+
+	/**
 	 * A present-but-unreadable body (wrong type) errors as a 500 on get.
 	 *
 	 * @return void

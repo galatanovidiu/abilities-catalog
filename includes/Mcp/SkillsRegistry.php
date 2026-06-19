@@ -66,8 +66,8 @@ final class SkillsRegistry {
 
 			$items[] = array(
 				'id'          => (string) $id,
-				'title'       => (string) $skill['title'],
-				'when_to_use' => (string) $skill['when_to_use'],
+				'title'       => $skill['title'],
+				'when_to_use' => $skill['when_to_use'],
 			);
 		}
 
@@ -116,8 +116,8 @@ final class SkillsRegistry {
 
 		return array(
 			'id'          => $id,
-			'title'       => (string) $skill['title'],
-			'when_to_use' => (string) $skill['when_to_use'],
+			'title'       => $skill['title'],
+			'when_to_use' => $skill['when_to_use'],
 			'body'        => $body,
 		);
 	}
@@ -200,19 +200,25 @@ final class SkillsRegistry {
 	}
 
 	/**
-	 * Reports whether a skill descriptor carries the keys both actions need.
+	 * Reports whether a skill descriptor carries the parts both actions need.
 	 *
-	 * Presence-only, never invoking a callable body, so {@see list()} stays lazy. It
-	 * keeps `list` and `get` agreeing on what counts as a real skill: a malformed
-	 * entry is invisible to `list` and unknown to `get`.
+	 * It requires string title and when_to_use (the body is checked at resolve time,
+	 * since it may be a callable). Without this, a third party could register a
+	 * non-string title and the later `(string)` of it would warn — or fatal for an
+	 * object — defeating the clean-degradation guarantee. The check never invokes a
+	 * callable body, so {@see list()} stays lazy. It keeps `list` and `get` agreeing
+	 * on what counts as a real skill: a malformed entry is invisible to `list` and
+	 * unknown to `get`.
 	 *
 	 * @param mixed $skill The candidate descriptor.
-	 * @return bool True when it is an array carrying title, when_to_use, and body.
+	 * @return bool True when it is an array carrying string title and when_to_use, and a body.
 	 *
-	 * @phpstan-assert-if-true array{title:mixed,when_to_use:mixed,body:mixed} $skill
+	 * @phpstan-assert-if-true array{title:string,when_to_use:string,body:mixed} $skill
 	 */
 	private function isWellFormed( $skill ): bool {
 		return is_array( $skill )
-			&& isset( $skill['title'], $skill['when_to_use'], $skill['body'] );
+			&& isset( $skill['title'], $skill['when_to_use'], $skill['body'] )
+			&& is_string( $skill['title'] )
+			&& is_string( $skill['when_to_use'] );
 	}
 }
