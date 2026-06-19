@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Validates a plugin/theme install SOURCE down to a wordpress.org directory slug.
  *
- * Installs over WebMCP accept ONLY a wordpress.org directory slug — never a ZIP
+ * Headless installs accept ONLY a wordpress.org directory slug — never a ZIP
  * URL, a remote URL, a local file path, an uploaded file, or a file-editor write.
  * This is the no-arbitrary-SOURCE guard: it removes the install-from-anywhere class
  * of risk by restricting input to a clean slug that maps to a known wp.org package.

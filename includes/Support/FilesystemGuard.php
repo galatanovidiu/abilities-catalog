@@ -9,13 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Ensures the filesystem is directly writable before an upgrader runs over WebMCP.
+ * Ensures the filesystem is directly writable before an upgrader runs in a headless context.
  *
  * Plugin/theme install, update, and delete go through core's `WP_Filesystem`
  * abstraction. On hosts that are not directly writable, core would otherwise emit a
- * credential request form (FTP/SSH prompt). That has no place in a headless WebMCP
- * call: there is no human form to fill in, and any path or credential detail must
- * never reach the in-browser AI agent. This guard requires the `'direct'` method and
+ * credential request form (FTP/SSH prompt). That has no place in a headless call:
+ * there is no human form to fill in, and any path or credential detail must never
+ * reach the consumer. This guard requires the `'direct'` method and
  * initializes the filesystem up front (with no credential args) so core never
  * reaches the prompt. On any failure it returns a single fixed, generic error — no
  * path, no credential, no host detail.
@@ -68,7 +68,7 @@ final class FilesystemGuard {
 	private static function error(): \WP_Error {
 		return new \WP_Error(
 			'abilities_catalog_fs_not_writable',
-			__( 'The filesystem is not directly writable, so this operation cannot run over WebMCP. It requires direct filesystem access (no credential prompt).', 'abilities-catalog' ),
+			__( 'The filesystem is not directly writable, so this operation cannot run in a headless context. It requires direct filesystem access (no credential prompt).', 'abilities-catalog' ),
 			array( 'status' => 503 )
 		);
 	}
