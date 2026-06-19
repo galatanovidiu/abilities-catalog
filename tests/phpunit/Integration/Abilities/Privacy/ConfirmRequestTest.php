@@ -112,4 +112,42 @@ final class ConfirmRequestTest extends TestCase {
 
 		$this->assertNotTrue( $allowed );
 	}
+
+	/**
+	 * On the routed path (coarse permission gate now floors at
+	 * manage_privacy_options), a missing request surfaces the specific 404 instead
+	 * of the generic ability_invalid_permissions.
+	 */
+	public function test_routed_missing_request_id_surfaces_404(): void {
+		$this->actingAs( 'administrator' );
+
+		$result = wp_get_ability( 'privacy/confirm-request' )->execute( array( 'request_id' => 999999 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'invalid_request', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
+
+	/**
+	 * A caller who clears the manage_privacy_options floor but lacks the per-type
+	 * cap (delete_users for an erase request) gets the relocated 403 — even when
+	 * the request is confirmable — and the status is left untouched.
+	 */
+	public function test_erase_request_without_delete_users_is_denied_in_execute(): void {
+		$request_id = wp_create_user_request( 'erase@example.com', 'remove_personal_data' );
+		$this->assertIsInt( $request_id );
+
+		$this->actingAs( 'subscriber' );
+		wp_get_current_user()->add_cap( 'manage_options' );
+
+		$this->assertTrue( current_user_can( 'manage_privacy_options' ) );
+		$this->assertFalse( current_user_can( 'delete_users' ) );
+
+		$result = wp_get_ability( 'privacy/confirm-request' )->execute( array( 'request_id' => $request_id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_confirm', $result->get_error_code() );
+		$this->assertSame( rest_authorization_required_code(), $result->get_error_data()['status'] );
+		$this->assertSame( 'request-pending', get_post_status( $request_id ) );
+	}
 }

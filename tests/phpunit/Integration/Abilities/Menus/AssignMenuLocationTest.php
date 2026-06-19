@@ -22,10 +22,12 @@ final class AssignMenuLocationTest extends TestCase {
 	public function set_up(): void {
 		parent::set_up();
 		register_nav_menu( 'ac_primary', 'AC Primary' );
+		register_nav_menu( 'ac_secondary', 'AC Secondary' );
 	}
 
 	public function tear_down(): void {
 		unregister_nav_menu( 'ac_primary' );
+		unregister_nav_menu( 'ac_secondary' );
 		remove_theme_mod( 'nav_menu_locations' );
 		parent::tear_down();
 	}
@@ -54,6 +56,38 @@ final class AssignMenuLocationTest extends TestCase {
 
 		$locations = get_theme_mod( 'nav_menu_locations' );
 		$this->assertSame( (int) $menu_id, (int) $locations['ac_primary'] );
+	}
+
+	public function test_previous_locations_reports_prior_assignment(): void {
+		$this->actingAs( 'administrator' );
+		$menu_id = wp_create_nav_menu( 'Header Menu' );
+		set_theme_mod( 'nav_menu_locations', array( 'ac_secondary' => $menu_id ) );
+
+		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+			array(
+				'menu_id'  => $menu_id,
+				'location' => 'ac_primary',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertContains( 'ac_secondary', $result['previous_locations'] );
+		$this->assertSame( array( 'ac_primary' ), $result['locations'] );
+	}
+
+	public function test_previous_locations_empty_for_unassigned_menu(): void {
+		$this->actingAs( 'administrator' );
+		$menu_id = wp_create_nav_menu( 'Header Menu' );
+
+		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+			array(
+				'menu_id'  => $menu_id,
+				'location' => 'ac_primary',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( array(), $result['previous_locations'] );
 	}
 
 	public function test_subscriber_is_denied(): void {

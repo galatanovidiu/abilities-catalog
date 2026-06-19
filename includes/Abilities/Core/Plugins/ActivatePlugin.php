@@ -85,7 +85,7 @@ final class ActivatePlugin implements Ability {
 				'annotations'  => array(
 					'readonly'    => false,
 					'destructive' => true,
-					'idempotent'  => false,
+					'idempotent'  => true,
 				),
 				'show_in_rest' => true,
 				'screen'       => 'plugins.php',

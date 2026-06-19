@@ -116,7 +116,10 @@ final class ListPostTypes implements Ability {
 	}
 
 	/**
-	 * Permission check: `edit_posts` for edit-context; otherwise any logged-in user.
+	 * Permission check: for edit-context, the current user must be able to edit at
+	 * least one REST-enabled post type (mirrors core's
+	 * `WP_REST_Post_Types_Controller::get_items_permissions_check()`); otherwise any
+	 * logged-in user.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may list post types.
@@ -126,7 +129,13 @@ final class ListPostTypes implements Ability {
 		$context = $input['context'] ?? 'view';
 
 		if ( 'edit' === $context ) {
-			return current_user_can( 'edit_posts' );
+			foreach ( get_post_types( array( 'show_in_rest' => true ), 'objects' ) as $type ) {
+				if ( current_user_can( $type->cap->edit_posts ) ) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		return is_user_logged_in();

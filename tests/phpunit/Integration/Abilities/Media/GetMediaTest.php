@@ -68,6 +68,32 @@ final class GetMediaTest extends TestCase {
 		$this->assertSame( '{}', wp_json_encode( $result['media_details'] ) );
 	}
 
+	public function test_unattached_media_returns_post_null(): void {
+		$this->actingAs( 'administrator' );
+
+		// A bare attachment with no parent: core emits post=null, which the ability
+		// must preserve as null rather than flattening to 0.
+		$attachment_id = self::factory()->attachment->create();
+
+		$result = wp_get_ability( 'media/get-media' )->execute( array( 'id' => $attachment_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'post', $result );
+		$this->assertNull( $result['post'] );
+	}
+
+	public function test_attached_media_returns_parent_id(): void {
+		$this->actingAs( 'administrator' );
+
+		$parent_id     = self::factory()->post->create();
+		$attachment_id = self::factory()->attachment->create( array( 'post_parent' => $parent_id ) );
+
+		$result = wp_get_ability( 'media/get-media' )->execute( array( 'id' => $attachment_id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( $parent_id, $result['post'] );
+	}
+
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 

@@ -29,10 +29,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  * data until every exporter reports `done`. A hard cap of {@see self::MAX_PAGES}
  * total processed pages bounds the run; exceeding it aborts with an error.
  *
- * After all exporters finish, the export file is written by
- * `wp_privacy_generate_personal_data_export_file($request_id)`, which lands the
- * file in core's index-protected exports directory. The download URL is stored on
- * the request by core; this ability never returns the file path or download URL.
+ * The export file is written exactly once, by core itself: on the last page of the
+ * last exporter, `wp_privacy_process_personal_data_export_page()` fires
+ * `do_action('wp_privacy_personal_data_export_file', $request_id)` while the grouped
+ * data is still present, then deletes that grouped meta. Core's file generator is
+ * hooked to that action only in wp-admin context
+ * (wp-admin/includes/admin-filters.php), so this ability registers it for the
+ * duration of the run when it is absent (REST/WP-CLI) and never calls the generator a
+ * second time — a post-loop call would read the already-deleted grouped data and
+ * overwrite the real archive with an empty one. The file lands in core's
+ * index-protected exports directory and the download URL is stored on the request;
+ * this ability never returns the file path or download URL.
  *
  * The export is run with `$send_as_email = false`, so no confirmation email is
  * sent. Generation brings exported personal data together into a file, so this
@@ -93,11 +100,11 @@ final class GenerateExport implements Ability {
 					),
 					'status'     => array(
 						'type'        => 'string',
-						'description' => __( 'The resulting request status.', 'abilities-catalog' ),
+						'description' => __( 'The request status after generation. With no confirmation email this stays request-pending or request-confirmed (never request-completed), so use the `generated` flag, not this field, as the success signal.', 'abilities-catalog' ),
 					),
 					'generated'  => array(
 						'type'        => 'boolean',
-						'description' => __( 'True when the export file was generated.', 'abilities-catalog' ),
+						'description' => __( 'True when this run wrote the export archive file.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -197,6 +204,66 @@ final class GenerateExport implements Ability {
 			);
 		}
 
+		// Finalization must happen exactly once, with the grouped export data still
+		// present. On the last page of the last exporter, core's
+		// wp_privacy_process_personal_data_export_page() saves _export_data_grouped, fires
+		// do_action( 'wp_privacy_personal_data_export_file' ), then unconditionally deletes
+		// _export_data_grouped (privacy-tools.php:856-868). The core generator is hooked to
+		// that action only in wp-admin context (admin-filters.php:154); register it here when
+		// absent (REST/WP-CLI) so core finalizes once. A second, post-loop generate call would
+		// read the already-deleted grouped meta and overwrite the real archive with an empty
+		// (null-payload) one.
+		$added_generate_callback = ! has_action( 'wp_privacy_personal_data_export_file', 'wp_privacy_generate_personal_data_export_file' );
+		if ( $added_generate_callback ) {
+			add_action( 'wp_privacy_personal_data_export_file', 'wp_privacy_generate_personal_data_export_file', 10 );
+		}
+
+		// Capture whether THIS run wrote an archive. Core fires
+		// wp_privacy_personal_data_export_file_created only after the ZIP is successfully
+		// written (privacy-tools.php:563), making it an honest per-run signal — unlike the
+		// persisted _export_file_name meta, which would survive a prior successful run.
+		$export_file_created = false;
+		$capture_created     = static function () use ( &$export_file_created ): void {
+			$export_file_created = true;
+		};
+		add_action( 'wp_privacy_personal_data_export_file_created', $capture_created );
+
+		try {
+			$result = $this->processExporters( $exporters, $email_address, $request_id );
+		} finally {
+			// Restore global hook state on every exit path (success, error return, or throw).
+			if ( $added_generate_callback ) {
+				remove_action( 'wp_privacy_personal_data_export_file', 'wp_privacy_generate_personal_data_export_file', 10 );
+			}
+			remove_action( 'wp_privacy_personal_data_export_file_created', $capture_created );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return array(
+			'request_id' => $request_id,
+			'status'     => (string) get_post_status( $request_id ),
+			'generated'  => $export_file_created,
+		);
+	}
+
+	/**
+	 * Drives every registered exporter page-by-page to completion.
+	 *
+	 * Mirrors `wp_ajax_wp_privacy_export_personal_data()`: iterates exporters 1-based,
+	 * calls each callback per page, and feeds the response through
+	 * `wp_privacy_process_personal_data_export_page()` until every exporter reports
+	 * `done`. Core finalizes the export file inside that call on the terminal page.
+	 * Bounded by {@see self::MAX_PAGES}.
+	 *
+	 * @param array<string,mixed> $exporters     The registered personal-data exporters.
+	 * @param string              $email_address The subject email address.
+	 * @param int                 $request_id    The export request ID.
+	 * @return true|\WP_Error True when every exporter finished, or a `WP_Error` on failure.
+	 */
+	private function processExporters( array $exporters, string $email_address, int $request_id ) {
 		$exporter_keys  = array_keys( $exporters );
 		$exporter_count = count( $exporters );
 		$pages_total    = 0;
@@ -276,12 +343,6 @@ final class GenerateExport implements Ability {
 			} while ( ! $response['done'] );
 		}
 
-		wp_privacy_generate_personal_data_export_file( $request_id );
-
-		return array(
-			'request_id' => $request_id,
-			'status'     => (string) get_post_status( $request_id ),
-			'generated'  => true,
-		);
+		return true;
 	}
 }

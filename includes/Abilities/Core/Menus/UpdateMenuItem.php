@@ -39,7 +39,7 @@ final class UpdateMenuItem implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Menu Item', 'abilities-catalog' ),
-			'description'         => __( 'Updates an existing classic menu item by ID. Only the supplied fields change; an empty-string value for a text field is skipped, not cleared.', 'abilities-catalog' ),
+			'description'         => __( 'Updates an existing classic menu item by ID. Only the supplied fields change; an empty-string value for a text field clears it.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -184,8 +184,12 @@ final class UpdateMenuItem implements Ability {
 		$id      = absint( $input['id'] );
 		$request = new WP_REST_Request( 'POST', '/wp/v2/menu-items/' . $id );
 
+		// Forward whenever the key is present, including '' so the caller can clear
+		// a label or URL. Core writes empty strings on update. ('status' has a schema
+		// default of 'publish' but the Abilities API does not inject per-property
+		// defaults into $input, and '' is enum-rejected, so this stays safe.)
 		foreach ( array( 'title', 'url', 'type', 'object', 'status' ) as $field ) {
-			if ( ! isset( $input[ $field ] ) || '' === $input[ $field ] ) {
+			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 

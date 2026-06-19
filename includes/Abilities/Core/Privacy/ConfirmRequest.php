@@ -32,14 +32,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * capability gate, so this ability is an administrative override of the
  * email-key proof, and there is no core admin cap to mirror exactly.
  *
- * The cap is therefore floored at the strictest correct guard: the current user
- * must hold `manage_privacy_options` AND the same capability that gates the
- * wp-admin screen where requests of that type are managed:
+ * The cap is therefore floored at the strictest correct guard. The
+ * `permission_callback` checks the object-independent `manage_privacy_options`;
+ * the per-type screen cap is enforced in `execute()` after the existence check
+ * (mirroring the B2 coarse-guard pattern), so the specific 404 (missing request)
+ * and per-type 403 reach the caller instead of the generic denial. The per-type
+ * caps are the same that gate the wp-admin screen for that request type:
  *   - `export_personal_data` → `export_others_personal_data`
  *     (wp-admin/export-personal-data.php:12)
  *   - `remove_personal_data` → `erase_others_personal_data` AND `delete_users`
  *     (wp-admin/erase-personal-data.php:12)
- * Unknown action types are denied.
+ * The per-type authorization runs before the confirmable-state (409) check so an
+ * unauthorized-for-type caller is not told whether the request is confirmable.
  *
  * CAP UNCERTAINTY: no core admin handler gates this exact operation, so the
  * `manage_privacy_options` floor is an added guard, not a core mirror. It is
@@ -117,16 +121,16 @@ final class ConfirmRequest implements Ability {
 	}
 
 	/**
-	 * Permission check: branches on the request action type.
+	 * Permission check: the object-independent `manage_privacy_options` floor.
 	 *
-	 * Loads the request and floors the cap at `manage_privacy_options` plus the
-	 * per-type screen cap (export → `export_others_personal_data`; erase →
-	 * `erase_others_personal_data` AND `delete_users`). Unknown or missing
-	 * requests are denied. The wrapped core function performs no capability
-	 * check, so this is the hard authorization guard.
+	 * Every successful caller holds `manage_privacy_options`, so this coarse floor
+	 * is never weaker than core. The per-type cap (and the missing-request 404) is
+	 * enforced in `execute()`, keeping this guard object-independent so the specific
+	 * error surfaces instead of the generic denial. The wrapped core function
+	 * performs no capability check.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may confirm this request.
+	 * @return bool True if the current user may manage privacy requests.
 	 */
 	public function hasPermission( $input ): bool {
 		$input      = is_array( $input ) ? $input : array();
@@ -135,23 +139,7 @@ final class ConfirmRequest implements Ability {
 			return false;
 		}
 
-		if ( ! current_user_can( 'manage_privacy_options' ) ) {
-			return false;
-		}
-
-		$request = wp_get_user_request( $request_id );
-		if ( ! $request instanceof WP_User_Request ) {
-			return false;
-		}
-
-		switch ( $request->action_name ) {
-			case 'export_personal_data':
-				return current_user_can( 'export_others_personal_data' );
-			case 'remove_personal_data':
-				return current_user_can( 'erase_others_personal_data' ) && current_user_can( 'delete_users' );
-			default:
-				return false;
-		}
+		return current_user_can( 'manage_privacy_options' );
 	}
 
 	/**
@@ -181,17 +169,27 @@ final class ConfirmRequest implements Ability {
 			);
 		}
 
-		if ( ! in_array( $request->status, self::CONFIRMABLE_STATUSES, true ) ) {
-			return new WP_Error(
-				'not_confirmable',
-				__( 'This request cannot be confirmed in its current state.', 'abilities-catalog' ),
-				array( 'status' => 409 )
-			);
-		}
-
+		// Validate the request type and enforce the per-type capability (relocated
+		// from permission_callback) before the confirmable-state check, so an
+		// unauthorized-for-type caller is not told whether the request is confirmable.
 		switch ( $request->action_name ) {
 			case 'export_personal_data':
+				if ( ! current_user_can( 'export_others_personal_data' ) ) {
+					return new WP_Error(
+						'rest_cannot_confirm',
+						__( 'Sorry, you are not allowed to confirm this request.', 'abilities-catalog' ),
+						array( 'status' => rest_authorization_required_code() )
+					);
+				}
+				break;
 			case 'remove_personal_data':
+				if ( ! ( current_user_can( 'erase_others_personal_data' ) && current_user_can( 'delete_users' ) ) ) {
+					return new WP_Error(
+						'rest_cannot_confirm',
+						__( 'Sorry, you are not allowed to confirm this request.', 'abilities-catalog' ),
+						array( 'status' => rest_authorization_required_code() )
+					);
+				}
 				break;
 			default:
 				return new WP_Error(
@@ -199,6 +197,14 @@ final class ConfirmRequest implements Ability {
 					__( 'This request type cannot be confirmed by this ability.', 'abilities-catalog' ),
 					array( 'status' => 400 )
 				);
+		}
+
+		if ( ! in_array( $request->status, self::CONFIRMABLE_STATUSES, true ) ) {
+			return new WP_Error(
+				'not_confirmable',
+				__( 'This request cannot be confirmed in its current state.', 'abilities-catalog' ),
+				array( 'status' => 409 )
+			);
 		}
 
 		_wp_privacy_account_request_confirmed( $request_id );
