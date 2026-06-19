@@ -76,6 +76,28 @@ final class ServerCustomToolsTest extends TestCase {
 	}
 
 	/**
+	 * A filter that returns only custom tools still keeps the curated ones.
+	 *
+	 * The curated set is seeded first, so a replace-style filter cannot silently drop a
+	 * curated tool — it can only override a curated slot (with a notice) or add to the set.
+	 *
+	 * @return void
+	 */
+	public function test_replacing_filter_keeps_curated_tools(): void {
+		$this->setExpectedIncorrectUsage( Server::class . '::mergeCustomTools' );
+
+		$content = $this->tool( 'content' );
+		$media   = $this->tool( 'media' );
+		$custom  = $this->tool( 'content' );
+
+		$merged = Server::mergeCustomTools( array( $content, $media ), array( $custom ) );
+
+		$this->assertSame( array( 'content', 'media' ), $this->names( $merged ) );
+		$this->assertSame( $custom, $merged[0], 'The custom tool should win the curated "content" slot.' );
+		$this->assertSame( $media, $merged[1], 'The untouched curated "media" tool must survive.' );
+	}
+
+	/**
 	 * A non-McpTool value in the filter result is skipped.
 	 *
 	 * @return void

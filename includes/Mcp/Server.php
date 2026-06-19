@@ -212,9 +212,10 @@ final class Server {
 		 *
 		 * Append `McpTool` instances to ship a whole custom tool (spec §12). On a name
 		 * collision with a curated tool, the custom tool wins and a `_doing_it_wrong()`
-		 * notice fires; names must otherwise be unique, since the adapter silently drops
-		 * duplicates. Preserve the entries already present — replacing the array drops the
-		 * curated domain and skills tools.
+		 * notice fires; custom names must otherwise be unique, since the adapter silently
+		 * drops duplicates. The curated domain and skills tools are always kept, so a filter
+		 * that returns a different array cannot lose them — it can only add to, or override a
+		 * named slot in, the curated set.
 		 *
 		 * @since 0.2.0
 		 *
@@ -227,28 +228,31 @@ final class Server {
 	 * Merges third-party custom tools onto the curated set, deduplicated by name.
 	 *
 	 * The escape hatch from spec §12: registration is construction-only, so a custom tool
-	 * has to ride in the same `$tools` array. A later entry wins a name collision (the
-	 * adapter would otherwise silently drop the duplicate); when the name it overwrites is
-	 * a curated tool, a `_doing_it_wrong()` notice records the override. A non-`McpTool`
-	 * value is skipped, and a non-array filter result falls back to the curated set, so a
-	 * misbehaving filter never breaks the server. Public and pure (it does not read the
-	 * filter) so the merge rules are testable without booting a server.
+	 * has to ride in the same `$tools` array. The curated tools are seeded first so a filter
+	 * can never drop them; a filtered `McpTool` whose name matches a curated one overrides
+	 * that slot (the adapter would otherwise silently drop the duplicate) and a
+	 * `_doing_it_wrong()` notice records the override. A non-`McpTool` value is skipped, and
+	 * a non-array filter result leaves the curated set untouched, so a misbehaving filter
+	 * never breaks the server. Public and pure (it does not read the filter) so the merge
+	 * rules are testable without booting a server.
 	 *
 	 * @param list<\WP\MCP\Domain\Tools\McpTool> $curated  The curated domain + skills tools.
 	 * @param mixed                              $filtered The `abilities_catalog_mcp_tools` filter result.
 	 * @return list<\WP\MCP\Domain\Tools\McpTool> The merged, name-deduplicated tools.
 	 */
 	public static function mergeCustomTools( array $curated, $filtered ): array {
-		if ( ! is_array( $filtered ) ) {
-			return $curated;
-		}
-
+		$by_name       = array();
 		$curated_names = array();
 		foreach ( $curated as $tool ) {
-			$curated_names[ self::toolName( $tool ) ] = true;
+			$name                   = self::toolName( $tool );
+			$curated_names[ $name ] = true;
+			$by_name[ $name ]       = $tool;
 		}
 
-		$by_name = array();
+		if ( ! is_array( $filtered ) ) {
+			return array_values( $by_name );
+		}
+
 		foreach ( $filtered as $tool ) {
 			if ( ! $tool instanceof McpTool ) {
 				self::log( 'Ignoring a non-McpTool value contributed to the abilities_catalog_mcp_tools filter.' );
@@ -257,7 +261,7 @@ final class Server {
 			}
 
 			$name = self::toolName( $tool );
-			if ( isset( $by_name[ $name ], $curated_names[ $name ] ) ) {
+			if ( isset( $curated_names[ $name ] ) && $by_name[ $name ] !== $tool ) {
 				_doing_it_wrong(
 					__METHOD__,
 					sprintf(
