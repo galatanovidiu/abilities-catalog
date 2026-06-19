@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Abilities Catalog
  * Plugin URI:        https://github.com/galatanovidiu/abilities-catalog
- * Description:       Registers WordPress wp-admin features as Abilities API abilities. Platform-agnostic: it only registers abilities and does not touch any browser bridge. A WebMCP adapter (or any Abilities API consumer) can expose them as tools.
+ * Description:       Registers WordPress wp-admin features as Abilities API abilities, plus an optional, off-by-default built-in MCP server that exposes them as curated domain tools. Consumer-agnostic: the catalog works standalone, and any Abilities API consumer can expose the abilities.
  * Version:           0.1.0
  * Requires at least: 7.0
  * Requires PHP:      8.1

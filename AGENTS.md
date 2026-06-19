@@ -4,8 +4,11 @@
 
 Register a coherent, complete-enough catalog of WordPress **abilities** for core WP 7.0 wp-admin,
 on top of the core Abilities API. This plugin is **consumer-agnostic**: it defines abilities and
-their risk classification. It does not surface them to any agent or UI — that is a consumer's job
-(an in-browser agent, a server-side MCP client, or none). It works standalone.
+their risk classification. The catalog surfaces them to no agent or UI — that is a consumer's job
+(an in-browser agent, a server-side MCP client, or none) — **except** for one optional,
+**off-by-default** consumer it now ships: a built-in **MCP server** (`includes/Mcp/`) that, when
+enabled, exposes the catalog as curated domain tools. The catalog still works standalone and is
+unaffected when the server is off.
 
 ## Docs
 
@@ -80,3 +83,12 @@ their risk classification. It does not surface them to any agent or UI — that 
 - **Consumer-provided hooks.** The Registry contributes dangerous ability names to an
   `abilities_catalog_dangerous_tools` filter and screen templates to an `abilities_catalog_screen_links`
   filter — hooks a consumer provides; the catalog only populates them when present.
+- **Optional built-in MCP server.** `includes/Mcp/` is an off-by-default consumer of the catalog,
+  gated by the `ABILITIES_CATALOG_MCP_ENABLED` constant or the `abilities_catalog_mcp_enabled` option.
+  When on, it exposes **11 curated domain tools** (`list` / `describe` / `execute`, mapped by
+  `Mcp\DomainMap`) plus a cross-cutting **`skills`** tool (lazy task recipes), built on
+  `wordpress/mcp-adapter` (loaded via the Jetpack Autoloader from `vendor/`, which is git-ignored).
+  It adds **no** authorization path: every `execute` still runs the ability's own
+  `permission_callback` (Capability is the hard guard). It is extensible without editing this plugin
+  (`abilities_catalog_mcp_domain_map`, `abilities_catalog_mcp_skills`, and
+  `abilities_catalog_mcp_tool_permission` filters). Off by default; the catalog is unaffected when off.
