@@ -19,9 +19,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Returns the active theme's user global-style overrides — the `wp_global_styles`
  * CPT record holding only the settings/styles the user changed in the Site Editor.
  * It does NOT merge the theme's baseline `theme.json`; use
- * `templates/get-theme-styles` for the theme baseline. The id is resolved from core
- * via {@see \WP_Theme_JSON_Resolver::get_user_global_styles_post_id()}, then the
- * record is fetched through `GET /wp/v2/global-styles/<id>`. Read-only.
+ * `templates/get-theme-styles` for the theme baseline. The existing record is
+ * resolved from core via
+ * {@see \WP_Theme_JSON_Resolver::get_user_data_from_wp_global_styles()} with
+ * `$create_post = false` (so this read never inserts a row), then fetched through
+ * `GET /wp/v2/global-styles/<id>`. Returns 404 when the active theme has no
+ * overrides record yet. Read-only.
  *
  * @since 0.1.0
  */
@@ -106,7 +109,14 @@ final class GetGlobalStyles implements Ability {
 			);
 		}
 
-		$id = (int) \WP_Theme_JSON_Resolver::get_user_global_styles_post_id();
+		// Resolve the EXISTING user global-styles record without creating one.
+		// WP_Theme_JSON_Resolver::get_user_global_styles_post_id() passes
+		// $create_post = true and inserts a wp_global_styles row on first access,
+		// which would make this read-only ability write to the database. Query with
+		// $create_post = false instead and 404 when the active theme has no overrides
+		// record yet (a read of "the user's overrides" is honestly empty then).
+		$user_cpt = \WP_Theme_JSON_Resolver::get_user_data_from_wp_global_styles( wp_get_theme(), false );
+		$id       = isset( $user_cpt['ID'] ) ? (int) $user_cpt['ID'] : 0;
 		if ( $id <= 0 ) {
 			return new WP_Error(
 				'global_styles_unavailable',
