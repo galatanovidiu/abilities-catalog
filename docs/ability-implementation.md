@@ -171,9 +171,10 @@ Capability remains the hard server-side guard underneath, regardless of any cons
 a browser client whose ability store keeps only `readonly`/`destructive`/`idempotent`), so they
 cannot see `annotations.dangerous`. For those consumers the Registry contributes every dangerous
 ability name to the `webmcp_dangerous_tools` filter — a hook a consumer provides and the catalog
-populates when present. When you add a dangerous ability, add its name to
-`Registry::contributeDangerousTools()` so any name-gating consumer treats it as dangerous, not as
-a plain destructive write. (The hook name carries a consumer prefix for historical reasons; a
+populates when present. `Registry::contributeDangerousTools()` discovers these automatically: it
+iterates every registered ability and includes the ones whose `meta.annotations.dangerous` is
+exactly `true`. So just set `dangerous: true` on the new ability — there is no list to edit and no
+per-ability Registry change. (The hook name carries a consumer prefix for historical reasons; a
 neutral rename is tracked separately.)
 
 **Server-side guards (`includes/Support/`).** Use these instead of calling core upgraders or
