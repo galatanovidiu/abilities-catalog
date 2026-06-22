@@ -2,6 +2,13 @@
 	"name": "abilities-catalog",
 	"type": "module",
 	"private": true,
+	"files": [
+		"abilities-catalog.php",
+		"readme.txt",
+		"includes",
+		"assets",
+		"vendor"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/galatanovidiu/abilities-catalog.git"

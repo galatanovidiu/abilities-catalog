@@ -4,6 +4,9 @@ Thumbs.db
 /vendor/
 /node_modules/
 
+# Distributable plugin zip built by `npm run plugin-zip` (and by the release CI).
+/abilities-catalog.zip
+
 # Local wp-env config (machine-specific plugin paths)
 /.wp-env.json
 /.wp-env.override.json
