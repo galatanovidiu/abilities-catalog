@@ -377,7 +377,7 @@ final class Server {
 	 * @return string The tool description.
 	 */
 	private function description( string $domain ): string {
-		return $this->domainBlurb( $domain ) . ' ' . __( 'Call "list" to see abilities, "describe" for a schema, "execute" to run one.', 'abilities-catalog' );
+		return $this->domainBlurb( $domain ) . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
 	}
 
 	/**

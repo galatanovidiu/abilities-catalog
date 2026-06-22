@@ -85,15 +85,15 @@ final class DomainToolFactory {
 				'action'  => array(
 					'type'        => 'string',
 					'enum'        => array( 'list', 'describe', 'execute' ),
-					'description' => __( 'list the domain\'s abilities, describe one ability\'s schema, or execute one ability.', 'abilities-catalog' ),
+					'description' => __( '"list" returns this domain\'s exact ability names; "describe" returns one ability\'s exact input schema; "execute" runs one ability. List and describe before execute; do not guess.', 'abilities-catalog' ),
 				),
 				'ability' => array(
 					'type'        => 'string',
-					'description' => __( 'Full ability name, e.g. content/get-post. Required for describe and execute.', 'abilities-catalog' ),
+					'description' => __( 'Exact ability name from "list", e.g. content/get-post. Required for describe and execute. Do not guess it — call "list" first.', 'abilities-catalog' ),
 				),
 				'input'   => array(
 					'type'        => 'object',
-					'description' => __( 'Arguments for the ability. Used by execute.', 'abilities-catalog' ),
+					'description' => __( 'Arguments for "execute", matching the ability\'s input schema. Get the exact field names from "describe" first; do not guess them.', 'abilities-catalog' ),
 				),
 			),
 			'required'   => array( 'action' ),
