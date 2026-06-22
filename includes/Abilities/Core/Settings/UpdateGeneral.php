@@ -62,11 +62,11 @@ final class UpdateGeneral implements Ability {
 				'properties'           => array(
 					'title'         => array(
 						'type'        => 'string',
-						'description' => __( 'The site title (blogname).', 'abilities-catalog' ),
+						'description' => __( 'The site title. Send it as the "title" field (it is stored in the blogname option); do not send a "blogname" key.', 'abilities-catalog' ),
 					),
 					'description'   => array(
 						'type'        => 'string',
-						'description' => __( 'The site tagline (blogdescription).', 'abilities-catalog' ),
+						'description' => __( 'The site tagline. Send it as the "description" field (it is stored in the blogdescription option); do not send a "blogdescription" key.', 'abilities-catalog' ),
 					),
 					'timezone'      => array(
 						'type'        => 'string',

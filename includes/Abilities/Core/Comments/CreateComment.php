@@ -87,7 +87,7 @@ final class CreateComment implements Ability {
 					'status'       => array(
 						'type'        => 'string',
 						'enum'        => array( 'approve', 'hold' ),
-						'description' => __( 'The comment status ("approve" or "hold"). Requires the moderate_comments capability.', 'abilities-catalog' ),
+						'description' => __( 'The initial moderation status — exactly "approve" (publish immediately) or "hold" (queue for moderation); not "approved", "publish", "spam", or a number. Only settable with the moderate_comments capability; omit it to let WordPress decide from the discussion settings.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'post', 'content' ),

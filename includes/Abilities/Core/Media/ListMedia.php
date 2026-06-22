@@ -41,7 +41,7 @@ final class ListMedia implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Media', 'abilities-catalog' ),
-			'description'         => __( 'Lists media library items with optional search, type, parent, author, status, and pagination filters.', 'abilities-catalog' ),
+			'description'         => __( 'Lists media library items with optional search, media_type, mime_type, parent, author, status, and pagination filters.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -56,7 +56,7 @@ final class ListMedia implements Ability {
 							'type' => 'string',
 							'enum' => array( 'image', 'video', 'text', 'application', 'audio' ),
 						),
-						'description' => __( 'Limit results to one or more media types.', 'abilities-catalog' ),
+						'description' => __( 'Filter by media type — the field is named "media_type", not "type". One or more of: image, video, text, application, audio. For a specific format use "mime_type" (e.g. "image/png").', 'abilities-catalog' ),
 					),
 					'mime_type'  => array(
 						'type'        => 'array',
