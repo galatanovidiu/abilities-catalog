@@ -62,7 +62,7 @@ final class UpdateGlobalStyles implements Ability {
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __( 'The global styles post ID for the active theme (from templates/get-global-styles).', 'abilities-catalog' ),
+						'description' => __( 'The global styles post ID for the active theme. Get it from templates/get-global-styles, or from templates/init-global-styles when no record exists yet.', 'abilities-catalog' ),
 					),
 					'settings' => array(
 						'type'                 => 'object',
