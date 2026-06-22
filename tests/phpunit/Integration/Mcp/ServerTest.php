@@ -58,7 +58,7 @@ final class ServerTest extends TestCase {
 	}
 
 	/**
-	 * Drops the default-server suppression filter this test installs.
+	 * Drops the test-only default-server suppression filter and the exposure option.
 	 *
 	 * @return void
 	 */
@@ -69,15 +69,22 @@ final class ServerTest extends TestCase {
 	}
 
 	/**
-	 * Booting registers the REST route, suppresses the default server, exposes every
-	 * curated domain tool, and runs an ability end-to-end through one of them.
+	 * Booting registers the REST route, exposes every curated domain tool, and runs
+	 * an ability end-to-end through one of them.
 	 *
 	 * The adapter is a process-wide singleton with no reset, so this boots exactly
 	 * once and asserts the whole wiring in one method.
 	 *
 	 * @return void
 	 */
-	public function test_booting_wires_domain_tools_route_and_suppresses_default_server(): void {
+	public function test_booting_wires_domain_tools_route(): void {
+		// Test-only: the adapter boots lazily here, after wp_abilities_api_init has
+		// already fired, so the default server's own abilities are never registered.
+		// Suppress it so the adapter does not _doing_it_wrong building a server with
+		// missing tools. Production boots the adapter on plugins_loaded, before that
+		// hook, so the default server creates cleanly and is intentionally left enabled.
+		add_filter( 'mcp_adapter_create_default_server', '__return_false' );
+
 		( new Server() )->register();
 
 		// Rebuild the REST server so the adapter's init chain runs against a fresh
@@ -92,11 +99,6 @@ final class ServerTest extends TestCase {
 			Server::restRoute(),
 			$routes,
 			'The MCP REST route should be registered when the server is booted.'
-		);
-		$this->assertArrayNotHasKey(
-			'/mcp/mcp-adapter-default-server',
-			$routes,
-			"The adapter's default server should be suppressed."
 		);
 
 		$server = McpAdapter::instance()->get_server( Server::SERVER_ID );

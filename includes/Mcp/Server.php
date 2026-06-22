@@ -31,8 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * {@see DomainMap} lists, plus any domain a third party opens through the
  * `abilities_catalog_mcp_domain_map` filter. Each domain tool routes its `list` /
  * `describe` / `execute` actions through a {@see DomainRouter}; the REST endpoint
- * appears only when the gate is on, and the adapter's own default server is
- * suppressed so only this server is exposed.
+ * appears only when the gate is on.
  *
  * @since 0.2.0
  */
@@ -99,19 +98,16 @@ final class Server {
 	/**
 	 * Registers the server wiring on the adapter's init cycle.
 	 *
-	 * Three steps, all safe to run on `plugins_loaded` (before the adapter's own
+	 * Two steps, both safe to run on `plugins_loaded` (before the adapter's own
 	 * `rest_api_init`/`init` pass):
-	 * 1. Suppress the adapter's default server so only this server is exposed.
-	 * 2. Initialize the adapter singleton, which hooks its init onto the request
+	 * 1. Initialize the adapter singleton, which hooks its init onto the request
 	 *    lifecycle.
-	 * 3. Hook {@see createServer()} onto `mcp_adapter_init`, the action where
+	 * 2. Hook {@see createServer()} onto `mcp_adapter_init`, the action where
 	 *    server creation is required to happen.
 	 *
 	 * @return void
 	 */
 	public function register(): void {
-		add_filter( 'mcp_adapter_create_default_server', '__return_false' );
-
 		McpAdapter::instance();
 
 		add_action( 'mcp_adapter_init', array( $this, 'createServer' ) );
