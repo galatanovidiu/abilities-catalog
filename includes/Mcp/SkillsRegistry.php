@@ -9,7 +9,13 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\BackUpContent;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\ConfigureReading;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\CreateContent;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\EditAnImage;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\FindContent;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\ModerateComments;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Skills\OrganizeWithTerms;
 use WP_Error;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -165,10 +171,40 @@ final class SkillsRegistry {
 	 */
 	private static function builtins(): array {
 		return array(
-			CreateContent::ID => array(
+			CreateContent::ID     => array(
 				'title'       => CreateContent::title(),
 				'when_to_use' => CreateContent::whenToUse(),
 				'body'        => array( CreateContent::class, 'body' ),
+			),
+			FindContent::ID       => array(
+				'title'       => FindContent::title(),
+				'when_to_use' => FindContent::whenToUse(),
+				'body'        => array( FindContent::class, 'body' ),
+			),
+			OrganizeWithTerms::ID => array(
+				'title'       => OrganizeWithTerms::title(),
+				'when_to_use' => OrganizeWithTerms::whenToUse(),
+				'body'        => array( OrganizeWithTerms::class, 'body' ),
+			),
+			ModerateComments::ID  => array(
+				'title'       => ModerateComments::title(),
+				'when_to_use' => ModerateComments::whenToUse(),
+				'body'        => array( ModerateComments::class, 'body' ),
+			),
+			EditAnImage::ID       => array(
+				'title'       => EditAnImage::title(),
+				'when_to_use' => EditAnImage::whenToUse(),
+				'body'        => array( EditAnImage::class, 'body' ),
+			),
+			ConfigureReading::ID  => array(
+				'title'       => ConfigureReading::title(),
+				'when_to_use' => ConfigureReading::whenToUse(),
+				'body'        => array( ConfigureReading::class, 'body' ),
+			),
+			BackUpContent::ID     => array(
+				'title'       => BackUpContent::title(),
+				'when_to_use' => BackUpContent::whenToUse(),
+				'body'        => array( BackUpContent::class, 'body' ),
 			),
 		);
 	}
