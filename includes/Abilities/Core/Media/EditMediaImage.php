@@ -187,7 +187,7 @@ final class EditMediaImage implements Ability {
 								),
 							),
 						),
-						'description' => __( 'Array of image edits ({type, args}). Each item is a flip, rotate, or crop modifier. Takes precedence over the deprecated rotation/crop fields.', 'abilities-catalog' ),
+						'description' => __( 'Array of image edits applied in order. Each item is an object shaped {"type": "flip"|"rotate"|"crop", "args": {...for that type}} — "type" and "args" are properties INSIDE each array item, never top-level input fields. Example, rotate 90 degrees clockwise: {"modifiers":[{"type":"rotate","args":{"angle":90}}]}. For a plain clockwise rotation the top-level "rotation" field (1-359) is a simpler alternative. When given, modifiers take precedence over the top-level rotation/crop fields.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id', 'src' ),

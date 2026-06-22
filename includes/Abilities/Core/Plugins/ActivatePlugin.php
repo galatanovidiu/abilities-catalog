@@ -51,7 +51,7 @@ final class ActivatePlugin implements Ability {
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin file path without the .php extension, for example "akismet/akismet".', 'abilities-catalog' ),
+						'description' => __( 'The plugin file path without the .php extension — the "plugin" value returned by plugins/list-plugins, e.g. "akismet/akismet" or "hello" (for hello.php). Not the human-readable plugin name ("Hello Dolly") and not a value ending in ".php".', 'abilities-catalog' ),
 						'minLength'   => 1,
 						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 					),
