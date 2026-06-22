@@ -23,7 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * deliberately grouped (themes+menus form "appearance"; templates+fonts form
  * "design"; `privacy/*` requests join "tools" while `settings/*` privacy-policy
  * settings stay in "settings"), and a few abilities are placed by exact name
- * where no prefix fits (`search/search-content` belongs to "content").
+ * where no prefix fits (`search/search-content` joins "content"; core's own
+ * read-only `core/*` info abilities join the domains whose data they mirror).
+ *
+ * The server exposes a *curated subset* of the registered abilities, not all of
+ * them: an ability no domain owns is simply not exposed by any tool. That is
+ * intentional, so this map never warns about an unmapped name.
  *
  * This class only knows names; it never touches the live ability registry. The
  * {@see DomainRouter} pairs a domain with the registry to list, describe, and run
@@ -65,13 +70,21 @@ final class DomainMap {
 	/**
 	 * Domain slug => exact ability names a prefix cannot capture.
 	 *
-	 * Checked before the prefix rules so an explicit placement always wins. The
-	 * only current case is search, whose `search/` prefix is not a domain.
+	 * Checked before the prefix rules so an explicit placement always wins. Two
+	 * kinds land here: full-text search, whose `search/` prefix is not a domain;
+	 * and the read-only `core/*` info abilities WordPress core itself registers,
+	 * each placed in the domain whose data it mirrors (site facts in "settings",
+	 * the current user in "users", the runtime environment in "site-health"). Any
+	 * other `core/*` ability is left unmapped, so the curated server does not
+	 * expose it.
 	 *
 	 * @var array<string, list<string>>
 	 */
 	private const DOMAIN_INCLUDES = array(
-		'content' => array( 'search/search-content' ),
+		'content'     => array( 'search/search-content' ),
+		'settings'    => array( 'core/get-site-info' ),
+		'users'       => array( 'core/get-user-info' ),
+		'site-health' => array( 'core/get-environment-info' ),
 	);
 
 	/**
@@ -139,61 +152,6 @@ final class DomainMap {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Returns the names that belong to no domain.
-	 *
-	 * Pure counterpart to {@see domainOf()}: the server feeds it the registered
-	 * ability names so it can warn about any ability that would be exposed by no
-	 * domain tool. It touches neither the registry nor the adapter, so the coverage
-	 * rule is testable on its own.
-	 *
-	 * @param list<string> $ability_names The ability names to classify.
-	 * @return list<string> The subset with no owning domain, in input order.
-	 */
-	public function unmapped( array $ability_names ): array {
-		$orphans = array();
-
-		foreach ( $ability_names as $name ) {
-			if ( null !== $this->domainOf( $name ) ) {
-				continue;
-			}
-
-			$orphans[] = $name;
-		}
-
-		return $orphans;
-	}
-
-	/**
-	 * Warns about any ability name no domain owns (spec §12).
-	 *
-	 * The coverage guard the server runs at boot: an ability whose name reaches no
-	 * domain would be exposed by no tool, so this fires a `_doing_it_wrong` notice
-	 * naming the orphans rather than dropping them silently. It reasons only about the
-	 * names it is given — the server supplies the registered ones — so the warning
-	 * lives next to the taxonomy without the class reaching into the registry.
-	 *
-	 * @param list<string> $ability_names The registered ability names to check.
-	 * @return void
-	 */
-	public function reportUnmapped( array $ability_names ): void {
-		$orphans = $this->unmapped( $ability_names );
-
-		if ( empty( $orphans ) ) {
-			return;
-		}
-
-		_doing_it_wrong(
-			__METHOD__,
-			sprintf(
-				/* translators: %s: comma-separated list of ability names. */
-				esc_html__( 'These abilities are registered but mapped to no MCP domain, so no domain tool exposes them: %s. Assign them with the "abilities_catalog_mcp_domain_map" filter.', 'abilities-catalog' ),
-				esc_html( implode( ', ', $orphans ) )
-			),
-			'0.2.0'
-		);
 	}
 
 	/**

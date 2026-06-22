@@ -14,8 +14,8 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * The map is pure (it never touches the registry), so these assert the curated
- * placement rules directly: prefixes grouped into domains, the search exception,
- * and unmapped names returning null.
+ * placement rules directly: prefixes grouped into domains, the search and
+ * core-info exact-name exceptions, and unmapped names returning null.
  */
 final class DomainMapTest extends TestCase {
 
@@ -178,64 +178,6 @@ final class DomainMapTest extends TestCase {
 	}
 
 	/**
-	 * reportUnmapped fires a _doing_it_wrong notice naming the orphan abilities.
-	 *
-	 * @return void
-	 */
-	public function test_report_unmapped_warns_about_orphan_names(): void {
-		$this->setExpectedIncorrectUsage( DomainMap::class . '::reportUnmapped' );
-
-		$this->map->reportUnmapped( array( 'content/get-post', 'widgets/orphan' ) );
-	}
-
-	/**
-	 * reportUnmapped is silent when every name maps to a domain.
-	 *
-	 * The WP test harness fails on any unexpected _doing_it_wrong, so a clean run
-	 * proves silence; the explicit assertion documents the precondition.
-	 *
-	 * @return void
-	 */
-	public function test_report_unmapped_is_silent_when_all_names_map(): void {
-		$names = array( 'content/get-post', 'media/list-media', 'search/search-content' );
-		$this->assertSame( array(), $this->map->unmapped( $names ) );
-
-		$this->map->reportUnmapped( $names );
-	}
-
-	/**
-	 * unmapped returns only the names no domain owns, in input order.
-	 *
-	 * @return void
-	 */
-	public function test_unmapped_returns_only_orphan_names(): void {
-		$names = array(
-			'content/get-post',
-			'widgets/list',
-			'media/list-media',
-			'noslash',
-			'search/search-content',
-		);
-
-		$this->assertSame(
-			array( 'widgets/list', 'noslash' ),
-			$this->map->unmapped( $names )
-		);
-	}
-
-	/**
-	 * unmapped returns an empty list when every name maps to a domain.
-	 *
-	 * @return void
-	 */
-	public function test_unmapped_is_empty_when_all_names_map(): void {
-		$this->assertSame(
-			array(),
-			$this->map->unmapped( array( 'content/get-post', 'media/list-media', 'updates/run-update' ) )
-		);
-	}
-
-	/**
 	 * The curated 11 domain slugs, in tool order.
 	 *
 	 * @return list<string>
@@ -269,7 +211,11 @@ final class DomainMapTest extends TestCase {
 			'site-health -> self'       => array( 'site-health/get-status', 'site-health' ),
 			'update -> updates'         => array( 'updates/run-update', 'updates' ),
 			'dashboard -> self'         => array( 'dashboard/get-activity', 'dashboard' ),
+			'core site -> settings'     => array( 'core/get-site-info', 'settings' ),
+			'core user -> users'        => array( 'core/get-user-info', 'users' ),
+			'core env -> site-health'   => array( 'core/get-environment-info', 'site-health' ),
 			'other search -> null'      => array( 'search/something-else', null ),
+			'unmapped core -> null'     => array( 'core/something-else', null ),
 			'unknown prefix -> null'    => array( 'widgets/list', null ),
 			'no slash -> null'          => array( 'noslash', null ),
 			'empty -> null'             => array( '', null ),
