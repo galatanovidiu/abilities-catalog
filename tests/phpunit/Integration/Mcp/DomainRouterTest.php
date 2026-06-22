@@ -255,46 +255,43 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
-	 * An unregistered name always tells the agent it can call `list` to recover.
+	 * An unregistered name directs the agent to the authoritative discovery path.
 	 *
 	 * The unknown-ability 404 is the dominant friction surface for a guessing agent; the
-	 * message must point at the one action that resolves any wrong name.
+	 * message must point at the exact path that resolves any wrong name and its inputs —
+	 * `list` for the exact names, then `describe` for the input schema — so the agent stops
+	 * guessing and reads instead.
 	 *
 	 * @return void
 	 */
-	public function test_unregistered_ability_message_points_to_list(): void {
+	public function test_unregistered_ability_message_points_to_list_and_describe(): void {
 		$error = $this->router->describe( 'content', 'content/totally-made-up-name' );
 
 		$this->assertWPError( $error );
 		$this->assertStringContainsString( 'action "list"', $error->get_error_message() );
+		$this->assertStringContainsString( 'describe', $error->get_error_message() );
 		$this->assertStringContainsString( 'content', $error->get_error_message() );
 	}
 
 	/**
-	 * A near-miss name (a likely typo) gets a "Did you mean" suggestion of the closest
-	 * registered ability, so the agent can retry in one step.
+	 * The server never guesses the intended name — no fuzzy "Did you mean" suggestion.
+	 *
+	 * A near-miss typo and a far-off name both get the same authoritative directive: read the
+	 * exact names from `list`. The server does not steer the agent with an edit-distance guess,
+	 * which can point at a wrong-but-close ability.
 	 *
 	 * @return void
 	 */
-	public function test_unregistered_near_miss_suggests_nearest_name(): void {
-		// "content/get-pots" is two edits from the real "content/get-post".
-		$error = $this->router->describe( 'content', 'content/get-pots' );
+	public function test_unknown_ability_never_suggests_a_guess(): void {
+		// "content/get-pots" is one edit from the real "content/get-post" — still no suggestion.
+		$near = $this->router->describe( 'content', 'content/get-pots' );
+		$far  = $this->router->describe( 'content', 'content/zzzzzzzzzzzzzzzzzzzz' );
 
-		$this->assertWPError( $error );
-		$this->assertStringContainsString( 'Did you mean "content/get-post"', $error->get_error_message() );
-	}
-
-	/**
-	 * A far-off guess gets only the `list` hint — no misleading suggestion.
-	 *
-	 * @return void
-	 */
-	public function test_unregistered_far_off_name_has_no_suggestion(): void {
-		$error = $this->router->describe( 'content', 'content/zzzzzzzzzzzzzzzzzzzz' );
-
-		$this->assertWPError( $error );
-		$this->assertStringContainsString( 'action "list"', $error->get_error_message() );
-		$this->assertStringNotContainsString( 'Did you mean', $error->get_error_message() );
+		foreach ( array( $near, $far ) as $error ) {
+			$this->assertWPError( $error );
+			$this->assertStringContainsString( 'action "list"', $error->get_error_message() );
+			$this->assertStringNotContainsString( 'Did you mean', $error->get_error_message() );
+		}
 	}
 
 	/**

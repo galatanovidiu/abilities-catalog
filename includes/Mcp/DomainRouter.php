@@ -176,7 +176,7 @@ final class DomainRouter {
 					__( 'Ability "%1$s" is not part of the "%2$s" domain.', 'abilities-catalog' ),
 					$ability,
 					$domain
-				) . $this->recoveryHint( $domain, $ability ),
+				) . $this->recoveryHint(),
 				array( 'status' => 404 )
 			);
 		}
@@ -212,7 +212,7 @@ final class DomainRouter {
 				__( 'Ability "%1$s" is not registered in the "%2$s" domain.', 'abilities-catalog' ),
 				$ability,
 				$domain
-			) . $this->recoveryHint( $domain, $ability ),
+			) . $this->recoveryHint(),
 			array( 'status' => 404 )
 		);
 	}
@@ -220,87 +220,16 @@ final class DomainRouter {
 	/**
 	 * Builds the recovery sentence appended to an unknown-ability error.
 	 *
-	 * Always tells the agent it can call `list` to see the domain's abilities — the
-	 * one action that resolves any wrong name. When a registered name is close enough
-	 * to the guess (a likely typo or a wrong prefix), it also offers a "Did you mean"
-	 * suggestion so the agent can retry in one step. The suggestion is advisory; the
-	 * `list` hint is the guaranteed path. This is why the unknown-ability path stays a
-	 * recoverable error rather than a dead end — it teaches the caller how to proceed.
+	 * Directs the agent to the authoritative discovery path — `list` for this domain's exact
+	 * ability names, then `describe` for an ability's exact input schema before it calls
+	 * `execute`. The server never guesses the intended name; it tells the caller where to read
+	 * the exact one. This is why the unknown-ability case stays a recoverable error rather than
+	 * a dead end — it points at the names and inputs instead of inviting another guess.
 	 *
-	 * @param string $domain  The domain slug whose abilities to suggest from.
-	 * @param string $ability The unrecognized ability name the caller sent.
-	 * @return string The leading-space recovery sentence(s) to append to the message.
+	 * @return string The leading-space recovery sentence to append to the message.
 	 */
-	private function recoveryHint( string $domain, string $ability ): string {
-		$suggestion = $this->nearestName( $ability, $this->namesInDomain( $domain ) );
-
-		$did_you_mean = null === $suggestion ? '' : sprintf(
-			/* translators: %s: a suggested ability name. */
-			__( ' Did you mean "%s"?', 'abilities-catalog' ),
-			$suggestion
-		);
-
-		return $did_you_mean . __( ' Call this tool with action "list" to see the available abilities.', 'abilities-catalog' );
-	}
-
-	/**
-	 * Returns the registered ability names mapped to a domain.
-	 *
-	 * The names-only counterpart to {@see list()}: it walks the live registry once and
-	 * keeps the in-domain names, without building the fuller summaries `list()` returns.
-	 * Used to source "Did you mean" suggestions on the error path, so a guess never has
-	 * to pay for the full listing.
-	 *
-	 * @param string $domain The domain slug.
-	 * @return list<string> The in-domain registered ability names.
-	 */
-	private function namesInDomain( string $domain ): array {
-		$names = array();
-
-		foreach ( wp_get_abilities() as $name => $ability ) {
-			if ( ! $ability instanceof WP_Ability ) {
-				continue;
-			}
-
-			if ( $this->map->domainOf( (string) $name ) !== $domain ) {
-				continue;
-			}
-
-			$names[] = (string) $name;
-		}
-
-		return $names;
-	}
-
-	/**
-	 * Picks the candidate name closest to a guess, when one is close enough.
-	 *
-	 * Uses the edit distance ({@see levenshtein()}) and only returns a candidate within
-	 * a small relative threshold (a third of the guess length, at least two edits), so a
-	 * genuine typo or wrong prefix yields a suggestion while an unrelated name yields
-	 * none — a far-off "Did you mean" would mislead more than help.
-	 *
-	 * @param string       $needle     The unrecognized ability name.
-	 * @param list<string> $candidates The registered names to match against.
-	 * @return string|null The nearest name within threshold, or null when none is close.
-	 */
-	private function nearestName( string $needle, array $candidates ): ?string {
-		$best          = null;
-		$best_distance = PHP_INT_MAX;
-
-		foreach ( $candidates as $candidate ) {
-			$distance = levenshtein( $needle, $candidate );
-			if ( $distance >= $best_distance ) {
-				continue;
-			}
-
-			$best_distance = $distance;
-			$best          = $candidate;
-		}
-
-		$threshold = max( 2, intdiv( strlen( $needle ), 3 ) );
-
-		return null !== $best && $best_distance <= $threshold ? $best : null;
+	private function recoveryHint(): string {
+		return __( ' Call this tool with action "list" to see the exact ability names, then "describe" to get an ability\'s input schema before "execute".', 'abilities-catalog' );
 	}
 
 	/**
