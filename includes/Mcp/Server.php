@@ -394,27 +394,27 @@ final class Server {
 	private function domainBlurb( string $domain ): string {
 		switch ( $domain ) {
 			case 'content':
-				return __( 'Manage content — full CRUD on posts, pages and all custom post types; categories and tags; comments; post meta and revisions; content search.', 'abilities-catalog' );
+				return __( 'Manage content — full CRUD on posts, pages and all custom post types; categories and tags; comments; post meta and revisions; full-text content search. Ability names use several prefixes, not just content/: posts, pages, meta and revisions are content/*; categories and tags are terms/*; comments are comments/*; full-text search is the single ability search/search-content. Do not assume the prefix matches the tool name.', 'abilities-catalog' );
 			case 'media':
-				return __( 'Manage the media library — upload, list, read, update and delete attachments; edit and crop images; regenerate thumbnails; and read the registered image sizes.', 'abilities-catalog' );
+				return __( 'Manage the media library — upload, list, read, update and delete attachments; edit and crop images; regenerate thumbnails; and read the registered image sizes. All abilities use the media/ prefix.', 'abilities-catalog' );
 			case 'appearance':
-				return __( 'Manage site appearance — install, switch, list and delete themes (and search the theme directory); and create, update and delete classic menus and block navigation, their items, and menu locations.', 'abilities-catalog' );
+				return __( 'Manage site appearance — install, switch, list and delete themes (and search the theme directory); and create, update and delete classic menus and block navigation, their items, and menu locations. Ability names use two prefixes, not appearance/: theme abilities are themes/*; menu and navigation abilities are menus/*. Do not assume the prefix matches the tool name.', 'abilities-catalog' );
 			case 'design':
-				return __( 'Manage site design — create, read, update and delete block templates and template parts; create and read block patterns and synced patterns; read and update global and theme styles; list registered block types; and install, list and delete web fonts and font collections.', 'abilities-catalog' );
+				return __( 'Manage site design — create, read, update and delete block templates and template parts; create and read block patterns and synced patterns; read and update global and theme styles; list registered block types; and install, list and delete web fonts and font collections. Ability names use two prefixes, not design/: templates, template parts, patterns, styles and block types are templates/*; web fonts and font collections are fonts/*. Do not assume the prefix matches the tool name.', 'abilities-catalog' );
 			case 'plugins':
-				return __( 'Manage plugins — list, read, install (from the plugin directory), activate, deactivate, update and delete plugins, and search the plugin directory.', 'abilities-catalog' );
+				return __( 'Manage plugins — list, read, install (from the plugin directory), activate, deactivate, update and delete plugins, and search the plugin directory. All abilities use the plugins/ prefix.', 'abilities-catalog' );
 			case 'users':
-				return __( 'Manage users — create, list, read, update and delete user accounts; read and update the current user; and manage application passwords.', 'abilities-catalog' );
+				return __( 'Manage users — create, list, read, update and delete user accounts; read and update the current user; and manage application passwords. All abilities use the users/ prefix (application passwords included, e.g. users/list-application-passwords).', 'abilities-catalog' );
 			case 'settings':
-				return __( 'Manage site settings — read and update the general, writing, reading, discussion, media, permalink and privacy option groups; read or update a single named option; and read connector (integration provider) metadata.', 'abilities-catalog' );
+				return __( 'Manage site settings — read and update the general, writing, reading, discussion, media, permalink and privacy option groups; read or update a single named option; and read connector (integration provider) metadata. Option-group ability names are settings/get-<group> and settings/update-<group> with no -settings suffix — the groups are general, writing, reading, discussion, media, permalinks, privacy (e.g. settings/get-general, settings/update-reading). A single option is settings/get-option and settings/update-option; connector metadata is connectors/*.', 'abilities-catalog' );
 			case 'tools':
-				return __( 'Site tools — export site content (WXR), list the available content importers, and manage personal-data export and erasure requests.', 'abilities-catalog' );
+				return __( 'Site tools — export site content (WXR), list the available content importers, and manage personal-data export and erasure requests. Ability names use two prefixes, not just tools/: export and importer abilities are tools/*; personal-data export and erasure requests are privacy/*.', 'abilities-catalog' );
 			case 'site-health':
-				return __( 'Inspect Site Health — read the status report, run the health tests, and read the debug information.', 'abilities-catalog' );
+				return __( 'Inspect Site Health — read the status report, run the health tests, and read the debug information. All abilities use the site-health/ prefix.', 'abilities-catalog' );
 			case 'updates':
-				return __( 'Manage updates — list the available core, plugin, theme and translation updates, and run a plugin, theme or translation update.', 'abilities-catalog' );
+				return __( 'Manage updates — list the available core, plugin, theme and translation updates, and run a plugin, theme or translation update. All abilities use the updates/ prefix.', 'abilities-catalog' );
 			case 'dashboard':
-				return __( 'Read the dashboard — recent site activity, the At a Glance counts, and recent drafts.', 'abilities-catalog' );
+				return __( 'Read the dashboard — recent site activity, the At a Glance counts, and recent drafts. All abilities use the dashboard/ prefix.', 'abilities-catalog' );
 			default:
 				return sprintf(
 					/* translators: %s: domain slug. */
