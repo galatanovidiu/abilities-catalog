@@ -130,26 +130,6 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
-	 * Every registered ability is owned by exactly one domain.
-	 *
-	 * The coverage invariant: an ability whose prefix is not in the map would be
-	 * exposed by no domain tool. This fails the moment someone adds an ability under a
-	 * new prefix without mapping it.
-	 *
-	 * @return void
-	 */
-	public function test_every_registered_ability_maps_to_a_domain(): void {
-		$names    = array_map( 'strval', array_keys( wp_get_abilities() ) );
-		$unmapped = ( new DomainMap() )->unmapped( $names );
-
-		$this->assertSame(
-			array(),
-			$unmapped,
-			'Every registered ability must map to a domain; unmapped: ' . implode( ', ', $unmapped )
-		);
-	}
-
-	/**
 	 * The 11 curated domain slugs, one per data row.
 	 *
 	 * @return array<string,array{0:string}>

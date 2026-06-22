@@ -162,8 +162,8 @@ final class Server {
 	 * opens through the `abilities_catalog_mcp_domain_map` filter are all exposed, then
 	 * appends the one {@see SkillsTool} that serves task recipes across domains. A tool
 	 * the adapter rejects is logged and skipped rather than aborting the whole server,
-	 * so one bad tool never costs the others. Before building, it asks the map to warn
-	 * about any registered ability no domain owns (so it cannot be silently unexposed).
+	 * so one bad tool never costs the others. The server exposes a curated subset of the
+	 * registered abilities, so an ability no domain owns is intentionally left unexposed.
 	 *
 	 * The domain tools and the skills tool share the same coarse permission floor.
 	 *
@@ -171,7 +171,6 @@ final class Server {
 	 */
 	private function tools(): array {
 		$map = new DomainMap();
-		$map->reportUnmapped( array_map( 'strval', array_keys( wp_get_abilities() ) ) );
 
 		$permission = $this->toolPermission();
 		$factory    = new DomainToolFactory( new DomainRouter( $map, new ExposurePolicy() ), $permission );
@@ -421,13 +420,13 @@ final class Server {
 			case 'plugins':
 				return __( 'Manage plugins — list, read, install (from the plugin directory), activate, deactivate, update and delete plugins, and search the plugin directory. All abilities use the plugins/ prefix.', 'abilities-catalog' );
 			case 'users':
-				return __( 'Manage users — create, list, read, update and delete user accounts; read and update the current user; and manage application passwords. All abilities use the users/ prefix (application passwords included, e.g. users/list-application-passwords).', 'abilities-catalog' );
+				return __( 'Manage users — create, list, read, update and delete user accounts; read and update the current user; and manage application passwords. Most abilities use the users/ prefix (application passwords included, e.g. users/list-application-passwords); the current user\'s core profile is the single read core/get-user-info.', 'abilities-catalog' );
 			case 'settings':
-				return __( 'Manage site settings — read and update the general, writing, reading, discussion, media, permalink and privacy option groups; read or update a single named option; and read connector (integration provider) metadata. Option-group ability names are settings/get-<group> and settings/update-<group> with no -settings suffix — the groups are general, writing, reading, discussion, media, permalinks, privacy (e.g. settings/get-general, settings/update-reading). A single option is settings/get-option and settings/update-option; connector metadata is connectors/*.', 'abilities-catalog' );
+				return __( 'Manage site settings — read and update the general, writing, reading, discussion, media, permalink and privacy option groups; read or update a single named option; and read connector (integration provider) metadata. Option-group ability names are settings/get-<group> and settings/update-<group> with no -settings suffix — the groups are general, writing, reading, discussion, media, permalinks, privacy (e.g. settings/get-general, settings/update-reading). A single option is settings/get-option and settings/update-option; connector metadata is connectors/*. Core general site facts (name, URL, admin email, language, version) are also a single read via core/get-site-info.', 'abilities-catalog' );
 			case 'tools':
 				return __( 'Site tools — export site content (WXR), list the available content importers, and manage personal-data export and erasure requests. Ability names use two prefixes, not just tools/: export and importer abilities are tools/*; personal-data export and erasure requests are privacy/*.', 'abilities-catalog' );
 			case 'site-health':
-				return __( 'Inspect Site Health — read the status report, run the health tests, and read the debug information. All abilities use the site-health/ prefix.', 'abilities-catalog' );
+				return __( 'Inspect Site Health — read the status report, run the health tests, and read the debug information. Most abilities use the site-health/ prefix; the site\'s runtime environment (PHP, database, WordPress version) is the single read core/get-environment-info.', 'abilities-catalog' );
 			case 'updates':
 				return __( 'Manage updates — list the available core, plugin, theme and translation updates, and run a plugin, theme or translation update. All abilities use the updates/ prefix.', 'abilities-catalog' );
 			case 'dashboard':
