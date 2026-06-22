@@ -383,6 +383,48 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
+	 * An invalid input shape points the caller at `describe` for the exact schema.
+	 *
+	 * When the agent guesses a field name, core rejects the input with `ability_invalid_input`.
+	 * The router appends a `describe` hint naming the ability, so the agent recovers by reading
+	 * the schema instead of guessing another field. The original error code is preserved.
+	 *
+	 * @return void
+	 */
+	public function test_execute_invalid_input_points_to_describe(): void {
+		$this->actingAs( 'administrator' );
+
+		// "content/get-post" requires "id" and forbids extra properties, so an unknown field is
+		// an invalid input shape — exactly the field-guessing case this hint serves.
+		$router = $this->routerWith( array( 'content/get-post' ) );
+		$result = $router->execute( 'content', 'content/get-post', array( 'not_a_real_field' => 'x' ) );
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+		$this->assertStringContainsString( 'describe', $result->get_error_message() );
+		$this->assertStringContainsString( 'content/get-post', $result->get_error_message() );
+	}
+
+	/**
+	 * A non-input error (e.g. a capability denial) is not rewritten with a describe hint.
+	 *
+	 * `describe` cannot fix a permission failure, so the guidance is scoped to input-shape
+	 * errors only — a denied caller must not be told to go read the schema.
+	 *
+	 * @return void
+	 */
+	public function test_execute_permission_error_has_no_describe_hint(): void {
+		$this->actingAs( 'subscriber' );
+
+		$router = $this->routerWith( array( 'content/create-post' ) );
+		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertStringNotContainsString( 'describe', $result->get_error_message() );
+	}
+
+	/**
 	 * Returns the list item with the given ability name, failing if absent.
 	 *
 	 * @param array<int,array<string,mixed>> $items The list items.

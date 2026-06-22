@@ -131,6 +131,10 @@ final class DomainRouter {
 	 * `null` before dispatch (the same normalization the adapter applies on its own
 	 * ability-wrap path; ours is handler-backed, so it bypasses that).
 	 *
+	 * When the ability rejects the input shape, the error is rewritten to point the caller at
+	 * `describe` for the exact schema ({@see guideInvalidInput()}), so an agent that guessed a
+	 * field name recovers by reading rather than guessing again.
+	 *
 	 * @param string              $domain  The domain slug the ability must belong to.
 	 * @param string              $ability The full ability name.
 	 * @param array<string,mixed> $input   Arguments for the ability.
@@ -146,7 +150,41 @@ final class DomainRouter {
 			return $this->disabled( $ability );
 		}
 
-		return $resolved->execute( AbilityArgumentNormalizer::normalize( $resolved, $input ) );
+		$result = $resolved->execute( AbilityArgumentNormalizer::normalize( $resolved, $input ) );
+
+		return is_wp_error( $result ) ? $this->guideInvalidInput( $result, $ability ) : $result;
+	}
+
+	/**
+	 * Points a caller at `describe` when the ability rejected its input shape.
+	 *
+	 * Core validates the input against the ability's schema and returns
+	 * `ability_invalid_input` (a wrong or guessed field) or `ability_missing_input_schema`
+	 * (arguments sent to a no-input ability). Both mean the caller guessed the input shape, so
+	 * the recovery is the same: read the exact schema with `describe`, do not guess again. Any
+	 * other error — a capability denial, an output bug, or the ability's own failure — passes
+	 * through unchanged, because `describe` would not help there. The original code and data are
+	 * preserved so the folded `(code, status)` the agent sees does not change.
+	 *
+	 * @param \WP_Error $error   The error the ability returned.
+	 * @param string    $ability The full ability name to describe.
+	 * @return \WP_Error The error, with a `describe` hint appended for an input-shape failure.
+	 */
+	private function guideInvalidInput( WP_Error $error, string $ability ): WP_Error {
+		$input_shape_errors = array( 'ability_invalid_input', 'ability_missing_input_schema' );
+		if ( ! in_array( $error->get_error_code(), $input_shape_errors, true ) ) {
+			return $error;
+		}
+
+		return new WP_Error(
+			$error->get_error_code(),
+			$error->get_error_message() . sprintf(
+				/* translators: %s: the ability name to describe. */
+				__( ' Call this tool with action "describe" and ability "%s" to see the exact input schema, then retry — do not guess field names.', 'abilities-catalog' ),
+				$ability
+			),
+			$error->get_error_data()
+		);
 	}
 
 	/**
