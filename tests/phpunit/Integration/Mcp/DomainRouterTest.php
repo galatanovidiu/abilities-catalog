@@ -255,6 +255,63 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
+	 * An unregistered name always tells the agent it can call `list` to recover.
+	 *
+	 * The unknown-ability 404 is the dominant friction surface for a guessing agent; the
+	 * message must point at the one action that resolves any wrong name.
+	 *
+	 * @return void
+	 */
+	public function test_unregistered_ability_message_points_to_list(): void {
+		$error = $this->router->describe( 'content', 'content/totally-made-up-name' );
+
+		$this->assertWPError( $error );
+		$this->assertStringContainsString( 'action "list"', $error->get_error_message() );
+		$this->assertStringContainsString( 'content', $error->get_error_message() );
+	}
+
+	/**
+	 * A near-miss name (a likely typo) gets a "Did you mean" suggestion of the closest
+	 * registered ability, so the agent can retry in one step.
+	 *
+	 * @return void
+	 */
+	public function test_unregistered_near_miss_suggests_nearest_name(): void {
+		// "content/get-pots" is two edits from the real "content/get-post".
+		$error = $this->router->describe( 'content', 'content/get-pots' );
+
+		$this->assertWPError( $error );
+		$this->assertStringContainsString( 'Did you mean "content/get-post"', $error->get_error_message() );
+	}
+
+	/**
+	 * A far-off guess gets only the `list` hint — no misleading suggestion.
+	 *
+	 * @return void
+	 */
+	public function test_unregistered_far_off_name_has_no_suggestion(): void {
+		$error = $this->router->describe( 'content', 'content/zzzzzzzzzzzzzzzzzzzz' );
+
+		$this->assertWPError( $error );
+		$this->assertStringContainsString( 'action "list"', $error->get_error_message() );
+		$this->assertStringNotContainsString( 'Did you mean', $error->get_error_message() );
+	}
+
+	/**
+	 * The out-of-domain error also points the agent at `list`, so a wrong-prefix guess
+	 * (e.g. appearance/list-themes when theme abilities are themes/*) is recoverable.
+	 *
+	 * @return void
+	 */
+	public function test_out_of_domain_message_points_to_list(): void {
+		$error = $this->router->describe( 'content', 'media/list-image-sizes' );
+
+		$this->assertWPError( $error );
+		$this->assertSame( 'abilities_catalog_mcp_unknown_ability', $error->get_error_code() );
+		$this->assertStringContainsString( 'action "list"', $error->get_error_message() );
+	}
+
+	/**
 	 * execute runs an ability for a user with the capability.
 	 *
 	 * @return void
