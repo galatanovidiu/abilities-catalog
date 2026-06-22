@@ -120,7 +120,7 @@ final class GetGlobalStyles implements Ability {
 		if ( $id <= 0 ) {
 			return new WP_Error(
 				'global_styles_unavailable',
-				__( 'No global styles record exists for the active theme.', 'abilities-catalog' ),
+				__( 'No global styles record exists for the active theme yet. Call templates/init-global-styles to create one, then retry.', 'abilities-catalog' ),
 				array( 'status' => 404 )
 			);
 		}
