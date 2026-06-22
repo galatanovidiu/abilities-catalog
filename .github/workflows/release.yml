@@ -48,6 +48,20 @@ jobs:
             exit 1
           fi
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+
+      # Production-only install: pulls the MCP adapter and the Jetpack Autoloader
+      # and generates vendor/autoload_packages.php, which the MCP server requires.
+      # vendor/ ships in the zip (it is in the `files` field of package.json that
+      # `wp-scripts plugin-zip` reads), so the MCP server works out of the box.
+      - name: Install Composer dependencies (production)
+        run: composer install --no-dev --no-interaction --no-progress
+
       - name: Build plugin zip
         run: npm run plugin-zip
 
