@@ -377,7 +377,24 @@ final class Server {
 	 * @return string The tool description.
 	 */
 	private function description( string $domain ): string {
-		return $this->domainBlurb( $domain ) . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
+		return $this->domainBlurb( $domain ) . ' ' . $this->skillsPointer() . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
+	}
+
+	/**
+	 * The cross-tool pointer to the skills tool, shared by every domain description.
+	 *
+	 * Multi-step tasks — authoring content, organizing with terms, moderating
+	 * comments, editing an image, configuring the homepage, exporting content — have a
+	 * ready-made recipe on the separate `skills` tool. An agent routes on the domain
+	 * tools, so the skills tool is easy to overlook (in evaluation it was consulted on
+	 * no task at all); the pointer therefore lives on each domain description and names
+	 * the action to call, so reaching the recipe is a single step. It is phrased as a
+	 * suggestion ("may have"), since a one-call task has no matching recipe.
+	 *
+	 * @return string The skills pointer sentence, without surrounding spaces.
+	 */
+	private function skillsPointer(): string {
+		return __( 'For a multi-step task, the separate "skills" tool may have a ready-made recipe — check it with action "list" before composing your own sequence of calls.', 'abilities-catalog' );
 	}
 
 	/**
