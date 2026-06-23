@@ -97,7 +97,7 @@ final class SetTransient implements Ability {
 					'network'    => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __( 'Whether to store a site/network transient (set_site_transient) instead of a normal transient (set_transient). Defaults to false. On a single site both stores behave the same; on multisite a site transient is shared across the network.', 'abilities-catalog' ),
+						'description' => __( 'Whether to store a site/network transient (set_site_transient) instead of a normal transient (set_transient). Defaults to false. On a single site both stores behave the same; on multisite a site transient is shared across the network, so writing one requires network-admin (manage_network_options) capability.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -147,11 +147,19 @@ final class SetTransient implements Ability {
 	 * authorization. The check is object-independent — there is no per-transient
 	 * capability in core — so nothing is deferred to a wrapped route.
 	 *
+	 * A site/network transient (`network` true) is shared across the whole network
+	 * on multisite, so writing it requires the network-admin capability
+	 * `manage_network_options` there — a per-site `manage_options` admin must not
+	 * write cross-site network state. On a single site both resolve to `manage_options`.
+	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may manage options.
+	 * @return bool True if the current user holds the capability for the targeted store.
 	 */
 	public function hasPermission( $input = null ): bool {
-		return current_user_can( 'manage_options' );
+		$input   = is_array( $input ) ? $input : array();
+		$network = ! empty( $input['network'] );
+
+		return current_user_can( $network && is_multisite() ? 'manage_network_options' : 'manage_options' );
 	}
 
 	/**
@@ -167,19 +175,22 @@ final class SetTransient implements Ability {
 	 * @return array<string,mixed>|\WP_Error The set result, or a WP_Error.
 	 */
 	public function execute( $input = null ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$input      = is_array( $input ) ? $input : array();
+		$key        = isset( $input['key'] ) ? (string) $input['key'] : '';
+		$value      = $input['value'] ?? null;
+		$expiration = isset( $input['expiration'] ) ? (int) $input['expiration'] : 0;
+		$network    = ! empty( $input['network'] );
+
+		// A network transient targets network-wide state on multisite, so it requires
+		// the network-admin capability there; a single named transient needs manage_options.
+		$capability = $network && is_multisite() ? 'manage_network_options' : 'manage_options';
+		if ( ! current_user_can( $capability ) ) {
 			return new WP_Error(
 				'abilities_catalog_cannot_manage_options',
 				__( 'You are not allowed to set transients.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);
 		}
-
-		$input      = is_array( $input ) ? $input : array();
-		$key        = isset( $input['key'] ) ? (string) $input['key'] : '';
-		$value      = $input['value'] ?? null;
-		$expiration = isset( $input['expiration'] ) ? (int) $input['expiration'] : 0;
-		$network    = ! empty( $input['network'] );
 
 		if ( $network ) {
 			set_site_transient( $key, $value, $expiration );

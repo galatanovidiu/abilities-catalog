@@ -68,7 +68,7 @@ final class FlushObjectCache implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Flush Object Cache', 'abilities-catalog' ),
-			'description'         => __( 'Flushes the ENTIRE WordPress object cache — every group, site-wide. On a persistent backend (Redis/Memcached) this empties the whole shared store; cached data repopulates lazily on the next reads, so a busy site may see a brief performance dip. Use to clear stale cache after out-of-band changes. Not undoable (but self-healing). Takes no input.', 'abilities-catalog' ),
+			'description'         => __( 'Flushes the ENTIRE WordPress object cache — every group, site-wide. On a persistent backend (Redis/Memcached) this empties the whole shared store; cached data repopulates lazily on the next reads, so a busy site may see a brief performance dip. On multisite the cache is shared across the network, so this requires network-admin (manage_network_options) capability there. Use to clear stale cache after out-of-band changes. Not undoable (but self-healing). Takes no input.', 'abilities-catalog' ),
 			'category'            => 'tools',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -116,7 +116,9 @@ final class FlushObjectCache implements Ability {
 	 * @return bool True if the current user may manage options.
 	 */
 	public function hasPermission( $input = null ): bool {
-		return current_user_can( 'manage_options' );
+		// On multisite the object cache backend is shared network-wide, so a flush
+		// requires the network-admin capability; on a single site it is manage_options.
+		return current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' );
 	}
 
 	/**
@@ -133,7 +135,8 @@ final class FlushObjectCache implements Ability {
 	 * @return array<string,bool>|\WP_Error The flush result, or a WP_Error.
 	 */
 	public function execute( $input = null ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$capability = is_multisite() ? 'manage_network_options' : 'manage_options';
+		if ( ! current_user_can( $capability ) ) {
 			return new WP_Error(
 				'abilities_catalog_cannot_manage_options',
 				__( 'You are not allowed to flush the object cache.', 'abilities-catalog' ),

@@ -68,7 +68,7 @@ final class GetTransient implements Ability {
 					'network' => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __( 'Whether to read a site/network transient (get_site_transient) instead of a normal transient (get_transient). Defaults to false. On a single site both stores behave the same; on multisite a site transient is shared across the network.', 'abilities-catalog' ),
+						'description' => __( 'Whether to read a site/network transient (get_site_transient) instead of a normal transient (get_transient). Defaults to false. On a single site both stores behave the same; on multisite a site transient is shared across the network, so reading one requires network-admin (manage_network_options) capability.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -119,11 +119,19 @@ final class GetTransient implements Ability {
 	 * the transient writes). The check is object-independent: there is no per-transient
 	 * capability in core, so nothing is deferred to a wrapped route.
 	 *
+	 * A site/network transient (`network` true) is shared across the whole network on
+	 * multisite, so reading it requires the network-admin capability
+	 * `manage_network_options` there — a per-site `manage_options` admin must not read
+	 * cross-site network state. On a single site both checks resolve to `manage_options`.
+	 *
 	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may manage options.
+	 * @return bool True if the current user holds the capability for the targeted store.
 	 */
 	public function hasPermission( $input = null ): bool {
-		return current_user_can( 'manage_options' );
+		$input   = is_array( $input ) ? $input : array();
+		$network = ! empty( $input['network'] );
+
+		return current_user_can( $network && is_multisite() ? 'manage_network_options' : 'manage_options' );
 	}
 
 	/**
