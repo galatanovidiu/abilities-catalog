@@ -127,6 +127,11 @@ final class CategoryCatalog implements CategoryProvider {
 				'label'       => __( 'Users', 'abilities-catalog' ),
 				'description' => __( 'Abilities that read user accounts and profiles.', 'abilities-catalog' ),
 			),
+			'widgets'     => array(
+				'slug'        => 'widgets',
+				'label'       => __( 'Widgets', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read and manage widgets and sidebars (widget areas).', 'abilities-catalog' ),
+			),
 		);
 	}
 }
