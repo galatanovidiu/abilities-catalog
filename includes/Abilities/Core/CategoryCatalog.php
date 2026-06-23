@@ -100,7 +100,7 @@ final class CategoryCatalog implements CategoryProvider {
 			'templates'   => array(
 				'slug'        => 'templates',
 				'label'       => __( 'Templates', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read site-editor data: templates, template parts, patterns, and global styles.', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read and manage site-editor data: templates, template parts, patterns, and global styles.', 'abilities-catalog' ),
 			),
 			'terms'       => array(
 				'slug'        => 'terms',
