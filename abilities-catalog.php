@@ -82,5 +82,9 @@ add_action(
 		}
 
 		Mcp\Server::boot();
+
+		// The scalable, search-based server is a second consumer of the same registry,
+		// on its own route. It boots after Server::boot() has loaded the adapter bundle.
+		Mcp\SearchServer::boot();
 	}
 );

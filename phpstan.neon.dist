@@ -63,4 +63,6 @@ parameters:
 		-
 			identifier: argument.type
 			message: '#Parameter \#10 \$tools of method WP\\MCP\\Core\\McpAdapter::create_server\(\) expects list<string>, list<WP\\MCP\\Domain\\Tools\\McpTool> given\.#'
-			path: includes/Mcp/Server.php
+			paths:
+				- includes/Mcp/Server.php
+				- includes/Mcp/SearchServer.php
