@@ -43,6 +43,7 @@ final class DomainMapTest extends TestCase {
 	 */
 	public function tear_down(): void {
 		remove_all_filters( 'abilities_catalog_mcp_domain_map' );
+		remove_all_filters( 'abilities_catalog_mcp_domains' );
 		parent::tear_down();
 	}
 
@@ -175,6 +176,97 @@ final class DomainMapTest extends TestCase {
 		$this->assertContains( '', $domains );
 		$this->assertSame( '0', $map->domainOf( 'acme/zero' ) );
 		$this->assertSame( '', $map->domainOf( 'acme/empty' ) );
+	}
+
+	/**
+	 * The add-on filter registers a whole domain tool: its abilities resolve, it is
+	 * appended after the curated domains, and its description is exposed.
+	 *
+	 * @return void
+	 */
+	public function test_addon_filter_registers_a_described_domain(): void {
+		add_filter(
+			'abilities_catalog_mcp_domains',
+			static function ( array $domains ): array {
+				$domains['forms'] = array(
+					'description' => 'Manage Contact Form 7 forms.',
+					'abilities'   => array( 'cf7/list-forms', 'cf7/get-form' ),
+				);
+
+				return $domains;
+			}
+		);
+		$map = new DomainMap();
+
+		$this->assertSame( 'forms', $map->domainOf( 'cf7/list-forms' ) );
+		$this->assertSame( 'forms', $map->domainOf( 'cf7/get-form' ) );
+		$this->assertSame( array_merge( $this->curatedDomains(), array( 'forms' ) ), $map->domains() );
+		$this->assertSame( 'Manage Contact Form 7 forms.', $map->descriptionOf( 'forms' ) );
+	}
+
+	/**
+	 * The add-on filter cannot hijack a curated core domain.
+	 *
+	 * @return void
+	 */
+	public function test_addon_filter_cannot_override_a_core_domain(): void {
+		add_filter(
+			'abilities_catalog_mcp_domains',
+			static function ( array $domains ): array {
+				$domains['content'] = array(
+					'description' => 'HIJACKED',
+					'abilities'   => array( 'acme/evil' ),
+				);
+
+				return $domains;
+			}
+		);
+		$map = new DomainMap();
+
+		// The core 'content' slug is refused: no description, no captured ability,
+		// and the curated domain set is unchanged.
+		$this->assertNull( $map->descriptionOf( 'content' ) );
+		$this->assertNull( $map->domainOf( 'acme/evil' ) );
+		$this->assertSame( $this->curatedDomains(), $map->domains() );
+	}
+
+	/**
+	 * Malformed add-on entries are dropped or sanitized without breaking the map.
+	 *
+	 * @return void
+	 */
+	public function test_addon_filter_drops_malformed_entries(): void {
+		add_filter(
+			'abilities_catalog_mcp_domains',
+			static function ( array $domains ): array {
+				$domains['a'] = 'not-an-array';                                   // Dropped: not an array.
+				$domains['b'] = array( 'abilities' => array( 'acme/b' ) );        // Description defaults to '' -> generic later.
+				$domains['c'] = array(
+					'description' => 'Domain C.',
+					'abilities'   => array( 'acme/c', 42, '', 'acme/c2' ),        // Non-string names are filtered out.
+				);
+
+				return $domains;
+			}
+		);
+		$map = new DomainMap();
+
+		$this->assertNull( $map->domainOf( 'acme/b-x' ) ); // 'a' is gone entirely.
+		$this->assertSame( 'b', $map->domainOf( 'acme/b' ) );
+		$this->assertNull( $map->descriptionOf( 'b' ) );   // Empty description -> null (generic blurb downstream).
+		$this->assertSame( 'c', $map->domainOf( 'acme/c' ) );
+		$this->assertSame( 'c', $map->domainOf( 'acme/c2' ) );
+		$this->assertSame( 'Domain C.', $map->descriptionOf( 'c' ) );
+	}
+
+	/**
+	 * descriptionOf is null for an unknown domain and for any curated core domain.
+	 *
+	 * @return void
+	 */
+	public function test_description_of_is_null_for_unknown_and_core_domains(): void {
+		$this->assertNull( $this->map->descriptionOf( 'content' ) );
+		$this->assertNull( $this->map->descriptionOf( 'nope' ) );
 	}
 
 	/**
