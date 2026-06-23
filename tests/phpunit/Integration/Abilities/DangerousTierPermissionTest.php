@@ -36,6 +36,7 @@ final class DangerousTierPermissionTest extends TestCase {
 		'privacy/generate-export' => array('request_id' => 1),
 		'cron/schedule-event'    => array('hook' => 'abilities_catalog_test_event', 'timestamp' => 2000000000),
 		'cron/unschedule-event'  => array('hook' => 'abilities_catalog_test_event', 'timestamp' => 2000000000),
+		'tools/flush-object-cache' => array(),
 	);
 
 	/**
