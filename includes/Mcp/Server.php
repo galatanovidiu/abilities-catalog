@@ -218,7 +218,7 @@ final class Server {
 
 		$tools = array();
 		foreach ( $map->domains() as $domain ) {
-			$tool = $factory->forDomain( $domain, $this->description( $domain ) );
+			$tool = $factory->forDomain( $domain, $this->description( $domain, $map ) );
 			if ( is_wp_error( $tool ) ) {
 				self::log( sprintf( 'Failed to build the "%s" domain tool: %s', $domain, $tool->get_error_message() ) );
 
@@ -413,11 +413,12 @@ final class Server {
 	 * shared action protocol (the three actions every domain tool answers). The blurb
 	 * is per-domain; the protocol line is identical across tools, so it lives once.
 	 *
-	 * @param string $domain The domain slug.
+	 * @param string                                       $domain The domain slug.
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap $map    The domain map, source of an add-on domain's description.
 	 * @return string The tool description.
 	 */
-	private function description( string $domain ): string {
-		return $this->domainBlurb( $domain ) . ' ' . $this->skillsPointer() . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
+	private function description( string $domain, DomainMap $map ): string {
+		return $this->domainBlurb( $domain, $map ) . ' ' . $this->skillsPointer() . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
 	}
 
 	/**
@@ -442,13 +443,16 @@ final class Server {
 	 *
 	 * Short scope statements so an agent can route to a domain without listing its
 	 * abilities. A domain a third party opens through the
-	 * `abilities_catalog_mcp_domain_map` filter has no curated blurb, so it gets a
-	 * generic one.
+	 * `abilities_catalog_mcp_domains` filter carries its own description, which the
+	 * map returns here; absent that, an add-on domain falls back to a generic blurb.
+	 * The curated core blurbs are not filterable — they are core's taxonomy, mirroring
+	 * the domain map.
 	 *
-	 * @param string $domain The domain slug.
+	 * @param string                                       $domain The domain slug.
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap $map    The domain map, source of an add-on domain's description.
 	 * @return string The capability blurb, without the shared action protocol line.
 	 */
-	private function domainBlurb( string $domain ): string {
+	private function domainBlurb( string $domain, DomainMap $map ): string {
 		switch ( $domain ) {
 			case 'content':
 				return __( 'Manage content — full CRUD on posts, pages and all custom post types; categories and tags; comments; post meta and revisions; full-text content search.', 'abilities-catalog' );
@@ -473,6 +477,13 @@ final class Server {
 			case 'dashboard':
 				return __( 'Read the dashboard — recent site activity, the At a Glance counts, and recent drafts.', 'abilities-catalog' );
 			default:
+				// An add-on domain (opened via `abilities_catalog_mcp_domains`) carries
+				// its own description; otherwise fall back to a generic blurb.
+				$addon = $map->descriptionOf( $domain );
+				if ( null !== $addon ) {
+					return $addon;
+				}
+
 				return sprintf(
 					/* translators: %s: domain slug. */
 					__( 'The "%s" domain — abilities another plugin contributed to this server.', 'abilities-catalog' ),

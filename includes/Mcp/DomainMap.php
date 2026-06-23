@@ -34,13 +34,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  * {@see DomainRouter} pairs a domain with the registry to list, describe, and run
  * the abilities a domain owns.
  *
- * Other plugins extend the taxonomy through the `abilities_catalog_mcp_domain_map`
- * filter: it carries the exact-name placements (the {@see DOMAIN_INCLUDES} shape),
- * so a third party can drop one of its abilities into an existing domain or open a
- * new domain of its own. A new domain introduced this way also appears in
- * {@see domains()}, so the server builds a tool for it. The curated prefix rules are
- * not filterable — they are core's taxonomy, and exposing them would let a third
- * party claim a whole prefix and capture core abilities.
+ * Other plugins extend the taxonomy through two filters with distinct jobs. The
+ * `abilities_catalog_mcp_domains` filter registers a whole add-on domain TOOL — its
+ * description and the exact abilities it owns (the {@see addonDomains()} shape) — so
+ * the server builds a fully-described tool from one place. The narrower
+ * `abilities_catalog_mcp_domain_map` filter only places exact ability names into a
+ * domain (the {@see DOMAIN_INCLUDES} shape), e.g. to drop a third-party ability into
+ * an existing core domain. Either way a new domain appears in {@see domains()} so the
+ * server builds a tool for it. The curated prefix rules are not filterable, and
+ * neither filter can override a core domain — that taxonomy is core's, and exposing
+ * it would let a third party claim a whole prefix and capture core abilities.
  *
  * @since 0.2.0
  */
@@ -98,19 +101,31 @@ final class DomainMap {
 	private ?array $includes = null;
 
 	/**
+	 * The add-on domain tools after the `abilities_catalog_mcp_domains` filter.
+	 *
+	 * Resolved once on first use and reused, so the filter runs a single time per
+	 * instance. Null until resolved.
+	 *
+	 * @var array<string, array{description: string, abilities: list<string>}>|null
+	 */
+	private ?array $addons = null;
+
+	/**
 	 * Returns the domain slugs, in tool order.
 	 *
 	 * This is the seam for registering one MCP tool per domain: the server iterates
 	 * these slugs to build the tools, so the order here is the order an agent sees.
 	 * The curated domains come first, in their defined order; any new domain a third
-	 * party opens through the `abilities_catalog_mcp_domain_map` filter follows.
+	 * party opens through the `abilities_catalog_mcp_domains` or
+	 * `abilities_catalog_mcp_domain_map` filter follows.
 	 *
 	 * @return list<string> The domain slugs.
 	 */
 	public function domains(): array {
 		$domains = array_keys( self::DOMAIN_PREFIXES );
 
-		foreach ( array_keys( $this->includes() ) as $domain ) {
+		$added = array_merge( array_keys( $this->includes() ), array_keys( $this->addonDomains() ) );
+		foreach ( $added as $domain ) {
 			$domain = (string) $domain;
 			if ( in_array( $domain, $domains, true ) ) {
 				continue;
@@ -135,6 +150,12 @@ final class DomainMap {
 	public function domainOf( string $ability ): ?string {
 		foreach ( $this->includes() as $domain => $names ) {
 			if ( is_array( $names ) && in_array( $ability, $names, true ) ) {
+				return (string) $domain;
+			}
+		}
+
+		foreach ( $this->addonDomains() as $domain => $spec ) {
+			if ( in_array( $ability, $spec['abilities'], true ) ) {
 				return (string) $domain;
 			}
 		}
@@ -183,5 +204,91 @@ final class DomainMap {
 		$this->includes = is_array( $filtered ) ? $filtered : self::DOMAIN_INCLUDES;
 
 		return $this->includes;
+	}
+
+	/**
+	 * The description an add-on supplied for one of its domains, or null.
+	 *
+	 * The server reads this to give an add-on domain tool the same kind of routing
+	 * blurb a curated core domain has, instead of a generic fallback. A core domain
+	 * is never here (the filter cannot override core), so the server keeps using its
+	 * own curated blurb for those.
+	 *
+	 * @param string $domain The domain slug.
+	 * @return string|null The add-on's description, or null when the domain is not an add-on domain.
+	 */
+	public function descriptionOf( string $domain ): ?string {
+		$description = $this->addonDomains()[ $domain ]['description'] ?? '';
+
+		return '' !== $description ? $description : null;
+	}
+
+	/**
+	 * Resolves the add-on domain tools, applying the registration filter once.
+	 *
+	 * Each entry is a whole domain tool an add-on opened: its routing description and
+	 * the exact ability names it owns. Malformed entries are dropped, and an entry
+	 * that reuses a curated core domain slug is ignored, so the filter can never
+	 * break the server or hijack core's taxonomy.
+	 *
+	 * @return array<string, array{description: string, abilities: list<string>}> Add-on domain slug => its tool descriptor.
+	 */
+	private function addonDomains(): array {
+		if ( null !== $this->addons ) {
+			return $this->addons;
+		}
+
+		/**
+		 * Filters the add-on MCP domain tools.
+		 *
+		 * Register a whole domain tool from another plugin: a `description` (the
+		 * routing blurb an agent reads) and the `abilities` (the exact ability names
+		 * the tool groups). The new domain gets its own `list`/`describe`/`execute`
+		 * tool. Preserve the entries already present; a non-array entry, a non-string
+		 * description, or a slug that reuses a curated core domain is ignored.
+		 *
+		 * @since 0.3.0
+		 *
+		 * @param array<string, array{description: string, abilities: list<string>}> $domains Add-on domain slug => its tool descriptor.
+		 */
+		$filtered = apply_filters( 'abilities_catalog_mcp_domains', array() );
+
+		$this->addons = array();
+
+		if ( ! is_array( $filtered ) ) {
+			return $this->addons;
+		}
+
+		foreach ( $filtered as $slug => $spec ) {
+			$slug = (string) $slug;
+
+			// A blank slug, or one that reuses a curated core domain, is refused.
+			if ( '' === $slug || isset( self::DOMAIN_PREFIXES[ $slug ] ) || ! is_array( $spec ) ) {
+				continue;
+			}
+
+			$description = $spec['description'] ?? '';
+			$abilities   = $spec['abilities'] ?? array();
+
+			if ( ! is_string( $description ) || ! is_array( $abilities ) ) {
+				continue;
+			}
+
+			$names = array();
+			foreach ( $abilities as $name ) {
+				if ( ! is_string( $name ) || '' === $name ) {
+					continue;
+				}
+
+				$names[] = $name;
+			}
+
+			$this->addons[ $slug ] = array(
+				'description' => $description,
+				'abilities'   => $names,
+			);
+		}
+
+		return $this->addons;
 	}
 }
