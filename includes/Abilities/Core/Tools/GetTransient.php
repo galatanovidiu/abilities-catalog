@@ -63,7 +63,7 @@ final class GetTransient implements Ability {
 					'key'     => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The transient name, without the internal "_transient_"/"_site_transient_" prefix that WordPress adds when storing it. For example, pass "update_plugins" not "_site_transient_update_plugins".', 'abilities-catalog' ),
+						'description' => __( 'The transient name, without the internal "_transient_"/"_site_transient_" prefix that WordPress adds when storing it. For example, pass "update_plugins", not its internally-prefixed storage name.', 'abilities-catalog' ),
 					),
 					'network' => array(
 						'type'        => 'boolean',
