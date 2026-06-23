@@ -37,6 +37,7 @@ final class DangerousTierPermissionTest extends TestCase {
 		'cron/schedule-event'    => array('hook' => 'abilities_catalog_test_event', 'timestamp' => 2000000000),
 		'cron/unschedule-event'  => array('hook' => 'abilities_catalog_test_event', 'timestamp' => 2000000000),
 		'tools/flush-object-cache' => array(),
+		'users/destroy-all-sessions' => array(),
 	);
 
 	/**
