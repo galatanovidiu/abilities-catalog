@@ -39,6 +39,15 @@ final class DangerousTierPermissionTest extends TestCase {
 		'tools/flush-object-cache' => array(),
 		'users/destroy-all-sessions' => array(),
 		'settings/flush-rewrite-rules' => array(),
+		// Network writes are multisite + super-admin gated, so a single-site
+		// administrator is denied (asserted below); the input only proves the
+		// denial is the cap, not missing input. These IDs need not resolve.
+		'network/create-site' => array('slug' => 'ac-dt-site', 'title' => 'AC DT', 'admin_id' => 1),
+		'network/update-site' => array('blog_id' => 1, 'archived' => true),
+		'network/delete-site' => array('blog_id' => 2),
+		'network/grant-super-admin' => array('user_id' => 1),
+		'network/revoke-super-admin' => array('user_id' => 1),
+		'network/update-network-option' => array('option' => 'ac_dt_opt', 'value' => 'x'),
 	);
 
 	/**
@@ -105,7 +114,14 @@ final class DangerousTierPermissionTest extends TestCase {
 			$input  = self::VALID_INPUT[$name] ?? array();
 			$result = wp_get_ability($name)->check_permissions($input);
 
-			$this->assertTrue($result, "Administrator should be permitted to run {$name} on single site.");
+			if (str_starts_with($name, 'network/')) {
+				// Network abilities require is_multisite() + a super-admin cap. This
+				// suite runs single-site, so a plain administrator is correctly denied;
+				// their permission is proven by the @group multisite per-ability tests.
+				$this->assertNotTrue($result, "Single-site administrator must NOT be permitted network ability {$name} (requires multisite + super-admin).");
+			} else {
+				$this->assertTrue($result, "Administrator should be permitted to run {$name} on single site.");
+			}
 		}
 	}
 }
