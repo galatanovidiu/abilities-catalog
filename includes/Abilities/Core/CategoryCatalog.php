@@ -110,7 +110,7 @@ final class CategoryCatalog implements CategoryProvider {
 			'themes'      => array(
 				'slug'        => 'themes',
 				'label'       => __( 'Themes', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read installed themes.', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read installed themes and manage the active theme\'s customizer settings (theme mods).', 'abilities-catalog' ),
 			),
 			'tools'       => array(
 				'slug'        => 'tools',
