@@ -20,7 +20,7 @@ The plugin also ships **one optional consumer of its own**: a built-in MCP serve
 
 = What it registers =
 
-160 ability classes across 18 wp-admin domains: Comments, Connectors, Content, Dashboard, Fonts, Media, Menus, Plugins, Privacy, Search, Settings, Site Health, Templates, Terms, Themes, Tools, Updates, and Users.
+230 ability classes across 21 wp-admin domains: Comments, Connectors, Content, Cron, Dashboard, Fonts, Media, Menus, Network, Plugins, Privacy, Search, Settings, Site Health, Templates, Terms, Themes, Tools, Updates, Users, and Widgets.
 
 Each ability is one class in one file, discovered by a directory scan and registered with `wp_register_ability()`. Ability names use a domain prefix, for example `plugins/list-plugins` or `comments/approve-comment`.
 
@@ -43,15 +43,47 @@ The plugin can expose the catalog over the Model Context Protocol through a buil
 * On top of every ability's capability check sits an owner-controlled, deny-by-default **exposure gate**: each ability is disabled until an administrator enables it on the settings page. A disabled ability can still be listed and described, so an agent can learn it, but `execute` is refused. Capability stays the hard guard on every `execute`.
 * Enable the server with the `ABILITIES_CATALOG_MCP_ENABLED` constant, the `abilities_catalog_mcp_enabled` option, or the toggle on the settings page at **Settings → MCP Server**.
 
+**Warning — read before connecting an MCP client.** When you connect the MCP server to an MCP client (such as Claude, Gemini, or ChatGPT), the AI acts on your site as you and can make real changes in your name. AI can make mistakes. Back up your site before you enable abilities, and enable only the abilities the agent actually needs.
+
 = Dependencies =
 
 The catalog has no build step and no runtime Composer or npm dependencies — its PSR-4 autoloader is in the plugin. The optional MCP server is the only part that needs Composer dependencies (the adapter and the Jetpack Autoloader); the official release zip bundles them, so the server works out of the box. If the server is enabled but those dependencies are missing, the plugin does not fatal: it shows an admin notice and the catalog keeps working.
+
+= Contributing =
+
+Abilities Catalog is an open source project. Bug reports, suggestions, and questions are welcome on the GitHub issue tracker: https://github.com/galatanovidiu/abilities-catalog/issues. Pull requests are welcome too.
 
 == Installation ==
 
 1. Upload the plugin zip via Plugins → Add New → Upload Plugin, or extract it into `wp-content/plugins/abilities-catalog`.
 2. Activate the plugin through the Plugins screen in WordPress.
 3. The abilities register automatically on `wp_abilities_api_init`. A consumer (an Abilities API client) is required to actually use them — or enable the built-in MCP server at **Settings → MCP Server**.
+
+== Connecting an MCP client ==
+
+Turn the server on first (see the FAQ below), then point an MCP client at the endpoint shown on **Settings → MCP Server**. The client signs in as a WordPress user with an Application Password (HTTP Basic authentication). You need three things:
+
+1. The endpoint URL, for example `https://your-site/wp-json/abilities-catalog/v1/mcp`.
+2. A WordPress username — the agent acts as this user.
+3. An Application Password for that user, created at **Users → Profile → Application Passwords** (this requires the site to run over HTTPS).
+
+Most clients (such as Claude Desktop or Cursor) connect through the `@automattic/mcp-wordpress-remote` proxy. Add it to your MCP client config:
+
+    {
+      "mcpServers": {
+        "wordpress": {
+          "command": "npx",
+          "args": [ "-y", "@automattic/mcp-wordpress-remote@latest" ],
+          "env": {
+            "WP_API_URL": "https://your-site/wp-json/abilities-catalog/v1/mcp",
+            "WP_API_USERNAME": "your-username",
+            "WP_API_PASSWORD": "your application password"
+          }
+        }
+      }
+    }
+
+A client that speaks remote (Streamable HTTP) MCP can call the endpoint directly, authenticating with the header `Authorization: Basic <base64 of "username:application-password">`. Either way the agent acts as the chosen user, so enable only the abilities it needs — and back up your site first.
 
 == Frequently Asked Questions ==
 
@@ -81,7 +113,7 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 * New: an optional, off-by-default built-in MCP server that exposes the catalog as curated domain tools (`list` / `describe` / `execute`) plus a cross-cutting `skills` tool, built on `wordpress/mcp-adapter`.
 * New: an owner-controlled, deny-by-default per-ability exposure gate and a **Settings → MCP Server** page (with its exposure REST API) to manage it. A disabled ability can be listed and described but not executed; capability stays the hard guard on every call.
 * New: extensibility filters for the domain map, skills, tools, and tool permissions, so consumers can extend the server without editing the plugin.
-* Catalog: expanded to 160 abilities across 18 wp-admin domains (adds the Search domain and broader coverage across Content, Terms, Menus, Templates, Settings, Users, and Fonts).
+* Catalog: expanded to 230 abilities across 21 wp-admin domains (adds the Cron, Network, Search, and Widgets domains and broader coverage across Content, Terms, Menus, Templates, Settings, Users, and Fonts).
 * Fixes: a correctness sweep across abilities — multi-value post meta stored as separate rows, reads no longer mutate state, REST responses no longer leak core download headers, hardened input schemas, and raw serialized block markup returned from navigation reads.
 * Internal: renamed the hook and identifier prefix to `abilities_catalog_` and removed consumer-specific wording, so the catalog is fully consumer-agnostic.
 
@@ -93,7 +125,7 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 == Upgrade Notice ==
 
 = 0.2.0 =
-Adds an optional, off-by-default built-in MCP server with a per-ability exposure gate and a Settings → MCP Server page, expands the catalog to 160 abilities across 18 domains, and ships correctness fixes. No action required for existing consumers; the catalog behaves the same when the server is off.
+Adds an optional, off-by-default built-in MCP server with a per-ability exposure gate and a Settings → MCP Server page, expands the catalog to 230 abilities across 21 domains, and ships correctness fixes. The catalog behaves the same when the server is off.
 
 = 0.1.0 =
 Initial release.

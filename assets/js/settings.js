@@ -410,6 +410,7 @@
 				__( 'The server exposes the ability catalog over the Model Context Protocol. Every ability is disabled by default; enable only the ones an agent should be allowed to run. Disabled abilities stay visible to a connected agent but refuse to execute. Capability checks still apply on top of these settings.', 'abilities-catalog' )
 			),
 			serverCard( state, toggleServer, copyEndpoint, copied ),
+			connectPanel( state ),
 			el( 'div', { style: { margin: '16px 0', maxWidth: '420px' } },
 				el( SearchControl, {
 					__nextHasNoMarginBottom: true,
@@ -515,6 +516,90 @@
 							)
 					  )
 					: null
+			)
+		);
+	}
+
+	/**
+	 * Renders the "Connect a client" help accordion.
+	 *
+	 * Static how-to for pointing an MCP client at this server: the client connects to
+	 * the endpoint and authenticates as a WordPress user with an Application Password
+	 * (HTTP Basic auth). The site's own endpoint is woven into the example so it is
+	 * copy-ready. No secret is rendered — the admin supplies the username and password.
+	 *
+	 * @param {Object} state The state (uses state.endpoint).
+	 * @return {Object} The panel element.
+	 */
+	function connectPanel( state ) {
+		var config =
+			'{\n' +
+			'  "mcpServers": {\n' +
+			'    "wordpress": {\n' +
+			'      "command": "npx",\n' +
+			'      "args": [ "-y", "@automattic/mcp-wordpress-remote@latest" ],\n' +
+			'      "env": {\n' +
+			'        "WP_API_URL": "' + state.endpoint + '",\n' +
+			'        "WP_API_USERNAME": "your-username",\n' +
+			'        "WP_API_PASSWORD": "your application password"\n' +
+			'      }\n' +
+			'    }\n' +
+			'  }\n' +
+			'}';
+
+		return el(
+			Panel,
+			{ style: { marginBottom: '16px' } },
+			el(
+				PanelBody,
+				{ title: __( 'Connect a client', 'abilities-catalog' ), initialOpen: false },
+				el(
+					'p',
+					{ style: { marginTop: 0 } },
+					__( 'An MCP client connects to the endpoint above and signs in as a WordPress user with an Application Password. You need three things:', 'abilities-catalog' )
+				),
+				el(
+					'ol',
+					{ style: { margin: '0 0 12px', paddingLeft: '20px' } },
+					el( 'li', null, __( 'The endpoint URL shown above.', 'abilities-catalog' ) ),
+					el( 'li', null, __( 'A WordPress username — the agent acts as this user.', 'abilities-catalog' ) ),
+					el(
+						'li',
+						null,
+						el(
+							'a',
+							{ href: 'profile.php#application-passwords' },
+							__( 'An Application Password for that user (Users → Profile → Application Passwords).', 'abilities-catalog' )
+						),
+						' ',
+						__( 'Creating one requires the site to run over HTTPS.', 'abilities-catalog' )
+					)
+				),
+				el(
+					'p',
+					{ style: { marginBottom: '4px' } },
+					__( 'Most clients (such as Claude Desktop or Cursor) connect through the @automattic/mcp-wordpress-remote proxy. Add it to your MCP client config:', 'abilities-catalog' )
+				),
+				el(
+					'pre',
+					{
+						style: {
+							padding: '12px',
+							background: '#f6f7f7',
+							border: '1px solid #dcdcde',
+							borderRadius: '3px',
+							overflowX: 'auto',
+							fontSize: '12px',
+							margin: '0 0 12px',
+						},
+					},
+					el( 'code', null, config )
+				),
+				el(
+					'p',
+					{ style: { marginBottom: 0, color: '#50575e' } },
+					__( 'A client that speaks remote (Streamable HTTP) MCP can call the endpoint directly, authenticating with the header Authorization: Basic <base64 of "username:application-password">. Either way the agent acts as the chosen user, so enable only the abilities it needs — and back up your site first.', 'abilities-catalog' )
+				)
 			)
 		);
 	}

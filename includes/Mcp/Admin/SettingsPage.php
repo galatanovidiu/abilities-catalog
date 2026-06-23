@@ -84,11 +84,20 @@ final class SettingsPage {
 			return;
 		}
 
+		// Version the no-build asset by its modification time so an edit busts the
+		// browser cache on the next reload. The plugin version alone does not change
+		// between edits within a release, so a hand-edit to settings.js would otherwise
+		// keep serving the cached copy. Falls back to the plugin version.
+		$script_path    = ABILITIES_CATALOG_DIR . 'assets/js/settings.js';
+		$script_version = file_exists( $script_path )
+			? (string) filemtime( $script_path )
+			: ABILITIES_CATALOG_VERSION;
+
 		wp_enqueue_script(
 			self::SCRIPT_HANDLE,
 			plugins_url( 'assets/js/settings.js', ABILITIES_CATALOG_FILE ),
 			array( 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ),
-			ABILITIES_CATALOG_VERSION,
+			$script_version,
 			true
 		);
 

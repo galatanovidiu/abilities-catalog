@@ -11,8 +11,12 @@ on:
 jobs:
   # Builds the distributable plugin zip and attaches it to the GitHub Release.
   #
-  # The zip is built with `wp-scripts plugin-zip`, which honours `.distignore`
-  # and produces a single top-level `abilities-catalog/` directory so the file
+  # The zip is built with `wp-scripts plugin-zip`. Because package.json has a
+  # `files` field, plugin-zip selects what ships via npm-packlist from that field
+  # (a `.distignore` is NOT consulted while the field exists). The preceding
+  # `composer install --no-dev` is what keeps the dev toolchain (phpstan.phar,
+  # phpcs, phpunit) out of vendor/; without it the zip fails Plugin Check. The
+  # result is a single top-level `abilities-catalog/` directory so the file
   # installs cleanly via Plugins -> Add New -> Upload Plugin.
   build-zip:
     name: Build and attach plugin zip
