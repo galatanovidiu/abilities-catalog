@@ -11,6 +11,9 @@ Thumbs.db
 /.wp-env.json
 /.wp-env.override.json
 
+# Local MCP client config — holds an Application Password; never commit.
+/.mcp.json
+
 # Test output (keep the directory, ignore generated reports/caches)
 /tests/_output/*
 !/tests/_output/.gitkeep
