@@ -70,7 +70,7 @@ final class DeleteTransient implements Ability {
 					'network' => array(
 						'type'        => 'boolean',
 						'default'     => false,
-						'description' => __( 'Whether to target a site/network transient (delete_site_transient) instead of a normal transient (delete_transient). Defaults to false. On a single site both stores behave the same; on multisite a site transient is shared across the network.', 'abilities-catalog' ),
+						'description' => __( 'Whether to target a site/network transient (delete_site_transient) instead of a normal transient (delete_transient). Defaults to false. On a single site both stores behave the same; on multisite a site transient is shared across the network, so deleting one requires network-admin (manage_network_options) capability.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -116,7 +116,12 @@ final class DeleteTransient implements Ability {
 	 * @return bool True if the current user may manage options.
 	 */
 	public function hasPermission( $input = null ): bool {
-		return current_user_can( 'manage_options' );
+		$input   = is_array( $input ) ? $input : array();
+		$network = ! empty( $input['network'] );
+
+		// A site/network transient is network-wide on multisite, so deleting it
+		// requires the network-admin capability there; a normal transient is per-site.
+		return current_user_can( $network && is_multisite() ? 'manage_network_options' : 'manage_options' );
 	}
 
 	/**
@@ -130,17 +135,20 @@ final class DeleteTransient implements Ability {
 	 * @return array<string,mixed>|\WP_Error The delete result, or a WP_Error.
 	 */
 	public function execute( $input = null ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$input   = is_array( $input ) ? $input : array();
+		$key     = isset( $input['key'] ) ? (string) $input['key'] : '';
+		$network = ! empty( $input['network'] );
+
+		// A network transient targets network-wide state on multisite, so it requires
+		// the network-admin capability there; a normal transient needs manage_options.
+		$capability = $network && is_multisite() ? 'manage_network_options' : 'manage_options';
+		if ( ! current_user_can( $capability ) ) {
 			return new WP_Error(
 				'abilities_catalog_cannot_manage_options',
 				__( 'You are not allowed to delete transients.', 'abilities-catalog' ),
 				array( 'status' => 403 )
 			);
 		}
-
-		$input   = is_array( $input ) ? $input : array();
-		$key     = isset( $input['key'] ) ? (string) $input['key'] : '';
-		$network = ! empty( $input['network'] );
 
 		$deleted = $network
 			? delete_site_transient( $key )
