@@ -3,7 +3,7 @@
 Abilities Catalog registers wp-admin functionality on the WordPress core
 Abilities API.
 
-It is a catalog first: 162 core abilities, each with schemas, category metadata,
+It is a catalog first: 230 core abilities, each with schemas, category metadata,
 server-side capability checks, and risk annotations. It does not choose which
 agent, UI, or integration may surface them.
 
@@ -21,11 +21,11 @@ default, that exposes enabled abilities as curated domain tools.
 
 ## What It Registers
 
-The core catalog currently includes 162 abilities across 18 wp-admin areas:
+The core catalog currently includes 230 abilities across 21 wp-admin areas:
 
-`Comments`, `Connectors`, `Content`, `Dashboard`, `Fonts`, `Media`, `Menus`,
-`Plugins`, `Privacy`, `Search`, `Settings`, `SiteHealth`, `Templates`, `Terms`,
-`Themes`, `Tools`, `Updates`, `Users`.
+`Comments`, `Connectors`, `Content`, `Cron`, `Dashboard`, `Fonts`, `Media`,
+`Menus`, `Network`, `Plugins`, `Privacy`, `Search`, `Settings`, `SiteHealth`,
+`Templates`, `Terms`, `Themes`, `Tools`, `Updates`, `Users`, `Widgets`.
 
 Each ability is one PHP class under `includes/Abilities/Core/<Domain>/`.
 `Registry` discovers those classes recursively and registers them with
@@ -137,6 +137,12 @@ an enabled ability still requires the right WordPress capability.
 
 ### Security Note
 
+> [!WARNING]
+> When you connect the MCP server to an MCP client (such as Claude, Gemini, or
+> ChatGPT), the AI acts on your site as you and can make real changes in your
+> name. AI can make mistakes. Back up your site before you enable abilities, and
+> enable only the abilities the agent actually needs.
+
 Enabling a write or dangerous ability gives a network client reach to that
 ability. For example, enabling `plugins/install-plugin` lets an authenticated
 administrator install executable code through MCP.
@@ -180,6 +186,13 @@ npm run wp-env:test start
 npm run test:php:setup
 npm run test:php
 ```
+
+## Contributing
+
+Abilities Catalog is an open source project. Bug reports, suggestions, and
+questions are welcome on the
+[GitHub issue tracker](https://github.com/galatanovidiu/abilities-catalog/issues).
+Pull requests are welcome too.
 
 ## License
 
