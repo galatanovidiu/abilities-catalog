@@ -85,12 +85,12 @@ final class CategoryCatalog implements CategoryProvider {
 			'search'      => array(
 				'slug'        => 'search',
 				'label'       => __( 'Search', 'abilities-catalog' ),
-				'description' => __( 'Abilities that search across site content (posts, pages, terms) using WordPress\'s unified search.', 'abilities-catalog' ),
+				'description' => __( 'Abilities that search across site content (posts, pages, terms) using WordPress\'s unified search, and read the site\'s XML sitemap configuration.', 'abilities-catalog' ),
 			),
 			'settings'    => array(
 				'slug'        => 'settings',
 				'label'       => __( 'Settings', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read site settings.', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read site settings and manage URL rewrite (permalink) rules.', 'abilities-catalog' ),
 			),
 			'site-health' => array(
 				'slug'        => 'site-health',
