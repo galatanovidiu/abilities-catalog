@@ -153,3 +153,6 @@ jobs:
 
       - name: Run PHPUnit
         run: npm run test:php
+
+      - name: Run PHPUnit (multisite)
+        run: npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/abilities-catalog/ env WP_MULTISITE=1 vendor/bin/phpunit -c phpunit.xml.dist --no-coverage --group multisite
