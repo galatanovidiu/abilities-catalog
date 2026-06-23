@@ -72,6 +72,11 @@ final class CategoryCatalog implements CategoryProvider {
 				'label'       => __( 'Menus', 'abilities-catalog' ),
 				'description' => __( 'Abilities that read navigation (block) and classic menus.', 'abilities-catalog' ),
 			),
+			'network'     => array(
+				'slug'        => 'network',
+				'label'       => __( 'Network', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read and manage multisite network state: sites, networks, super admins, and network options.', 'abilities-catalog' ),
+			),
 			'plugins'     => array(
 				'slug'        => 'plugins',
 				'label'       => __( 'Plugins', 'abilities-catalog' ),

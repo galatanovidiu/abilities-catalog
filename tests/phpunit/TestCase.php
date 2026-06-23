@@ -35,6 +35,20 @@ abstract class TestCase extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Creates an administrator, grants super admin, and makes it the current user.
+	 *
+	 * Multisite only — call after a markTestSkipped guard on single-site.
+	 *
+	 * @return int The created user ID.
+	 */
+	protected function actingAsSuperAdmin(): int {
+		$user_id = $this->actingAs('administrator');
+		grant_super_admin($user_id);
+
+		return $user_id;
+	}
+
+	/**
 	 * Resets the current user after each test.
 	 *
 	 * @return void
