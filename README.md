@@ -119,6 +119,54 @@ Application Password for a remote agent, or cookie and nonce for same-origin use
 The endpoint runs as the authenticated user. Capability checks are therefore
 per-user, just like other WordPress admin actions.
 
+### Connect a Client
+
+A client connects to the endpoint and authenticates as a WordPress user with an
+Application Password. You need three things:
+
+1. The **endpoint URL** — `https://your-site/wp-json/abilities-catalog/v1/mcp`.
+2. A **WordPress username** — the agent acts as this user.
+3. An **Application Password** for that user, created at **Users → Profile →
+   Application Passwords**. Creating one requires the site to run over HTTPS.
+
+<details>
+<summary>Claude Desktop, Cursor, and most clients (via mcp-wordpress-remote)</summary>
+
+Connect through the
+[`@automattic/mcp-wordpress-remote`](https://www.npmjs.com/package/@automattic/mcp-wordpress-remote)
+proxy. Add it to the client's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "wordpress": {
+      "command": "npx",
+      "args": [ "-y", "@automattic/mcp-wordpress-remote@latest" ],
+      "env": {
+        "WP_API_URL": "https://your-site/wp-json/abilities-catalog/v1/mcp",
+        "WP_API_USERNAME": "your-username",
+        "WP_API_PASSWORD": "your application password"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Remote (Streamable HTTP) clients</summary>
+
+A client that supports remote MCP servers can call the endpoint URL directly,
+authenticating with the header
+`Authorization: Basic <base64 of "username:application-password">`.
+
+</details>
+
+> [!NOTE]
+> The agent acts as the chosen user. Enable only the abilities it needs, and
+> back up your site before enabling write or dangerous abilities.
+
 ### Exposure Gate
 
 The MCP server has a separate per-ability exposure gate. Every ability is

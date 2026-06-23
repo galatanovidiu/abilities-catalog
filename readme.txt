@@ -59,6 +59,32 @@ Abilities Catalog is an open source project. Bug reports, suggestions, and quest
 2. Activate the plugin through the Plugins screen in WordPress.
 3. The abilities register automatically on `wp_abilities_api_init`. A consumer (an Abilities API client) is required to actually use them — or enable the built-in MCP server at **Settings → MCP Server**.
 
+== Connecting an MCP client ==
+
+Turn the server on first (see the FAQ below), then point an MCP client at the endpoint shown on **Settings → MCP Server**. The client signs in as a WordPress user with an Application Password (HTTP Basic authentication). You need three things:
+
+1. The endpoint URL, for example `https://your-site/wp-json/abilities-catalog/v1/mcp`.
+2. A WordPress username — the agent acts as this user.
+3. An Application Password for that user, created at **Users → Profile → Application Passwords** (this requires the site to run over HTTPS).
+
+Most clients (such as Claude Desktop or Cursor) connect through the `@automattic/mcp-wordpress-remote` proxy. Add it to your MCP client config:
+
+    {
+      "mcpServers": {
+        "wordpress": {
+          "command": "npx",
+          "args": [ "-y", "@automattic/mcp-wordpress-remote@latest" ],
+          "env": {
+            "WP_API_URL": "https://your-site/wp-json/abilities-catalog/v1/mcp",
+            "WP_API_USERNAME": "your-username",
+            "WP_API_PASSWORD": "your application password"
+          }
+        }
+      }
+    }
+
+A client that speaks remote (Streamable HTTP) MCP can call the endpoint directly, authenticating with the header `Authorization: Basic <base64 of "username:application-password">`. Either way the agent acts as the chosen user, so enable only the abilities it needs — and back up your site first.
+
 == Frequently Asked Questions ==
 
 = Does this plugin add any admin UI? =
