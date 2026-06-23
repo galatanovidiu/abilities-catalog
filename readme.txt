@@ -4,7 +4,7 @@ Tags: abilities-api, ai, mcp, agents, wp-admin
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -109,11 +109,20 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 
 == Changelog ==
 
+= 0.3.0 =
+* New: a scalable, search-based MCP server (`overview` / `search` / `describe` / `execute`) for navigating large catalogs, and the bundled adapter default server now publishes the curated ability subset instead of being suppressed.
+* New: six task-recipe skills spanning the domain tools, plus discovery guidance that points agents at `list` / `describe` (and at the exact schema on invalid input) instead of guessing ability names or inputs.
+* New: register an add-on domain tool through the `abilities_catalog_mcp_domains` filter, so add-ons extend the MCP server without editing this plugin.
+* Catalog: expanded to 230 abilities across 21 wp-admin domains (adds the Cron, Network, and Widgets domains; adds meta read/write, transient and object-cache, cron scheduling, multisite network read/write, roles & capabilities lookups, template parts, rewrite rules, sitemaps, taxonomy, theme mods, and user sessions).
+* Changed: license switched from GPL-2.0-or-later to MIT.
+* Fixes: gate multisite network transient/cache operations on `manage_network_options`; avoid a Plugin Check `plugin_updater_detected` false positive.
+* Docs: guide for building catalog add-ons, and how to connect an MCP client.
+
 = 0.2.0 =
 * New: an optional, off-by-default built-in MCP server that exposes the catalog as curated domain tools (`list` / `describe` / `execute`) plus a cross-cutting `skills` tool, built on `wordpress/mcp-adapter`.
 * New: an owner-controlled, deny-by-default per-ability exposure gate and a **Settings → MCP Server** page (with its exposure REST API) to manage it. A disabled ability can be listed and described but not executed; capability stays the hard guard on every call.
 * New: extensibility filters for the domain map, skills, tools, and tool permissions, so consumers can extend the server without editing the plugin.
-* Catalog: expanded to 230 abilities across 21 wp-admin domains (adds the Cron, Network, Search, and Widgets domains and broader coverage across Content, Terms, Menus, Templates, Settings, Users, and Fonts).
+* Catalog: expanded to 160 abilities across 18 wp-admin domains (adds the Search domain and broader coverage across Content, Terms, Menus, Templates, Settings, Users, and Fonts).
 * Fixes: a correctness sweep across abilities — multi-value post meta stored as separate rows, reads no longer mutate state, REST responses no longer leak core download headers, hardened input schemas, and raw serialized block markup returned from navigation reads.
 * Internal: renamed the hook and identifier prefix to `abilities_catalog_` and removed consumer-specific wording, so the catalog is fully consumer-agnostic.
 
@@ -124,8 +133,11 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 
 == Upgrade Notice ==
 
+= 0.3.0 =
+Expands the catalog to 230 abilities across 21 domains (new Cron, Network, and Widgets domains), adds a scalable search-based MCP server, and switches the license to MIT. The bundled MCP adapter's default server now publishes the curated subset; the catalog behaves the same when the server is off.
+
 = 0.2.0 =
-Adds an optional, off-by-default built-in MCP server with a per-ability exposure gate and a Settings → MCP Server page, expands the catalog to 230 abilities across 21 domains, and ships correctness fixes. The catalog behaves the same when the server is off.
+Adds an optional, off-by-default built-in MCP server with a per-ability exposure gate and a Settings → MCP Server page, expands the catalog to 160 abilities across 18 domains, and ships correctness fixes. The catalog behaves the same when the server is off.
 
 = 0.1.0 =
 Initial release.
