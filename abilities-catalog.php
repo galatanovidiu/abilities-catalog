@@ -8,8 +8,8 @@
  * Requires PHP:      8.1
  * Author:            Ovidiu Galatan
  * Author URI:        https://github.com/galatanovidiu
- * License:           GPL-2.0-or-later
- * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * License:           MIT
+ * License URI:       https://opensource.org/licenses/MIT
  * Text Domain:       abilities-catalog
  *
  * @package AbilitiesCatalog

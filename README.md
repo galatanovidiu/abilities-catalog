@@ -183,4 +183,4 @@ npm run test:php
 
 ## License
 
-GPL-2.0-or-later.
+MIT. See [LICENSE](LICENSE).
