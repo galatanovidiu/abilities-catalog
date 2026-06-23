@@ -33,6 +33,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `describe` / `execute` actions through a {@see DomainRouter}; the REST endpoint
  * appears only when the gate is on.
  *
+ * It also exposes the same curated, owner-enabled abilities on the bundled adapter's
+ * default server ({@see publishToDefaultServer()}), so both MCP endpoints surface one
+ * consistent, exposure-gated subset of the catalog.
+ *
  * @since 0.2.0
  */
 final class Server {
@@ -110,7 +114,48 @@ final class Server {
 	public function register(): void {
 		McpAdapter::instance();
 
+		$this->publishToDefaultServer();
+
 		add_action( 'mcp_adapter_init', array( $this, 'createServer' ) );
+	}
+
+	/**
+	 * Marks the curated, owner-enabled abilities `mcp.public` for the adapter's default server.
+	 *
+	 * Un-suppressing the bundled adapter's default server gives a second MCP endpoint
+	 * (`/wp-json/mcp/mcp-adapter-default-server`) whose `discover` / `execute` meta-tools
+	 * only see abilities with `meta.mcp.public = true`. This filter sets that flag — but
+	 * only for an ability the {@see DomainMap} already curates AND the {@see ExposurePolicy}
+	 * already allows, so the default endpoint exposes exactly the same subset the curated
+	 * domain server does. A disabled or unmapped ability stays unexposed on both servers,
+	 * so the deny-by-default exposure gate is not weakened; capability remains the hard
+	 * guard on every execute. The map and policy are built once and reused across the
+	 * registration pass (each caches its option/filter read), so a full register costs one
+	 * option read, not one per ability.
+	 *
+	 * Registered in {@see register()} (on `plugins_loaded`), before `wp_abilities_api_init`
+	 * fires, so the flag is present by the time each ability registers.
+	 *
+	 * @return void
+	 */
+	private function publishToDefaultServer(): void {
+		$map    = new DomainMap();
+		$policy = new ExposurePolicy();
+
+		add_filter(
+			'wp_register_ability_args',
+			static function ( array $args, string $name ) use ( $map, $policy ): array {
+				if ( null === $map->domainOf( $name ) || ! $policy->allows( $name ) ) {
+					return $args;
+				}
+
+				$args['meta']['mcp']['public'] = true;
+
+				return $args;
+			},
+			10,
+			2
+		);
 	}
 
 	/**

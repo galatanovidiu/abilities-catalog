@@ -69,8 +69,9 @@ final class ServerTest extends TestCase {
 	}
 
 	/**
-	 * Booting registers the REST route, exposes every curated domain tool, and runs
-	 * an ability end-to-end through one of them.
+	 * Booting registers the REST route, exposes every curated domain tool, publishes
+	 * the owner-enabled abilities to the adapter's default server, and runs an ability
+	 * end-to-end through one of them.
 	 *
 	 * The adapter is a process-wide singleton with no reset, so this boots exactly
 	 * once and asserts the whole wiring in one method.
@@ -86,6 +87,33 @@ final class ServerTest extends TestCase {
 		add_filter( 'mcp_adapter_create_default_server', '__return_false' );
 
 		( new Server() )->register();
+
+		// Booting also publishes the curated, owner-enabled abilities to the bundled
+		// adapter's default server by marking them mcp.public through the
+		// wp_register_ability_args filter. Assert that filter directly (it does not
+		// depend on registration timing): only an ability that is BOTH curated (mapped
+		// to a domain) AND enabled in the exposure gate is published, so the second
+		// endpoint honors the same deny-by-default gate as the curated server. set_up()
+		// enabled only content/get-post.
+		$enabled_mapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'content/get-post' );
+		$this->assertTrue(
+			$enabled_mapped['meta']['mcp']['public'] ?? false,
+			'A curated, exposure-enabled ability should be marked mcp.public for the default server.'
+		);
+
+		$disabled_mapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'content/create-post' );
+		$this->assertArrayNotHasKey(
+			'mcp',
+			$disabled_mapped['meta'],
+			'A curated but exposure-disabled ability must not be public on the default server (the gate holds).'
+		);
+
+		$unmapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'nonexistent/thing' );
+		$this->assertArrayNotHasKey(
+			'mcp',
+			$unmapped['meta'],
+			'An unmapped ability must not be exposed on the default server.'
+		);
 
 		// Rebuild the REST server so the adapter's init chain runs against a fresh
 		// route table: register() hooked McpAdapter::init() onto rest_api_init, which
