@@ -65,7 +65,7 @@ final class CategoryCatalog implements CategoryProvider {
 			'media'       => array(
 				'slug'        => 'media',
 				'label'       => __( 'Media', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read media library items.', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read and manage media library items, including a post\'s featured image.', 'abilities-catalog' ),
 			),
 			'menus'       => array(
 				'slug'        => 'menus',
@@ -100,7 +100,7 @@ final class CategoryCatalog implements CategoryProvider {
 			'templates'   => array(
 				'slug'        => 'templates',
 				'label'       => __( 'Templates', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read and manage site-editor data: templates, template parts, patterns, and global styles.', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read and manage site-editor data: templates, template parts, patterns, global styles, and block binding sources.', 'abilities-catalog' ),
 			),
 			'terms'       => array(
 				'slug'        => 'terms',
@@ -115,7 +115,7 @@ final class CategoryCatalog implements CategoryProvider {
 			'tools'       => array(
 				'slug'        => 'tools',
 				'label'       => __( 'Tools', 'abilities-catalog' ),
-				'description' => __( 'Abilities that read importer availability and export site content.', 'abilities-catalog' ),
+				'description' => __( 'Abilities for maintenance tools: transients and the object cache, importer availability and content export, and sending a test email.', 'abilities-catalog' ),
 			),
 			'updates'     => array(
 				'slug'        => 'updates',
