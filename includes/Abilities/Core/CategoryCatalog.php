@@ -47,6 +47,11 @@ final class CategoryCatalog implements CategoryProvider {
 				'label'       => __( 'Content', 'abilities-catalog' ),
 				'description' => __( 'Abilities that read posts, pages, and other content.', 'abilities-catalog' ),
 			),
+			'cron'        => array(
+				'slug'        => 'cron',
+				'label'       => __( 'Cron', 'abilities-catalog' ),
+				'description' => __( 'Abilities that read WP-Cron scheduled events and recurrence schedules, and schedule or unschedule individual events.', 'abilities-catalog' ),
+			),
 			'dashboard'   => array(
 				'slug'        => 'dashboard',
 				'label'       => __( 'Dashboard', 'abilities-catalog' ),
