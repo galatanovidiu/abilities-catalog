@@ -162,15 +162,20 @@ final class DomainRouter {
 			return $allowed;
 		}
 		if ( ! $allowed ) {
-			return new WP_Error(
-				'forbidden',
-				sprintf(
-					/* translators: %s: the ability name. */
-					__( 'You do not have permission to run "%s".', 'abilities-catalog' ),
-					$ability
-				),
-				array( 'status' => 403 )
+			$message = sprintf(
+				/* translators: %s: the ability name. */
+				__( 'You do not have permission to run "%s". Your account lacks the capability this action requires; an administrator must grant it.', 'abilities-catalog' ),
+				$ability
 			);
+
+			// A capability denial while targeting a specific site is usually "you are not
+			// a member of that site" — point the agent at the sites it can act on, the same
+			// recovery the invalid-blog_id error gives (PLAN Decision 3 / spec A3).
+			if ( isset( $input['blog_id'] ) ) {
+				$message .= ' ' . __( 'You targeted a specific site with blog_id and may not be able to act on it; list the sites you can act on with users/list-my-sites.', 'abilities-catalog' );
+			}
+
+			return new WP_Error( 'forbidden', $message, array( 'status' => 403 ) );
 		}
 
 		$result = $resolved->execute( $args );

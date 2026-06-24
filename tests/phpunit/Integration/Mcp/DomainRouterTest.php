@@ -363,6 +363,28 @@ final class DomainRouterTest extends TestCase {
 		// The router pre-checks the capability and returns its own 403 'forbidden'
 		// (mirroring AbilityIndex), rather than letting core's execute() genericize it.
 		$this->assertSame( 'forbidden', $result->get_error_code() );
+		// The denial is recovery-oriented: it states the cause and the next step.
+		$this->assertStringContainsString( 'administrator', $result->get_error_message() );
+	}
+
+	/**
+	 * A capability denial while targeting a site by blog_id points at users/list-my-sites.
+	 *
+	 * The usual cause is that the caller is not a member of the targeted site, so the
+	 * recovery matches the invalid-blog_id error: list the sites you can act on. The hint
+	 * is added only when the input carried a blog_id.
+	 *
+	 * @return void
+	 */
+	public function test_execute_denial_with_blog_id_points_to_list_my_sites(): void {
+		$this->actingAs( 'subscriber' );
+
+		$router = $this->routerWith( array( 'content/create-post' ) );
+		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope', 'blog_id' => 2 ) );
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'forbidden', $result->get_error_code() );
+		$this->assertStringContainsString( 'users/list-my-sites', $result->get_error_message() );
 	}
 
 	/**
