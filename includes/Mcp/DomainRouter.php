@@ -150,7 +150,30 @@ final class DomainRouter {
 			return $this->disabled( $ability );
 		}
 
-		$result = $resolved->execute( AbilityArgumentNormalizer::normalize( $resolved, $input ) );
+		// Pre-check the capability the way AbilityIndex does, so a wrapped site-scoped
+		// ability's rich recovery WP_Error (e.g. abilities_catalog_invalid_blog_id for a
+		// bad blog_id) reaches the agent verbatim. Core's WP_Ability::execute() would
+		// genericize a permission failure and trip _doing_it_wrong; pre-checking here
+		// avoids that. Normalize once and reuse the same args for both calls.
+		$args = AbilityArgumentNormalizer::normalize( $resolved, $input );
+
+		$allowed = $resolved->check_permissions( $args );
+		if ( is_wp_error( $allowed ) ) {
+			return $allowed;
+		}
+		if ( ! $allowed ) {
+			return new WP_Error(
+				'forbidden',
+				sprintf(
+					/* translators: %s: the ability name. */
+					__( 'You do not have permission to run "%s".', 'abilities-catalog' ),
+					$ability
+				),
+				array( 'status' => 403 )
+			);
+		}
+
+		$result = $resolved->execute( $args );
 
 		return is_wp_error( $result ) ? $this->guideInvalidInput( $result, $ability ) : $result;
 	}

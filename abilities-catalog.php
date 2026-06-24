@@ -69,6 +69,14 @@ add_action(
 			return;
 		}
 
+		// On a multisite network, let an agent target a site by passing an optional
+		// blog_id to any site-scoped ability; the decorator switches into that blog
+		// around the capability check and execute, balanced. Single-site is a no-op.
+		// Always-on (independent of the optional MCP server) — blog_id targeting is a
+		// global concern, so it registers alongside Registry::register(), before
+		// wp_abilities_api_init fires.
+		( new Support\PolicyDecorator() )->register();
+
 		// The MCP server's settings page and its exposure REST API are always
 		// available — independent of whether the server is on — so a site can turn the
 		// server on and gate its abilities from one screen in wp-admin.

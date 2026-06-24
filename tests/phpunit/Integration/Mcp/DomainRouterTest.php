@@ -360,7 +360,9 @@ final class DomainRouterTest extends TestCase {
 		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
 
 		$this->assertWPError( $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		// The router pre-checks the capability and returns its own 403 'forbidden'
+		// (mirroring AbilityIndex), rather than letting core's execute() genericize it.
+		$this->assertSame( 'forbidden', $result->get_error_code() );
 	}
 
 	/**
@@ -401,7 +403,9 @@ final class DomainRouterTest extends TestCase {
 		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
 
 		$this->assertWPError( $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		// The router's permission pre-check returns 'forbidden' (a non-input-shape error),
+		// so guideInvalidInput never appends the describe hint.
+		$this->assertSame( 'forbidden', $result->get_error_code() );
 		$this->assertStringNotContainsString( 'describe', $result->get_error_message() );
 	}
 
