@@ -176,8 +176,10 @@ final class DomainToolHandlerTest extends TestCase {
 		);
 
 		$this->assertWPError( $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
-		$this->assertStringContainsString( 'ability_invalid_permissions', $result->get_error_message() );
+		// The router pre-checks the capability and returns its own 'forbidden' (403),
+		// consistent with the other MCP execute paths; the handler folds that into the message.
+		$this->assertSame( 'forbidden', $result->get_error_code() );
+		$this->assertStringContainsString( 'forbidden', $result->get_error_message() );
 		$this->assertStringContainsString( 'status: 403', $result->get_error_message() );
 	}
 }
