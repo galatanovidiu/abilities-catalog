@@ -48,13 +48,13 @@ final class DomainMapTest extends TestCase {
 	}
 
 	/**
-	 * The 11 curated domains are exposed in tool order.
+	 * The 12 curated domains are exposed in tool order.
 	 *
 	 * @return void
 	 */
-	public function test_domains_lists_the_eleven_curated_slugs_in_order(): void {
+	public function test_domains_lists_the_curated_slugs_in_order(): void {
 		$this->assertSame(
-			array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard' ),
+			$this->curatedDomains(),
 			$this->map->domains()
 		);
 	}
@@ -270,12 +270,12 @@ final class DomainMapTest extends TestCase {
 	}
 
 	/**
-	 * The curated 11 domain slugs, in tool order.
+	 * The curated domain slugs, in tool order.
 	 *
 	 * @return list<string>
 	 */
 	private function curatedDomains(): array {
-		return array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard' );
+		return array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard', 'network' );
 	}
 
 	/**
@@ -300,15 +300,18 @@ final class DomainMapTest extends TestCase {
 			'connector -> settings'     => array( 'connectors/list-connectors', 'settings' ),
 			'tool -> tools'             => array( 'tools/export-content', 'tools' ),
 			'privacy -> tools'          => array( 'privacy/generate-export', 'tools' ),
+			'cron -> tools'             => array( 'cron/list-events', 'tools' ),
+			'widget -> appearance'      => array( 'widgets/list-widgets', 'appearance' ),
 			'site-health -> self'       => array( 'site-health/get-status', 'site-health' ),
 			'update -> updates'         => array( 'updates/run-update', 'updates' ),
 			'dashboard -> self'         => array( 'dashboard/get-activity', 'dashboard' ),
+			'network -> network'        => array( 'network/list-sites', 'network' ),
 			'core site -> settings'     => array( 'core/get-site-info', 'settings' ),
 			'core user -> users'        => array( 'core/get-user-info', 'users' ),
 			'core env -> site-health'   => array( 'core/get-environment-info', 'site-health' ),
 			'other search -> null'      => array( 'search/something-else', null ),
 			'unmapped core -> null'     => array( 'core/something-else', null ),
-			'unknown prefix -> null'    => array( 'widgets/list', null ),
+			'unknown prefix -> null'    => array( 'acme/list', null ),
 			'no slash -> null'          => array( 'noslash', null ),
 			'empty -> null'             => array( '', null ),
 		);

@@ -106,8 +106,8 @@ final class DomainRouterTest extends TestCase {
 	/**
 	 * Every curated domain lists a non-empty, correctly-scoped set of abilities.
 	 *
-	 * This is the per-domain coverage check: each of the 11 tools owns real abilities,
-	 * and `list` never leaks one that belongs to another domain.
+	 * This is the per-domain coverage check: each curated domain tool owns real
+	 * abilities, and `list` never leaks one that belongs to another domain.
 	 *
 	 * @dataProvider curatedDomains
 	 *
@@ -130,7 +130,7 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
-	 * The 11 curated domain slugs, one per data row.
+	 * The curated domain slugs, one per data row.
 	 *
 	 * @return array<string,array{0:string}>
 	 */
@@ -147,6 +147,7 @@ final class DomainRouterTest extends TestCase {
 			'site-health' => array( 'site-health' ),
 			'updates'     => array( 'updates' ),
 			'dashboard'   => array( 'dashboard' ),
+			'network'     => array( 'network' ),
 		);
 	}
 

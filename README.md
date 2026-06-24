@@ -73,7 +73,8 @@ Execution happens server-side through `wp_get_ability()`, so the target ability'
 own capability check still runs.
 
 The curated domains are `content`, `media`, `appearance`, `design`, `plugins`,
-`users`, `settings`, `tools`, `site-health`, `updates`, and `dashboard`.
+`users`, `settings`, `tools`, `site-health`, `updates`, `dashboard`, and
+`network` (multisite only).
 
 ### Enable It
 
