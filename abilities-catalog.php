@@ -3,7 +3,7 @@
  * Plugin Name:       Abilities Catalog
  * Plugin URI:        https://github.com/galatanovidiu/abilities-catalog
  * Description:       Registers WordPress wp-admin features as Abilities API abilities, plus an optional, off-by-default built-in MCP server that exposes them as curated domain tools. Consumer-agnostic: the catalog works standalone, and any Abilities API consumer can expose the abilities.
- * Version:           0.3.0
+ * Version:           0.3.1
  * Requires at least: 7.0
  * Requires PHP:      8.1
  * Author:            Ovidiu Galatan
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ABILITIES_CATALOG_VERSION', '0.3.0' );
+define( 'ABILITIES_CATALOG_VERSION', '0.3.1' );
 define( 'ABILITIES_CATALOG_FILE', __FILE__ );
 define( 'ABILITIES_CATALOG_DIR', plugin_dir_path( __FILE__ ) );
 
