@@ -96,6 +96,26 @@ final class AbilityIndexTest extends TestCase {
 	}
 
 	/**
+	 * overview() seeds search vocabulary: each category lists a few example abilities.
+	 *
+	 * @return void
+	 */
+	public function test_overview_lists_bounded_example_abilities_per_category(): void {
+		$overview = $this->index()->overview();
+
+		foreach ( $overview['categories'] as $row ) {
+			$this->assertArrayHasKey( 'examples', $row );
+			$this->assertNotEmpty( $row['examples'], 'A non-empty category must show at least one example.' );
+			$this->assertLessThanOrEqual( 5, count( $row['examples'] ), 'Examples stay bounded so overview is O(categories).' );
+
+			foreach ( $row['examples'] as $example ) {
+				$this->assertArrayHasKey( 'name', $example );
+				$this->assertArrayHasKey( 'label', $example );
+			}
+		}
+	}
+
+	/**
 	 * search() ranks the matching ability in, honors the limit, and flags enabled state.
 	 *
 	 * @return void
@@ -110,10 +130,27 @@ final class AbilityIndexTest extends TestCase {
 		$this->assertSame( $result['returned'], count( $result['abilities'] ) );
 		$this->assertGreaterThanOrEqual( $result['returned'], $result['total_matched'] );
 
+		$this->assertArrayNotHasKey( 'no_match', $result, 'A matching search must not carry the no-match fallback.' );
+
 		foreach ( $result['abilities'] as $hit ) {
 			$this->assertArrayHasKey( 'enabled', $hit );
 			$this->assertArrayNotHasKey( '_score', $hit, 'The internal score must not leak to the client.' );
 		}
+	}
+
+	/**
+	 * A query that matches nothing returns the category map so the agent can re-orient.
+	 *
+	 * @return void
+	 */
+	public function test_search_with_no_match_returns_the_category_map(): void {
+		$result = $this->index()->search( 'zzqqwx qphwlmx vbxnkt', null, 5 );
+
+		$this->assertSame( 0, $result['total_matched'], 'The nonsense query must match nothing.' );
+		$this->assertSame( array(), $result['abilities'] );
+		$this->assertTrue( $result['no_match'] );
+		$this->assertNotEmpty( $result['categories'], 'A dead-end search hands back the category map to re-orient.' );
+		$this->assertArrayHasKey( 'next_step', $result );
 	}
 
 	/**
