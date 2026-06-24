@@ -31,7 +31,7 @@ final class ServerTest extends TestCase {
 	 *
 	 * @var list<string>
 	 */
-	private const CURATED_DOMAINS = array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard' );
+	private const CURATED_DOMAINS = array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard', 'network' );
 
 	/**
 	 * Loads the adapter bundle, or skips the suite when it is not installed.

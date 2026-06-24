@@ -20,9 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ability needs a home. This map is the single source of truth for that
  * assignment (spec §11). It is a *curated* taxonomy, not a naive first-segment
  * split: most abilities land by their name prefix, but the prefixes are
- * deliberately grouped (themes+menus form "appearance"; templates+fonts form
- * "design"; `privacy/*` requests join "tools" while `settings/*` privacy-policy
- * settings stay in "settings"), and a few abilities are placed by exact name
+ * deliberately grouped (themes+menus+widgets form "appearance"; templates+fonts
+ * form "design"; `privacy/*` and `cron/*` join "tools" while `settings/*`
+ * privacy-policy settings stay in "settings"; multisite `network/*` is its own
+ * domain), and a few abilities are placed by exact name
  * where no prefix fits (`search/search-content` joins "content"; core's own
  * read-only `core/*` info abilities join the domains whose data they mirror).
  *
@@ -59,15 +60,16 @@ final class DomainMap {
 	private const DOMAIN_PREFIXES = array(
 		'content'     => array( 'content', 'terms', 'comments' ),
 		'media'       => array( 'media' ),
-		'appearance'  => array( 'themes', 'menus' ),
+		'appearance'  => array( 'themes', 'menus', 'widgets' ),
 		'design'      => array( 'templates', 'fonts' ),
 		'plugins'     => array( 'plugins' ),
 		'users'       => array( 'users' ),
 		'settings'    => array( 'settings', 'connectors' ),
-		'tools'       => array( 'tools', 'privacy' ),
+		'tools'       => array( 'tools', 'privacy', 'cron' ),
 		'site-health' => array( 'site-health' ),
 		'updates'     => array( 'updates' ),
 		'dashboard'   => array( 'dashboard' ),
+		'network'     => array( 'network' ),
 	);
 
 	/**

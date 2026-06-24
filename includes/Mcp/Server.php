@@ -459,7 +459,7 @@ final class Server {
 			case 'media':
 				return __( 'Manage the media library — upload, list, read, update and delete attachments; edit and crop images; regenerate thumbnails; and read the registered image sizes.', 'abilities-catalog' );
 			case 'appearance':
-				return __( 'Manage site appearance — install, switch, list and delete themes (and search the theme directory); and create, update and delete classic menus and block navigation, their items, and menu locations.', 'abilities-catalog' );
+				return __( 'Manage site appearance — install, switch, list and delete themes (and search the theme directory); create, update and delete classic menus and block navigation, their items, and menu locations; and manage widgets and sidebars — list widget types and sidebars, read a sidebar, and create, read, update and delete widgets.', 'abilities-catalog' );
 			case 'design':
 				return __( 'Manage site design — create, read, update and delete block templates and template parts; create and read block patterns and synced patterns; read and update global and theme styles; list registered block types; and install, list and delete web fonts and font collections.', 'abilities-catalog' );
 			case 'plugins':
@@ -469,13 +469,15 @@ final class Server {
 			case 'settings':
 				return __( 'Manage site settings — read and update the general, writing, reading, discussion, media, permalink and privacy option groups; read or update a single named option; and read connector (integration provider) metadata.', 'abilities-catalog' );
 			case 'tools':
-				return __( 'Site tools — export site content (WXR), list the available content importers, and manage personal-data export and erasure requests.', 'abilities-catalog' );
+				return __( 'Site tools — export site content (WXR), list the available content importers, send a test email, flush the object cache, read and write transients, manage personal-data export and erasure requests, and manage scheduled (cron) events: list events and schedules, read an event, and schedule or unschedule one.', 'abilities-catalog' );
 			case 'site-health':
 				return __( 'Inspect Site Health — read the status report, run the health tests, and read the debug information.', 'abilities-catalog' );
 			case 'updates':
 				return __( 'Manage updates — list the available core, plugin, theme and translation updates, and run a plugin, theme or translation update.', 'abilities-catalog' );
 			case 'dashboard':
 				return __( 'Read the dashboard — recent site activity, the At a Glance counts, and recent drafts.', 'abilities-catalog' );
+			case 'network':
+				return __( 'Manage a multisite network — list networks and sites, read and count sites, create, update and delete sites, read and write network options, list super admins, grant or revoke super admin, and add or remove a user on a site. Multisite only; inert on a single-site install.', 'abilities-catalog' );
 			default:
 				// An add-on domain (opened via `abilities_catalog_mcp_domains`) carries
 				// its own description; otherwise fall back to a generic blurb.
