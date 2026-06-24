@@ -84,13 +84,16 @@ final class DeleteUserMeta implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => false,
 					'destructive' => true,
 					'idempotent'  => true,
 				),
-				'show_in_rest' => true,
-				'screen'       => 'user-edit.php?user_id={id}',
+				'abilities_catalog' => array(
+					'scope' => 'site',
+				),
+				'show_in_rest'      => true,
+				'screen'            => 'user-edit.php?user_id={id}',
 			),
 		);
 	}

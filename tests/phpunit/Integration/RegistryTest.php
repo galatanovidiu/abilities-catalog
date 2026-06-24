@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
+use GalatanOvidiu\AbilitiesCatalog\Support\ScopeResolver;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
@@ -119,6 +120,34 @@ final class RegistryTest extends TestCase {
 			if (true === ($annotations['readonly'] ?? null)) {
 				$this->assertArrayNotHasKey($ability->name(), $links, $ability->name() . ' is read-only but has a screen link.');
 			}
+		}
+	}
+
+	public function test_known_non_site_domains_declare_a_non_site_scope(): void {
+		$non_site_prefixes = array('network/', 'updates/', 'privacy/', 'site-health/', 'connectors/');
+
+		foreach ($this->discoverAbilities() as $ability) {
+			$name = $ability->name();
+
+			$is_non_site_domain = false;
+			foreach ($non_site_prefixes as $prefix) {
+				if (0 === strpos($name, $prefix)) {
+					$is_non_site_domain = true;
+					break;
+				}
+			}
+
+			if (!$is_non_site_domain) {
+				continue;
+			}
+
+			$scope = ScopeResolver::resolve($ability->args(), $name);
+
+			$this->assertNotSame(
+				'site',
+				$scope,
+				$name . ' is in a non-site domain but resolves to the site scope; declare meta.abilities_catalog.scope (network/user/global).'
+			);
 		}
 	}
 }

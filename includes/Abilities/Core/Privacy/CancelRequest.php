@@ -94,12 +94,15 @@ final class CancelRequest implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => false,
 					'destructive' => true,
 					'idempotent'  => false,
 				),
-				'show_in_rest' => true,
+				'abilities_catalog' => array(
+					'scope' => 'global',
+				),
+				'show_in_rest'      => true,
 			),
 		);
 	}

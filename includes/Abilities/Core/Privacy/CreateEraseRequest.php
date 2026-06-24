@@ -93,13 +93,16 @@ final class CreateEraseRequest implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => false,
 					'destructive' => false,
 					'idempotent'  => false,
 				),
-				'show_in_rest' => true,
-				'screen'       => 'erase-personal-data.php',
+				'abilities_catalog' => array(
+					'scope' => 'global',
+				),
+				'show_in_rest'      => true,
+				'screen'            => 'erase-personal-data.php',
 			),
 		);
 	}

@@ -47,6 +47,9 @@ CI run the integration suite (`.github/workflows/test.yml`).
   `Contracts\CategoryProvider` (Core's is `Abilities\Core\CategoryCatalog`), registered
   on `wp_abilities_api_categories_init`. An ability links to its category by slug in
   `args()['category']`.
+- `site` is the default scope; declare `meta.abilities_catalog.scope` only for a
+  non-site ability (network / user identity / install-wide). On multisite the policy
+  decorator injects an optional `blog_id` into `site` abilities only.
 - **Wrap, don't reimplement.** `execute_callback` wraps a core function or an internal
   REST route (`rest_do_request`) and returns `WP_Error` on failure. Do not reimplement
   core behavior.

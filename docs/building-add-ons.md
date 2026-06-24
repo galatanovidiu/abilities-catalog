@@ -245,6 +245,36 @@ opt-in (Step 7). The `permission_callback` is always the hard authorization
 guard: enforce the real capability server-side with `current_user_can()`,
 independent of any consumer gating.
 
+**Multisite scope (`meta.abilities_catalog.scope`).** On multisite, the catalog's
+policy decorator injects an optional `blog_id` into every **site-scoped** ability
+and runs it inside `switch_to_blog()`, so an agent can target a specific site.
+`site` is the default and is correct for almost every per-site ability (content,
+terms, options, your own per-site CPTs), so most abilities declare nothing. Only a
+**non-site** ability must opt out by declaring a scope:
+
+```php
+'meta' => array(
+	'annotations'       => array( 'readonly' => false, 'destructive' => false ),
+	'abilities_catalog' => array(
+		'scope' => 'network', // 'network' | 'user' | 'global'
+	),
+),
+```
+
+- `network` — network management that owns its own targeting.
+- `user` — network-global user identity (the current user, sessions, app passwords).
+- `global` — operates on the install/network as a whole (updates, diagnostics,
+  privacy exports). Here `site` would be the *unsafe* default: a switch would scope
+  the operation to one site and silently produce an incomplete result.
+
+**This one is on you, and only you.** The catalog's write-guard test runs in a
+plugin-only test environment, so it **cannot** see — and cannot enforce scope on —
+a third-party registry like yours. The documentation here plus the safe `site`
+default are the *only* safeguard. A non-site ability that omits `scope` will
+**silently mis-switch on multisite**: the decorator will inject a `blog_id`, switch
+to that site, and run your network/user/global operation against the wrong scope
+with no error. If an ability is not per-site, declare its scope.
+
 **`ConditionalAbility` — wrapping an optional dependency.** If your ability
 needs another plugin's functions, implement `ConditionalAbility` and report
 availability without touching the dependency's symbols beyond detecting them:
@@ -392,6 +422,10 @@ npm run wp-env start && npm run test:php   # integration suite, in Docker
       REST (no reimplementation).
 - [ ] Every write sets an explicit boolean `annotations.destructive`. Permanent
       / irreversible writes set it `true`; high-risk ones also set `dangerous`.
+- [ ] Non-site abilities declare `meta.abilities_catalog.scope` (`network` /
+      `user` / `global`); per-site abilities leave it at the default `site`. The
+      catalog cannot enforce this on your registry — a missed scope mis-switches
+      on multisite.
 - [ ] `permission_callback` enforces the real capability with
       `current_user_can()` — the hard guard.
 - [ ] Optional-dependency abilities implement `ConditionalAbility`; detection
@@ -400,5 +434,3 @@ npm run wp-env start && npm run test:php   # integration suite, in Docker
 - [ ] MCP `Integration` (if any) contributes via filters, preserves existing
       entries, and gates on the same condition as the abilities.
 - [ ] Tests mirror the class path; lint, phpstan, and the wp-env suite pass.
-</content>
-</invoke>
