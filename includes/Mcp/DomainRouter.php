@@ -242,7 +242,7 @@ final class DomainRouter {
 					__( 'Ability "%1$s" is not part of the "%2$s" domain.', 'abilities-catalog' ),
 					$ability,
 					$domain
-				) . $this->recoveryHint(),
+				) . $this->recoveryHint( $domain ),
 				array( 'status' => 404 )
 			);
 		}
@@ -278,7 +278,7 @@ final class DomainRouter {
 				__( 'Ability "%1$s" is not registered in the "%2$s" domain.', 'abilities-catalog' ),
 				$ability,
 				$domain
-			) . $this->recoveryHint(),
+			) . $this->recoveryHint( $domain ),
 			array( 'status' => 404 )
 		);
 	}
@@ -286,16 +286,35 @@ final class DomainRouter {
 	/**
 	 * Builds the recovery sentence appended to an unknown-ability error.
 	 *
-	 * Directs the agent to the authoritative discovery path — `list` for this domain's exact
-	 * ability names, then `describe` for an ability's exact input schema before it calls
-	 * `execute`. The server never guesses the intended name; it tells the caller where to read
-	 * the exact one. This is why the unknown-ability case stays a recoverable error rather than
-	 * a dead end — it points at the names and inputs instead of inviting another guess.
+	 * First names the ability-name patterns this domain owns ({@see DomainMap::namePatternsOf()}),
+	 * because the dominant guessing failure is that the domain tool name is not the ability
+	 * prefix — an agent reaches the `content` tool and guesses `content/search-posts` when the
+	 * real ability is `search/search-content`. Naming the prefixes turns that wrong guess into a
+	 * right one without a round-trip. These are taxonomy facts, not an edit-distance "did you
+	 * mean", so they cannot point at a wrong-but-close ability.
 	 *
+	 * Then directs the agent to the authoritative discovery path — `list` for this domain's
+	 * exact ability names, then `describe` for an ability's exact input schema before it calls
+	 * `execute`. The server never guesses the intended name; it tells the caller which prefixes
+	 * are real and where to read the exact name. This is why the unknown-ability case stays a
+	 * recoverable error rather than a dead end.
+	 *
+	 * @param string $domain The domain the failed call targeted, whose owned patterns are named.
 	 * @return string The leading-space recovery sentence to append to the message.
 	 */
-	private function recoveryHint(): string {
-		return __( ' Call this tool with action "list" to see the exact ability names, then "describe" to get an ability\'s input schema before "execute".', 'abilities-catalog' );
+	private function recoveryHint( string $domain ): string {
+		$owns     = '';
+		$patterns = $this->map->namePatternsOf( $domain );
+		if ( array() !== $patterns ) {
+			$owns = sprintf(
+				/* translators: 1: domain slug, 2: comma-separated ability-name patterns the domain owns. */
+				__( ' The "%1$s" tool owns these ability names: %2$s.', 'abilities-catalog' ),
+				$domain,
+				implode( ', ', $patterns )
+			);
+		}
+
+		return $owns . __( ' Call this tool with action "list" to see the exact ability names, then "describe" to get an ability\'s input schema before "execute".', 'abilities-catalog' );
 	}
 
 	/**
