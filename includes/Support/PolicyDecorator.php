@@ -72,9 +72,19 @@ final class PolicyDecorator {
 	 *                                            primitive; defaults to `CoreBlogSwitcher`.
 	 * @param callable():bool|null $is_multisite Optional multisite predicate; defaults to
 	 *                                            core `is_multisite()`.
+	 * @param callable(int):(\WP_Site|null)|null $site_lookup Optional site lookup forwarded to the
+	 *                                            switch runner; defaults to core `get_site()`. A
+	 *                                            seam so the wrap path is testable without a network.
+	 * @param callable():int|null $current_network_id Optional current-network resolver forwarded to
+	 *                                            the switch runner; defaults to core `get_current_network_id()`.
 	 */
-	public function __construct( ?BlogSwitcher $switcher = null, ?callable $is_multisite = null ) {
-		$this->runner       = new BlogSwitchRunner( $switcher ?? new CoreBlogSwitcher() );
+	public function __construct(
+		?BlogSwitcher $switcher = null,
+		?callable $is_multisite = null,
+		?callable $site_lookup = null,
+		?callable $current_network_id = null
+	) {
+		$this->runner       = new BlogSwitchRunner( $switcher ?? new CoreBlogSwitcher(), $site_lookup, $current_network_id );
 		$this->is_multisite = $is_multisite ?? static function (): bool {
 			return is_multisite();
 		};

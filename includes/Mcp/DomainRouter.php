@@ -150,7 +150,35 @@ final class DomainRouter {
 			return $this->disabled( $ability );
 		}
 
-		$result = $resolved->execute( AbilityArgumentNormalizer::normalize( $resolved, $input ) );
+		// Pre-check the capability the way AbilityIndex does, so a wrapped site-scoped
+		// ability's rich recovery WP_Error (e.g. abilities_catalog_invalid_blog_id for a
+		// bad blog_id) reaches the agent verbatim. Core's WP_Ability::execute() would
+		// genericize a permission failure and trip _doing_it_wrong; pre-checking here
+		// avoids that. Normalize once and reuse the same args for both calls.
+		$args = AbilityArgumentNormalizer::normalize( $resolved, $input );
+
+		$allowed = $resolved->check_permissions( $args );
+		if ( is_wp_error( $allowed ) ) {
+			return $allowed;
+		}
+		if ( ! $allowed ) {
+			$message = sprintf(
+				/* translators: %s: the ability name. */
+				__( 'You do not have permission to run "%s". Your account lacks the capability this action requires; an administrator must grant it.', 'abilities-catalog' ),
+				$ability
+			);
+
+			// A capability denial while targeting a specific site is usually "you are not
+			// a member of that site" — point the agent at the sites it can act on, the same
+			// recovery the invalid-blog_id error gives (PLAN Decision 3 / spec A3).
+			if ( isset( $input['blog_id'] ) ) {
+				$message .= ' ' . __( 'You targeted a specific site with blog_id and may not be able to act on it; list the sites you can act on with users/list-my-sites.', 'abilities-catalog' );
+			}
+
+			return new WP_Error( 'forbidden', $message, array( 'status' => 403 ) );
+		}
+
+		$result = $resolved->execute( $args );
 
 		return is_wp_error( $result ) ? $this->guideInvalidInput( $result, $ability ) : $result;
 	}
