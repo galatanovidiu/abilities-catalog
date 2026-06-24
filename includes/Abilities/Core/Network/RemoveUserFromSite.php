@@ -111,13 +111,16 @@ final class RemoveUserFromSite implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => false,
 					'destructive' => false,
 					'idempotent'  => true,
 				),
-				'show_in_rest' => true,
-				'screen'       => 'site-users.php',
+				'abilities_catalog' => array(
+					'scope' => 'network',
+				),
+				'show_in_rest'      => true,
+				'screen'            => 'site-users.php',
 			),
 		);
 	}

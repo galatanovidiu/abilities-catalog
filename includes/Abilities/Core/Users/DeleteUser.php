@@ -107,13 +107,16 @@ final class DeleteUser implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => false,
 					'destructive' => true,
 					'idempotent'  => false,
 				),
-				'show_in_rest' => true,
-				'screen'       => 'users.php',
+				'abilities_catalog' => array(
+					'scope' => 'user',
+				),
+				'show_in_rest'      => true,
+				'screen'            => 'users.php',
 			),
 		);
 	}
@@ -142,14 +145,26 @@ final class DeleteUser implements Ability {
 	/**
 	 * Executes the ability by dispatching the internal REST delete request.
 	 *
-	 * Re-validates the data-loss guard, then forces `force=true` and sets the
-	 * validated `reassign` target so the deleted user's content is reassigned. A
-	 * REST error (e.g. multisite unsupported, invalid reassign) is surfaced unchanged.
+	 * On multisite the core REST users controller refuses every DELETE
+	 * (`rest_cannot_delete`, 501), so this returns a recovery-oriented `WP_Error`
+	 * before dispatching, pointing the caller at `network/remove-user-from-site`
+	 * for per-site removal. On single site it re-validates the data-loss guard,
+	 * then forces `force=true` and sets the validated `reassign` target so the
+	 * deleted user's content is reassigned. A REST error (e.g. invalid reassign)
+	 * is surfaced unchanged.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deletion result, or the REST error.
+	 * @return array<string,mixed>|\WP_Error The deletion result, or a WP_Error.
 	 */
 	public function execute( $input ) {
+		if ( is_multisite() ) {
+			return new WP_Error(
+				'abilities_catalog_delete_user_multisite',
+				__( 'Deleting a user is disabled on multisite. To remove a user from one site, use network/remove-user-from-site.', 'abilities-catalog' ),
+				array( 'status' => 400 )
+			);
+		}
+
 		$input    = is_array( $input ) ? $input : array();
 		$id       = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
 		$reassign = isset( $input['reassign'] ) ? absint( $input['reassign'] ) : 0;

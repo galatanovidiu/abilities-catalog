@@ -43,6 +43,15 @@ interface Ability {
 	 * `destructive` annotation; destructive writes register but are exposed to the
 	 * browser only when the adapter's destructive setting is also on.
 	 *
+	 * An ability MAY declare its multisite policy scope in
+	 * `meta.abilities_catalog.scope`, one of `site` | `network` | `user` |
+	 * `global`. The default is `site` (a site-scoped ability declares nothing).
+	 * Only a non-site ability sets an explicit scope: `network` (network
+	 * management that owns its own targeting), `user` (network-global user
+	 * identity), or `global` (operates on the install/network as a whole). On
+	 * multisite the policy decorator injects an optional `blog_id` into `site`
+	 * abilities only; the other scopes opt out of that injection.
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function args(): array;

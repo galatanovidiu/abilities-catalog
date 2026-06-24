@@ -95,12 +95,15 @@ final class GetUserCapabilities implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => true,
 					'destructive' => false,
 					'idempotent'  => true,
 				),
-				'show_in_rest' => true,
+				'abilities_catalog' => array(
+					'scope' => 'site',
+				),
+				'show_in_rest'      => true,
 			),
 		);
 	}

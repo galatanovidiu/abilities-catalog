@@ -113,14 +113,17 @@ final class CreateSite implements Ability {
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
-				'annotations'  => array(
+				'annotations'       => array(
 					'readonly'    => false,
 					'destructive' => false,
 					'idempotent'  => false,
 					'dangerous'   => true,
 				),
-				'show_in_rest' => true,
-				'screen'       => 'site-new.php',
+				'abilities_catalog' => array(
+					'scope' => 'network',
+				),
+				'show_in_rest'      => true,
+				'screen'            => 'site-new.php',
 			),
 		);
 	}
