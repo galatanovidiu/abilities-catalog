@@ -4,7 +4,7 @@ Tags: abilities-api, ai, mcp, agents, wp-admin
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -109,6 +109,9 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 
 == Changelog ==
 
+= 0.3.1 =
+* New: the optional MCP server now exposes the Network, Cron, and Widgets abilities through its curated domain tools — Network as its own (multisite-only) domain tool, with Cron folded into Tools and Widgets into Appearance. These 28 abilities shipped in 0.3.0 but were reachable through no domain tool until now.
+
 = 0.3.0 =
 * New: a scalable, search-based MCP server (`overview` / `search` / `describe` / `execute`) for navigating large catalogs, and the bundled adapter default server now publishes the curated ability subset instead of being suppressed.
 * New: six task-recipe skills spanning the domain tools, plus discovery guidance that points agents at `list` / `describe` (and at the exact schema on invalid input) instead of guessing ability names or inputs.
@@ -132,6 +135,9 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 * Server-side safety pipeline for the dangerous tier: filesystem guard, source validation, option allow-list, and upgrader lock.
 
 == Upgrade Notice ==
+
+= 0.3.1 =
+Exposes 28 already-registered abilities (Network, Cron, Widgets) through the curated MCP domain tools: a new multisite-only Network domain tool, plus Cron folded into Tools and Widgets into Appearance. No change to the catalog, and no change when the MCP server is off.
 
 = 0.3.0 =
 Expands the catalog to 230 abilities across 21 domains (new Cron, Network, and Widgets domains), adds a scalable search-based MCP server, and switches the license to MIT. The bundled MCP adapter's default server now publishes the curated subset; the catalog behaves the same when the server is off.
