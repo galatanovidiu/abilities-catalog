@@ -12,7 +12,9 @@ Thumbs.db
 /.wp-env.override.json
 
 # Local MCP client config — holds an Application Password; never commit.
+# Pattern covers stray duplicates too (e.g. ".mcp copy.json").
 /.mcp.json
+.mcp*.json
 
 # Test output (keep the directory, ignore generated reports/caches)
 /tests/_output/*

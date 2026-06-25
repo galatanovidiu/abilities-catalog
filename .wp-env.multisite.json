@@ -4,7 +4,13 @@
 	"port": 8893,
 	"multisite": true,
 	"core": null,
-	"plugins": [ "./." ],
+	"plugins": [
+		"./.",
+		"https://downloads.wordpress.org/plugin/contact-form-7.6.1.6.zip",
+		"galatanovidiu/abilities-catalog-cf7",
+		"https://downloads.wordpress.org/plugin/woocommerce.zip",
+		"../abilities-catalog-woo"
+	],
 	"config": {
 		"FS_METHOD": "direct",
 		"WP_DEBUG": true
