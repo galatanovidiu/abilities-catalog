@@ -104,7 +104,10 @@ without `vendor/`, the plugin shows an admin notice and keeps working — it doe
 fatal.
 
 - Exposes curated **domain tools** (`list` / `describe` / `execute`, mapped by
-  `Mcp\DomainMap`) plus a cross-cutting `skills` tool — not flat per-ability tools.
+  `Mcp\DomainMap`) plus a cross-cutting `knowledge` tool — not flat per-ability tools.
+  The `knowledge` tool reads file-based **OKF** bundles (markdown + YAML frontmatter)
+  under `includes/knowledge/`: a no-arg call returns a generated index (live site facts
+  + every bundle's concepts grouped by type), a `{uri}` call returns one concept.
 - On top of the capability guard sits an owner-controlled **exposure gate**
   (`Mcp\ExposurePolicy`, deny-by-default): every ability is disabled until enabled on
   the settings page. `execute` refuses a disabled ability; `list` / `describe` still
@@ -114,8 +117,8 @@ fatal.
   server enable flag. The page is a no-build React app on core
   `wp-element` / `wp-components`.
 - Extensible without editing this plugin: filters `abilities_catalog_mcp_domain_map`,
-  `abilities_catalog_mcp_skills`, `abilities_catalog_mcp_tools`,
-  `abilities_catalog_mcp_tool_permission`.
+  `abilities_catalog_mcp_knowledge` (carries scanned `KnowledgeBundle` objects),
+  `abilities_catalog_mcp_tools`, `abilities_catalog_mcp_tool_permission`.
 
 ## Architecture
 

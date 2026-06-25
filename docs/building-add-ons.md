@@ -18,15 +18,17 @@ You ship a standalone plugin. It does two things:
    API (WordPress 7.0+). Any consumer — the catalog, a custom REST client, a
    different MCP server — can then call them.
 2. **Optionally:** when the Abilities Catalog and its MCP server are active,
-   contributes a curated MCP *domain tool* and *skills* through the catalog's
-   public filters.
+   contributes a curated MCP *domain tool* and a *knowledge bundle* through the
+   catalog's public filters.
 
 **The rule: zero coupling.** Do not add the catalog as a dependency. Do not
-reference its classes. Do not edit its files. The catalog is optional; your
-add-on must work standalone on the bare Abilities API. The MCP filters you hook
-simply do not fire when the catalog is absent, so the integration code is inert
-on its own. CF7 proves the shape: install it without the catalog and the
-`cf7/*` abilities still register and run.
+reference its classes (the one exception: the `KnowledgeBundle` scanner you call
+inside the `abilities_catalog_mcp_knowledge` filter — Step 7 — which only runs
+when the catalog is loaded and firing that filter). Do not edit its files. The
+catalog is optional; your add-on must work standalone on the bare Abilities API.
+The MCP filters you hook simply do not fire when the catalog is absent, so the
+integration code is inert on its own. CF7 proves the shape: install it without
+the catalog and the `cf7/*` abilities still register and run.
 
 ## File layout
 
@@ -51,8 +53,8 @@ includes/
   Support/                                  # optional: shared schema/helpers, dependency facade
   Mcp/
     Integration.php                         # optional: the MCP filter hooks
-    Skills/
-      DoTheCommonTask.php                   # optional: a recipe
+  knowledge/                                # optional: an OKF bundle (markdown concepts)
+    do-the-common-task.md                   # one concept = one markdown file
 tests/phpunit/Integration/...              # tests mirror the ability class path
 ```
 
@@ -328,13 +330,20 @@ correct before normalization:
 ## Step 7 — plug into the catalog's MCP server (optional)
 
 When the catalog and its MCP server are active, you contribute a curated **domain
-tool** (one tool per domain, with `list` / `describe` / `execute`) and optional
-**skills**. All of it is filter-based — the catalog provides the hooks, you fill
-them. Put it in `Mcp/Integration.php` and call `Integration::register()` from the
-bootstrap. The filters never fire when the catalog is absent, so this code is
-safe standalone.
+tool** (one tool per domain, with `list` / `describe` / `execute`) and an optional
+**knowledge bundle** (OKF markdown concepts — task recipes and guidelines). All of
+it is filter-based — the catalog provides the hooks, you fill them. Put it in
+`Mcp/Integration.php` and call `Integration::register()` from the bootstrap. The
+filters never fire when the catalog is absent, so this code is safe standalone.
+
+Your knowledge bundle is a directory of `.md` files (frontmatter + body) you ship
+under `includes/knowledge/`. The catalog's `KnowledgeBundle::fromDirectory()`
+scanner reads **your own** directory and you push the returned bundle onto the
+filter; the catalog merges it into the `knowledge` tool's index under your slug.
 
 ```php
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Knowledge\KnowledgeBundle;
+
 final class Integration {
 
 	private const ABILITIES = array(
@@ -346,7 +355,7 @@ final class Integration {
 
 	public static function register(): void {
 		add_filter( 'abilities_catalog_mcp_domains', array( self::class, 'contributeDomain' ) );
-		add_filter( 'abilities_catalog_mcp_skills',  array( self::class, 'contributeSkill' ) );
+		add_filter( 'abilities_catalog_mcp_knowledge', array( self::class, 'contributeKnowledge' ) );
 	}
 
 	public static function contributeDomain( array $domains ): array {
@@ -357,27 +366,43 @@ final class Integration {
 		return $domains;   // preserve existing entries — add, don't replace
 	}
 
-	public static function contributeSkill( array $skills ): array {
-		$skills[ DoTheCommonTask::ID ] = array(
-			'title'       => DoTheCommonTask::title(),
-			'when_to_use' => DoTheCommonTask::whenToUse(),
-			'body'        => array( DoTheCommonTask::class, 'body' ),   // callable -> built only on `get`
-		);
-		return $skills;
+	public static function contributeKnowledge( array $bundles ): array {
+		// Scan your own bundle dir; guard the WP_Error fromDirectory returns on a
+		// missing directory so a bad scan never breaks the tool.
+		$bundle = KnowledgeBundle::fromDirectory( dirname( __DIR__ ) . '/knowledge', 'your-slug' );
+		if ( ! is_wp_error( $bundle ) ) {
+			$bundles[] = $bundle;   // preserve existing entries — add, don't replace
+		}
+		return $bundles;
 	}
 }
 ```
 
+A concept file looks like this (`includes/knowledge/do-the-common-task.md`):
+
+```markdown
+---
+type: Skill
+title: Do the common task
+description: When a user wants to do the thing your add-on is for.
+---
+
+Recipe: do the common task.
+
+STEP 1 - ... (through the "your-domain" tool)
+- your-domain execute your-domain/list-things: ...
+```
+
 If your abilities are conditional, gate these contributions on the same
 condition (CF7 returns the array unchanged when CF7 is inactive, so no empty tool
-or dangling skill appears).
+or dangling concept appears).
 
 ### The filters you can use
 
 | Filter | When to use | Payload |
 |---|---|---|
 | `abilities_catalog_mcp_domains` | Open a **new** domain tool over your own abilities. The usual choice. | `slug => [ 'description' => string, 'abilities' => string[] ]`. A slug that collides with a curated core domain is ignored. |
-| `abilities_catalog_mcp_skills` | Add a cross-cutting **recipe** (a short procedural playbook chaining tools). | `id => [ 'title', 'when_to_use', 'body ]`. `body` is a string or a **callable** returning a string — use a callable so the text costs no context until a `get` resolves it. |
+| `abilities_catalog_mcp_knowledge` | Add a **knowledge bundle** (OKF markdown concepts: recipes, guidelines) to the cross-cutting `knowledge` tool. | `KnowledgeBundle[]`. Scan your own dir with `KnowledgeBundle::fromDirectory( $dir, $slug )`, guard its `WP_Error`, and append the bundle. Preserve the entries already present; the `core` slug is reserved. |
 | `abilities_catalog_mcp_domain_map` | Drop your ability into an **existing core** domain instead of opening your own. | `domain-slug => string[]` (exact ability names). Preserve the curated names already there. |
 | `abilities_catalog_mcp_tools` | Low-level: register a raw MCP tool. Rarely needed; prefer a domain. | the tools array |
 | `abilities_catalog_mcp_tool_permission` | Override who may call the MCP tools. | a callable returning bool |
