@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `tools/flush-object-cache`.
+ * Dangerous-tier write ability: `og-tools/flush-object-cache`.
  *
  * Flushes the ENTIRE WordPress object cache — every group, site-wide. Wraps core
  * `wp_cache_flush()` (which calls `$wp_object_cache->flush()`) and reports whether a
@@ -59,7 +59,7 @@ final class FlushObjectCache implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/flush-object-cache';
+		return 'og-tools/flush-object-cache';
 	}
 
 	/**

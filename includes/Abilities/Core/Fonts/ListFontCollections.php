@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `fonts/list-font-collections`.
+ * Read ability: `og-fonts/list-font-collections`.
  *
  * Wraps `GET /wp/v2/font-collections` via `rest_do_request()` and returns the
  * collection plus its total counts. These are remote installable-font catalogs
@@ -31,7 +31,7 @@ final class ListFontCollections implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'fonts/list-font-collections';
+		return 'og-fonts/list-font-collections';
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-reading ability.
+ * Integration tests for the og-settings/update-reading ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-reading writes the Reading Settings split across POST
+ * og-settings/update-reading writes the Reading Settings split across POST
  * /wp/v2/settings (REST-registered keys) and direct update_option() (posts_per_rss,
  * blog_public). manage_options is the hard capability guard; show_on_front is
  * validated in-execute; the -1 "show all" sentinel survives write.
@@ -36,13 +36,13 @@ final class UpdateReadingTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/update-reading' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/update-reading' ) );
 	}
 
 	public function test_admin_writes_rest_and_non_rest_keys(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-reading' )->execute(
+		$result = wp_get_ability( 'og-settings/update-reading' )->execute(
 			array(
 				'show_on_front'  => 'posts',
 				'posts_per_page' => 7,
@@ -66,7 +66,7 @@ final class UpdateReadingTest extends TestCase {
 	public function test_output_returns_all_six_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-reading' )->execute(
+		$result = wp_get_ability( 'og-settings/update-reading' )->execute(
 			array( 'show_on_front' => 'posts' )
 		);
 
@@ -99,7 +99,7 @@ final class UpdateReadingTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// Input only the non-REST-registered keys: skips the REST dispatch.
-		$result = wp_get_ability( 'settings/update-reading' )->execute(
+		$result = wp_get_ability( 'og-settings/update-reading' )->execute(
 			array( 'posts_per_rss' => -1 )
 		);
 
@@ -114,7 +114,7 @@ final class UpdateReadingTest extends TestCase {
 	public function test_non_rest_only_input_skips_rest_dispatch(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-reading' )->execute(
+		$result = wp_get_ability( 'og-settings/update-reading' )->execute(
 			array( 'blog_public' => true )
 		);
 
@@ -126,7 +126,7 @@ final class UpdateReadingTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/update-reading' )->execute(
+		$result = wp_get_ability( 'og-settings/update-reading' )->execute(
 			array( 'show_on_front' => 'page' )
 		);
 

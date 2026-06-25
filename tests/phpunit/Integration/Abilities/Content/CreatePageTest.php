@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/create-page output fidelity.
+ * Integration tests for og-content/create-page output fidelity.
  *
  * Covers the signed menu_order pass-through and the additive output fields
  * (slug, date, featured_media) the ability returns so a caller can detect how
@@ -16,14 +16,14 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
- * Exercises content/create-page output.
+ * Exercises og-content/create-page output.
  */
 final class CreatePageTest extends TestCase {
 
 	public function test_negative_menu_order_reaches_post_unchanged(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-page' )->execute(
+		$result = wp_get_ability( 'og-content/create-page' )->execute(
 			array(
 				'title'      => 'Ordered page',
 				'menu_order' => -5,
@@ -38,7 +38,7 @@ final class CreatePageTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// Publish so core assigns a public slug (drafts expose an empty slug).
-		$result = wp_get_ability( 'content/create-page' )->execute(
+		$result = wp_get_ability( 'og-content/create-page' )->execute(
 			array(
 				'title'  => 'Has slug',
 				'status' => 'publish',
@@ -58,7 +58,7 @@ final class CreatePageTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// A non-existent attachment ID: core silently ignores it on create.
-		$result = wp_get_ability( 'content/create-page' )->execute(
+		$result = wp_get_ability( 'og-content/create-page' )->execute(
 			array(
 				'title'          => 'No thumbnail',
 				'featured_media' => 999999,

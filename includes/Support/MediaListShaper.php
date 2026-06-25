@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Projects raw `/wp/v2/media` REST items into flat summary rows for the
- * `media/list-media` ability.
+ * `og-media/list-media` ability.
  *
  * The media route returns 30+ fields per attachment, including the nested
  * `media_details` (every generated image size — the heaviest part of the
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * objects, and `_links`. Returning that verbatim leaks REST internals and makes a
  * single list call cost thousands of tokens. This shaper maps each item to a
  * small, predictable row (the file bytes and full detail live behind
- * `media/get-media-file`) and exposes the matching `output_schema` fragment so
+ * `og-media/get-media-file`) and exposes the matching `output_schema` fragment so
  * the runtime shape and the declared schema stay in sync.
  *
  * This is NOT under `includes/Abilities/`, so the Registry never treats it as an

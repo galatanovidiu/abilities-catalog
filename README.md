@@ -32,7 +32,7 @@ Each ability is one PHP class under `includes/Abilities/Core/<Domain>/`.
 `wp_register_ability()`.
 
 Ability names use a `domain/verb-noun` shape, for example
-`plugins/list-plugins` or `comments/approve-comment`.
+`og-plugins/list-plugins` or `og-comments/approve-comment`.
 
 ## Safety Model
 
@@ -196,7 +196,7 @@ an enabled ability still requires the right WordPress capability.
 > enable only the abilities the agent actually needs.
 
 Enabling a write or dangerous ability gives a network client reach to that
-ability. For example, enabling `plugins/install-plugin` lets an authenticated
+ability. For example, enabling `og-plugins/install-plugin` lets an authenticated
 administrator install executable code through MCP.
 
 The server is off by default, every ability is disabled by default for MCP

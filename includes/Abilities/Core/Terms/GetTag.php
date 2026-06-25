@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `terms/get-tag`.
+ * Read ability: `og-terms/get-tag`.
  *
  * Wraps `GET /wp/v2/tags/<id>` via `rest_do_request()` and shapes the response
  * into a flat field set.
@@ -26,7 +26,7 @@ final class GetTag implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/get-tag';
+		return 'og-terms/get-tag';
 	}
 
 	/**
@@ -35,7 +35,7 @@ final class GetTag implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Tag', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single post-tag term by ID. Tag-specific read; discover IDs with terms/list-tags. Use terms/get-category for categories or terms/get-term for an arbitrary taxonomy.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single post-tag term by ID. Tag-specific read; discover IDs with og-terms/list-tags. Use og-terms/get-category for categories or og-terms/get-term for an arbitrary taxonomy.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -43,7 +43,7 @@ final class GetTag implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The tag term ID. Discover IDs with terms/list-tags.', 'abilities-catalog' ),
+						'description' => __( 'The tag term ID. Discover IDs with og-terms/list-tags.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',

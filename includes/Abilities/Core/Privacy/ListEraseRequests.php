@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `privacy/list-erase-requests`.
+ * T1 read ability: `og-privacy/list-erase-requests`.
  *
  * Lists personal-data erasure requests. These are `user_request` custom-post-type
  * posts whose `post_name` (mapped to `action_name`) is `remove_personal_data`.
@@ -33,7 +33,7 @@ final class ListEraseRequests implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/list-erase-requests';
+		return 'og-privacy/list-erase-requests';
 	}
 
 	/**

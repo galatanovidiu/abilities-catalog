@@ -13,10 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `users/get-current-user`.
+ * Read ability: `og-users/get-current-user`.
  *
  * Wraps `GET /wp/v2/users/me` via `rest_do_request()` and shapes the response
- * into the same flat field set as `users/get-user`. Requires a logged-in user.
+ * into the same flat field set as `og-users/get-user`. Requires a logged-in user.
  * Never outputs any password value. Read-only.
  *
  * @since 0.1.0
@@ -27,7 +27,7 @@ final class GetCurrentUser implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/get-current-user';
+		return 'og-users/get-current-user';
 	}
 
 	/**

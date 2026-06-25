@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `network/update-network-option`.
+ * Dangerous-tier write ability: `og-network/update-network-option`.
  *
  * Writes a single network (site) option by name to an arbitrary value for the
  * whole multisite network. Wraps core `update_network_option()`
@@ -46,7 +46,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `readonly` is false: this is a write (it stores network configuration).
  * - `destructive` is false: overwriting an option is not, on its own,
  *   irreversible data loss — the caller can write the prior value back (read it
- *   first with `network/get-network-option`).
+ *   first with `og-network/get-network-option`).
  * - `idempotent` is true: writing the same value twice leaves the same end state.
  * - `dangerous` is true: this is a raw network-wide config write with NO write
  *   allow-list, and a bad value for a core network option can break the whole
@@ -62,7 +62,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Security: this is a GENERIC network-option write gated ONLY on the super-admin
  * `manage_network_options` capability (the hard guard). There is deliberately NO
- * write allow-list here — unlike `settings/update-option`'s `OptionAllowList` —
+ * write allow-list here — unlike `og-settings/update-option`'s `OptionAllowList` —
  * because the owner chose generic network-option writes behind the network-admin
  * cap. A super admin can already write any network option via wp-admin / WP-CLI,
  * so this is not weaker than core. `update_network_option()` performs no
@@ -79,7 +79,7 @@ final class UpdateNetworkOption implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/update-network-option';
+		return 'og-network/update-network-option';
 	}
 
 	/**
@@ -88,7 +88,7 @@ final class UpdateNetworkOption implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Network Option', 'abilities-catalog' ),
-			'description'         => __( 'Writes a single network (site) option by name to a value, for the whole multisite network. Pass the option name as stored in wp_sitemeta (e.g. "registration") and any JSON value; it is stored as-is and confirmed by a read-back (updated is true even when re-writing an unchanged value). Omit network_id for the current network. This is a raw, allow-list-free network-wide config write — the manage_network_options super-admin capability is the only guard, and a bad value for a core option can break the network, so this is a dangerous operation. Read an option first with network/get-network-option. Requires a multisite install and the manage_network_options (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Writes a single network (site) option by name to a value, for the whole multisite network. Pass the option name as stored in wp_sitemeta (e.g. "registration") and any JSON value; it is stored as-is and confirmed by a read-back (updated is true even when re-writing an unchanged value). Omit network_id for the current network. This is a raw, allow-list-free network-wide config write — the manage_network_options super-admin capability is the only guard, and a bad value for a core option can break the network, so this is a dangerous operation. Read an option first with og-network/get-network-option. Requires a multisite install and the manage_network_options (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -106,7 +106,7 @@ final class UpdateNetworkOption implements Ability {
 					'network_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'Optional. Write to one network (multi-network installs). Discover IDs with network/list-networks. Omit for the current network.', 'abilities-catalog' ),
+						'description' => __( 'Optional. Write to one network (multi-network installs). Discover IDs with og-network/list-networks. Omit for the current network.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

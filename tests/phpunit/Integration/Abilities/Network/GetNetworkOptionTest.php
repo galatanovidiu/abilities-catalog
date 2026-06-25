@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/get-network-option ability.
+ * Integration tests for the og-network/get-network-option ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -40,17 +40,17 @@ final class GetNetworkOptionTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/get-network-option' );
+		$ability = wp_get_ability( 'og-network/get-network-option' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/get-network-option', $ability->get_name() );
+		$this->assertSame( 'og-network/get-network-option', $ability->get_name() );
 	}
 
 	public function test_happy_path_reads_back_a_stored_string(): void {
 		$this->actingAsSuperAdmin();
 		update_network_option( null, self::OPT_STRING, 'hello' );
 
-		$result = wp_get_ability( 'network/get-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/get-network-option' )->execute(
 			array( 'option' => self::OPT_STRING )
 		);
 
@@ -66,7 +66,7 @@ final class GetNetworkOptionTest extends TestCase {
 		$this->actingAsSuperAdmin();
 		update_network_option( null, self::OPT_STRING, 'hello' );
 
-		$result = wp_get_ability( 'network/get-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/get-network-option' )->execute(
 			array( 'option' => self::OPT_STRING )
 		);
 
@@ -83,7 +83,7 @@ final class GetNetworkOptionTest extends TestCase {
 		// default-`false` old value of a not-yet-existing option (option.php:2427).
 		add_network_option( null, self::OPT_FALSE, false );
 
-		$result = wp_get_ability( 'network/get-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/get-network-option' )->execute(
 			array( 'option' => self::OPT_FALSE )
 		);
 
@@ -99,7 +99,7 @@ final class GetNetworkOptionTest extends TestCase {
 	public function test_missing_option_is_a_benign_no_op(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/get-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/get-network-option' )->execute(
 			array( 'option' => self::OPT_MISSING )
 		);
 
@@ -112,7 +112,7 @@ final class GetNetworkOptionTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/get-network-option' );
+		$ability = wp_get_ability( 'og-network/get-network-option' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'option' => self::OPT_STRING ) ) );
 
@@ -124,7 +124,7 @@ final class GetNetworkOptionTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/get-network-option' );
+		$ability = wp_get_ability( 'og-network/get-network-option' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'option' => self::OPT_STRING ) ) );
 
@@ -136,7 +136,7 @@ final class GetNetworkOptionTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/get-network-option' );
+		$ability = wp_get_ability( 'og-network/get-network-option' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'option' => self::OPT_STRING ) ) );
 

@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `cron/schedule-event`.
+ * Dangerous-tier write ability: `og-cron/schedule-event`.
  *
  * Schedules a new WP-Cron event — either recurring (when a `recurrence` schedule
  * name is supplied) or a one-off single event (when `recurrence` is omitted).
@@ -25,11 +25,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `readonly` is false: this is a write (it adds an event to the site-wide `cron`
  *   option).
  * - `destructive` is false: adding an event is reversible via
- *   `cron/unschedule-event` and does not, on its own, have a broad blast radius.
+ *   `og-cron/unschedule-event` and does not, on its own, have a broad blast radius.
  * - `idempotent` is false: a second identical call is rejected with a 409 (the
  *   duplicate guard below), not treated as a same-state no-op.
  * - `dangerous` is true: scheduling mutates the site-wide `cron` option, which the
- *   generic option writer (`settings/update-option`) deliberately refuses. There is
+ *   generic option writer (`og-settings/update-option`) deliberately refuses. There is
  *   no `Support/` guard for cron (no filesystem/source/upgrader/option-allow-list
  *   risk class applies); the hard guard is `manage_options` plus the existence /
  *   duplicate pre-checks in {@see self::execute()}. The Registry auto-lists any
@@ -51,7 +51,7 @@ final class ScheduleEvent implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'cron/schedule-event';
+		return 'og-cron/schedule-event';
 	}
 
 	/**
@@ -60,7 +60,7 @@ final class ScheduleEvent implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Schedule Cron Event', 'abilities-catalog' ),
-			'description'         => __( 'Schedules a new WP-Cron event (recurring or one-off), returning the stored event and a scheduled flag. Pass recurrence (a schedule name from cron/list-schedules, e.g. "hourly") for a recurring event; omit recurrence for a one-off single event that runs once at timestamp. This mutates the site-wide cron schedule and is reversible: remove it with cron/unschedule-event. Fails with a 409 if an event with the same hook and args already exists; unschedule that one first.', 'abilities-catalog' ),
+			'description'         => __( 'Schedules a new WP-Cron event (recurring or one-off), returning the stored event and a scheduled flag. Pass recurrence (a schedule name from og-cron/list-schedules, e.g. "hourly") for a recurring event; omit recurrence for a one-off single event that runs once at timestamp. This mutates the site-wide cron schedule and is reversible: remove it with og-cron/unschedule-event. Fails with a 409 if an event with the same hook and args already exists; unschedule that one first.', 'abilities-catalog' ),
 			'category'            => 'cron',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -78,12 +78,12 @@ final class ScheduleEvent implements Ability {
 					),
 					'recurrence' => array(
 						'type'        => 'string',
-						'description' => __( 'Optional. A schedule name from cron/list-schedules (e.g. "hourly", "daily") to make the event recur. Omit for a one-off single event. Validated by WordPress against the registered schedules; an unknown name is rejected.', 'abilities-catalog' ),
+						'description' => __( 'Optional. A schedule name from og-cron/list-schedules (e.g. "hourly", "daily") to make the event recur. Omit for a one-off single event. Validated by WordPress against the registered schedules; an unknown name is rejected.', 'abilities-catalog' ),
 					),
 					'args'       => array(
 						'type'        => 'array',
 						'default'     => array(),
-						'description' => __( 'Optional. Arguments passed to the hook callback; also part of the event identity (two events differing only in args are distinct). Pass these back verbatim to cron/unschedule-event. Defaults to an empty array.', 'abilities-catalog' ),
+						'description' => __( 'Optional. Arguments passed to the hook callback; also part of the event identity (two events differing only in args are distinct). Pass these back verbatim to og-cron/unschedule-event. Defaults to an empty array.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -118,7 +118,7 @@ final class ScheduleEvent implements Ability {
 					),
 					'args'      => array(
 						'type'        => 'array',
-						'description' => __( 'The arguments the event was scheduled with. Pass these back verbatim to cron/unschedule-event to remove it.', 'abilities-catalog' ),
+						'description' => __( 'The arguments the event was scheduled with. Pass these back verbatim to og-cron/unschedule-event to remove it.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -200,7 +200,7 @@ final class ScheduleEvent implements Ability {
 		 * list, so reindex any stray associative keys to a list. This keeps the value a
 		 * `list<mixed>` (what core's signatures expect) without altering identity for the
 		 * list input the schema guarantees; the read-back below returns the stored args
-		 * verbatim for round-tripping to cron/unschedule-event.
+		 * verbatim for round-tripping to og-cron/unschedule-event.
 		 *
 		 * @var list<mixed> $args
 		 */
@@ -211,7 +211,7 @@ final class ScheduleEvent implements Ability {
 		if ( false !== wp_get_scheduled_event( $hook, $args ) ) {
 			return new WP_Error(
 				'abilities_catalog_cron_event_exists',
-				__( 'An event with that hook and args is already scheduled; unschedule it first with cron/unschedule-event.', 'abilities-catalog' ),
+				__( 'An event with that hook and args is already scheduled; unschedule it first with og-cron/unschedule-event.', 'abilities-catalog' ),
 				array( 'status' => 409 )
 			);
 		}

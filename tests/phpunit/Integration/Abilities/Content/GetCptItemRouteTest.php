@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/get-cpt-item route resolution.
+ * Integration tests for og-content/get-cpt-item route resolution.
  *
  * Proves the ability resolves a post type's REST item route via
  * rest_get_route_for_post_type_items(), so a CPT registered with a custom
@@ -58,7 +58,7 @@ final class GetCptItemRouteTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/get-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'id'        => $post_id,
@@ -86,7 +86,7 @@ final class GetCptItemRouteTest extends TestCase {
 
 		wp_set_current_user( 0 );
 
-		$without = wp_get_ability( 'content/get-cpt-item' )->execute(
+		$without = wp_get_ability( 'og-content/get-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'id'        => $post_id,
@@ -95,7 +95,7 @@ final class GetCptItemRouteTest extends TestCase {
 		$this->assertIsArray( $without );
 		$this->assertSame( '', $without['content'] );
 
-		$with = wp_get_ability( 'content/get-cpt-item' )->execute(
+		$with = wp_get_ability( 'og-content/get-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'id'        => $post_id,

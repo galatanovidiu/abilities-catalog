@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous-tier write ability: `settings/update-option`.
+ * T3 dangerous-tier write ability: `og-settings/update-option`.
  *
  * The deny-by-default generic option writer. It writes a single WordPress option
  * by name, but only when that name is on the allow-list in
@@ -42,7 +42,7 @@ final class UpdateOption implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-option';
+		return 'og-settings/update-option';
 	}
 
 	/**

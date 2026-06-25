@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/update-post clear-field semantics.
+ * Integration tests for og-content/update-post clear-field semantics.
  *
  * Covers presence-based forwarding so a present key with an empty value
  * reaches core: blanking the title, detaching the featured image with 0,
@@ -16,7 +16,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
- * Exercises content/update-post clear-field behavior.
+ * Exercises og-content/update-post clear-field behavior.
  */
 final class UpdatePostTest extends TestCase {
 
@@ -29,7 +29,7 @@ final class UpdatePostTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'    => $post_id,
 				'title' => '',
@@ -49,7 +49,7 @@ final class UpdatePostTest extends TestCase {
 		set_post_thumbnail( $post_id, $attachment_id );
 		$this->assertSame( $attachment_id, get_post_thumbnail_id( $post_id ) );
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'             => $post_id,
 				'featured_media' => 0,
@@ -68,7 +68,7 @@ final class UpdatePostTest extends TestCase {
 		wp_set_post_categories( $post_id, array( $category_id ) );
 		$this->assertSame( array( $category_id ), wp_get_post_categories( $post_id ) );
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'         => $post_id,
 				'categories' => array(),

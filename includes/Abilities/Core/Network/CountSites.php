@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `network/count-sites`.
+ * T1 read ability: `og-network/count-sites`.
  *
  * Returns the multisite network's site counts grouped by status (all, public,
  * archived, mature, spam, deleted), so an agent can see the network's size and
@@ -43,7 +43,7 @@ final class CountSites implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/count-sites';
+		return 'og-network/count-sites';
 	}
 
 	/**
@@ -52,7 +52,7 @@ final class CountSites implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Count Sites', 'abilities-catalog' ),
-			'description'         => __( 'Returns the multisite network\'s site counts grouped by status: all, public, archived, mature, spam, and deleted. Use network/list-sites to enumerate the sites themselves. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the multisite network\'s site counts grouped by status: all, public, archived, mature, spam, and deleted. Use og-network/list-sites to enumerate the sites themselves. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -60,7 +60,7 @@ final class CountSites implements Ability {
 					'network_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'Count one network\'s sites (multi-network installs). Discover IDs with network/list-networks. Omit for the current network.', 'abilities-catalog' ),
+						'description' => __( 'Count one network\'s sites (multi-network installs). Discover IDs with og-network/list-networks. Omit for the current network.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

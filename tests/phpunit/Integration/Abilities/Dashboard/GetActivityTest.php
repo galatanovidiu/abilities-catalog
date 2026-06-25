@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the dashboard/get-activity ability.
+ * Integration tests for the og-dashboard/get-activity ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use WP_Error;
 final class GetActivityTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'dashboard/get-activity' );
+		$ability = wp_get_ability( 'og-dashboard/get-activity' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'dashboard/get-activity', $ability->get_name() );
+		$this->assertSame( 'og-dashboard/get-activity', $ability->get_name() );
 	}
 
 	public function test_published_items_use_closed_shape(): void {
@@ -36,7 +36,7 @@ final class GetActivityTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array( 'number' => 5 ) );
+		$result = wp_get_ability( 'og-dashboard/get-activity' )->execute( array( 'number' => 5 ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'published', $result );
@@ -63,7 +63,7 @@ final class GetActivityTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array( 'number' => 5 ) );
+		$result = wp_get_ability( 'og-dashboard/get-activity' )->execute( array( 'number' => 5 ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'comments', $result );
@@ -110,7 +110,7 @@ final class GetActivityTest extends TestCase {
 		// edit or read another user's private post.
 		$this->actingAs( 'contributor' );
 
-		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array( 'number' => 20 ) );
+		$result = wp_get_ability( 'og-dashboard/get-activity' )->execute( array( 'number' => 20 ) );
 
 		$this->assertIsArray( $result );
 		$ids = wp_list_pluck( $result['comments'], 'id' );
@@ -137,7 +137,7 @@ final class GetActivityTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array( 'number' => 20 ) );
+		$result = wp_get_ability( 'og-dashboard/get-activity' )->execute( array( 'number' => 20 ) );
 
 		$ids = wp_list_pluck( $result['comments'], 'id' );
 		$this->assertContains( $comment_id, $ids );
@@ -146,7 +146,7 @@ final class GetActivityTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'dashboard/get-activity' )->execute( array() );
+		$result = wp_get_ability( 'og-dashboard/get-activity' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

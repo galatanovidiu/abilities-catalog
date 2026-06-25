@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-privacy ability.
+ * Integration tests for the og-settings/update-privacy ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-privacy writes the privacy policy page ID directly via
+ * og-settings/update-privacy writes the privacy policy page ID directly via
  * update_option(). manage_privacy_options is the hard capability guard. The
  * single field is required; the stored value is cast with plain (int) to match
  * core parity (no absint sign-flip).
@@ -22,7 +22,7 @@ use WP_Error;
 final class UpdatePrivacyTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/update-privacy' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/update-privacy' ) );
 	}
 
 	public function test_admin_writes_and_reads_back_page_id_as_typed_integer(): void {
@@ -30,7 +30,7 @@ final class UpdatePrivacyTest extends TestCase {
 
 		$page_id = self::factory()->post->create( array( 'post_type' => 'page' ) );
 
-		$result = wp_get_ability( 'settings/update-privacy' )->execute(
+		$result = wp_get_ability( 'og-settings/update-privacy' )->execute(
 			array( 'page_for_privacy_policy' => $page_id )
 		);
 
@@ -53,7 +53,7 @@ final class UpdatePrivacyTest extends TestCase {
 
 		$before = get_option( 'wp_page_for_privacy_policy' );
 
-		$result = wp_get_ability( 'settings/update-privacy' )->execute(
+		$result = wp_get_ability( 'og-settings/update-privacy' )->execute(
 			array( 'page_for_privacy_policy' => 999 )
 		);
 

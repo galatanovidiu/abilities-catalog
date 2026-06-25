@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the tools/set-transient ability.
+ * Integration tests for the og-tools/set-transient ability.
  *
  * Covers registration, the output-shape contract
  * (stored/key/expiration/network), a happy-path store with a get_transient
@@ -21,7 +21,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises tools/set-transient registration, store semantics, and the gate.
+ * Exercises og-tools/set-transient registration, store semantics, and the gate.
  */
 final class SetTransientTest extends TestCase {
 
@@ -39,11 +39,11 @@ final class SetTransientTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'tools/set-transient' ) );
+		$this->assertNotNull( wp_get_ability( 'og-tools/set-transient' ) );
 	}
 
 	public function test_output_schema_requires_the_full_field_set(): void {
-		$schema = wp_get_ability( 'tools/set-transient' )->get_output_schema();
+		$schema = wp_get_ability( 'og-tools/set-transient' )->get_output_schema();
 
 		$this->assertFalse( $schema['additionalProperties'] );
 		$this->assertSame(
@@ -55,7 +55,7 @@ final class SetTransientTest extends TestCase {
 	public function test_stores_value_and_reads_back(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'        => 'abilities_catalog_test_t',
 				'value'      => 'v1',
@@ -83,7 +83,7 @@ final class SetTransientTest extends TestCase {
 
 		set_transient( 'abilities_catalog_test_t', 'v1', HOUR_IN_SECONDS );
 
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'   => 'abilities_catalog_test_t',
 				'value' => 'v2',
@@ -101,7 +101,7 @@ final class SetTransientTest extends TestCase {
 
 		// The raw set_transient() bool would be false here (value unchanged); the
 		// read-back makes stored correctly report true.
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'   => 'abilities_catalog_test_t',
 				'value' => 'same',
@@ -120,7 +120,7 @@ final class SetTransientTest extends TestCase {
 			'b' => array( 'nested', true ),
 		);
 
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'   => 'abilities_catalog_test_arr',
 				'value' => $value,
@@ -134,7 +134,7 @@ final class SetTransientTest extends TestCase {
 	public function test_stores_site_transient_when_network_true(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'     => 'abilities_catalog_test_site_t',
 				'value'   => 'site-cached',
@@ -154,7 +154,7 @@ final class SetTransientTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_nothing_stored(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'   => 'abilities_catalog_guard_t',
 				'value' => 'should-not-store',
@@ -171,7 +171,7 @@ final class SetTransientTest extends TestCase {
 	public function test_subscriber_is_denied_and_nothing_stored(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'tools/set-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/set-transient' )->execute(
 			array(
 				'key'   => 'abilities_catalog_guard_sub_t',
 				'value' => 'should-not-store',

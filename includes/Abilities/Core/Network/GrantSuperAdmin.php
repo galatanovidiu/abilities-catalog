@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `network/grant-super-admin`.
+ * Dangerous-tier write ability: `og-network/grant-super-admin`.
  *
  * Grants a user network-wide super-admin privileges — full control of every site
  * in the multisite network and all network settings. Wraps
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Classification rationale:
  * - `readonly` is false: this is a write (it mutates the network `site_admins`
  *   option).
- * - `destructive` is false: reversible via `network/revoke-super-admin`.
+ * - `destructive` is false: reversible via `og-network/revoke-super-admin`.
  * - `idempotent` is true: granting an already-super-admin is a same-state no-op
  *   (`granted:false`, `is_super_admin:true`).
  * - `dangerous` is true: this is a privilege escalation granting network-wide
@@ -60,7 +60,7 @@ final class GrantSuperAdmin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/grant-super-admin';
+		return 'og-network/grant-super-admin';
 	}
 
 	/**
@@ -69,7 +69,7 @@ final class GrantSuperAdmin implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Grant Super Admin', 'abilities-catalog' ),
-			'description'         => __( 'Grants a user NETWORK-WIDE super-admin privileges: full control of every site in the network and all network settings. This is a privilege escalation and a dangerous operation; reverse it with network/revoke-super-admin. is_super_admin in the result is the authoritative end state — granted may be false when the user was already a super admin (a no-op) or when the site pins its super-admin list in wp-config (which this tool cannot change). An unknown user_id returns a 404. Requires a multisite install and the manage_network_users (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Grants a user NETWORK-WIDE super-admin privileges: full control of every site in the network and all network settings. This is a privilege escalation and a dangerous operation; reverse it with og-network/revoke-super-admin. is_super_admin in the result is the authoritative end state — granted may be false when the user was already a super admin (a no-op) or when the site pins its super-admin list in wp-config (which this tool cannot change). An unknown user_id returns a 404. Requires a multisite install and the manage_network_users (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -78,7 +78,7 @@ final class GrantSuperAdmin implements Ability {
 					'user_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of an existing user to grant super-admin privileges to. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The ID of an existing user to grant super-admin privileges to. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

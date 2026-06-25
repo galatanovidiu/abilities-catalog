@@ -13,18 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/get-post-type`.
+ * Read ability: `og-content/get-post-type`.
  *
  * Wraps `GET /wp/v2/types/<type>` via `rest_do_request()` and shapes the
  * response into a flat field set. Single-object companion to
- * `content/list-post-types`.
+ * `og-content/list-post-types`.
  *
  * The wrapped route returns `viewable` and `supports` only in `edit` context,
  * but both are stable, non-sensitive facts about a registered type. Rather than
  * expose an `edit` context (which would tighten the permission to an
  * edit-posts holder), this ability derives them from core directly —
  * `is_post_type_viewable()` and `get_all_post_type_supports()` — exactly as the
- * sibling `content/list-post-types` derives `supports`. That keeps the read a
+ * sibling `og-content/list-post-types` derives `supports`. That keeps the read a
  * public `view` read.
  *
  * @since 0.1.0
@@ -35,7 +35,7 @@ final class GetPostType implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-post-type';
+		return 'og-content/get-post-type';
 	}
 
 	/**
@@ -44,7 +44,7 @@ final class GetPostType implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Post Type', 'abilities-catalog' ),
-			'description'         => __( 'Returns one registered post type by its slug, including its name, description, hierarchical flag, viewable flag, REST base, taxonomies, and supported features. Discover slugs with content/list-post-types.', 'abilities-catalog' ),
+			'description'         => __( 'Returns one registered post type by its slug, including its name, description, hierarchical flag, viewable flag, REST base, taxonomies, and supported features. Discover slugs with og-content/list-post-types.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -52,7 +52,7 @@ final class GetPostType implements Ability {
 				'properties'           => array(
 					'type' => array(
 						'type'        => 'string',
-						'description' => __( 'The post type slug, e.g. "post" or "page". Discover slugs with content/list-post-types.', 'abilities-catalog' ),
+						'description' => __( 'The post type slug, e.g. "post" or "page". Discover slugs with og-content/list-post-types.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

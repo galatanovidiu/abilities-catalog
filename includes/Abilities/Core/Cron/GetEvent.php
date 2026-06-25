@@ -12,12 +12,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Core-function T1 read ability: `cron/get-event`.
+ * Core-function T1 read ability: `og-cron/get-event`.
  *
  * Returns a single scheduled WP-Cron event by its action hook (plus the exact
  * args it was scheduled with, plus an optional specific timestamp), projected
- * into the same flat closed row `cron/list-events` emits. This is the
- * single-object companion to `cron/list-events`. Built on the core accessor
+ * into the same flat closed row `og-cron/list-events` emits. This is the
+ * single-object companion to `og-cron/list-events`. Built on the core accessor
  * `wp_get_scheduled_event()` (wp-includes/cron.php, loaded always) since core
  * exposes no REST route for cron; no wp-admin includes are loaded.
  *
@@ -36,7 +36,7 @@ final class GetEvent implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'cron/get-event';
+		return 'og-cron/get-event';
 	}
 
 	/**
@@ -45,7 +45,7 @@ final class GetEvent implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Event', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single scheduled WP-Cron event by its hook, including its next timestamp, recurrence schedule, interval, and the args it was scheduled with. Single-event read; use cron/list-events to enumerate every event and discover the hook, timestamp, and args. Pass args back exactly as listed (they identify the event), and a specific timestamp to target one occurrence; omit timestamp to get the next occurrence.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single scheduled WP-Cron event by its hook, including its next timestamp, recurrence schedule, interval, and the args it was scheduled with. Single-event read; use og-cron/list-events to enumerate every event and discover the hook, timestamp, and args. Pass args back exactly as listed (they identify the event), and a specific timestamp to target one occurrence; omit timestamp to get the next occurrence.', 'abilities-catalog' ),
 			'category'            => 'cron',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -53,17 +53,17 @@ final class GetEvent implements Ability {
 				'properties'           => array(
 					'hook'      => array(
 						'type'        => 'string',
-						'description' => __( 'The action hook name of the scheduled event. Discover hooks with cron/list-events.', 'abilities-catalog' ),
+						'description' => __( 'The action hook name of the scheduled event. Discover hooks with og-cron/list-events.', 'abilities-catalog' ),
 					),
 					'args'      => array(
 						'type'        => 'array',
-						'description' => __( 'The arguments the event was scheduled with; they uniquely identify the event and must match exactly. Copy this verbatim from cron/list-events. Omit (defaults to an empty array) for an event scheduled with no args.', 'abilities-catalog' ),
+						'description' => __( 'The arguments the event was scheduled with; they uniquely identify the event and must match exactly. Copy this verbatim from og-cron/list-events. Omit (defaults to an empty array) for an event scheduled with no args.', 'abilities-catalog' ),
 						'default'     => array(),
 					),
 					'timestamp' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'Unix UTC seconds of a specific occurrence to fetch (the timestamp from cron/list-events). Omit to get the next scheduled occurrence of this hook and args.', 'abilities-catalog' ),
+						'description' => __( 'Unix UTC seconds of a specific occurrence to fetch (the timestamp from og-cron/list-events). Omit to get the next scheduled occurrence of this hook and args.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -78,7 +78,7 @@ final class GetEvent implements Ability {
 					),
 					'timestamp' => array(
 						'type'        => 'integer',
-						'description' => __( 'Unix UTC seconds of this occurrence. This is the canonical time; pass it back to cron/get-event or cron/unschedule-event to target this exact occurrence.', 'abilities-catalog' ),
+						'description' => __( 'Unix UTC seconds of this occurrence. This is the canonical time; pass it back to og-cron/get-event or og-cron/unschedule-event to target this exact occurrence.', 'abilities-catalog' ),
 					),
 					'gmt_date'  => array(
 						'type'        => 'string',
@@ -94,7 +94,7 @@ final class GetEvent implements Ability {
 					),
 					'args'      => array(
 						'type'        => 'array',
-						'description' => __( 'The arguments the event was scheduled with. Pass this back verbatim to cron/get-event or cron/unschedule-event; it identifies the event.', 'abilities-catalog' ),
+						'description' => __( 'The arguments the event was scheduled with. Pass this back verbatim to og-cron/get-event or og-cron/unschedule-event; it identifies the event.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

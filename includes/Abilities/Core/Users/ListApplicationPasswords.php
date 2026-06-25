@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `users/list-application-passwords`.
+ * Read ability: `og-users/list-application-passwords`.
  *
  * Wraps `GET /wp/v2/users/<user_id>/application-passwords` via `rest_do_request()`
  * and returns the list of application-password records. The list route returns
@@ -28,7 +28,7 @@ final class ListApplicationPasswords implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/list-application-passwords';
+		return 'og-users/list-application-passwords';
 	}
 
 	/**

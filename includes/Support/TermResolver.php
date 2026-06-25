@@ -11,9 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Resolves term references to existing term IDs within a taxonomy.
  *
- * The post-term abilities (`terms/attach-post-terms`, `terms/detach-post-terms`)
+ * The post-term abilities (`og-terms/attach-post-terms`, `og-terms/detach-post-terms`)
  * accept terms as IDs, slugs, or names but never create terms — that is the job of
- * `terms/create-term`. This resolver maps each reference to an existing term ID and
+ * `og-terms/create-term`. This resolver maps each reference to an existing term ID and
  * reports anything it cannot find, so the abilities can return an actionable error
  * instead of silently creating or skipping terms.
  *

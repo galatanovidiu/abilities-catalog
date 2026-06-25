@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/get-post output fidelity.
+ * Integration tests for og-content/get-post output fidelity.
  *
  * Covers the additive output fields (slug, password_protected) the ability
  * returns so a caller can tell a locked post from a genuinely empty one and
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises content/get-post output.
+ * Exercises og-content/get-post output.
  */
 final class GetPostTest extends TestCase {
 
@@ -34,7 +34,7 @@ final class GetPostTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'slug', $result );
@@ -55,7 +55,7 @@ final class GetPostTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['password_protected'] );
@@ -75,7 +75,7 @@ final class GetPostTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-post' )->execute(
+		$result = wp_get_ability( 'og-content/get-post' )->execute(
 			array(
 				'id'       => $id,
 				'password' => 'hunter2',
@@ -102,7 +102,7 @@ final class GetPostTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-post' )->execute(
+		$result = wp_get_ability( 'og-content/get-post' )->execute(
 			array(
 				'id'      => $id,
 				'context' => 'edit',
@@ -131,7 +131,7 @@ final class GetPostTest extends TestCase {
 
 		// Default (view) context: core does not return *.raw, so the ability must
 		// not invent the field.
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayNotHasKey( 'content_raw', $result );
@@ -144,7 +144,7 @@ final class GetPostTest extends TestCase {
 
 		// The `minimum: 1` input guard rejects a non-positive id at the schema
 		// boundary, before execute() builds a REST path.
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => -12 ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => -12 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );

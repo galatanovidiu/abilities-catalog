@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the cron/list-events ability.
+ * Integration tests for the og-cron/list-events ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -27,16 +27,16 @@ final class ListEventsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'cron/list-events' );
+		$ability = wp_get_ability( 'og-cron/list-events' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'cron/list-events', $ability->get_name() );
+		$this->assertSame( 'og-cron/list-events', $ability->get_name() );
 	}
 
 	public function test_result_uses_closed_top_level_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/list-events' )->execute();
+		$result = wp_get_ability( 'og-cron/list-events' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'events', 'total' ), array_keys( $result ) );
@@ -51,7 +51,7 @@ final class ListEventsTest extends TestCase {
 		$timestamp = time() + HOUR_IN_SECONDS;
 		wp_schedule_single_event( $timestamp, self::TEST_HOOK );
 
-		$result = wp_get_ability( 'cron/list-events' )->execute();
+		$result = wp_get_ability( 'og-cron/list-events' )->execute();
 
 		$row = $this->findRow( $result['events'], self::TEST_HOOK );
 
@@ -68,7 +68,7 @@ final class ListEventsTest extends TestCase {
 
 		wp_schedule_single_event( time() + HOUR_IN_SECONDS, self::TEST_HOOK );
 
-		$result = wp_get_ability( 'cron/list-events' )->execute();
+		$result = wp_get_ability( 'og-cron/list-events' )->execute();
 		$row    = $this->findRow( $result['events'], self::TEST_HOOK );
 
 		$this->assertNotNull( $row );
@@ -87,7 +87,7 @@ final class ListEventsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'cron/list-events' );
+		$ability = wp_get_ability( 'og-cron/list-events' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -99,7 +99,7 @@ final class ListEventsTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'cron/list-events' );
+		$ability = wp_get_ability( 'og-cron/list-events' );
 
 		$this->assertFalse( $ability->check_permissions() );
 

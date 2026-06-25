@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/get-theme-styles output and contract.
+ * Integration tests for og-templates/get-theme-styles output and contract.
  *
  * Covers the happy path for the active theme (canonical stylesheet plus
  * object-shaped settings/styles), the wrong-capability denial (a subscriber
@@ -18,14 +18,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/get-theme-styles.
+ * Exercises og-templates/get-theme-styles.
  */
 final class GetThemeStylesTest extends TestCase {
 
 	public function test_active_theme_returns_canonical_stylesheet_and_object_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-theme-styles' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/get-theme-styles' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		// Core serves the active theme only; the output reports its canonical
@@ -44,7 +44,7 @@ final class GetThemeStylesTest extends TestCase {
 		// raw encoded input.
 		$encoded = rawurlencode( get_stylesheet() );
 
-		$result = wp_get_ability( 'templates/get-theme-styles' )->execute(
+		$result = wp_get_ability( 'og-templates/get-theme-styles' )->execute(
 			array( 'stylesheet' => $encoded )
 		);
 
@@ -59,7 +59,7 @@ final class GetThemeStylesTest extends TestCase {
 	public function test_empty_settings_and_styles_serialize_as_objects(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-theme-styles' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/get-theme-styles' )->execute( array() );
 
 		$this->assertIsArray( $result );
 
@@ -75,7 +75,7 @@ final class GetThemeStylesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/get-theme-styles' );
+		$ability = wp_get_ability( 'og-templates/get-theme-styles' );
 
 		// edit_theme_options is the catalog guard; a subscriber lacks it.
 		$this->assertFalse( $ability->check_permissions( array() ) );

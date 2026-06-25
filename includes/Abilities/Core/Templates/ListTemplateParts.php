@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-template-parts`.
+ * Read ability: `og-templates/list-template-parts`.
  *
  * Wraps `GET /wp/v2/template-parts` via `rest_do_request()`. Returns the active
  * theme's template parts (reusable block regions such as the header and footer),
  * optionally filtered by area. Read-only.
  *
  * The route is hardcoded to `/wp/v2/template-parts`; unlike the general
- * `templates/list-templates`, this ability takes no `post_type` and always lists
+ * `og-templates/list-templates`, this ability takes no `post_type` and always lists
  * parts, so `area` is a first-class filter. Each row's `area` is surfaced from
  * the response (`area` is a plain string in the controller schema; core accepts
  * custom areas and falls back to "uncategorized" for unsupported ones on write).
@@ -33,7 +33,7 @@ final class ListTemplateParts implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-template-parts';
+		return 'og-templates/list-template-parts';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class ListTemplateParts implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Template Parts', 'abilities-catalog' ),
-			'description'         => __( 'Lists the active theme\'s template parts (reusable block regions like the header and footer), including each part\'s id, slug, area, source, title, and status. Optionally filter by area (e.g. "header"). Use templates/get-template-part to read one part\'s block markup. For full block templates (not parts) use templates/list-templates.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the active theme\'s template parts (reusable block regions like the header and footer), including each part\'s id, slug, area, source, title, and status. Optionally filter by area (e.g. "header"). Use og-templates/get-template-part to read one part\'s block markup. For full block templates (not parts) use og-templates/list-templates.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -72,7 +72,7 @@ final class ListTemplateParts implements Ability {
 							'properties'           => array(
 								'id'              => array(
 									'type'        => 'string',
-									'description' => __( 'The template-part id in "theme//slug" form (e.g. "twentytwentyfive//header"). Pass it to templates/get-template-part.', 'abilities-catalog' ),
+									'description' => __( 'The template-part id in "theme//slug" form (e.g. "twentytwentyfive//header"). Pass it to og-templates/get-template-part.', 'abilities-catalog' ),
 								),
 								'slug'            => array(
 									'type'        => 'string',
@@ -105,7 +105,7 @@ final class ListTemplateParts implements Ability {
 							),
 							'additionalProperties' => false,
 						),
-						'description' => __( 'The list of template parts as flat summary rows. Use templates/get-template-part for a single part with its block markup.', 'abilities-catalog' ),
+						'description' => __( 'The list of template parts as flat summary rows. Use og-templates/get-template-part for a single part with its block markup.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

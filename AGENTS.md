@@ -41,8 +41,8 @@ CI run the integration suite (`.github/workflows/test.yml`).
   (e.g. `Woo/`).
 - `Registry` scans `includes/Abilities/` recursively and registers each ability on
   `wp_abilities_api_init` via `wp_register_ability()`. No manifest, no extra build step.
-- Ability names are `domain/verb-noun` — e.g. `plugins/list-plugins`,
-  `comments/approve-comment`.
+- Ability names are `domain/verb-noun` — e.g. `og-plugins/list-plugins`,
+  `og-comments/approve-comment`.
 - Each group declares its categories in a class implementing
   `Contracts\CategoryProvider` (Core's is `Abilities\Core\CategoryCatalog`), registered
   on `wp_abilities_api_categories_init`. An ability links to its category by slug in

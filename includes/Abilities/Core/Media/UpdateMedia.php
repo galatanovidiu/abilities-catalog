@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `media/update-media`.
+ * T2 non-destructive write ability: `og-media/update-media`.
  *
  * Wraps `POST /wp/v2/media/<id>` via `rest_do_request()` to update an existing
  * attachment's metadata fields (title, alt text, caption, description, parent
@@ -30,7 +30,7 @@ final class UpdateMedia implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/update-media';
+		return 'og-media/update-media';
 	}
 
 	/**

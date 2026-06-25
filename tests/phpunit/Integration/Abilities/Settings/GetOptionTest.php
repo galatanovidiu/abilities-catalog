@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/get-option ability.
+ * Integration tests for the og-settings/get-option ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/get-option is the deny-by-default generic option reader. The allow-list
+ * og-settings/get-option is the deny-by-default generic option reader. The allow-list
  * is the authoritative guard, repeated in execute() as defense in depth, and
  * manage_options is the hard capability guard.
  */
@@ -24,7 +24,7 @@ final class GetOptionTest extends TestCase {
 		$this->actingAs('administrator');
 		update_option('blogname', 'Catalog Read Site');
 
-		$result = wp_get_ability('settings/get-option')->execute(
+		$result = wp_get_ability('og-settings/get-option')->execute(
 			array(
 				'name' => 'blogname',
 			)
@@ -66,7 +66,7 @@ final class GetOptionTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('settings/get-option')->execute(
+		$result = wp_get_ability('og-settings/get-option')->execute(
 			array(
 				'name' => 'blogname',
 			)

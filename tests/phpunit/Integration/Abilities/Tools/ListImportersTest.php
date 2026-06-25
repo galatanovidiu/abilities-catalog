@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the tools/list-importers ability.
+ * Integration tests for the og-tools/list-importers ability.
  *
  * Covers registration, the output-shape contract (each item carries
  * id/name/description/installed/action_url), an empty-list happy path, a
@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises tools/list-importers registration, output shape, and capability gate.
+ * Exercises og-tools/list-importers registration, output shape, and capability gate.
  */
 final class ListImportersTest extends TestCase {
 
@@ -51,11 +51,11 @@ final class ListImportersTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'tools/list-importers' ) );
+		$this->assertNotNull( wp_get_ability( 'og-tools/list-importers' ) );
 	}
 
 	public function test_output_schema_requires_full_record(): void {
-		$schema = wp_get_ability( 'tools/list-importers' )->get_output_schema();
+		$schema = wp_get_ability( 'og-tools/list-importers' )->get_output_schema();
 
 		$this->assertContains( 'items', $schema['required'] );
 
@@ -70,7 +70,7 @@ final class ListImportersTest extends TestCase {
 	public function test_empty_registry_returns_empty_items(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/list-importers' )->execute();
+		$result = wp_get_ability( 'og-tools/list-importers' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array(), $result['items'] );
@@ -86,7 +86,7 @@ final class ListImportersTest extends TestCase {
 			'__return_null'
 		);
 
-		$result = wp_get_ability( 'tools/list-importers' )->execute();
+		$result = wp_get_ability( 'og-tools/list-importers' )->execute();
 
 		$this->assertIsArray( $result );
 
@@ -105,7 +105,7 @@ final class ListImportersTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'tools/list-importers' )->execute();
+		$result = wp_get_ability( 'og-tools/list-importers' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -114,7 +114,7 @@ final class ListImportersTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'tools/list-importers' )->execute();
+		$result = wp_get_ability( 'og-tools/list-importers' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

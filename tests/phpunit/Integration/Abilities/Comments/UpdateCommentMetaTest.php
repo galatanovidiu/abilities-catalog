@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/update-meta ability.
+ * Integration tests for the og-comments/update-meta ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -68,16 +68,16 @@ final class UpdateCommentMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'comments/update-meta' );
+		$ability = wp_get_ability( 'og-comments/update-meta' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'comments/update-meta', $ability->get_name() );
+		$this->assertSame( 'og-comments/update-meta', $ability->get_name() );
 	}
 
 	public function test_admin_writes_registered_meta_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'meta' => array( self::TEST_KEY => 'hello world' ),
@@ -97,7 +97,7 @@ final class UpdateCommentMetaTest extends TestCase {
 	public function test_output_shape_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'meta' => array( self::TEST_KEY => 'value' ),
@@ -121,7 +121,7 @@ final class UpdateCommentMetaTest extends TestCase {
 	public function test_unregistered_internal_key_is_rejected_and_nothing_written(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'meta' => array( '_internal' => 'secret' ),
@@ -145,7 +145,7 @@ final class UpdateCommentMetaTest extends TestCase {
 	public function test_unknown_key_blocks_a_valid_key_in_the_same_call(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'meta' => array(
@@ -171,7 +171,7 @@ final class UpdateCommentMetaTest extends TestCase {
 	public function test_missing_comment_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => 99999999,
 				'meta' => array( self::TEST_KEY => 'value' ),
@@ -187,7 +187,7 @@ final class UpdateCommentMetaTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_meta_unchanged(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'meta' => array( self::TEST_KEY => 'should be denied' ),
@@ -212,7 +212,7 @@ final class UpdateCommentMetaTest extends TestCase {
 	public function test_subscriber_is_denied_with_403_not_404(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'comments/update-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/update-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'meta' => array( self::TEST_KEY => 'value' ),

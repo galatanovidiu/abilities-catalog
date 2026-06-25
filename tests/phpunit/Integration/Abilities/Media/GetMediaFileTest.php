@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/get-media-file ability.
+ * Integration tests for the og-media/get-media-file ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,17 +13,17 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises media/get-media-file: base64 read over a real upload, the
+ * Exercises og-media/get-media-file: base64 read over a real upload, the
  * intermediate-size path/dimension resolution, the missing-attachment 404, the
  * non-image dimensions = 0 case, and the oversized-file file_too_large branch.
  */
 final class GetMediaFileTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'media/get-media-file' );
+		$ability = wp_get_ability( 'og-media/get-media-file' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'media/get-media-file', $ability->get_name() );
+		$this->assertSame( 'og-media/get-media-file', $ability->get_name() );
 	}
 
 	public function test_admin_reads_full_image_bytes(): void {
@@ -32,7 +32,7 @@ final class GetMediaFileTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'data', $result );
@@ -53,7 +53,7 @@ final class GetMediaFileTest extends TestCase {
 		$expected = image_get_intermediate_size( $attachment_id, 'thumbnail' );
 		$this->assertIsArray( $expected );
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute(
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute(
 			array(
 				'id'   => $attachment_id,
 				'size' => 'thumbnail',
@@ -73,7 +73,7 @@ final class GetMediaFileTest extends TestCase {
 		// With the object guard relocated into execute(), a non-existent ID reaches the
 		// explicit attachment check and returns the specific invalid_attachment 404
 		// instead of the opaque ability_invalid_permissions the gate produced before.
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_attachment', $result->get_error_code() );
@@ -96,7 +96,7 @@ final class GetMediaFileTest extends TestCase {
 		// 403 — the guard is not weakened by coarsening permission_callback.
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_forbidden', $result->get_error_code() );
@@ -110,7 +110,7 @@ final class GetMediaFileTest extends TestCase {
 		// rejected by the explicit attachment check in execute().
 		$post_id = self::factory()->post->create();
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_attachment', $result->get_error_code() );
@@ -120,7 +120,7 @@ final class GetMediaFileTest extends TestCase {
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => -3 ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => -3 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -134,7 +134,7 @@ final class GetMediaFileTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/wordpress-gsoc-flyer.pdf' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'application/pdf', $result['mime_type'] );
@@ -157,7 +157,7 @@ final class GetMediaFileTest extends TestCase {
 		$path = get_attached_file( $attachment_id );
 		$wp_filesystem->put_contents( $path, str_repeat( '0', 5 * 1024 * 1024 + 1 ) );
 
-		$result = wp_get_ability( 'media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/get-media-file' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'file_too_large', $result->get_error_code() );

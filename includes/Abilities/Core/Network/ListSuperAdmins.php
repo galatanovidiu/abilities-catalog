@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `network/list-super-admins`.
+ * T1 read ability: `og-network/list-super-admins`.
  *
  * Lists a multisite network's super admins (the users with global network
  * control), resolving each stored login to its user id, email, and display
@@ -42,7 +42,7 @@ final class ListSuperAdmins implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/list-super-admins';
+		return 'og-network/list-super-admins';
 	}
 
 	/**

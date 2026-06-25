@@ -138,16 +138,16 @@ final class PostMetaTest extends TestCase {
 	}
 
 	public function test_abilities_are_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'content/get-post-meta' ) );
-		$this->assertNotNull( wp_get_ability( 'content/update-post-meta' ) );
-		$this->assertNotNull( wp_get_ability( 'content/delete-post-meta' ) );
-		$this->assertNotNull( wp_get_ability( 'content/list-post-meta-keys' ) );
+		$this->assertNotNull( wp_get_ability( 'og-content/get-post-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-content/update-post-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-content/delete-post-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-content/list-post-meta-keys' ) );
 	}
 
 	public function test_list_returns_only_show_in_rest_keys(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
+		$result = wp_get_ability( 'og-content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
 
 		$this->assertIsArray( $result );
 		$keys = wp_list_pluck( $result['keys'], 'key' );
@@ -158,7 +158,7 @@ final class PostMetaTest extends TestCase {
 	public function test_update_then_get_roundtrip(): void {
 		$this->actingAs( 'administrator' );
 
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'subtitle' => 'Hello world' ),
@@ -170,7 +170,7 @@ final class PostMetaTest extends TestCase {
 		$this->assertNotEmpty( $updated['edit_link'] );
 		$this->assertSame( 'Hello world', get_post_meta( $this->post_id, 'subtitle', true ) );
 
-		$got = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
+		$got = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
 		$this->assertSame( 'Hello world', ( (array) $got['meta'] )['subtitle'] );
 	}
 
@@ -178,7 +178,7 @@ final class PostMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_post_meta( $this->post_id, 'subtitle', 'A subtitle' );
 
-		$got = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
+		$got = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
 
 		$this->assertIsArray( $got );
 		$this->assertSame( $this->post_id, $got['id'] );
@@ -191,7 +191,7 @@ final class PostMetaTest extends TestCase {
 	public function test_get_missing_post_returns_invalid_id(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
@@ -202,7 +202,7 @@ final class PostMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_post_meta( $this->post_id, 'subtitle', 'Only me' );
 
-		$got = wp_get_ability( 'content/get-post-meta' )->execute(
+		$got = wp_get_ability( 'og-content/get-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'subtitle' ),
@@ -216,7 +216,7 @@ final class PostMetaTest extends TestCase {
 	public function test_get_off_list_requested_key_is_dropped(): void {
 		$this->actingAs( 'administrator' );
 
-		$got = wp_get_ability( 'content/get-post-meta' )->execute(
+		$got = wp_get_ability( 'og-content/get-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'subtitle', 'internal_flag', 'does_not_exist' ),
@@ -233,7 +233,7 @@ final class PostMetaTest extends TestCase {
 	public function test_update_rejects_unregistered_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/update-post-meta' )->execute(
+		$result = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'internal_flag' => 'x' ),
@@ -250,7 +250,7 @@ final class PostMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_post_meta( $this->post_id, 'subtitle', 'to be removed' );
 
-		$result = wp_get_ability( 'content/delete-post-meta' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'subtitle' ),
@@ -267,7 +267,7 @@ final class PostMetaTest extends TestCase {
 		update_post_meta( $this->post_id, 'guarded_meta', 'x' );
 
 		// Delete is gated on `delete_post_meta`, which the auth_callback denies.
-		$result = wp_get_ability( 'content/delete-post-meta' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'guarded_meta' ),
@@ -281,7 +281,7 @@ final class PostMetaTest extends TestCase {
 		// The same key is editable: update is gated on `edit_post_meta`, which the
 		// auth_callback allows. This proves the divergence is cap-driven, not a
 		// blanket denial.
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'guarded_meta' => 'y' ),
@@ -298,7 +298,7 @@ final class PostMetaTest extends TestCase {
 	public function test_object_wide_meta_is_listed(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
+		$result = wp_get_ability( 'og-content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
 
 		$keys = wp_list_pluck( $result['keys'], 'key' );
 		$this->assertContains( 'objectwide_note', $keys, 'Object-wide meta must be listed for the post type.' );
@@ -307,7 +307,7 @@ final class PostMetaTest extends TestCase {
 	public function test_object_wide_meta_roundtrip(): void {
 		$this->actingAs( 'administrator' );
 
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'objectwide_note' => 'noted' ),
@@ -317,10 +317,10 @@ final class PostMetaTest extends TestCase {
 		$this->assertIsArray( $updated, 'Object-wide meta must be writable, not rejected as unknown.' );
 		$this->assertSame( 'noted', get_post_meta( $this->post_id, 'objectwide_note', true ) );
 
-		$got = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
+		$got = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
 		$this->assertSame( 'noted', ( (array) $got['meta'] )['objectwide_note'] );
 
-		$deleted = wp_get_ability( 'content/delete-post-meta' )->execute(
+		$deleted = wp_get_ability( 'og-content/delete-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'objectwide_note' ),
@@ -348,7 +348,7 @@ final class PostMetaTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'attachment' ) );
+		$result = wp_get_ability( 'og-content/list-post-meta-keys' )->execute( array( 'post_type' => 'attachment' ) );
 
 		$keys = wp_list_pluck( $result['keys'], 'key' );
 		$this->assertNotContains(
@@ -368,13 +368,13 @@ final class PostMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// Listed under the public alias, not the storage key.
-		$listed = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
+		$listed = wp_get_ability( 'og-content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
 		$keys   = wp_list_pluck( $listed['keys'], 'key' );
 		$this->assertContains( 'public_alias', $keys );
 		$this->assertNotContains( 'aliased_storage_key', $keys );
 
 		// Write under the alias; storage lands on the underlying key.
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'public_alias' => 'aliased value' ),
@@ -385,14 +385,14 @@ final class PostMetaTest extends TestCase {
 		$this->assertSame( 'aliased value', get_post_meta( $this->post_id, 'aliased_storage_key', true ) );
 
 		// Read returns it under the alias.
-		$got  = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
+		$got  = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
 		$meta = (array) $got['meta'];
 		$this->assertArrayHasKey( 'public_alias', $meta );
 		$this->assertArrayNotHasKey( 'aliased_storage_key', $meta );
 		$this->assertSame( 'aliased value', $meta['public_alias'] );
 
 		// Writing under the raw storage key is rejected as unknown.
-		$rejected = wp_get_ability( 'content/update-post-meta' )->execute(
+		$rejected = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'aliased_storage_key' => 'x' ),
@@ -402,7 +402,7 @@ final class PostMetaTest extends TestCase {
 		$this->assertSame( 'rest_post_meta_unknown_key', $rejected->get_error_code() );
 
 		// Delete under the alias clears the storage key.
-		$deleted = wp_get_ability( 'content/delete-post-meta' )->execute(
+		$deleted = wp_get_ability( 'og-content/delete-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'public_alias' ),
@@ -421,7 +421,7 @@ final class PostMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_post_meta( $this->post_id, 'is_featured', '1' );
 
-		$got  = wp_get_ability( 'content/get-post-meta' )->execute(
+		$got  = wp_get_ability( 'og-content/get-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'is_featured' ),
@@ -437,7 +437,7 @@ final class PostMetaTest extends TestCase {
 	public function test_update_returns_cast_value(): void {
 		$this->actingAs( 'administrator' );
 
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'is_featured' => true ),
@@ -464,7 +464,7 @@ final class PostMetaTest extends TestCase {
 		};
 		add_filter( 'update_post_metadata', $short_circuit, 10, 3 );
 
-		$result = wp_get_ability( 'content/update-post-meta' )->execute(
+		$result = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'subtitle' => 'never written' ),
@@ -489,7 +489,7 @@ final class PostMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_post_meta( $this->post_id, 'subtitle', 'same value' );
 
-		$result = wp_get_ability( 'content/update-post-meta' )->execute(
+		$result = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'subtitle' => 'same value' ),
@@ -508,7 +508,7 @@ final class PostMetaTest extends TestCase {
 	public function test_update_multi_value_meta_stores_separate_rows(): void {
 		$this->actingAs( 'administrator' );
 
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'color_tags' => array( 'red', 'green', 'blue' ) ),
@@ -527,7 +527,7 @@ final class PostMetaTest extends TestCase {
 		$this->assertSame( array( 'red', 'green', 'blue' ), ( (array) $updated['meta'] )['color_tags'] );
 
 		// Round-trips through get-post-meta as a list.
-		$got = wp_get_ability( 'content/get-post-meta' )->execute(
+		$got = wp_get_ability( 'og-content/get-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'keys' => array( 'color_tags' ),
@@ -546,7 +546,7 @@ final class PostMetaTest extends TestCase {
 		add_post_meta( $this->post_id, 'color_tags', 'red' );
 		add_post_meta( $this->post_id, 'color_tags', 'green' );
 
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'color_tags' => array( 'green', 'yellow' ) ),
@@ -569,7 +569,7 @@ final class PostMetaTest extends TestCase {
 		add_post_meta( $this->post_id, 'color_tags', 'red' );
 		add_post_meta( $this->post_id, 'color_tags', 'green' );
 
-		$updated = wp_get_ability( 'content/update-post-meta' )->execute(
+		$updated = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'id'   => $this->post_id,
 				'meta' => array( 'color_tags' => array() ),
@@ -583,7 +583,7 @@ final class PostMetaTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
+		$result = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => $this->post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		// A logged-out user cannot edit the post, so the object-level guard in
@@ -598,7 +598,7 @@ final class PostMetaTest extends TestCase {
 
 		// An unregistered post type passes the permission gate so execute() can
 		// return a specific 400 error instead of a generic permission collapse.
-		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'no_such_type' ) );
+		$result = wp_get_ability( 'og-content/list-post-meta-keys' )->execute( array( 'post_type' => 'no_such_type' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_post_type', $result->get_error_code() );
@@ -611,7 +611,7 @@ final class PostMetaTest extends TestCase {
 		// A registered type the user cannot edit fails the capability guard, so
 		// core collapses it to the generic permission error — distinct from the
 		// 400 invalid_post_type returned for an unknown type.
-		$result = wp_get_ability( 'content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
+		$result = wp_get_ability( 'og-content/list-post-meta-keys' )->execute( array( 'post_type' => 'post' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertNotSame( 'invalid_post_type', $result->get_error_code() );

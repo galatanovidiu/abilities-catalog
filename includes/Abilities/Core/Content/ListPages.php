@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/list-pages`.
+ * Read ability: `og-content/list-pages`.
  *
  * Wraps `GET /wp/v2/pages` via `rest_do_request()` and returns the collection
  * plus its total counts. Read-only; REST enforces per-row visibility underneath.
@@ -27,7 +27,7 @@ final class ListPages implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/list-pages';
+		return 'og-content/list-pages';
 	}
 
 	/**
@@ -100,7 +100,7 @@ final class ListPages implements Ability {
 					'items'       => array(
 						'type'        => 'array',
 						'items'       => ContentListShaper::pageItemSchema(),
-						'description' => __( 'The list of pages as flat summary rows. Use content/get-page for a single page body.', 'abilities-catalog' ),
+						'description' => __( 'The list of pages as flat summary rows. Use og-content/get-page for a single page body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',

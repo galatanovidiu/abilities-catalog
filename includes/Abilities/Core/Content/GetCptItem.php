@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/get-cpt-item`.
+ * Read ability: `og-content/get-cpt-item`.
  *
  * Generic single-item reader keyed by `post_type`. Resolves the type's REST item
  * route via `rest_get_route_for_post_type_items()` (honoring a custom
@@ -29,7 +29,7 @@ final class GetCptItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-cpt-item';
+		return 'og-content/get-cpt-item';
 	}
 
 	/**

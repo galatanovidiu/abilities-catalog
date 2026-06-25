@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `users/get-meta`.
+ * T1 read ability: `og-users/get-meta`.
  *
  * Reads a user's custom fields (meta) as a key/value map, limited to the meta
  * keys the site has registered with `show_in_rest` for the user object — the
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * the registered-key gate runs through {@see RegisteredMeta::forObject()}.
  *
  * Meta can carry data beyond a user's public profile, so this read requires
- * object-level `edit_user` — the same reason `content/get-post-meta` requires
+ * object-level `edit_user` — the same reason `og-content/get-post-meta` requires
  * `edit_post` rather than the public view context.
  *
  * @since 0.7.0
@@ -33,7 +33,7 @@ final class GetUserMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/get-meta';
+		return 'og-users/get-meta';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class GetUserMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The user ID to read meta from. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The user ID to read meta from. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 					'keys' => array(
 						'type'        => 'array',

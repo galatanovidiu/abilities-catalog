@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/get-page output fidelity.
+ * Integration tests for og-content/get-page output fidelity.
  *
  * Covers the additive output fields (slug, password_protected) the ability
  * returns so a caller can tell a locked page from a genuinely empty one and
@@ -16,7 +16,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
- * Exercises content/get-page output.
+ * Exercises og-content/get-page output.
  */
 final class GetPageTest extends TestCase {
 
@@ -32,7 +32,7 @@ final class GetPageTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-page' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-content/get-page' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'slug', $result );
@@ -54,7 +54,7 @@ final class GetPageTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-page' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-content/get-page' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['password_protected'] );
@@ -75,7 +75,7 @@ final class GetPageTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-page' )->execute(
+		$result = wp_get_ability( 'og-content/get-page' )->execute(
 			array(
 				'id'       => $id,
 				'password' => 'hunter2',
@@ -103,7 +103,7 @@ final class GetPageTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-page' )->execute(
+		$result = wp_get_ability( 'og-content/get-page' )->execute(
 			array(
 				'id'      => $id,
 				'context' => 'edit',
@@ -132,7 +132,7 @@ final class GetPageTest extends TestCase {
 		);
 
 		// Default (view) context: core does not return *.raw.
-		$result = wp_get_ability( 'content/get-page' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-content/get-page' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayNotHasKey( 'content_raw', $result );

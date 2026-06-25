@@ -89,7 +89,7 @@ final class DomainToolFactory {
 				),
 				'ability' => array(
 					'type'        => 'string',
-					'description' => __( 'Exact ability name from "list", e.g. content/get-post. Required for describe and execute. Do not guess it — call "list" first.', 'abilities-catalog' ),
+					'description' => __( 'Exact ability name from "list", e.g. og-content/get-post. Required for describe and execute. Do not guess it — call "list" first.', 'abilities-catalog' ),
 				),
 				'input'   => array(
 					'type'        => 'object',

@@ -24,7 +24,7 @@ final class PolicyDecoratorTest extends TestCase {
 
 	private const FLAG = '_abilities_catalog_decorated';
 
-	private const HINT = ' On multisite, pass blog_id to target a specific site; discover site IDs with users/list-my-sites (or network/list-sites as a super admin). Omit blog_id to act on the current site.';
+	private const HINT = ' On multisite, pass blog_id to target a specific site; discover site IDs with og-users/list-my-sites (or og-network/list-sites as a super admin). Omit blog_id to act on the current site.';
 
 	/**
 	 * A site-scoped object schema gets an optional `blog_id`, the hint once, the flag,
@@ -33,7 +33,7 @@ final class PolicyDecoratorTest extends TestCase {
 	 */
 	public function test_site_object_schema_is_fully_decorated(): void {
 		$args   = $this->siteAbility();
-		$result = $this->decorator()->decorate($args, 'content/create-post');
+		$result = $this->decorator()->decorate($args, 'og-content/create-post');
 
 		$this->assertArrayHasKey('blog_id', $result['input_schema']['properties']);
 		$this->assertSame('integer', $result['input_schema']['properties']['blog_id']['type']);
@@ -60,10 +60,10 @@ final class PolicyDecoratorTest extends TestCase {
 
 	public function test_hint_is_appended_exactly_once_across_two_passes(): void {
 		$decorator = $this->decorator();
-		$once      = $decorator->decorate($this->siteAbility(), 'content/create-post');
+		$once      = $decorator->decorate($this->siteAbility(), 'og-content/create-post');
 
 		// Re-running the same already-flagged args must not append a second hint.
-		$twice = $decorator->decorate($once, 'content/create-post');
+		$twice = $decorator->decorate($once, 'og-content/create-post');
 
 		$this->assertSame($once['description'], $twice['description']);
 		$this->assertSame(1, substr_count($twice['description'], 'pass blog_id to target a specific site'));
@@ -90,7 +90,7 @@ final class PolicyDecoratorTest extends TestCase {
 		$args                          = $this->siteAbility();
 		$args['meta'][ self::FLAG ]    = true;
 
-		$result = $this->decorator()->decorate($args, 'content/create-post');
+		$result = $this->decorator()->decorate($args, 'og-content/create-post');
 
 		$this->assertEquals($args, $result);
 		$this->assertArrayNotHasKey('blog_id', $result['input_schema']['properties']);
@@ -141,7 +141,7 @@ final class PolicyDecoratorTest extends TestCase {
 			'description' => 'The ability owns this field.',
 		);
 
-		$result = $this->decorator()->decorate($args, 'network/add-user-to-site');
+		$result = $this->decorator()->decorate($args, 'og-network/add-user-to-site');
 
 		// The ability's own blog_id schema is untouched and callbacks are NOT wrapped.
 		$this->assertSame($args['input_schema']['properties']['blog_id'], $result['input_schema']['properties']['blog_id']);
@@ -159,7 +159,7 @@ final class PolicyDecoratorTest extends TestCase {
 		);
 
 		$args   = $this->siteAbility();
-		$result = $decorator->decorate($args, 'content/create-post');
+		$result = $decorator->decorate($args, 'og-content/create-post');
 
 		$this->assertEquals($args, $result);
 		$this->assertArrayNotHasKey(self::FLAG, $result['meta']);

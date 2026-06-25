@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/approve-comment ability.
+ * Integration tests for the og-comments/approve-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -47,16 +47,16 @@ final class ApproveCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/approve-comment');
+		$ability = wp_get_ability('og-comments/approve-comment');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/approve-comment', $ability->get_name());
+		$this->assertSame('og-comments/approve-comment', $ability->get_name());
 	}
 
 	public function test_admin_can_approve_held_comment(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($this->comment_id, $result['id']);
@@ -66,7 +66,7 @@ final class ApproveCommentTest extends TestCase {
 	public function test_output_shape_has_only_id_and_status(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame(array('id', 'status'), array_keys($result));
@@ -75,7 +75,7 @@ final class ApproveCommentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -89,7 +89,7 @@ final class ApproveCommentTest extends TestCase {
 	public function test_non_moderator_is_denied_with_403(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_cannot_edit', $result->get_error_code());
@@ -104,7 +104,7 @@ final class ApproveCommentTest extends TestCase {
 	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => 99999999));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => 99999999));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_invalid_id', $result->get_error_code());
@@ -127,7 +127,7 @@ final class ApproveCommentTest extends TestCase {
 
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $approved_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $approved_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_cannot_edit', $result->get_error_code());
@@ -147,7 +147,7 @@ final class ApproveCommentTest extends TestCase {
 
 		$this->assertFalse(current_user_can('edit_comment', $this->comment_id));
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame('approved', $result['status']);
@@ -169,7 +169,7 @@ final class ApproveCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $approved_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $approved_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame('approved', $result['status']);
@@ -193,7 +193,7 @@ final class ApproveCommentTest extends TestCase {
 			)
 		);
 
-		wp_get_ability('comments/approve-comment')->execute(array('id' => $comment_id));
+		wp_get_ability('og-comments/approve-comment')->execute(array('id' => $comment_id));
 
 		$this->assertSame('203.0.113.45', get_comment($comment_id)->comment_author_IP);
 	}
@@ -202,7 +202,7 @@ final class ApproveCommentTest extends TestCase {
 	 * A spam comment is rejected with a 409 `rest_comment_wrong_state` error and
 	 * left untouched. Approving via wp_set_comment_status only flips
 	 * comment_approved and skips the unspam restore path, leaving stale meta, so
-	 * the caller must unspam first. Contrast comments/unapprove-comment, which
+	 * the caller must unspam first. Contrast og-comments/unapprove-comment, which
 	 * accepts any state.
 	 */
 	public function test_approving_spam_comment_returns_409_and_leaves_status_unchanged(): void {
@@ -216,7 +216,7 @@ final class ApproveCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $spam_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $spam_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
@@ -241,7 +241,7 @@ final class ApproveCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => $trash_id));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => $trash_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
@@ -257,7 +257,7 @@ final class ApproveCommentTest extends TestCase {
 	public function test_missing_comment_id_returns_404(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/approve-comment')->execute(array('id' => 99999999));
+		$result = wp_get_ability('og-comments/approve-comment')->execute(array('id' => 99999999));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_invalid_id', $result->get_error_code());

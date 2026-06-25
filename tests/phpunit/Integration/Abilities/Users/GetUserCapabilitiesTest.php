@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/get-user-capabilities ability.
+ * Integration tests for the og-users/get-user-capabilities ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -35,16 +35,16 @@ final class GetUserCapabilitiesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('users/get-user-capabilities');
+		$ability = wp_get_ability('og-users/get-user-capabilities');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('users/get-user-capabilities', $ability->get_name());
+		$this->assertSame('og-users/get-user-capabilities', $ability->get_name());
 	}
 
 	public function test_admin_reads_editor_roles_and_capabilities(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user-capabilities')->execute(array('id' => $this->editor_id));
+		$result = wp_get_ability('og-users/get-user-capabilities')->execute(array('id' => $this->editor_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($this->editor_id, $result['id']);
@@ -64,7 +64,7 @@ final class GetUserCapabilitiesTest extends TestCase {
 	public function test_capabilities_are_sorted_and_exclude_role_slugs(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user-capabilities')->execute(array('id' => $this->editor_id));
+		$result = wp_get_ability('og-users/get-user-capabilities')->execute(array('id' => $this->editor_id));
 
 		$sorted = $result['capabilities'];
 		sort($sorted);
@@ -78,7 +78,7 @@ final class GetUserCapabilitiesTest extends TestCase {
 	public function test_output_has_exactly_the_closed_key_set(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user-capabilities')->execute(array('id' => $this->editor_id));
+		$result = wp_get_ability('og-users/get-user-capabilities')->execute(array('id' => $this->editor_id));
 
 		$expected = array('id', 'roles', 'capabilities');
 		sort($expected);
@@ -91,7 +91,7 @@ final class GetUserCapabilitiesTest extends TestCase {
 	public function test_missing_user_returns_specific_404_not_permission_denial(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user-capabilities')->execute(array('id' => 99999999));
+		$result = wp_get_ability('og-users/get-user-capabilities')->execute(array('id' => 99999999));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_user_invalid_id', $result->get_error_code());
@@ -105,7 +105,7 @@ final class GetUserCapabilitiesTest extends TestCase {
 	public function test_logged_out_caller_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('users/get-user-capabilities')->execute(array('id' => $this->editor_id));
+		$result = wp_get_ability('og-users/get-user-capabilities')->execute(array('id' => $this->editor_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -117,7 +117,7 @@ final class GetUserCapabilitiesTest extends TestCase {
 
 		$this->assertFalse(current_user_can('edit_users'), 'Test premise: a subscriber lacks edit_users.');
 
-		$result = wp_get_ability('users/get-user-capabilities')->execute(array('id' => $this->editor_id));
+		$result = wp_get_ability('og-users/get-user-capabilities')->execute(array('id' => $this->editor_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());

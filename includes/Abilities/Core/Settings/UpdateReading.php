@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `settings/update-reading`.
+ * T2 non-destructive write ability: `og-settings/update-reading`.
  *
  * Updates the Reading Settings screen. The accepted fields mirror the matching
  * read ability {@see GetReading}. The write path is split by where each option is
@@ -34,7 +34,7 @@ final class UpdateReading implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-reading';
+		return 'og-settings/update-reading';
 	}
 
 	/**

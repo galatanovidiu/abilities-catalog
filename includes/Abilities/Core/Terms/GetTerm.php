@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Generic read ability: `terms/get-term`.
+ * Generic read ability: `og-terms/get-term`.
  *
  * Wraps `GET /wp/v2/<rest_base>/<id>` for any REST-exposed taxonomy keyed by the
  * `taxonomy` input, and shapes the response into a flat field set.
@@ -27,7 +27,7 @@ final class GetTerm implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/get-term';
+		return 'og-terms/get-term';
 	}
 
 	/**
@@ -43,12 +43,12 @@ final class GetTerm implements Ability {
 				'properties'           => array(
 					'taxonomy' => array(
 						'type'        => 'string',
-						'description' => __( 'The taxonomy slug (for example "category" or "post_tag"). Discover slugs via terms/list-taxonomies.', 'abilities-catalog' ),
+						'description' => __( 'The taxonomy slug (for example "category" or "post_tag"). Discover slugs via og-terms/list-taxonomies.', 'abilities-catalog' ),
 					),
 					'id'       => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The term ID. Discover IDs via terms/list-terms (or terms/list-categories / terms/list-tags).', 'abilities-catalog' ),
+						'description' => __( 'The term ID. Discover IDs via og-terms/list-terms (or og-terms/list-categories / og-terms/list-tags).', 'abilities-catalog' ),
 					),
 					'context'  => array(
 						'type'        => 'string',

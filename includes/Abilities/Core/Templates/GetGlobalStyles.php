@@ -14,12 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/get-global-styles`.
+ * Read ability: `og-templates/get-global-styles`.
  *
  * Returns the active theme's user global-style overrides — the `wp_global_styles`
  * CPT record holding only the settings/styles the user changed in the Site Editor.
  * It does NOT merge the theme's baseline `theme.json`; use
- * `templates/get-theme-styles` for the theme baseline. The existing record is
+ * `og-templates/get-theme-styles` for the theme baseline. The existing record is
  * resolved from core via
  * {@see \WP_Theme_JSON_Resolver::get_user_data_from_wp_global_styles()} with
  * `$create_post = false` (so this read never inserts a row), then fetched through
@@ -34,7 +34,7 @@ final class GetGlobalStyles implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/get-global-styles';
+		return 'og-templates/get-global-styles';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class GetGlobalStyles implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Global Styles', 'abilities-catalog' ),
-			'description'         => __( 'Returns the active theme\'s user global-style overrides (the settings and styles changed in the Site Editor), not the theme.json baseline. Use templates/get-theme-styles for the theme baseline.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the active theme\'s user global-style overrides (the settings and styles changed in the Site Editor), not the theme.json baseline. Use og-templates/get-theme-styles for the theme baseline.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -120,7 +120,7 @@ final class GetGlobalStyles implements Ability {
 		if ( $id <= 0 ) {
 			return new WP_Error(
 				'global_styles_unavailable',
-				__( 'No global styles record exists for the active theme yet. Call templates/init-global-styles to create one, then retry.', 'abilities-catalog' ),
+				__( 'No global styles record exists for the active theme yet. Call og-templates/init-global-styles to create one, then retry.', 'abilities-catalog' ),
 				array( 'status' => 404 )
 			);
 		}

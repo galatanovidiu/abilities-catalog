@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `network/create-site`.
+ * Dangerous-tier write ability: `og-network/create-site`.
  *
  * Creates a new site (blog) in a multisite network under a slug, with a title
  * and an existing user as its administrator — the Network Admin -> Sites -> Add
@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `readonly` is false: this is a write (it provisions new `wp_blogs` rows and a
  *   full set of per-site tables).
  * - `destructive` is false: a created site is reversible — remove it with
- *   `network/delete-site`.
+ *   `og-network/delete-site`.
  * - `idempotent` is false: a second identical call collides on the domain/path
  *   (`blog_taken`), so repeating it is not a same-state no-op.
  * - `dangerous` is true: provisioning a new set of database tables is a broad
@@ -43,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Multisite only: the `wp_blogs` table does not exist on a single site, so
  * `execute()` returns a 400 before touching any `ms-*` function, mirroring the
  * "explicit guard at the top of execute() when the wrapped core fn has no route
- * to surface an error" idiom (`tools/delete-transient`).
+ * to surface an error" idiom (`og-tools/delete-transient`).
  *
  * Security note: core's `wpmu_create_blog()` performs NO capability check of its
  * own. The `permission_callback` plus the explicit `current_user_can( 'create_sites' )`
@@ -57,7 +57,7 @@ final class CreateSite implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/create-site';
+		return 'og-network/create-site';
 	}
 
 	/**
@@ -66,7 +66,7 @@ final class CreateSite implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Site', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new site (blog) in a WordPress multisite network under a slug, with a title and an existing user as its administrator — the Network Admin Add New Site action. Derives the domain/path from whether the network is subdomain- or subdirectory-based. admin_id must be an existing user (discover with users/list-users); the site is created with public visibility. Creating a site provisions a new set of database tables, so this is a dangerous network operation; remove a site with network/delete-site. Fails with a 409 if the slug is already taken. Requires a multisite install and the create_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new site (blog) in a WordPress multisite network under a slug, with a title and an existing user as its administrator — the Network Admin Add New Site action. Derives the domain/path from whether the network is subdomain- or subdirectory-based. admin_id must be an existing user (discover with og-users/list-users); the site is created with public visibility. Creating a site provisions a new set of database tables, so this is a dangerous network operation; remove a site with og-network/delete-site. Fails with a 409 if the slug is already taken. Requires a multisite install and the create_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -86,7 +86,7 @@ final class CreateSite implements Ability {
 					'admin_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( "The ID of an EXISTING user who becomes the new site's administrator. Discover IDs with users/list-users. The user is not created; an unknown id is rejected with a 404.", 'abilities-catalog' ),
+						'description' => __( "The ID of an EXISTING user who becomes the new site's administrator. Discover IDs with og-users/list-users. The user is not created; an unknown id is rejected with a 404.", 'abilities-catalog' ),
 					),
 					'lang'     => array(
 						'type'        => 'string',
@@ -101,7 +101,7 @@ final class CreateSite implements Ability {
 				'properties'           => array(
 					'blog_id' => array(
 						'type'        => 'integer',
-						'description' => __( "The new site's blog ID. Pass it to network/get-site, network/update-site, or network/add-user-to-site.", 'abilities-catalog' ),
+						'description' => __( "The new site's blog ID. Pass it to og-network/get-site, og-network/update-site, or og-network/add-user-to-site.", 'abilities-catalog' ),
 					),
 					'url'     => array(
 						'type'        => 'string',

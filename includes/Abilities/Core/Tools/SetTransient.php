@@ -12,14 +12,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Write ability: `tools/set-transient`.
+ * Write ability: `og-tools/set-transient`.
  *
  * Stores or overwrites a single transient (a cached value with an optional
  * expiry) by name. Wraps core `set_transient()` for a normal transient, or
  * `set_site_transient()` when `network` is true (a site/network transient on
  * multisite). The `key` is the transient name WITHOUT the internal
  * `_transient_` / `_site_transient_` storage prefix that core adds. The stored
- * transient is clearable with `tools/delete-transient`.
+ * transient is clearable with `og-tools/delete-transient`.
  *
  * Value typing: a transient value is arbitrary (a scalar, array, or
  * serializable structure), so the `value` field is a JSON-type union and is
@@ -40,12 +40,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `destructive` is false: a transient is a cache entry, not a source of
  *   truth. Overwriting it is not irreversible data loss — the value is derived
  *   and self-healing — so the boolean is declared (a write must declare it) and
- *   set to false, matching `tools/delete-transient`.
+ *   set to false, matching `og-tools/delete-transient`.
  * - `idempotent` is true: setting the same key, value, and expiry twice leaves
  *   the same end state.
  *
  * It is NOT `dangerous`: this touches a single named transient, not a wide
- * site-wide blast (unlike `tools/flush-object-cache`).
+ * site-wide blast (unlike `og-tools/flush-object-cache`).
  *
  * No `meta.screen` is set: there is no dedicated wp-admin screen for a single
  * transient, so there is nothing for a consumer to deep-link.
@@ -64,7 +64,7 @@ final class SetTransient implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/set-transient';
+		return 'og-tools/set-transient';
 	}
 
 	/**
@@ -73,7 +73,7 @@ final class SetTransient implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Set Transient', 'abilities-catalog' ),
-			'description'         => __( 'Stores or overwrites a single transient (a cached value) by name, with an optional expiry. Pass the transient name without the internal "_transient_"/"_site_transient_" prefix. expiration is in seconds; 0 (the default) means no expiry (the transient persists until it is deleted or the cache evicts it). Set network to true to store a site/network transient instead. The value is stored as-is and may be any JSON type. Clear it later with tools/delete-transient. Returns stored, confirmed by reading the value back.', 'abilities-catalog' ),
+			'description'         => __( 'Stores or overwrites a single transient (a cached value) by name, with an optional expiry. Pass the transient name without the internal "_transient_"/"_site_transient_" prefix. expiration is in seconds; 0 (the default) means no expiry (the transient persists until it is deleted or the cache evicts it). Set network to true to store a site/network transient instead. The value is stored as-is and may be any JSON type. Clear it later with og-tools/delete-transient. Returns stored, confirmed by reading the value back.', 'abilities-catalog' ),
 			'category'            => 'tools',
 			'input_schema'        => array(
 				'type'                 => 'object',

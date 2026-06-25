@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Integration tests for the `network/list-networks` ability.
+ * Integration tests for the `og-network/list-networks` ability.
  *
  * @group multisite
  */
@@ -29,10 +29,10 @@ final class ListNetworksTest extends TestCase {
 	 * The ability registers and resolves.
 	 */
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/list-networks' );
+		$ability = wp_get_ability( 'og-network/list-networks' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/list-networks', $ability->get_name() );
+		$this->assertSame( 'og-network/list-networks', $ability->get_name() );
 	}
 
 	/**
@@ -41,7 +41,7 @@ final class ListNetworksTest extends TestCase {
 	public function test_super_admin_lists_networks(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/list-networks' )->execute( array() );
+		$result = wp_get_ability( 'og-network/list-networks' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'networks', 'total' ), array_keys( $result ) );
@@ -73,7 +73,7 @@ final class ListNetworksTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'network/list-networks' )->execute( array() );
+		$result = wp_get_ability( 'og-network/list-networks' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -85,7 +85,7 @@ final class ListNetworksTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'network/list-networks' )->execute( array() );
+		$result = wp_get_ability( 'og-network/list-networks' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -97,7 +97,7 @@ final class ListNetworksTest extends TestCase {
 	public function test_logged_out_caller_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'network/list-networks' )->execute( array() );
+		$result = wp_get_ability( 'og-network/list-networks' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

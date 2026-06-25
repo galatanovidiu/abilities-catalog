@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the updates/run-update ability.
+ * Integration tests for the og-updates/run-update ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -15,7 +15,7 @@ use WP_Error;
 
 /**
  * Covers registration, the per-type capability mapping, and the unsupported-type
- * rejection (defense-in-depth) for the updates/run-update ability.
+ * rejection (defense-in-depth) for the og-updates/run-update ability.
  *
  * The capability mapping and the unsupported-type guard are asserted directly on a
  * RunUpdate instance. The ability wrapper enforces the input schema (which excludes
@@ -29,7 +29,7 @@ use WP_Error;
 final class RunUpdateTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'updates/run-update' ) );
+		$this->assertNotNull( wp_get_ability( 'og-updates/run-update' ) );
 	}
 
 	public function test_permission_maps_plugin_type_to_update_plugins_cap(): void {

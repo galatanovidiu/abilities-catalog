@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `terms/delete-term` (generic, keyed by `taxonomy`).
+ * T2 destructive write ability: `og-terms/delete-term` (generic, keyed by `taxonomy`).
  *
  * Resolves the taxonomy's REST base and wraps `DELETE /wp/v2/<rest_base>/<id>` with
  * `force=true` via `rest_do_request()`, permanently deleting the term (taxonomy
@@ -36,7 +36,7 @@ final class DeleteTerm implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/delete-term';
+		return 'og-terms/delete-term';
 	}
 
 	/**
@@ -52,12 +52,12 @@ final class DeleteTerm implements Ability {
 				'properties'           => array(
 					'taxonomy' => array(
 						'type'        => 'string',
-						'description' => __( 'The taxonomy slug (required), e.g. "category" or a custom taxonomy. Find available slugs via terms/list-taxonomies.', 'abilities-catalog' ),
+						'description' => __( 'The taxonomy slug (required), e.g. "category" or a custom taxonomy. Find available slugs via og-terms/list-taxonomies.', 'abilities-catalog' ),
 					),
 					'id'       => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The term ID to permanently delete (required). Find it via terms/list-terms or terms/get-term.', 'abilities-catalog' ),
+						'description' => __( 'The term ID to permanently delete (required). Find it via og-terms/list-terms or og-terms/get-term.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'taxonomy', 'id' ),

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/update-tag ability.
+ * Integration tests for the og-terms/update-tag ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,10 +38,10 @@ final class UpdateTagTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/update-tag');
+		$ability = wp_get_ability('og-terms/update-tag');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/update-tag', $ability->get_name());
+		$this->assertSame('og-terms/update-tag', $ability->get_name());
 	}
 
 	/**
@@ -52,7 +52,7 @@ final class UpdateTagTest extends TestCase {
 	public function test_explicit_empty_name_surfaces_core_validation_error(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-tag')->execute(
+		$result = wp_get_ability('og-terms/update-tag')->execute(
 			array(
 				'id'   => $this->term_id,
 				'name' => '',
@@ -79,7 +79,7 @@ final class UpdateTagTest extends TestCase {
 	public function test_explicit_empty_slug_is_forwarded_to_core(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-tag')->execute(
+		$result = wp_get_ability('og-terms/update-tag')->execute(
 			array(
 				'id'   => $this->term_id,
 				'slug' => '',
@@ -102,7 +102,7 @@ final class UpdateTagTest extends TestCase {
 	public function test_description_update_is_returned_in_output(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-tag')->execute(
+		$result = wp_get_ability('og-terms/update-tag')->execute(
 			array(
 				'id'          => $this->term_id,
 				'description' => 'A fresh description.',
@@ -125,7 +125,7 @@ final class UpdateTagTest extends TestCase {
 	public function test_omitted_name_leaves_name_unchanged(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-tag')->execute(
+		$result = wp_get_ability('og-terms/update-tag')->execute(
 			array(
 				'id'          => $this->term_id,
 				'description' => 'New description.',
@@ -147,7 +147,7 @@ final class UpdateTagTest extends TestCase {
 		// An admin holds edit_post_tags (the coarse guard), so a non-existent id
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability('terms/update-tag')->execute(
+		$result = wp_get_ability('og-terms/update-tag')->execute(
 			array(
 				'id'   => 999999,
 				'name' => 'Renamed',

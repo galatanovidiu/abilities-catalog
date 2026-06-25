@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the fonts/get-font-family ability.
+ * Integration tests for the og-fonts/get-font-family ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -60,10 +60,10 @@ final class GetFontFamilyTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'fonts/get-font-family' );
+		$ability = wp_get_ability( 'og-fonts/get-font-family' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'fonts/get-font-family', $ability->get_name() );
+		$this->assertSame( 'og-fonts/get-font-family', $ability->get_name() );
 	}
 
 	public function test_admin_reads_family_with_shaped_output(): void {
@@ -79,7 +79,7 @@ final class GetFontFamilyTest extends TestCase {
 		$face_one  = $this->createFontFace( $family_id );
 		$face_two  = $this->createFontFace( $family_id );
 
-		$result = wp_get_ability( 'fonts/get-font-family' )->execute( array( 'id' => $family_id ) );
+		$result = wp_get_ability( 'og-fonts/get-font-family' )->execute( array( 'id' => $family_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $family_id, $result['id'] );
@@ -104,7 +104,7 @@ final class GetFontFamilyTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'fonts/get-font-family' )->execute( array( 'id' => $family_id ) );
+		$result = wp_get_ability( 'og-fonts/get-font-family' )->execute( array( 'id' => $family_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

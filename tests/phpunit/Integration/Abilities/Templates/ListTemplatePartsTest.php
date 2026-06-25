@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-template-parts output and contract.
+ * Integration tests for og-templates/list-template-parts output and contract.
  *
  * Covers registration, the happy path (returns an `items` array whose rows
  * carry the guaranteed `id` and the always-present `area`), the area filter
@@ -21,7 +21,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-template-parts.
+ * Exercises og-templates/list-template-parts.
  */
 final class ListTemplatePartsTest extends TestCase {
 
@@ -48,7 +48,7 @@ final class ListTemplatePartsTest extends TestCase {
 	 * @return void
 	 */
 	private function seedHeaderPart( string $slug ): void {
-		$created = wp_get_ability( 'templates/create-template-part' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template-part' )->execute(
 			array(
 				'slug'    => $slug,
 				'area'    => 'header',
@@ -64,7 +64,7 @@ final class ListTemplatePartsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'templates/list-template-parts' ) );
+		$this->assertTrue( wp_has_ability( 'og-templates/list-template-parts' ) );
 	}
 
 	public function test_returns_items_with_id_and_area(): void {
@@ -72,7 +72,7 @@ final class ListTemplatePartsTest extends TestCase {
 
 		$this->seedHeaderPart( 'abilities-catalog-list-part-a' );
 
-		$result = wp_get_ability( 'templates/list-template-parts' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-template-parts' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -109,7 +109,7 @@ final class ListTemplatePartsTest extends TestCase {
 
 		$this->seedHeaderPart( 'abilities-catalog-list-part-b' );
 
-		$result = wp_get_ability( 'templates/list-template-parts' )->execute(
+		$result = wp_get_ability( 'og-templates/list-template-parts' )->execute(
 			array( 'area' => 'header' )
 		);
 
@@ -127,7 +127,7 @@ final class ListTemplatePartsTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'templates/list-template-parts' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-template-parts' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -137,7 +137,7 @@ final class ListTemplatePartsTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		// edit_theme_options is the catalog guard; a subscriber lacks it.
-		$result = wp_get_ability( 'templates/list-template-parts' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-template-parts' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

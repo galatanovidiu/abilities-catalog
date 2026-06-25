@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `comments/get-comment`.
+ * Read ability: `og-comments/get-comment`.
  *
  * Wraps `GET /wp/v2/comments/<id>` via `rest_do_request()` and shapes the
  * response into a flat field set. Read-only; REST enforces per-object
@@ -27,7 +27,7 @@ final class GetComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/get-comment';
+		return 'og-comments/get-comment';
 	}
 
 	/**
@@ -44,7 +44,7 @@ final class GetComment implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID. Discover valid IDs with comments/list-comments.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID. Discover valid IDs with og-comments/list-comments.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -119,7 +119,7 @@ final class GetComment implements Ability {
 	/**
 	 * Permission check: baseline `edit_posts` to read a comment.
 	 *
-	 * Encodes the catalog baseline capability for `comments/get-comment`.
+	 * Encodes the catalog baseline capability for `og-comments/get-comment`.
 	 * Object-level and edit-context visibility (`edit_comment`,
 	 * `moderate_comments`) is enforced per object by REST; `edit_posts` is the
 	 * minimum required to run the read and is not weaker than that baseline.

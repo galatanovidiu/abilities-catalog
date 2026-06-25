@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `users/update-meta`.
+ * T2 write ability: `og-users/update-meta`.
  *
  * Sets one or more of a user's custom fields (meta). It writes only meta keys the
  * site has registered with `show_in_rest` for users, and rejects any unknown key —
@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * meta holds `session_tokens`, `wp_capabilities`, and hashed-key material, none of
  * which is writable here. Wraps core `update_metadata( 'user', ... )` after a
  * per-key `edit_user_meta` capability check; the registered value is sanitized by
- * its `sanitize_callback`. Does not delete meta (use `users/delete-meta`) and does
- * not change other user fields (use `users/update-user`). Returns the user `id`, the
+ * its `sanitize_callback`. Does not delete meta (use `og-users/delete-meta`) and does
+ * not change other user fields (use `og-users/update-user`). Returns the user `id`, the
  * applied `meta` values, and `edit_link` (the wp-admin profile editor URL); surface
  * `edit_link` so a human can review the change.
  *
@@ -38,7 +38,7 @@ final class UpdateUserMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/update-meta';
+		return 'og-users/update-meta';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class UpdateUserMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update User Meta', 'abilities-catalog' ),
-			'description'         => __( 'Sets custom fields (meta) on a user. Only meta keys registered with show_in_rest for users can be written; unknown keys are rejected, so internal meta such as wp_capabilities or session_tokens cannot be reached. Returns the user id, the applied meta, and edit_link — surface edit_link so a human can review the change. Use users/update-user to change profile fields instead.', 'abilities-catalog' ),
+			'description'         => __( 'Sets custom fields (meta) on a user. Only meta keys registered with show_in_rest for users can be written; unknown keys are rejected, so internal meta such as wp_capabilities or session_tokens cannot be reached. Returns the user id, the applied meta, and edit_link — surface edit_link so a human can review the change. Use og-users/update-user to change profile fields instead.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -55,7 +55,7 @@ final class UpdateUserMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The user ID to update meta on. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The user ID to update meta on. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 					'meta' => array(
 						'type'                 => 'object',

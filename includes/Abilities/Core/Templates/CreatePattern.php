@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `templates/create-pattern`.
+ * T2 non-destructive write ability: `og-templates/create-pattern`.
  *
  * Wraps `POST /wp/v2/blocks` via `rest_do_request()`. A user pattern is a
  * `wp_block` post (a reusable block / synced pattern). The permission mirrors
@@ -38,7 +38,7 @@ final class CreatePattern implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/create-pattern';
+		return 'og-templates/create-pattern';
 	}
 
 	/**

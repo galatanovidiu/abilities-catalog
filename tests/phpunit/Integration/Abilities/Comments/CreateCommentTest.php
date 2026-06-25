@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/create-comment ability.
+ * Integration tests for the og-comments/create-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -33,16 +33,16 @@ final class CreateCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/create-comment');
+		$ability = wp_get_ability('og-comments/create-comment');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/create-comment', $ability->get_name());
+		$this->assertSame('og-comments/create-comment', $ability->get_name());
 	}
 
 	public function test_admin_can_create_comment(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'A freshly created comment.',
@@ -57,7 +57,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_output_includes_edit_link(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Comment with edit link.',
@@ -74,7 +74,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_status_enum_rejects_unknown_value(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Bad status value.',
@@ -88,7 +88,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Should be denied.',
@@ -106,7 +106,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_non_moderator_can_create_plain_comment(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'A subscriber comment.',
@@ -128,7 +128,7 @@ final class CreateCommentTest extends TestCase {
 
 		$before = get_comments(array('post_id' => $this->post_id, 'count' => true));
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'        => $this->post_id,
 				'content'     => 'Spoofed identity attempt.',
@@ -153,7 +153,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_non_moderator_cannot_spoof_author_email(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'         => $this->post_id,
 				'content'      => 'Spoofed email attempt.',
@@ -177,7 +177,7 @@ final class CreateCommentTest extends TestCase {
 
 		$before = get_comments(array('post_id' => $this->post_id, 'count' => true));
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'         => $this->post_id,
 				'content'      => 'Comment with a broken email.',
@@ -206,7 +206,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_valid_author_email_is_stored(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'         => $this->post_id,
 				'content'      => 'Comment with a valid email.',
@@ -229,7 +229,7 @@ final class CreateCommentTest extends TestCase {
 	public function test_non_moderator_setting_status_gets_specific_route_error(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/create-comment')->execute(
+		$result = wp_get_ability('og-comments/create-comment')->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Trying to self-approve.',

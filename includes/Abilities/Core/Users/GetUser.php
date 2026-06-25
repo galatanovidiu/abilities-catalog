@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `users/get-user`.
+ * Read ability: `og-users/get-user`.
  *
  * Wraps `GET /wp/v2/users/<id>` via `rest_do_request()` and shapes the response
  * into a flat field set. The `email` and `roles` fields are only present when the
@@ -28,7 +28,7 @@ final class GetUser implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/get-user';
+		return 'og-users/get-user';
 	}
 
 	/**
@@ -77,7 +77,7 @@ final class GetUser implements Ability {
 	/**
 	 * Permission check: delegated to the wrapped REST route.
 	 *
-	 * `users/get-user` reads through `GET /wp/v2/users/<id>`, whose own
+	 * `og-users/get-user` reads through `GET /wp/v2/users/<id>`, whose own
 	 * `get_item_permissions_check` enforces visibility on the object — self is always
 	 * readable, a public author with published posts is viewable, `list_users` or
 	 * `edit_user` widens access, and `edit` context requires `edit_user`. Doing the

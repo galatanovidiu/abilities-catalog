@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/list-sidebars ability.
+ * Integration tests for the og-widgets/list-sidebars ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,16 +38,16 @@ final class ListSidebarsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/list-sidebars' );
+		$ability = wp_get_ability( 'og-widgets/list-sidebars' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/list-sidebars', $ability->get_name() );
+		$this->assertSame( 'og-widgets/list-sidebars', $ability->get_name() );
 	}
 
 	public function test_lists_inactive_holding_area(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/list-sidebars' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-sidebars' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -64,7 +64,7 @@ final class ListSidebarsTest extends TestCase {
 	public function test_row_has_exactly_the_closed_field_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/list-sidebars' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-sidebars' )->execute();
 		$row    = $this->rowById( $result['items'], 'wp_inactive_widgets' );
 
 		$this->assertNotNull( $row );
@@ -80,7 +80,7 @@ final class ListSidebarsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'widgets/list-sidebars' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-sidebars' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -89,7 +89,7 @@ final class ListSidebarsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'widgets/list-sidebars' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-sidebars' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `content/create-page`.
+ * T1 write ability: `og-content/create-page`.
  *
  * Wraps `POST /wp/v2/pages` via `rest_do_request()` and returns the new page's
  * id, link, and status. The `permission_callback` encodes the catalog's page
@@ -37,7 +37,7 @@ final class CreatePage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/create-page';
+		return 'og-content/create-page';
 	}
 
 	/**
@@ -57,7 +57,7 @@ final class CreatePage implements Ability {
 					),
 					'content'        => array(
 						'type'        => 'string',
-						'description' => __( 'The page content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
+						'description' => __( 'The page content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use og-templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'        => array(
 						'type'        => 'string',

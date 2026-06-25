@@ -12,13 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `media/detach-featured-image`.
+ * T2 non-destructive write ability: `og-media/detach-featured-image`.
  *
  * Removes a post's featured image (thumbnail) by wrapping the core function
  * `delete_post_thumbnail()`. This is a net-new write: it does NOT dispatch a REST
  * request. Only the post-to-attachment association is removed; the attachment
  * itself is untouched and stays in the media library, so the operation is
- * reversible with `media/set-featured-image`. Write annotations are therefore
+ * reversible with `og-media/set-featured-image`. Write annotations are therefore
  * `readonly:false, destructive:false, idempotent:true` (detaching a post that has
  * no featured image is a benign no-op that reaches the same end state).
  *
@@ -38,7 +38,7 @@ final class DetachFeaturedImage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/detach-featured-image';
+		return 'og-media/detach-featured-image';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class DetachFeaturedImage implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Detach Featured Image', 'abilities-catalog' ),
-			'description'         => __( 'Removes a post\'s featured image, clearing the post-to-attachment association only. The attachment itself is not deleted and remains in the media library, so this is reversible with media/set-featured-image. Detaching a post that has no featured image is a benign no-op (detached is false). Requires edit access to the post.', 'abilities-catalog' ),
+			'description'         => __( 'Removes a post\'s featured image, clearing the post-to-attachment association only. The attachment itself is not deleted and remains in the media library, so this is reversible with og-media/set-featured-image. Detaching a post that has no featured image is a benign no-op (detached is false). Requires edit access to the post.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -55,7 +55,7 @@ final class DetachFeaturedImage implements Ability {
 					'post_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The post ID to remove the featured image from. Discover IDs with content/list-posts or content/get-post.', 'abilities-catalog' ),
+						'description' => __( 'The post ID to remove the featured image from. Discover IDs with og-content/list-posts or og-content/get-post.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'post_id' ),

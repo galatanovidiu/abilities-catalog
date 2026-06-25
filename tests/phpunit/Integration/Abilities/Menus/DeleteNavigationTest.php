@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/delete-navigation ability.
+ * Integration tests for the og-menus/delete-navigation ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -37,17 +37,17 @@ final class DeleteNavigationTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/delete-navigation' );
+		$ability = wp_get_ability( 'og-menus/delete-navigation' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/delete-navigation', $ability->get_name() );
+		$this->assertSame( 'og-menus/delete-navigation', $ability->get_name() );
 	}
 
 	public function test_admin_trashes_navigation_by_default(): void {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->createNavigation( 'Primary Navigation' );
 
-		$result = wp_get_ability( 'menus/delete-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array( 'id' => $nav_id )
 		);
 
@@ -64,7 +64,7 @@ final class DeleteNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->createNavigation( 'Footer Navigation' );
 
-		$result = wp_get_ability( 'menus/delete-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array(
 				'id'    => $nav_id,
 				'force' => true,
@@ -84,7 +84,7 @@ final class DeleteNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->createNavigation( 'Header Navigation' );
 
-		$result = wp_get_ability( 'menus/delete-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array( 'id' => $nav_id )
 		);
 
@@ -97,7 +97,7 @@ final class DeleteNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->createNavigation( 'Sidebar Navigation' );
 
-		$result = wp_get_ability( 'menus/delete-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array(
 				'id'    => $nav_id,
 				'force' => true,
@@ -115,7 +115,7 @@ final class DeleteNavigationTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent id
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/delete-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array( 'id' => 999999 )
 		);
 
@@ -128,7 +128,7 @@ final class DeleteNavigationTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		$nav_id = $this->createNavigation( 'Denied Navigation' );
 
-		$result = wp_get_ability( 'menus/delete-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array( 'id' => $nav_id )
 		);
 

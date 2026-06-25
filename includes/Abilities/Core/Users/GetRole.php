@@ -12,11 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed T1 read ability: `users/get-role`.
+ * Composed T1 read ability: `og-users/get-role`.
  *
  * Returns a single registered WordPress role by its slug with its human display
  * name, the capabilities granted to it, and the number of users currently in
- * that role. This is the single-object companion to `users/list-roles`. Built
+ * that role. This is the single-object companion to `og-users/list-roles`. Built
  * directly on core role and counting functions (`wp_roles()`, `count_users()`)
  * rather than REST, since core exposes no REST route for the role/capability
  * map. All three functions live in wp-includes, so no wp-admin includes are
@@ -34,7 +34,7 @@ final class GetRole implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/get-role';
+		return 'og-users/get-role';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class GetRole implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Role', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single registered user role by its slug, including its display name, the capabilities granted to it, and the number of users currently assigned to it. Single-role read; use users/list-roles to enumerate every role and discover slugs, or users/list-users to enumerate the users themselves.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single registered user role by its slug, including its display name, the capabilities granted to it, and the number of users currently assigned to it. Single-role read; use og-users/list-roles to enumerate every role and discover slugs, or og-users/list-users to enumerate the users themselves.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -51,7 +51,7 @@ final class GetRole implements Ability {
 				'properties'           => array(
 					'slug' => array(
 						'type'        => 'string',
-						'description' => __( 'The role identifier used by core (e.g. "editor", "administrator"). Discover slugs with users/list-roles.', 'abilities-catalog' ),
+						'description' => __( 'The role identifier used by core (e.g. "editor", "administrator"). Discover slugs with og-users/list-roles.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -62,7 +62,7 @@ final class GetRole implements Ability {
 				'properties'           => array(
 					'slug'         => array(
 						'type'        => 'string',
-						'description' => __( 'The role identifier used by core (e.g. "administrator", "editor"). Pass this to users/create-user or users/update-user as the role value.', 'abilities-catalog' ),
+						'description' => __( 'The role identifier used by core (e.g. "administrator", "editor"). Pass this to og-users/create-user or og-users/update-user as the role value.', 'abilities-catalog' ),
 					),
 					'name'         => array(
 						'type'        => 'string',

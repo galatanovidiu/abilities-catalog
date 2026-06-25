@@ -12,10 +12,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/untrash-comment`.
+ * T1 write ability: `og-comments/untrash-comment`.
  *
  * Restores a trashed comment to the status it held before being trashed, the
- * recovery counterpart to `comments/trash-comment`. Calls core
+ * recovery counterpart to `og-comments/trash-comment`. Calls core
  * `wp_untrash_comment()` directly, which reads the `_wp_trash_meta_status` meta
  * (saved when the comment was trashed) and writes it back via
  * `wp_set_comment_status()`, then clears the trash bookkeeping meta. The core
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * because core `wp_untrash_comment()` has no in-trash guard: on a non-trashed
  * comment it would force the (absent) meta status, defaulting to `hold` — a silent
  * wrong mutation. The 409 mirrors the wrong-state convention established for
- * `comments/approve-comment` and `comments/unspam-comment` (backlog B5).
+ * `og-comments/approve-comment` and `og-comments/unspam-comment` (backlog B5).
  *
  * @since 0.2.0
  */
@@ -43,7 +43,7 @@ final class UntrashComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/untrash-comment';
+		return 'og-comments/untrash-comment';
 	}
 
 	/**
@@ -52,7 +52,7 @@ final class UntrashComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Untrash Comment', 'abilities-catalog' ),
-			'description'         => __( 'Restores a comment from the trash to the status it held before it was trashed (for example "approved" or "hold"), the reverse of comments/trash-comment. Only a comment currently in the trash can be untrashed; a comment in any other state is rejected with a 409 "rest_comment_wrong_state" error. Discover trashed comment IDs with comments/list-comments (status "trash") first. Requires the moderate_comments capability or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Restores a comment from the trash to the status it held before it was trashed (for example "approved" or "hold"), the reverse of og-comments/trash-comment. Only a comment currently in the trash can be untrashed; a comment in any other state is rejected with a 409 "rest_comment_wrong_state" error. Discover trashed comment IDs with og-comments/list-comments (status "trash") first. Requires the moderate_comments capability or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -60,7 +60,7 @@ final class UntrashComment implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to restore from the trash. Find it with comments/list-comments filtered to the "trash" status.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to restore from the trash. Find it with og-comments/list-comments filtered to the "trash" status.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

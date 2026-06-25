@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `tools/export-content`.
+ * T1 read ability: `og-tools/export-content`.
  *
  * Produces a WXR (WordPress eXtended RSS) export of site content via the core
  * `export_wp()` function. This is the classic content export, not the Site Editor
@@ -41,7 +41,7 @@ final class ExportContent implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/export-content';
+		return 'og-tools/export-content';
 	}
 
 	/**

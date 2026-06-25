@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `content/create-cpt-item` (generic, keyed by `post_type`).
+ * T2 write ability: `og-content/create-cpt-item` (generic, keyed by `post_type`).
  *
  * Restricts `post_type` to **post-like creatable** types via a controller-aware
  * allow-test (see {@see CreateCptItem::isPostLikeCreatable()}): the type must be
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * For a supported type it resolves the collection route via
  * `rest_get_route_for_post_type_items()` (honoring a custom `rest_namespace`) and
  * wraps `POST <route>` via `rest_do_request()`. Mirrors the create fan-out of
- * `content/create-post`, but resolves every capability per-type from
+ * `og-content/create-post`, but resolves every capability per-type from
  * `get_post_type_object()`: `create_posts` to author a draft, `publish_posts` to
  * publish, and `edit_others_posts` to set another user as author. Defaults to a
  * draft. Write annotations (`readonly:false, destructive:false, idempotent:false`)
@@ -66,7 +66,7 @@ final class CreateCptItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/create-cpt-item';
+		return 'og-content/create-cpt-item';
 	}
 
 	/**
@@ -82,7 +82,7 @@ final class CreateCptItem implements Ability {
 				'properties'           => array(
 					'post_type' => array(
 						'type'        => 'string',
-						'description' => __( 'The post type slug (required). Must be a post-like REST type (title/content/excerpt/status fields); font, global-styles, template, navigation, and attachment types are not supported. Use content/list-post-types to discover available types.', 'abilities-catalog' ),
+						'description' => __( 'The post type slug (required). Must be a post-like REST type (title/content/excerpt/status fields); font, global-styles, template, navigation, and attachment types are not supported. Use og-content/list-post-types to discover available types.', 'abilities-catalog' ),
 					),
 					'title'     => array(
 						'type'        => 'string',
@@ -90,7 +90,7 @@ final class CreateCptItem implements Ability {
 					),
 					'content'   => array(
 						'type'        => 'string',
-						'description' => __( 'The item content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
+						'description' => __( 'The item content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use og-templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'   => array(
 						'type'        => 'string',

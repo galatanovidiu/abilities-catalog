@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `users/create-application-password`.
+ * T2 write ability: `og-users/create-application-password`.
  *
  * Wraps `POST /wp/v2/users/<user_id>/application-passwords` via
  * `rest_do_request()` and returns the new record's uuid, app_id, name, and the
@@ -37,7 +37,7 @@ final class CreateApplicationPassword implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/create-application-password';
+		return 'og-users/create-application-password';
 	}
 
 	/**

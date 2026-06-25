@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/update-meta ability.
+ * Integration tests for the og-terms/update-meta ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises terms/update-meta against a registered show_in_rest meta key, plus the
+ * Exercises og-terms/update-meta against a registered show_in_rest meta key, plus the
  * registered-key security gate (internal/unregistered keys are rejected) and the
  * object/permission guards.
  */
@@ -52,13 +52,13 @@ final class UpdateTermMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'terms/update-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-terms/update-meta' ) );
 	}
 
 	public function test_update_writes_registered_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'Hello world' ),
@@ -78,7 +78,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_output_has_exact_key_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'shape' ),
@@ -100,7 +100,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_update_rejects_unregistered_key_and_writes_nothing(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array( '_internal' => 'x' ),
@@ -121,7 +121,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_update_unknown_key_in_batch_blocks_valid_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array(
@@ -140,7 +140,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_empty_meta_is_rejected(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array(),
@@ -155,7 +155,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_missing_term_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => 99999999,
 				'meta' => array( 'abilities_catalog_test_key' => 'x' ),
@@ -171,7 +171,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_meta_unchanged(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'never written' ),
@@ -194,7 +194,7 @@ final class UpdateTermMetaTest extends TestCase {
 	public function test_user_without_edit_term_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'terms/update-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/update-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'x' ),

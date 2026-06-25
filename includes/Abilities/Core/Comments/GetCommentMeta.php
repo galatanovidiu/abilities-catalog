@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `comments/get-meta`.
+ * T1 read ability: `og-comments/get-meta`.
  *
  * Reads a comment's custom fields (meta), limited to the meta keys the site has
  * registered with `show_in_rest` for comments — the same set the REST API
@@ -29,7 +29,7 @@ final class GetCommentMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/get-meta';
+		return 'og-comments/get-meta';
 	}
 
 	/**
@@ -46,7 +46,7 @@ final class GetCommentMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to read meta from. Discover IDs with comments/list-comments.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to read meta from. Discover IDs with og-comments/list-comments.', 'abilities-catalog' ),
 					),
 					'keys' => array(
 						'type'        => 'array',

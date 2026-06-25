@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 safe-write ability: `terms/update-tag`.
+ * T1 safe-write ability: `og-terms/update-tag`.
  *
  * Wraps `POST /wp/v2/tags/<id>` via `rest_do_request()` and returns the updated
  * term's id, name, slug, description, and public archive link. The permission check mirrors the REST terms
@@ -29,7 +29,7 @@ final class UpdateTag implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/update-tag';
+		return 'og-terms/update-tag';
 	}
 
 	/**

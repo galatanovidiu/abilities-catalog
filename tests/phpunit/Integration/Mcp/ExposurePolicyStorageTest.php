@@ -38,7 +38,7 @@ final class ExposurePolicyStorageTest extends TestCase {
 
 		$policy = new ExposurePolicy();
 
-		$this->assertFalse( $policy->allows( 'content/get-post' ) );
+		$this->assertFalse( $policy->allows( 'og-content/get-post' ) );
 		$this->assertSame( array(), $policy->enabledAbilities() );
 	}
 
@@ -51,14 +51,14 @@ final class ExposurePolicyStorageTest extends TestCase {
 	 * @return void
 	 */
 	public function test_persist_round_trips_without_pruning(): void {
-		$stored = ExposurePolicy::persist( array( 'content/get-post', 'third-party/feature', 'content/get-post' ) );
+		$stored = ExposurePolicy::persist( array( 'og-content/get-post', 'third-party/feature', 'og-content/get-post' ) );
 
-		$this->assertSame( array( 'content/get-post', 'third-party/feature' ), $stored, 'persist dedupes but keeps an unregistered name.' );
+		$this->assertSame( array( 'og-content/get-post', 'third-party/feature' ), $stored, 'persist dedupes but keeps an unregistered name.' );
 
 		$policy = new ExposurePolicy();
-		$this->assertTrue( $policy->allows( 'content/get-post' ) );
+		$this->assertTrue( $policy->allows( 'og-content/get-post' ) );
 		$this->assertTrue( $policy->allows( 'third-party/feature' ) );
-		$this->assertFalse( $policy->allows( 'content/create-post' ) );
+		$this->assertFalse( $policy->allows( 'og-content/create-post' ) );
 	}
 
 	/**
@@ -70,7 +70,7 @@ final class ExposurePolicyStorageTest extends TestCase {
 		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, 'not-an-array' );
 		$this->assertSame( array(), ( new ExposurePolicy() )->enabledAbilities() );
 
-		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'content/get-post', 42, array( 'x' ) ) );
-		$this->assertSame( array( 'content/get-post' ), ExposurePolicy::stored() );
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'og-content/get-post', 42, array( 'x' ) ) );
+		$this->assertSame( array( 'og-content/get-post' ), ExposurePolicy::stored() );
 	}
 }

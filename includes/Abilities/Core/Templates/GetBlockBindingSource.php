@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/get-block-binding-source`.
+ * Read ability: `og-templates/get-block-binding-source`.
  *
  * Reads one registered block-bindings source by name from the live
  * `WP_Block_Bindings_Registry` singleton and projects it to a flat shape
  * (`name`, `label`, `uses_context`). A block-bindings source (e.g.
  * `core/post-meta`, `core/pattern-overrides`) is a target an editor can bind a
  * block attribute to. Discover available names with
- * `templates/list-block-binding-sources`. An unknown name returns a specific
+ * `og-templates/list-block-binding-sources`. An unknown name returns a specific
  * `abilities_catalog_binding_source_not_found` 404, not a permission denial.
  *
  * The source's private `get_value_callback` is never surfaced — only the public
@@ -34,7 +34,7 @@ final class GetBlockBindingSource implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/get-block-binding-source';
+		return 'og-templates/get-block-binding-source';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class GetBlockBindingSource implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Block Binding Source', 'abilities-catalog' ),
-			'description'         => __( 'Returns one registered block-bindings source by name, including its label and the block context keys it uses (uses_context). A block-bindings source (e.g. "core/post-meta", "core/pattern-overrides") is a target an editor can bind a block attribute to. Discover names with templates/list-block-binding-sources. An unknown name returns a 404, not a permission error.', 'abilities-catalog' ),
+			'description'         => __( 'Returns one registered block-bindings source by name, including its label and the block context keys it uses (uses_context). A block-bindings source (e.g. "core/post-meta", "core/pattern-overrides") is a target an editor can bind a block attribute to. Discover names with og-templates/list-block-binding-sources. An unknown name returns a 404, not a permission error.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -52,7 +52,7 @@ final class GetBlockBindingSource implements Ability {
 					'name' => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The block-bindings source name, e.g. "core/post-meta". Discover names with templates/list-block-binding-sources.', 'abilities-catalog' ),
+						'description' => __( 'The block-bindings source name, e.g. "core/post-meta". Discover names with og-templates/list-block-binding-sources.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -93,7 +93,7 @@ final class GetBlockBindingSource implements Ability {
 	/**
 	 * Permission check: `edit_posts` (catalog capability for reading editor infrastructure).
 	 *
-	 * Mirrors `templates/list-block-types` — reading the block-bindings registry is
+	 * Mirrors `og-templates/list-block-types` — reading the block-bindings registry is
 	 * editor infrastructure, gated on the baseline content-editing capability.
 	 *
 	 * @param mixed $input The validated input data.

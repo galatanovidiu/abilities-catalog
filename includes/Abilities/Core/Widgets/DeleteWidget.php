@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Destructive write ability: `widgets/delete-widget`.
+ * Destructive write ability: `og-widgets/delete-widget`.
  *
  * Wraps `DELETE /wp/v2/widgets/<id>` via `rest_do_request()`. The `force` param
  * selects between two route behaviours (verified against
@@ -46,7 +46,7 @@ final class DeleteWidget implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/delete-widget';
+		return 'og-widgets/delete-widget';
 	}
 
 	/**
@@ -55,14 +55,14 @@ final class DeleteWidget implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Widget', 'abilities-catalog' ),
-			'description'         => __( 'Removes a widget. By default (force=false) it is deactivated — moved to the Inactive Widgets area and recoverable. Pass force=true to permanently delete it; that cannot be undone. Discover the widget id with widgets/list-widgets.', 'abilities-catalog' ),
+			'description'         => __( 'Removes a widget. By default (force=false) it is deactivated — moved to the Inactive Widgets area and recoverable. Pass force=true to permanently delete it; that cannot be undone. Discover the widget id with og-widgets/list-widgets.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'    => array(
 						'type'        => 'string',
-						'description' => __( 'The widget instance id to remove (e.g. "block-3"). Discover it with widgets/list-widgets.', 'abilities-catalog' ),
+						'description' => __( 'The widget instance id to remove (e.g. "block-3"). Discover it with og-widgets/list-widgets.', 'abilities-catalog' ),
 					),
 					'force' => array(
 						'type'        => 'boolean',

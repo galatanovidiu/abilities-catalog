@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `terms/delete-category`.
+ * T2 destructive write ability: `og-terms/delete-category`.
  *
  * Wraps `DELETE /wp/v2/categories/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the category term (taxonomy terms have no Trash). The
@@ -38,7 +38,7 @@ final class DeleteCategory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/delete-category';
+		return 'og-terms/delete-category';
 	}
 
 	/**
@@ -54,7 +54,7 @@ final class DeleteCategory implements Ability {
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The category term ID to permanently delete. Find it via terms/list-categories or terms/get-category.', 'abilities-catalog' ),
+						'description' => __( 'The category term ID to permanently delete. Find it via og-terms/list-categories or og-terms/get-category.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

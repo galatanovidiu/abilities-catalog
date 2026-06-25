@@ -11,11 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `menus/list-menu-locations`.
+ * T1 read ability: `og-menus/list-menu-locations`.
  *
  * Lists the navigation menu locations the active theme registers, with each
  * location's description and the classic menu currently assigned to it (if any).
- * This is the companion read for `menus/assign-menu-location`: it tells an agent
+ * This is the companion read for `og-menus/assign-menu-location`: it tells an agent
  * which location slugs exist before assigning a menu. Wraps core
  * `get_registered_nav_menus()` and `get_nav_menu_locations()`.
  *
@@ -27,7 +27,7 @@ final class ListMenuLocations implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/list-menu-locations';
+		return 'og-menus/list-menu-locations';
 	}
 
 	/**
@@ -36,7 +36,7 @@ final class ListMenuLocations implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Menu Locations', 'abilities-catalog' ),
-			'description'         => __( 'Returns the navigation menu locations registered by the active theme, each with its description and the classic menu assigned to it (if any). Use this to find a location slug before calling menus/assign-menu-location.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the navigation menu locations registered by the active theme, each with its description and the classic menu assigned to it (if any). Use this to find a location slug before calling og-menus/assign-menu-location.', 'abilities-catalog' ),
 			'category'            => 'menus',
 			'input_schema'        => array(),
 			'output_schema'       => array(

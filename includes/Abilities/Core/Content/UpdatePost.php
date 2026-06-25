@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `content/update-post`.
+ * T1 write ability: `og-content/update-post`.
  *
  * Wraps `POST /wp/v2/posts/<id>` via `rest_do_request()` and returns the post's
  * id, link, status, and modified date. The `permission_callback` enforces the
@@ -39,7 +39,7 @@ final class UpdatePost implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/update-post';
+		return 'og-content/update-post';
 	}
 
 	/**
@@ -64,7 +64,7 @@ final class UpdatePost implements Ability {
 					),
 					'content'        => array(
 						'type'        => 'string',
-						'description' => __( 'The post content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
+						'description' => __( 'The post content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use og-templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'        => array(
 						'type'        => 'string',

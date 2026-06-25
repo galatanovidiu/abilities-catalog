@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/list-super-admins ability.
+ * Integration tests for the og-network/list-super-admins ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -30,16 +30,16 @@ final class ListSuperAdminsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/list-super-admins' );
+		$ability = wp_get_ability( 'og-network/list-super-admins' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/list-super-admins', $ability->get_name() );
+		$this->assertSame( 'og-network/list-super-admins', $ability->get_name() );
 	}
 
 	public function test_lists_current_super_admin(): void {
 		$user_id = $this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/list-super-admins' )->execute();
+		$result = wp_get_ability( 'og-network/list-super-admins' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'super_admins', 'total' ), array_keys( $result ) );
@@ -64,7 +64,7 @@ final class ListSuperAdminsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/list-super-admins' );
+		$ability = wp_get_ability( 'og-network/list-super-admins' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -76,7 +76,7 @@ final class ListSuperAdminsTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/list-super-admins' );
+		$ability = wp_get_ability( 'og-network/list-super-admins' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -88,7 +88,7 @@ final class ListSuperAdminsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/list-super-admins' );
+		$ability = wp_get_ability( 'og-network/list-super-admins' );
 
 		$this->assertFalse( $ability->check_permissions() );
 

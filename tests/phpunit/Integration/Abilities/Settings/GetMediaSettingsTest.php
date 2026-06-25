@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/get-media ability.
+ * Integration tests for the og-settings/get-media ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/get-media is a net-new read of the media option values. It always
+ * og-settings/get-media is a net-new read of the media option values. It always
  * returns all eight fields; manage_options is the hard capability guard.
  */
 final class GetMediaSettingsTest extends TestCase {
@@ -36,7 +36,7 @@ final class GetMediaSettingsTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/get-media' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/get-media' ) );
 	}
 
 	public function test_execute_returns_exact_shape_and_types(): void {
@@ -51,7 +51,7 @@ final class GetMediaSettingsTest extends TestCase {
 		update_option( 'large_size_h', 1024 );
 		update_option( 'uploads_use_yearmonth_folders', '1' );
 
-		$result = wp_get_ability( 'settings/get-media' )->execute();
+		$result = wp_get_ability( 'og-settings/get-media' )->execute();
 
 		$this->assertIsArray( $result );
 		// All eight fields are present, in order, with no extras.
@@ -92,7 +92,7 @@ final class GetMediaSettingsTest extends TestCase {
 		update_option( 'thumbnail_crop', '0' );
 		update_option( 'uploads_use_yearmonth_folders', '0' );
 
-		$result = wp_get_ability( 'settings/get-media' )->execute();
+		$result = wp_get_ability( 'og-settings/get-media' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertFalse( $result['thumbnail_crop'] );
@@ -102,7 +102,7 @@ final class GetMediaSettingsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/get-media' )->execute();
+		$result = wp_get_ability( 'og-settings/get-media' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-synced-patterns`.
+ * Read ability: `og-templates/list-synced-patterns`.
  *
  * Wraps `GET /wp/v2/blocks` via `rest_do_request()` and shapes the result. A
  * user pattern is a reusable block stored as a `wp_block` post. The route lists
@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * updates every place it is inserted, while `partial` and `unsynced` patterns do
  * not. Returns a flattened list (id, title, slug, status, modified, sync_status)
  * so an agent can find a pattern's id, tell its sync state apart, and then read
- * it with `templates/get-pattern`. This is the editable user pattern library,
- * distinct from `templates/list-patterns` (the read-only registered pattern
+ * it with `og-templates/get-pattern`. This is the editable user pattern library,
+ * distinct from `og-templates/list-patterns` (the read-only registered pattern
  * registry). Read-only.
  *
  * @since 0.5.0
@@ -33,7 +33,7 @@ final class ListSyncedPatterns implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-synced-patterns';
+		return 'og-templates/list-synced-patterns';
 	}
 
 	/**

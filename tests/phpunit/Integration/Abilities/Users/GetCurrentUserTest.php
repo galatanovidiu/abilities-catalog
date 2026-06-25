@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/get-current-user ability.
+ * Integration tests for the og-users/get-current-user ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,16 +21,16 @@ use WP_Error;
 final class GetCurrentUserTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('users/get-current-user');
+		$ability = wp_get_ability('og-users/get-current-user');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('users/get-current-user', $ability->get_name());
+		$this->assertSame('og-users/get-current-user', $ability->get_name());
 	}
 
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('users/get-current-user')->execute(array());
+		$result = wp_get_ability('og-users/get-current-user')->execute(array());
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -39,7 +39,7 @@ final class GetCurrentUserTest extends TestCase {
 	public function test_view_context_returns_own_profile_for_logged_in_user(): void {
 		$id = $this->actingAs('subscriber');
 
-		$result = wp_get_ability('users/get-current-user')->execute(array());
+		$result = wp_get_ability('og-users/get-current-user')->execute(array());
 
 		$this->assertIsArray($result);
 		$this->assertSame($id, $result['id']);
@@ -52,7 +52,7 @@ final class GetCurrentUserTest extends TestCase {
 		// context, even for the user's own /me record.
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('users/get-current-user')->execute(array());
+		$result = wp_get_ability('og-users/get-current-user')->execute(array());
 
 		$this->assertArrayNotHasKey('email', $result, 'Edit-only email must not leak in view context.');
 		$this->assertArrayNotHasKey('roles', $result, 'Edit-only roles must not leak in view context.');
@@ -63,7 +63,7 @@ final class GetCurrentUserTest extends TestCase {
 	public function test_edit_context_exposes_gated_fields_with_capabilities_map(): void {
 		$id = $this->actingAs('editor');
 
-		$result = wp_get_ability('users/get-current-user')->execute(array('context' => 'edit'));
+		$result = wp_get_ability('og-users/get-current-user')->execute(array('context' => 'edit'));
 
 		$this->assertSame($id, $result['id']);
 		$this->assertArrayHasKey('email', $result, 'Edit context must expose own email.');

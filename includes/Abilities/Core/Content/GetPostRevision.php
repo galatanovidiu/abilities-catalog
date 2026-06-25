@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/get-post-revision`.
+ * Read ability: `og-content/get-post-revision`.
  *
  * Wraps `GET /wp/v2/posts/<parent>/revisions/<id>` via `rest_do_request()` and
  * shapes the response into a flat field set. The capability is object-level
@@ -27,7 +27,7 @@ final class GetPostRevision implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-post-revision';
+		return 'og-content/get-post-revision';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class GetPostRevision implements Ability {
 					),
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The revision ID. Use content/list-post-revisions to list revisions for the parent post.', 'abilities-catalog' ),
+						'description' => __( 'The revision ID. Use og-content/list-post-revisions to list revisions for the parent post.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',

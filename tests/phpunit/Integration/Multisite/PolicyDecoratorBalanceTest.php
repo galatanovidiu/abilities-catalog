@@ -24,14 +24,14 @@ use WP_Error;
  *    When a site-scoped body returns a WP_Error WHILE switched to the target blog,
  *    the BlogSwitchRunner::run finally{} block must still restore the blog. The
  *    catalog returns WP_Error (it does not throw), so this is the realistic
- *    mid-switch failure. Both a write body (settings/update-option, whose option
+ *    mid-switch failure. Both a write body (og-settings/update-option, whose option
  *    sanitizer rejects the value on the target blog) and a read body
- *    (content/get-post, missing id) are exercised; each must leave
+ *    (og-content/get-post, missing id) are exercised; each must leave
  *    get_current_blog_id() restored to the pre-call blog.
  *
  * 2. Bad / archived / deleted / spam blog_id => 404, no switch leak (PLAN.md §7
  *    "Bad/archived/cross-network blog_id (F7)", §3 BlogSwitchRunner::validateTarget).
- *    A site-scoped ability (content/create-post) given a rejected blog_id must
+ *    A site-scoped ability (og-content/create-post) given a rejected blog_id must
  *    return the recovery error abilities_catalog_invalid_blog_id with
  *    array( 'status' => 404 ) (Decision 3) and NOT a generic permission collapse;
  *    because get_site() runs BEFORE switch_to_blog(), a bad id never switches, so
@@ -117,7 +117,7 @@ final class PolicyDecoratorBalanceTest extends TestCase {
 		// timezone_string is allow-listed; an invalid timezone is reverted by core's
 		// option sanitizer, which registers a settings error on the target blog, so
 		// the wrapped body returns a WP_Error WHILE switched to $blog_id.
-		$result = wp_get_ability( 'settings/update-option' )->execute(
+		$result = wp_get_ability( 'og-settings/update-option' )->execute(
 			array(
 				'name'    => 'timezone_string',
 				'value'   => 'Not/A_Real_Zone',
@@ -142,7 +142,7 @@ final class PolicyDecoratorBalanceTest extends TestCase {
 
 		// No post with this id exists on the target blog, so the wrapped GET body
 		// returns core's invalid-id 404 WHILE switched to $blog_id.
-		$result = wp_get_ability( 'content/get-post' )->execute(
+		$result = wp_get_ability( 'og-content/get-post' )->execute(
 			array(
 				'id'      => 99999999,
 				'blog_id' => $blog_id,
@@ -211,7 +211,7 @@ final class PolicyDecoratorBalanceTest extends TestCase {
 	 * @return void
 	 */
 	private function assertInvalidBlogIdRejected( int $blog_id ): void {
-		$ability = wp_get_ability( 'content/create-post' );
+		$ability = wp_get_ability( 'og-content/create-post' );
 		$input   = array(
 			'title'   => 'Should never be created',
 			'content' => 'Body that must not land on any blog.',

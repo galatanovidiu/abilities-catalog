@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `themes/list-themes`.
+ * Read ability: `og-themes/list-themes`.
  *
  * Wraps `GET /wp/v2/themes` via `rest_do_request()` and returns the installed
  * themes plus their totals. Each row is projected by {@see ThemeListShaper} into
@@ -31,7 +31,7 @@ final class ListThemes implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/list-themes';
+		return 'og-themes/list-themes';
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/create-user ability.
+ * Integration tests for the og-users/create-user ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -22,16 +22,16 @@ use WP_Error;
 final class CreateUserTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('users/create-user');
+		$ability = wp_get_ability('og-users/create-user');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('users/create-user', $ability->get_name());
+		$this->assertSame('og-users/create-user', $ability->get_name());
 	}
 
 	public function test_admin_creates_user_with_flat_shape_and_no_password(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/create-user')->execute(
+		$result = wp_get_ability('og-users/create-user')->execute(
 			array(
 				'username' => 'new_writer',
 				'email'    => 'new_writer@example.com',
@@ -58,7 +58,7 @@ final class CreateUserTest extends TestCase {
 		// role, rather than falling back to the site default role.
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/create-user')->execute(
+		$result = wp_get_ability('og-users/create-user')->execute(
 			array(
 				'username' => 'roleless_user',
 				'email'    => 'roleless@example.com',
@@ -79,7 +79,7 @@ final class CreateUserTest extends TestCase {
 		// site default role (subscriber on a fresh single-site install).
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/create-user')->execute(
+		$result = wp_get_ability('og-users/create-user')->execute(
 			array(
 				'username' => 'default_role_user',
 				'email'    => 'default_role@example.com',
@@ -96,7 +96,7 @@ final class CreateUserTest extends TestCase {
 		// the REST route runs.
 		$this->actingAs('author');
 
-		$result = wp_get_ability('users/create-user')->execute(
+		$result = wp_get_ability('og-users/create-user')->execute(
 			array(
 				'username' => 'should_not_exist',
 				'email'    => 'should_not_exist@example.com',
@@ -122,7 +122,7 @@ final class CreateUserTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('users/create-user')->execute(
+		$result = wp_get_ability('og-users/create-user')->execute(
 			array(
 				'username' => 'second_owner',
 				'email'    => 'taken@example.com',

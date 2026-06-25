@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/delete-template output and contract.
+ * Integration tests for og-templates/delete-template output and contract.
  *
  * Covers a successful delete of a user-created custom template (deleted:true plus
  * the flattened previous snapshot: canonical id, title, slug, type,
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/delete-template.
+ * Exercises og-templates/delete-template.
  */
 final class DeleteTemplateTest extends TestCase {
 
@@ -30,7 +30,7 @@ final class DeleteTemplateTest extends TestCase {
 	 * @return string The created template id.
 	 */
 	private function createCustomTemplate( string $slug ): string {
-		$created = wp_get_ability( 'templates/create-template' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'    => $slug,
 				'title'   => 'Doomed ' . $slug,
@@ -48,7 +48,7 @@ final class DeleteTemplateTest extends TestCase {
 
 		$id = $this->createCustomTemplate( 'page-doomed' );
 
-		$result = wp_get_ability( 'templates/delete-template' )->execute(
+		$result = wp_get_ability( 'og-templates/delete-template' )->execute(
 			array( 'id' => $id )
 		);
 
@@ -72,7 +72,7 @@ final class DeleteTemplateTest extends TestCase {
 
 		$id = $this->createCustomTemplate( 'page-shape' );
 
-		$result = wp_get_ability( 'templates/delete-template' )->execute(
+		$result = wp_get_ability( 'og-templates/delete-template' )->execute(
 			array( 'id' => $id )
 		);
 
@@ -86,7 +86,7 @@ final class DeleteTemplateTest extends TestCase {
 	public function test_missing_id_preserves_not_found_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/delete-template' )->execute(
+		$result = wp_get_ability( 'og-templates/delete-template' )->execute(
 			array( 'id' => get_stylesheet() . '//does-not-exist' )
 		);
 
@@ -98,7 +98,7 @@ final class DeleteTemplateTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/delete-template' );
+		$ability = wp_get_ability( 'og-templates/delete-template' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

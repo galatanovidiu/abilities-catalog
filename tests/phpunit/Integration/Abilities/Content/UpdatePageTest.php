@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/update-page output fidelity.
+ * Integration tests for og-content/update-page output fidelity.
  *
  * Covers the signed menu_order pass-through so a negative value survives the
  * ability instead of being clamped to a positive integer.
@@ -15,7 +15,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
- * Exercises content/update-page output.
+ * Exercises og-content/update-page output.
  */
 final class UpdatePageTest extends TestCase {
 
@@ -29,7 +29,7 @@ final class UpdatePageTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/update-page' )->execute(
+		$result = wp_get_ability( 'og-content/update-page' )->execute(
 			array(
 				'id'         => $page_id,
 				'menu_order' => -5,
@@ -50,7 +50,7 @@ final class UpdatePageTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/update-page' )->execute(
+		$result = wp_get_ability( 'og-content/update-page' )->execute(
 			array(
 				'id'    => $page_id,
 				'title' => '',
@@ -73,7 +73,7 @@ final class UpdatePageTest extends TestCase {
 		);
 		$this->assertSame( $parent_id, (int) get_post( $child_id )->post_parent );
 
-		$result = wp_get_ability( 'content/update-page' )->execute(
+		$result = wp_get_ability( 'og-content/update-page' )->execute(
 			array(
 				'id'     => $child_id,
 				'parent' => 0,

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier destructive write ability: `network/delete-site`.
+ * Dangerous-tier destructive write ability: `og-network/delete-site`.
  *
  * Permanently deletes one site (blog) from a multisite network by its `blog_id`,
  * wrapping `wp_delete_site()` (wp-includes/ms-site.php:212 -> the deleted
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `readonly` is false: this is a write.
  * - `destructive` is true: it is irreversible (the site and its tables are
  *   permanently dropped). For a reversible offline toggle use
- *   `network/update-site` (archived/spam/deleted).
+ *   `og-network/update-site` (archived/spam/deleted).
  * - `idempotent` is false: a second call for the same `blog_id` returns a 404
  *   (`site_not_exist`), not a same-state no-op.
  * - `dangerous` is true: it permanently destroys a tenant of the network. There is
@@ -61,7 +61,7 @@ final class DeleteSite implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/delete-site';
+		return 'og-network/delete-site';
 	}
 
 	/**
@@ -70,7 +70,7 @@ final class DeleteSite implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Site', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a site (blog) from a multisite network by blog_id, dropping the site and ALL of its database tables and content. This cannot be undone. The network\'s main site cannot be deleted (returns a 409). To take a site offline reversibly instead, use network/update-site with archived/spam/deleted. An unknown blog_id returns a 404. This is a dangerous, irreversible network operation. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a site (blog) from a multisite network by blog_id, dropping the site and ALL of its database tables and content. This cannot be undone. The network\'s main site cannot be deleted (returns a 409). To take a site offline reversibly instead, use og-network/update-site with archived/spam/deleted. An unknown blog_id returns a 404. This is a dangerous, irreversible network operation. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -79,7 +79,7 @@ final class DeleteSite implements Ability {
 					'blog_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The site (blog) ID to permanently delete. Discover IDs with network/list-sites. The network\'s main site cannot be deleted.', 'abilities-catalog' ),
+						'description' => __( 'The site (blog) ID to permanently delete. Discover IDs with og-network/list-sites. The network\'s main site cannot be deleted.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

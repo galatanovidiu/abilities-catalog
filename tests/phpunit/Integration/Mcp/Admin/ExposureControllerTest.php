@@ -74,7 +74,7 @@ final class ExposureControllerTest extends TestCase {
 		$this->assertArrayHasKey( 'endpoint', $data );
 		$this->assertArrayHasKey( 'domains', $data );
 		$this->assertNotEmpty( $data['domains'] );
-		$this->assertFalse( $this->abilityEnabled( $data, 'content/get-post' ), 'Abilities are disabled by default.' );
+		$this->assertFalse( $this->abilityEnabled( $data, 'og-content/get-post' ), 'Abilities are disabled by default.' );
 	}
 
 	/**
@@ -96,11 +96,11 @@ final class ExposureControllerTest extends TestCase {
 	public function test_post_enables_an_ability(): void {
 		$this->actingAs( 'administrator' );
 
-		$response = $this->dispatch( 'POST', array( 'abilities' => array( 'content/get-post' => true ) ) );
+		$response = $this->dispatch( 'POST', array( 'abilities' => array( 'og-content/get-post' => true ) ) );
 
 		$this->assertSame( 200, $response->get_status() );
-		$this->assertContains( 'content/get-post', ExposurePolicy::stored() );
-		$this->assertTrue( $this->abilityEnabled( $response->get_data(), 'content/get-post' ) );
+		$this->assertContains( 'og-content/get-post', ExposurePolicy::stored() );
+		$this->assertTrue( $this->abilityEnabled( $response->get_data(), 'og-content/get-post' ) );
 	}
 
 	/**
@@ -139,10 +139,10 @@ final class ExposureControllerTest extends TestCase {
 	public function test_post_is_forbidden_for_subscriber(): void {
 		$this->actingAs( 'subscriber' );
 
-		$response = $this->dispatch( 'POST', array( 'abilities' => array( 'content/get-post' => true ) ) );
+		$response = $this->dispatch( 'POST', array( 'abilities' => array( 'og-content/get-post' => true ) ) );
 
 		$this->assertSame( 403, $response->get_status() );
-		$this->assertNotContains( 'content/get-post', ExposurePolicy::stored() );
+		$this->assertNotContains( 'og-content/get-post', ExposurePolicy::stored() );
 	}
 
 	/**

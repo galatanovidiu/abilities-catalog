@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/create-application-password ability.
+ * Integration tests for the og-users/create-application-password ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -36,16 +36,16 @@ final class CreateApplicationPasswordTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/create-application-password' );
+		$ability = wp_get_ability( 'og-users/create-application-password' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/create-application-password', $ability->get_name() );
+		$this->assertSame( 'og-users/create-application-password', $ability->get_name() );
 	}
 
 	public function test_admin_creates_own_app_password_and_returns_plaintext_once(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/create-application-password' )->execute(
+		$result = wp_get_ability( 'og-users/create-application-password' )->execute(
 			array( 'name' => 'Laptop CLI' )
 		);
 
@@ -60,7 +60,7 @@ final class CreateApplicationPasswordTest extends TestCase {
 		// floor must let this through so the ability is never stricter than core.
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'users/create-application-password' )->execute(
+		$result = wp_get_ability( 'og-users/create-application-password' )->execute(
 			array( 'name' => 'Phone App' )
 		);
 
@@ -77,7 +77,7 @@ final class CreateApplicationPasswordTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'users/create-application-password' )->execute(
+		$result = wp_get_ability( 'og-users/create-application-password' )->execute(
 			array(
 				'user_id' => $owner_id,
 				'name'    => 'Stolen',
@@ -96,7 +96,7 @@ final class CreateApplicationPasswordTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'users/create-application-password' )->execute(
+		$result = wp_get_ability( 'og-users/create-application-password' )->execute(
 			array( 'name' => 'Nope' )
 		);
 

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/update-classic-menu`.
+ * T2 non-destructive write ability: `og-menus/update-classic-menu`.
  *
  * Wraps `POST /wp/v2/menus/<id>` via `rest_do_request()` to update a classic menu
  * (`nav_menu` term). The menus controller inherits its update permission from the
@@ -31,7 +31,7 @@ final class UpdateClassicMenu implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/update-classic-menu';
+		return 'og-menus/update-classic-menu';
 	}
 
 	/**
@@ -48,7 +48,7 @@ final class UpdateClassicMenu implements Ability {
 					'id'          => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The classic menu term ID to update. Use menus/list-classic-menus to discover valid menu IDs.', 'abilities-catalog' ),
+						'description' => __( 'The classic menu term ID to update. Use og-menus/list-classic-menus to discover valid menu IDs.', 'abilities-catalog' ),
 					),
 					'name'        => array(
 						'type'        => 'string',
@@ -61,7 +61,7 @@ final class UpdateClassicMenu implements Ability {
 					'locations'   => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Theme location slugs to assign this menu to. This replaces the menu\'s entire set of assigned locations: any location omitted here is cleared. Use menus/list-menu-locations to discover valid location slugs.', 'abilities-catalog' ),
+						'description' => __( 'Theme location slugs to assign this menu to. This replaces the menu\'s entire set of assigned locations: any location omitted here is cleared. Use og-menus/list-menu-locations to discover valid location slugs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

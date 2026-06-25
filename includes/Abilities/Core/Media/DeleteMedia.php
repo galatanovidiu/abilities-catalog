@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `media/delete-media`.
+ * T2 destructive write ability: `og-media/delete-media`.
  *
  * Wraps `DELETE /wp/v2/media/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the attachment. Forcing `force=true` bypasses Trash, so
@@ -34,7 +34,7 @@ final class DeleteMedia implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/delete-media';
+		return 'og-media/delete-media';
 	}
 
 	/**

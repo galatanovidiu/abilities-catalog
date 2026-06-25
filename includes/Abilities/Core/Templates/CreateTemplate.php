@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `templates/create-template`.
+ * T2 non-destructive write ability: `og-templates/create-template`.
  *
  * Wraps `POST /wp/v2/templates` (for `wp_template`) or `POST /wp/v2/template-parts`
  * (for `wp_template_part`) via `rest_do_request()`. Creates a new site-editor
  * template or template part as a database record, identified afterwards by its
  * `theme//slug` id. It does NOT modify any theme file and does NOT overwrite an
- * existing customization — use `templates/update-template` to change an existing
+ * existing customization — use `og-templates/update-template` to change an existing
  * one. The new template is editable in the Site Editor.
  *
  * Annotated as a non-destructive write (`destructive:false`): it only adds a new
@@ -36,7 +36,7 @@ final class CreateTemplate implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/create-template';
+		return 'og-templates/create-template';
 	}
 
 	/**

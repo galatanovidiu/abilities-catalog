@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/remove-user-from-site ability.
+ * Integration tests for the og-network/remove-user-from-site ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -70,10 +70,10 @@ final class RemoveUserFromSiteTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/remove-user-from-site' );
+		$ability = wp_get_ability( 'og-network/remove-user-from-site' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/remove-user-from-site', $ability->get_name() );
+		$this->assertSame( 'og-network/remove-user-from-site', $ability->get_name() );
 	}
 
 	public function test_happy_path_removes_membership_and_reads_back(): void {
@@ -85,7 +85,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 		// Seed the membership we will remove.
 		add_user_to_blog( $blog_id, $user_id, 'author' );
 
-		$result = wp_get_ability( 'network/remove-user-from-site' )->execute(
+		$result = wp_get_ability( 'og-network/remove-user-from-site' )->execute(
 			array(
 				'user_id' => $user_id,
 				'blog_id' => $blog_id,
@@ -111,7 +111,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 		$user_id = (int) self::factory()->user->create();
 		add_user_to_blog( $blog_id, $user_id, 'author' );
 
-		$result = wp_get_ability( 'network/remove-user-from-site' )->execute(
+		$result = wp_get_ability( 'og-network/remove-user-from-site' )->execute(
 			array(
 				'user_id' => $user_id,
 				'blog_id' => $blog_id,
@@ -136,7 +136,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/remove-user-from-site' )->execute(
+		$result = wp_get_ability( 'og-network/remove-user-from-site' )->execute(
 			array(
 				'user_id' => 99999999,
 				'blog_id' => $blog_id,
@@ -154,7 +154,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 
 		$user_id = (int) self::factory()->user->create();
 
-		$result = wp_get_ability( 'network/remove-user-from-site' )->execute(
+		$result = wp_get_ability( 'og-network/remove-user-from-site' )->execute(
 			array(
 				'user_id' => $user_id,
 				'blog_id' => 99999999,
@@ -170,7 +170,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/remove-user-from-site' );
+		$ability = wp_get_ability( 'og-network/remove-user-from-site' );
 
 		$this->assertNotTrue(
 			$ability->check_permissions(
@@ -185,7 +185,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/remove-user-from-site' );
+		$ability = wp_get_ability( 'og-network/remove-user-from-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -200,7 +200,7 @@ final class RemoveUserFromSiteTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/remove-user-from-site' );
+		$ability = wp_get_ability( 'og-network/remove-user-from-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

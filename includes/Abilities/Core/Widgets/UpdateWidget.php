@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `widgets/update-widget`.
+ * T1 write ability: `og-widgets/update-widget`.
  *
  * Wraps `POST /wp/v2/widgets/<id>` via `rest_do_request()` (the route registers
  * update under the EDITABLE methods) and returns the updated widget's id,
@@ -40,7 +40,7 @@ final class UpdateWidget implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/update-widget';
+		return 'og-widgets/update-widget';
 	}
 
 	/**
@@ -49,14 +49,14 @@ final class UpdateWidget implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Widget', 'abilities-catalog' ),
-			'description'         => __( 'Updates a widget\'s settings and/or moves it to another sidebar (widget area), returning the widget\'s id, id_base, sidebar, and rendered HTML. Identify the widget by its instance id from widgets/list-widgets; discover sidebar ids with widgets/list-sidebars. Omitted fields are left unchanged. Pass settings as either instance (an object; for the core "block" widget use {raw:{content}} with Gutenberg block markup) or form_data (a URL-encoded string, for classic widgets). Pass sidebar to move the widget to that sidebar. Reversible by updating it again.', 'abilities-catalog' ),
+			'description'         => __( 'Updates a widget\'s settings and/or moves it to another sidebar (widget area), returning the widget\'s id, id_base, sidebar, and rendered HTML. Identify the widget by its instance id from og-widgets/list-widgets; discover sidebar ids with og-widgets/list-sidebars. Omitted fields are left unchanged. Pass settings as either instance (an object; for the core "block" widget use {raw:{content}} with Gutenberg block markup) or form_data (a URL-encoded string, for classic widgets). Pass sidebar to move the widget to that sidebar. Reversible by updating it again.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'        => array(
 						'type'        => 'string',
-						'description' => __( 'The widget instance id to update, e.g. "block-3" or "text-2". Discover it with widgets/list-widgets.', 'abilities-catalog' ),
+						'description' => __( 'The widget instance id to update, e.g. "block-3" or "text-2". Discover it with og-widgets/list-widgets.', 'abilities-catalog' ),
 					),
 					'instance'  => array(
 						'type'                 => 'object',
@@ -69,7 +69,7 @@ final class UpdateWidget implements Ability {
 					),
 					'sidebar'   => array(
 						'type'        => 'string',
-						'description' => __( 'Move the widget to this sidebar id (from widgets/list-sidebars). Use "wp_inactive_widgets" to deactivate it. Omit to leave the widget in its current sidebar.', 'abilities-catalog' ),
+						'description' => __( 'Move the widget to this sidebar id (from og-widgets/list-sidebars). Use "wp_inactive_widgets" to deactivate it. Omit to leave the widget in its current sidebar.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

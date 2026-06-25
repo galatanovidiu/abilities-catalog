@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `widgets/list-widgets`.
+ * Read ability: `og-widgets/list-widgets`.
  *
  * Wraps `GET /wp/v2/widgets` via `rest_do_request()` and returns the widget
  * instances as flat rows, optionally filtered to one sidebar. The widgets
@@ -30,7 +30,7 @@ final class ListWidgets implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/list-widgets';
+		return 'og-widgets/list-widgets';
 	}
 
 	/**
@@ -39,14 +39,14 @@ final class ListWidgets implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Widgets', 'abilities-catalog' ),
-			'description'         => __( 'Lists widget instances, optionally filtered to one sidebar, returning each widget\'s id, id_base (type), sidebar, and rendered HTML. Use this to find the widget id needed by widgets/get-widget, widgets/update-widget, or widgets/delete-widget. Discover sidebar ids with widgets/list-sidebars; an empty or unknown sidebar returns no items.', 'abilities-catalog' ),
+			'description'         => __( 'Lists widget instances, optionally filtered to one sidebar, returning each widget\'s id, id_base (type), sidebar, and rendered HTML. Use this to find the widget id needed by og-widgets/get-widget, og-widgets/update-widget, or og-widgets/delete-widget. Discover sidebar ids with og-widgets/list-sidebars; an empty or unknown sidebar returns no items.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'sidebar' => array(
 						'type'        => 'string',
-						'description' => __( 'Limit results to widgets in this sidebar id (e.g. "sidebar-1" or "wp_inactive_widgets"). Discover sidebar ids with widgets/list-sidebars. Omit to list widgets across all sidebars.', 'abilities-catalog' ),
+						'description' => __( 'Limit results to widgets in this sidebar id (e.g. "sidebar-1" or "wp_inactive_widgets"). Discover sidebar ids with og-widgets/list-sidebars. Omit to list widgets across all sidebars.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -64,7 +64,7 @@ final class ListWidgets implements Ability {
 					'items' => array(
 						'type'        => 'array',
 						'items'       => self::widgetItemSchema(),
-						'description' => __( 'The list of widget instances as flat rows. Use widgets/get-widget for a single widget.', 'abilities-catalog' ),
+						'description' => __( 'The list of widget instances as flat rows. Use og-widgets/get-widget for a single widget.', 'abilities-catalog' ),
 					),
 					'total' => array(
 						'type'        => 'integer',
@@ -102,11 +102,11 @@ final class ListWidgets implements Ability {
 			'properties'           => array(
 				'id'       => array(
 					'type'        => 'string',
-					'description' => __( 'The widget instance id (e.g. "block-3" or "text-2"). Pass it to widgets/get-widget, widgets/update-widget, or widgets/delete-widget.', 'abilities-catalog' ),
+					'description' => __( 'The widget instance id (e.g. "block-3" or "text-2"). Pass it to og-widgets/get-widget, og-widgets/update-widget, or og-widgets/delete-widget.', 'abilities-catalog' ),
 				),
 				'id_base'  => array(
 					'type'        => 'string',
-					'description' => __( 'The widget type slug (e.g. "block", "text"). Corresponds to the id from widgets/list-widget-types.', 'abilities-catalog' ),
+					'description' => __( 'The widget type slug (e.g. "block", "text"). Corresponds to the id from og-widgets/list-widget-types.', 'abilities-catalog' ),
 				),
 				'sidebar'  => array(
 					'type'        => 'string',

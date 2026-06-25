@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `privacy/generate-export`.
+ * T3 dangerous write ability: `og-privacy/generate-export`.
  *
  * Runs an existing personal-data EXPORT request to completion server-side and
  * produces the export file. Export generation only: erase-request execution is
@@ -67,7 +67,7 @@ final class GenerateExport implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/generate-export';
+		return 'og-privacy/generate-export';
 	}
 
 	/**
@@ -84,7 +84,7 @@ final class GenerateExport implements Ability {
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of an existing personal-data export request. Use `privacy/list-export-requests` to find request IDs.', 'abilities-catalog' ),
+						'description' => __( 'The ID of an existing personal-data export request. Use `og-privacy/list-export-requests` to find request IDs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'request_id' ),

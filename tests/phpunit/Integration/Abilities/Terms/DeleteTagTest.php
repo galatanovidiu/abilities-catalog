@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/delete-tag ability.
+ * Integration tests for the og-terms/delete-tag ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -19,10 +19,10 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 final class DeleteTagTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'terms/delete-tag' );
+		$ability = wp_get_ability( 'og-terms/delete-tag' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'terms/delete-tag', $ability->get_name() );
+		$this->assertSame( 'og-terms/delete-tag', $ability->get_name() );
 	}
 
 	/**
@@ -39,7 +39,7 @@ final class DeleteTagTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'terms/delete-tag' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-terms/delete-tag' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -61,7 +61,7 @@ final class DeleteTagTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'terms/delete-tag' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-terms/delete-tag' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'Removable', $result['previous_name'] );
@@ -79,7 +79,7 @@ final class DeleteTagTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		$id      = self::factory()->tag->create( array( 'name' => 'Guarded' ) );
-		$ability = wp_get_ability( 'terms/delete-tag' );
+		$ability = wp_get_ability( 'og-terms/delete-tag' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'id' => $id ) ) );
 	}
@@ -91,7 +91,7 @@ final class DeleteTagTest extends TestCase {
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/delete-tag' )->execute( array( 'id' => -5 ) );
+		$result = wp_get_ability( 'og-terms/delete-tag' )->execute( array( 'id' => -5 ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 	}
@@ -102,7 +102,7 @@ final class DeleteTagTest extends TestCase {
 		// An admin holds delete_post_tags (the coarse guard), so a non-existent id
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'terms/delete-tag' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-terms/delete-tag' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );

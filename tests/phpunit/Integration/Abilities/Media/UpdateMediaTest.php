@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/update-media ability.
+ * Integration tests for the og-media/update-media ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,16 +13,16 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises media/update-media: flat output shape after a real update,
+ * Exercises og-media/update-media: flat output shape after a real update,
  * the source_url and post fields in the result, and the minimum: 1 input guard.
  */
 final class UpdateMediaTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'media/update-media' );
+		$ability = wp_get_ability( 'og-media/update-media' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'media/update-media', $ability->get_name() );
+		$this->assertSame( 'og-media/update-media', $ability->get_name() );
 	}
 
 	public function test_admin_updates_media_and_gets_flat_fields(): void {
@@ -31,7 +31,7 @@ final class UpdateMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/update-media' )->execute(
+		$result = wp_get_ability( 'og-media/update-media' )->execute(
 			array(
 				'id'          => $attachment_id,
 				'title'       => 'Updated Canola',
@@ -58,7 +58,7 @@ final class UpdateMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/update-media' )->execute(
+		$result = wp_get_ability( 'og-media/update-media' )->execute(
 			array(
 				'id'   => $attachment_id,
 				'post' => $post_id,
@@ -76,7 +76,7 @@ final class UpdateMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create( array( 'post_parent' => $post_id ) );
 		$this->assertSame( $post_id, (int) get_post( $attachment_id )->post_parent );
 
-		$result = wp_get_ability( 'media/update-media' )->execute(
+		$result = wp_get_ability( 'og-media/update-media' )->execute(
 			array(
 				'id'   => $attachment_id,
 				'post' => 0,
@@ -93,7 +93,7 @@ final class UpdateMediaTest extends TestCase {
 
 		// The minimum: 1 input guard rejects a non-positive id at the schema
 		// boundary, before absint() could retarget it to a different object.
-		$result = wp_get_ability( 'media/update-media' )->execute( array( 'id' => -7 ) );
+		$result = wp_get_ability( 'og-media/update-media' )->execute( array( 'id' => -7 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -105,7 +105,7 @@ final class UpdateMediaTest extends TestCase {
 		// opaque ability_invalid_permissions an object-level pre-check produced.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/update-media' )->execute(
+		$result = wp_get_ability( 'og-media/update-media' )->execute(
 			array(
 				'id'    => 999999,
 				'title' => 'x',
@@ -130,7 +130,7 @@ final class UpdateMediaTest extends TestCase {
 		// generic collapse — and the title is unchanged.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/update-media' )->execute(
+		$result = wp_get_ability( 'og-media/update-media' )->execute(
 			array(
 				'id'    => $attachment_id,
 				'title' => 'Hacked',

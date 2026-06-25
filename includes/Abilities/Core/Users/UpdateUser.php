@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `users/update-user`.
+ * T2 write ability: `og-users/update-user`.
  *
  * Wraps `POST /wp/v2/users/<id>` via `rest_do_request()` and returns the user's
  * id, name, email, and roles. Encodes the catalog capability `edit_user` on the
@@ -36,7 +36,7 @@ final class UpdateUser implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/update-user';
+		return 'og-users/update-user';
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/update-current-user ability.
+ * Integration tests for the og-users/update-current-user ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -22,16 +22,16 @@ use WP_Error;
 final class UpdateCurrentUserTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/update-current-user' );
+		$ability = wp_get_ability( 'og-users/update-current-user' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/update-current-user', $ability->get_name() );
+		$this->assertSame( 'og-users/update-current-user', $ability->get_name() );
 	}
 
 	public function test_admin_updates_own_profile_with_flat_shape_and_no_password(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-current-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-current-user' )->execute(
 			array(
 				'name'       => 'Edited Admin',
 				'first_name' => 'Edited',
@@ -61,7 +61,7 @@ final class UpdateCurrentUserTest extends TestCase {
 		// before the REST route runs.
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'users/update-current-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-current-user' )->execute(
 			array(
 				'name' => 'Should Not Apply',
 			)
@@ -82,7 +82,7 @@ final class UpdateCurrentUserTest extends TestCase {
 
 		$this->assertFalse( current_user_can( 'promote_user', $actor ), 'Test premise: a subscriber cannot promote.' );
 
-		$result = wp_get_ability( 'users/update-current-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-current-user' )->execute(
 			array( 'roles' => array( 'administrator' ) )
 		);
 
@@ -107,7 +107,7 @@ final class UpdateCurrentUserTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'users/update-current-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-current-user' )->execute(
 			array(
 				'email'    => 'taken@example.com',
 				'password' => 'Must-Not-Leak-Pass!',

@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `widgets/list-widget-types`.
+ * Read ability: `og-widgets/list-widget-types`.
  *
  * Wraps `GET /wp/v2/widget-types` via `rest_do_request()` and returns the
  * available widget types — the valid `id_base` values for
- * `widgets/create-widget`. The collection route returns a bare JSON array (no
+ * `og-widgets/create-widget`. The collection route returns a bare JSON array (no
  * `X-WP-Total` header), so `total` is derived with `count()` over the shaped
  * rows. Each raw widget type carries `id`, `name`, `description`, `is_multi`,
  * and `classname`; this projects down to the four agent-useful fields and drops
@@ -31,7 +31,7 @@ final class ListWidgetTypes implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/list-widget-types';
+		return 'og-widgets/list-widget-types';
 	}
 
 	/**
@@ -40,7 +40,7 @@ final class ListWidgetTypes implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Widget Types', 'abilities-catalog' ),
-			'description'         => __( 'Lists the available widget types (the valid id_base values for widgets/create-widget), each with its slug, display name, description, and whether it supports multiple instances. Call this before widgets/create-widget to discover what kinds of widgets can be added.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the available widget types (the valid id_base values for og-widgets/create-widget), each with its slug, display name, description, and whether it supports multiple instances. Call this before og-widgets/create-widget to discover what kinds of widgets can be added.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -55,7 +55,7 @@ final class ListWidgetTypes implements Ability {
 							'properties'           => array(
 								'id'          => array(
 									'type'        => 'string',
-									'description' => __( 'The widget type slug — pass it as id_base to widgets/create-widget (e.g. "block", "text").', 'abilities-catalog' ),
+									'description' => __( 'The widget type slug — pass it as id_base to og-widgets/create-widget (e.g. "block", "text").', 'abilities-catalog' ),
 								),
 								'name'        => array(
 									'type'        => 'string',
@@ -72,7 +72,7 @@ final class ListWidgetTypes implements Ability {
 							),
 							'additionalProperties' => false,
 						),
-						'description' => __( 'The available widget types as flat rows. Use a row\'s id as the id_base for widgets/create-widget.', 'abilities-catalog' ),
+						'description' => __( 'The available widget types as flat rows. Use a row\'s id as the id_base for og-widgets/create-widget.', 'abilities-catalog' ),
 					),
 					'total' => array(
 						'type'        => 'integer',

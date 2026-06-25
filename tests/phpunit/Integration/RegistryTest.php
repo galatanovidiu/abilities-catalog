@@ -124,7 +124,7 @@ final class RegistryTest extends TestCase {
 	}
 
 	public function test_known_non_site_domains_declare_a_non_site_scope(): void {
-		$non_site_prefixes = array('network/', 'updates/', 'privacy/', 'site-health/', 'connectors/');
+		$non_site_prefixes = array('og-network/', 'og-updates/', 'og-privacy/', 'og-site-health/', 'og-connectors/');
 
 		foreach ($this->discoverAbilities() as $ability) {
 			$name = $ability->name();

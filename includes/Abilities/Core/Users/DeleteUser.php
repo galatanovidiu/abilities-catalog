@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Destructive T2 write ability: `users/delete-user`.
+ * Destructive T2 write ability: `og-users/delete-user`.
  *
  * Wraps `DELETE /wp/v2/users/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the user. Users do not support trashing, so this is an
@@ -36,7 +36,7 @@ final class DeleteUser implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/delete-user';
+		return 'og-users/delete-user';
 	}
 
 	/**
@@ -147,7 +147,7 @@ final class DeleteUser implements Ability {
 	 *
 	 * On multisite the core REST users controller refuses every DELETE
 	 * (`rest_cannot_delete`, 501), so this returns a recovery-oriented `WP_Error`
-	 * before dispatching, pointing the caller at `network/remove-user-from-site`
+	 * before dispatching, pointing the caller at `og-network/remove-user-from-site`
 	 * for per-site removal. On single site it re-validates the data-loss guard,
 	 * then forces `force=true` and sets the validated `reassign` target so the
 	 * deleted user's content is reassigned. A REST error (e.g. invalid reassign)
@@ -160,7 +160,7 @@ final class DeleteUser implements Ability {
 		if ( is_multisite() ) {
 			return new WP_Error(
 				'abilities_catalog_delete_user_multisite',
-				__( 'Deleting a user is disabled on multisite. To remove a user from one site, use network/remove-user-from-site.', 'abilities-catalog' ),
+				__( 'Deleting a user is disabled on multisite. To remove a user from one site, use og-network/remove-user-from-site.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
 		}

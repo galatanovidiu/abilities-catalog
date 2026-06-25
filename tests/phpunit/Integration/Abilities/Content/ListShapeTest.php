@@ -38,7 +38,7 @@ final class ListShapeTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		self::factory()->post->create_many( 3, array( 'post_status' => 'publish' ) );
 
-		$result = wp_get_ability( 'content/list-posts' )->execute( array( 'per_page' => 10 ) );
+		$result = wp_get_ability( 'og-content/list-posts' )->execute( array( 'per_page' => 10 ) );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -65,7 +65,7 @@ final class ListShapeTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/list-pages' )->execute( array() );
+		$result = wp_get_ability( 'og-content/list-pages' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -96,7 +96,7 @@ final class ListShapeTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		self::factory()->post->create_many( 2, array( 'post_status' => 'publish' ) );
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array(
 				'post_type' => 'post',
 				'per_page'  => 10,
@@ -115,7 +115,7 @@ final class ListShapeTest extends TestCase {
 	public function test_list_cpt_items_unknown_type_returns_400_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute( array( 'post_type' => 'not_a_real_type' ) );
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute( array( 'post_type' => 'not_a_real_type' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_post_type', $result->get_error_code() );
@@ -131,7 +131,7 @@ final class ListShapeTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/list-post-revisions' )->execute( array( 'parent' => $post_id ) );
+		$result = wp_get_ability( 'og-content/list-post-revisions' )->execute( array( 'parent' => $post_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -149,7 +149,7 @@ final class ListShapeTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create();
 
-		$result = wp_get_ability( 'content/list-post-revisions' )->execute( array( 'parent' => -$post_id ) );
+		$result = wp_get_ability( 'og-content/list-post-revisions' )->execute( array( 'parent' => -$post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
@@ -158,7 +158,7 @@ final class ListShapeTest extends TestCase {
 	public function test_list_post_types_reports_supports_as_flat_list(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-post-types' )->execute( array() );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$post_row = null;
@@ -178,7 +178,7 @@ final class ListShapeTest extends TestCase {
 	public function test_list_post_types_view_context_returns_shaped_rows(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-post-types' )->execute( array( 'context' => 'view' ) );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'view' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -204,13 +204,13 @@ final class ListShapeTest extends TestCase {
 	public function test_list_post_types_view_denied_when_logged_out(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'content/list-post-types' );
+		$ability = wp_get_ability( 'og-content/list-post-types' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'view' ) ) );
 	}
 
 	public function test_list_post_types_edit_context_requires_edit_posts(): void {
-		$ability = wp_get_ability( 'content/list-post-types' );
+		$ability = wp_get_ability( 'og-content/list-post-types' );
 
 		$this->actingAs( 'subscriber' );
 		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
@@ -238,6 +238,6 @@ final class ListShapeTest extends TestCase {
 		wp_get_current_user()->add_cap( 'edit_ac_books' );
 
 		$this->assertFalse( current_user_can( 'edit_posts' ), 'The subscriber must lack the global edit_posts cap for this test to be meaningful.' );
-		$this->assertTrue( wp_get_ability( 'content/list-post-types' )->check_permissions( array( 'context' => 'edit' ) ) );
+		$this->assertTrue( wp_get_ability( 'og-content/list-post-types' )->check_permissions( array( 'context' => 'edit' ) ) );
 	}
 }

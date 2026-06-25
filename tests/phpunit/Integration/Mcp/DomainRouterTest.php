@@ -72,10 +72,10 @@ final class DomainRouterTest extends TestCase {
 		$items = $this->router->list( 'content' );
 		$names = array_column( $items, 'name' );
 
-		$this->assertContains( 'content/get-post', $names );
-		$this->assertContains( 'terms/create-category', $names );
-		$this->assertContains( 'comments/get-comment', $names );
-		$this->assertContains( 'search/search-content', $names );
+		$this->assertContains( 'og-content/get-post', $names );
+		$this->assertContains( 'og-terms/create-category', $names );
+		$this->assertContains( 'og-comments/get-comment', $names );
+		$this->assertContains( 'og-search/search-content', $names );
 
 		foreach ( $items as $item ) {
 			$this->assertArrayHasKey( 'readonly', $item );
@@ -84,7 +84,7 @@ final class DomainRouterTest extends TestCase {
 			$this->assertArrayHasKey( 'enabled', $item );
 		}
 
-		$this->assertTrue( $this->itemNamed( $items, 'content/get-post' )['readonly'] );
+		$this->assertTrue( $this->itemNamed( $items, 'og-content/get-post' )['readonly'] );
 	}
 
 	/**
@@ -96,11 +96,11 @@ final class DomainRouterTest extends TestCase {
 	 * @return void
 	 */
 	public function test_list_marks_each_ability_enabled_state(): void {
-		$router = $this->routerWith( array( 'content/get-post' ) );
+		$router = $this->routerWith( array( 'og-content/get-post' ) );
 		$items  = $router->list( 'content' );
 
-		$this->assertTrue( $this->itemNamed( $items, 'content/get-post' )['enabled'] );
-		$this->assertFalse( $this->itemNamed( $items, 'content/create-post' )['enabled'] );
+		$this->assertTrue( $this->itemNamed( $items, 'og-content/get-post' )['enabled'] );
+		$this->assertFalse( $this->itemNamed( $items, 'og-content/create-post' )['enabled'] );
 	}
 
 	/**
@@ -160,7 +160,7 @@ final class DomainRouterTest extends TestCase {
 		$map   = new DomainMap();
 		$names = array_column( $this->router->list( 'content' ), 'name' );
 
-		$this->assertNotContains( 'media/list-image-sizes', $names );
+		$this->assertNotContains( 'og-media/list-image-sizes', $names );
 		foreach ( $names as $name ) {
 			$this->assertSame( 'content', $map->domainOf( $name ) );
 		}
@@ -172,10 +172,10 @@ final class DomainRouterTest extends TestCase {
 	 * @return void
 	 */
 	public function test_describe_returns_schema_and_annotations(): void {
-		$description = $this->router->describe( 'content', 'content/get-post' );
+		$description = $this->router->describe( 'content', 'og-content/get-post' );
 
 		$this->assertIsArray( $description );
-		$this->assertSame( 'content/get-post', $description['name'] );
+		$this->assertSame( 'og-content/get-post', $description['name'] );
 		$this->assertArrayHasKey( 'input_schema', $description );
 		$this->assertArrayHasKey( 'output_schema', $description );
 		$this->assertTrue( $description['annotations']['readonly'] ?? false );
@@ -190,11 +190,11 @@ final class DomainRouterTest extends TestCase {
 	 * @return void
 	 */
 	public function test_describe_notes_disabled_state(): void {
-		$gated = $this->router->describe( 'content', 'content/get-post' );
+		$gated = $this->router->describe( 'content', 'og-content/get-post' );
 		$this->assertIsArray( $gated );
 		$this->assertStringContainsString( 'currently disabled', $gated['description'] );
 
-		$enabled = $this->routerWith( array( 'content/get-post' ) )->describe( 'content', 'content/get-post' );
+		$enabled = $this->routerWith( array( 'og-content/get-post' ) )->describe( 'content', 'og-content/get-post' );
 		$this->assertIsArray( $enabled );
 		$this->assertStringNotContainsString( 'currently disabled', $enabled['description'] );
 	}
@@ -205,7 +205,7 @@ final class DomainRouterTest extends TestCase {
 	 * @return void
 	 */
 	public function test_describe_rejects_out_of_domain_ability(): void {
-		$error = $this->router->describe( 'content', 'media/list-image-sizes' );
+		$error = $this->router->describe( 'content', 'og-media/list-image-sizes' );
 
 		$this->assertWPError( $error );
 		$this->assertSame( 'abilities_catalog_mcp_unknown_ability', $error->get_error_code() );
@@ -264,7 +264,7 @@ final class DomainRouterTest extends TestCase {
 	 * @return void
 	 */
 	public function test_unknown_ability_never_suggests_a_guess(): void {
-		// "content/get-pots" is one edit from the real "content/get-post" — still no suggestion.
+		// "content/get-pots" is one edit from the real "og-content/get-post" — still no suggestion.
 		$near = $this->router->describe( 'content', 'content/get-pots' );
 		$far  = $this->router->describe( 'content', 'content/zzzzzzzzzzzzzzzzzzzz' );
 
@@ -282,7 +282,7 @@ final class DomainRouterTest extends TestCase {
 	 * @return void
 	 */
 	public function test_out_of_domain_message_points_to_list(): void {
-		$error = $this->router->describe( 'content', 'media/list-image-sizes' );
+		$error = $this->router->describe( 'content', 'og-media/list-image-sizes' );
 
 		$this->assertWPError( $error );
 		$this->assertSame( 'abilities_catalog_mcp_unknown_ability', $error->get_error_code() );
@@ -294,9 +294,9 @@ final class DomainRouterTest extends TestCase {
 	 * (tool name != ability prefix) recovers to a real prefix without a round-trip.
 	 *
 	 * `content/search-posts` is the trace-proven miss: the agent reaches the content tool and
-	 * invents that name, when the real ability is `search/search-content`. The error must name
+	 * invents that name, when the real ability is `og-search/search-content`. The error must name
 	 * the owned prefixes (so the agent learns `terms/`, `comments/` belong here too) and the
-	 * exact `search/search-content` placement — without ever offering an edit-distance guess.
+	 * exact `og-search/search-content` placement — without ever offering an edit-distance guess.
 	 *
 	 * @return void
 	 */
@@ -304,7 +304,7 @@ final class DomainRouterTest extends TestCase {
 		$message = $this->router->describe( 'content', 'content/search-posts' )->get_error_message();
 
 		$this->assertStringContainsString( 'terms/*', $message, 'The owned prefixes orient the next guess.' );
-		$this->assertStringContainsString( 'search/search-content', $message, 'The exact placement names the real search ability.' );
+		$this->assertStringContainsString( 'og-search/search-content', $message, 'The exact placement names the real search ability.' );
 		$this->assertStringContainsString( 'action "list"', $message, 'The authoritative path still follows.' );
 		$this->assertStringNotContainsString( 'Did you mean', $message, 'Naming the taxonomy is not a fuzzy suggestion.' );
 	}
@@ -318,8 +318,8 @@ final class DomainRouterTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_title' => 'Hello' ) );
 
-		$router = $this->routerWith( array( 'content/get-post' ) );
-		$result = $router->execute( 'content', 'content/get-post', array( 'id' => $post_id ) );
+		$router = $this->routerWith( array( 'og-content/get-post' ) );
+		$result = $router->execute( 'content', 'og-content/get-post', array( 'id' => $post_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $post_id, $result['id'] );
@@ -338,8 +338,8 @@ final class DomainRouterTest extends TestCase {
 	public function test_execute_runs_no_input_ability_with_empty_arguments(): void {
 		$this->actingAs( 'administrator' );
 
-		$router = $this->routerWith( array( 'dashboard/get-at-a-glance' ) );
-		$result = $router->execute( 'dashboard', 'dashboard/get-at-a-glance', array() );
+		$router = $this->routerWith( array( 'og-dashboard/get-at-a-glance' ) );
+		$result = $router->execute( 'dashboard', 'og-dashboard/get-at-a-glance', array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'wp_version', $result );
@@ -357,7 +357,7 @@ final class DomainRouterTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create();
 
-		$result = $this->router->execute( 'content', 'content/get-post', array( 'id' => $post_id ) );
+		$result = $this->router->execute( 'content', 'og-content/get-post', array( 'id' => $post_id ) );
 
 		$this->assertWPError( $result );
 		$this->assertSame( 'abilities_catalog_mcp_ability_disabled', $result->get_error_code() );
@@ -376,8 +376,8 @@ final class DomainRouterTest extends TestCase {
 	public function test_execute_denies_low_privilege_user(): void {
 		$this->actingAs( 'subscriber' );
 
-		$router = $this->routerWith( array( 'content/create-post' ) );
-		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
+		$router = $this->routerWith( array( 'og-content/create-post' ) );
+		$result = $router->execute( 'content', 'og-content/create-post', array( 'title' => 'Nope' ) );
 
 		$this->assertWPError( $result );
 		// The router pre-checks the capability and returns its own 403 'forbidden'
@@ -388,7 +388,7 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
-	 * A capability denial while targeting a site by blog_id points at users/list-my-sites.
+	 * A capability denial while targeting a site by blog_id points at og-users/list-my-sites.
 	 *
 	 * The usual cause is that the caller is not a member of the targeted site, so the
 	 * recovery matches the invalid-blog_id error: list the sites you can act on. The hint
@@ -399,12 +399,12 @@ final class DomainRouterTest extends TestCase {
 	public function test_execute_denial_with_blog_id_points_to_list_my_sites(): void {
 		$this->actingAs( 'subscriber' );
 
-		$router = $this->routerWith( array( 'content/create-post' ) );
-		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope', 'blog_id' => 2 ) );
+		$router = $this->routerWith( array( 'og-content/create-post' ) );
+		$result = $router->execute( 'content', 'og-content/create-post', array( 'title' => 'Nope', 'blog_id' => 2 ) );
 
 		$this->assertWPError( $result );
 		$this->assertSame( 'forbidden', $result->get_error_code() );
-		$this->assertStringContainsString( 'users/list-my-sites', $result->get_error_message() );
+		$this->assertStringContainsString( 'og-users/list-my-sites', $result->get_error_message() );
 	}
 
 	/**
@@ -419,15 +419,15 @@ final class DomainRouterTest extends TestCase {
 	public function test_execute_invalid_input_points_to_describe(): void {
 		$this->actingAs( 'administrator' );
 
-		// "content/get-post" requires "id" and forbids extra properties, so an unknown field is
+		// "og-content/get-post" requires "id" and forbids extra properties, so an unknown field is
 		// an invalid input shape — exactly the field-guessing case this hint serves.
-		$router = $this->routerWith( array( 'content/get-post' ) );
-		$result = $router->execute( 'content', 'content/get-post', array( 'not_a_real_field' => 'x' ) );
+		$router = $this->routerWith( array( 'og-content/get-post' ) );
+		$result = $router->execute( 'content', 'og-content/get-post', array( 'not_a_real_field' => 'x' ) );
 
 		$this->assertWPError( $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 		$this->assertStringContainsString( 'describe', $result->get_error_message() );
-		$this->assertStringContainsString( 'content/get-post', $result->get_error_message() );
+		$this->assertStringContainsString( 'og-content/get-post', $result->get_error_message() );
 	}
 
 	/**
@@ -441,8 +441,8 @@ final class DomainRouterTest extends TestCase {
 	public function test_execute_permission_error_has_no_describe_hint(): void {
 		$this->actingAs( 'subscriber' );
 
-		$router = $this->routerWith( array( 'content/create-post' ) );
-		$result = $router->execute( 'content', 'content/create-post', array( 'title' => 'Nope' ) );
+		$router = $this->routerWith( array( 'og-content/create-post' ) );
+		$result = $router->execute( 'content', 'og-content/create-post', array( 'title' => 'Nope' ) );
 
 		$this->assertWPError( $result );
 		// The router's permission pre-check returns 'forbidden' (a non-input-shape error),

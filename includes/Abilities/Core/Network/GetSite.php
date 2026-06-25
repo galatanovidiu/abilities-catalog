@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Core-function T1 read ability: `network/get-site`.
+ * Core-function T1 read ability: `og-network/get-site`.
  *
  * Returns one site (blog) in a multisite network by its `blog_id`, projected
- * into a flat closed row: the same twelve fields `network/list-sites` emits,
+ * into a flat closed row: the same twelve fields `og-network/list-sites` emits,
  * plus the site's display name (`blogname`) and WordPress address (`siteurl`)
  * read from that site's own options. The single-object companion to
- * `network/list-sites`. Built on `get_site()` (wp-includes/ms-site.php:310 ->
+ * `og-network/list-sites`. Built on `get_site()` (wp-includes/ms-site.php:310 ->
  * `WP_Site|null`) since core exposes no REST route for sites; no wp-admin
  * includes are loaded.
  *
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Multisite only: these tables (`wp_blogs`) do not exist on a single site, so
  * `execute()` returns a 400 before touching any `ms-*` function, mirroring the
  * "explicit guard at the top of execute() when the wrapped core fn has no route
- * to surface an error" idiom (`tools/delete-transient`).
+ * to surface an error" idiom (`og-tools/delete-transient`).
  *
  * @since 0.1.0
  */
@@ -46,7 +46,7 @@ final class GetSite implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/get-site';
+		return 'og-network/get-site';
 	}
 
 	/**
@@ -55,7 +55,7 @@ final class GetSite implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Site', 'abilities-catalog' ),
-			'description'         => __( 'Returns one site (blog) in a multisite network by its blog_id, including its domain, path, url, status flags, display name (blogname), and WordPress address (siteurl). Single-site read; enumerate sites with network/list-sites. An unknown blog_id returns a 404 rest_site_invalid_id error. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Returns one site (blog) in a multisite network by its blog_id, including its domain, path, url, status flags, display name (blogname), and WordPress address (siteurl). Single-site read; enumerate sites with og-network/list-sites. An unknown blog_id returns a 404 rest_site_invalid_id error. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -64,7 +64,7 @@ final class GetSite implements Ability {
 					'blog_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The site (blog) ID to fetch. Discover IDs with network/list-sites.', 'abilities-catalog' ),
+						'description' => __( 'The site (blog) ID to fetch. Discover IDs with og-network/list-sites.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -75,7 +75,7 @@ final class GetSite implements Ability {
 				'properties'           => array(
 					'blog_id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The site (blog) ID; pass to network/get-site.', 'abilities-catalog' ),
+						'description' => __( 'The site (blog) ID; pass to og-network/get-site.', 'abilities-catalog' ),
 					),
 					'network_id'   => array(
 						'type'        => 'integer',

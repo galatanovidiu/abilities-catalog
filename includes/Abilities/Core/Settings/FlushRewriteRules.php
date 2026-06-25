@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `settings/flush-rewrite-rules`.
+ * Dangerous-tier write ability: `og-settings/flush-rewrite-rules`.
  *
  * Regenerates the site's entire URL rewrite (permalink) rule set from scratch by
  * wrapping core `flush_rewrite_rules( $hard )`, then reads back the stored
@@ -68,7 +68,7 @@ final class FlushRewriteRules implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/flush-rewrite-rules';
+		return 'og-settings/flush-rewrite-rules';
 	}
 
 	/**

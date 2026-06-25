@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/create-category ability.
+ * Integration tests for the og-terms/create-category ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use WP_Error;
 final class CreateCategoryTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/create-category');
+		$ability = wp_get_ability('og-terms/create-category');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/create-category', $ability->get_name());
+		$this->assertSame('og-terms/create-category', $ability->get_name());
 	}
 
 	/**
@@ -33,7 +33,7 @@ final class CreateCategoryTest extends TestCase {
 	public function test_creates_category_and_returns_core_shape(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/create-category')->execute(
+		$result = wp_get_ability('og-terms/create-category')->execute(
 			array(
 				'name' => 'News',
 				'slug' => 'news',
@@ -62,7 +62,7 @@ final class CreateCategoryTest extends TestCase {
 
 		$parent_id = self::factory()->category->create(array('name' => 'Parent'));
 
-		$result = wp_get_ability('terms/create-category')->execute(
+		$result = wp_get_ability('og-terms/create-category')->execute(
 			array(
 				'name'   => 'Child',
 				'parent' => $parent_id,
@@ -85,7 +85,7 @@ final class CreateCategoryTest extends TestCase {
 	public function test_subscriber_cannot_create_category(): void {
 		$this->actingAs('subscriber');
 
-		$ability = wp_get_ability('terms/create-category');
+		$ability = wp_get_ability('og-terms/create-category');
 
 		$this->assertFalse($ability->check_permissions(array('name' => 'Denied')));
 	}
@@ -104,7 +104,7 @@ final class CreateCategoryTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('terms/create-category')->execute(
+		$result = wp_get_ability('og-terms/create-category')->execute(
 			array(
 				'name' => 'Duplicate',
 				'slug' => 'duplicate',

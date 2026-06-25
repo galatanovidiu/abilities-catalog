@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/create-classic-menu`.
+ * T2 non-destructive write ability: `og-menus/create-classic-menu`.
  *
  * Wraps `POST /wp/v2/menus` via `rest_do_request()` to create a classic menu
  * (`nav_menu` term). The menus controller inherits its create permission from the
@@ -32,7 +32,7 @@ final class CreateClassicMenu implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/create-classic-menu';
+		return 'og-menus/create-classic-menu';
 	}
 
 	/**

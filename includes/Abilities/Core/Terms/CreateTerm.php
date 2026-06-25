@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 safe-write ability: `terms/create-term` (generic, keyed by `taxonomy`).
+ * T1 safe-write ability: `og-terms/create-term` (generic, keyed by `taxonomy`).
  *
  * Wraps `POST /wp/v2/<rest_base>` via `rest_do_request()` for any `show_in_rest`
  * taxonomy and returns the new term's id, name, slug, and taxonomy. The
@@ -32,7 +32,7 @@ final class CreateTerm implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/create-term';
+		return 'og-terms/create-term';
 	}
 
 	/**

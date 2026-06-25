@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-templates`.
+ * Read ability: `og-templates/list-templates`.
  *
  * Wraps `GET /wp/v2/templates` or `GET /wp/v2/template-parts` via
  * `rest_do_request()`, selected by the `post_type` input. Returns the
@@ -27,7 +27,7 @@ final class ListTemplates implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-templates';
+		return 'og-templates/list-templates';
 	}
 
 	/**

@@ -58,14 +58,14 @@ final class PostTermsTest extends TestCase {
 	}
 
 	public function test_abilities_are_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'terms/attach-post-terms' ) );
-		$this->assertNotNull( wp_get_ability( 'terms/detach-post-terms' ) );
+		$this->assertNotNull( wp_get_ability( 'og-terms/attach-post-terms' ) );
+		$this->assertNotNull( wp_get_ability( 'og-terms/detach-post-terms' ) );
 	}
 
 	public function test_attach_by_id_and_slug_appends(): void {
 		$this->actingAs( 'administrator' );
 
-		$first = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$first = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -77,7 +77,7 @@ final class PostTermsTest extends TestCase {
 		$this->assertNotEmpty( $first['edit_link'] );
 
 		// Append the second term by slug.
-		$second = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$second = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -92,7 +92,7 @@ final class PostTermsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -109,7 +109,7 @@ final class PostTermsTest extends TestCase {
 	public function test_attach_output_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -146,7 +146,7 @@ final class PostTermsTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'pages_only_tax',
@@ -163,7 +163,7 @@ final class PostTermsTest extends TestCase {
 	public function test_attach_missing_term_returns_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -179,7 +179,7 @@ final class PostTermsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		wp_set_object_terms( $this->post_id, array( $this->cat_a, $this->cat_b ), 'category' );
 
-		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -196,7 +196,7 @@ final class PostTermsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		wp_set_object_terms( $this->post_id, array( $this->cat_a, $this->cat_b ), 'category' );
 
-		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -222,7 +222,7 @@ final class PostTermsTest extends TestCase {
 		// With the object-level edit_post check relocated into execute(), an admin who
 		// holds assign_terms reaches execute(), and a non-existent post surfaces the
 		// specific rest_post_invalid_id 404 instead of the generic collapse.
-		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => 999999,
 				'taxonomy' => 'category',
@@ -238,7 +238,7 @@ final class PostTermsTest extends TestCase {
 	public function test_attach_invalid_post_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => 999999,
 				'taxonomy' => 'category',
@@ -260,7 +260,7 @@ final class PostTermsTest extends TestCase {
 		// 403 and no term is attached — the guard is not weakened by coarsening.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $post_id,
 				'taxonomy' => 'category',
@@ -283,7 +283,7 @@ final class PostTermsTest extends TestCase {
 		// with a 403 and the existing term assignment is left intact.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => $post_id,
 				'taxonomy' => 'category',
@@ -302,7 +302,7 @@ final class PostTermsTest extends TestCase {
 		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
 
 		// cat_b is not assigned; detaching it is a successful no-op.
-		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -318,7 +318,7 @@ final class PostTermsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'terms/attach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/attach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',
@@ -334,7 +334,7 @@ final class PostTermsTest extends TestCase {
 		wp_set_current_user( 0 );
 		wp_set_object_terms( $this->post_id, array( $this->cat_a ), 'category' );
 
-		$result = wp_get_ability( 'terms/detach-post-terms' )->execute(
+		$result = wp_get_ability( 'og-terms/detach-post-terms' )->execute(
 			array(
 				'post_id'  => $this->post_id,
 				'taxonomy' => 'category',

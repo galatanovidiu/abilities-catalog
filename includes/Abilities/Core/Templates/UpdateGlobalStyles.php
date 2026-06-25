@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `templates/update-global-styles`.
+ * T2 destructive write ability: `og-templates/update-global-styles`.
  *
  * Wraps `POST /wp/v2/global-styles/<id>` via `rest_do_request()`, where `<id>`
  * is the `wp_global_styles` post id for the active theme (resolve it first with
- * `templates/get-global-styles`). The outer ability `/run` call is POST (an
+ * `og-templates/get-global-styles`). The outer ability `/run` call is POST (an
  * update, not a delete); the internal REST verb is also POST (EDITABLE).
  *
  * This is annotated DESTRUCTIVE because it replaces the active theme's global
@@ -46,7 +46,7 @@ final class UpdateGlobalStyles implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/update-global-styles';
+		return 'og-templates/update-global-styles';
 	}
 
 	/**
@@ -55,14 +55,14 @@ final class UpdateGlobalStyles implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Global Styles', 'abilities-catalog' ),
-			'description'         => __( 'Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Each provided top-level settings or styles object REPLACES that stored section wholesale (not a deep merge); read the current record first with templates/get-global-styles and send a complete replacement for whichever section you change.', 'abilities-catalog' ),
+			'description'         => __( 'Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Each provided top-level settings or styles object REPLACES that stored section wholesale (not a deep merge); read the current record first with og-templates/get-global-styles and send a complete replacement for whichever section you change.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id'       => array(
 						'type'        => 'integer',
-						'description' => __( 'The global styles post ID for the active theme. Get it from templates/get-global-styles, or from templates/init-global-styles when no record exists yet.', 'abilities-catalog' ),
+						'description' => __( 'The global styles post ID for the active theme. Get it from og-templates/get-global-styles, or from og-templates/init-global-styles when no record exists yet.', 'abilities-catalog' ),
 					),
 					'settings' => array(
 						'type'                 => 'object',

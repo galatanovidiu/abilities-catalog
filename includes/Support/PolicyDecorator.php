@@ -199,7 +199,7 @@ final class PolicyDecorator {
 		$props['blog_id'] = array(
 			'type'        => 'integer',
 			'minimum'     => 1,
-			'description' => __( 'Optional. On multisite, the site (blog) ID to target. Omit to act on the current site. Discover IDs with users/list-my-sites, or network/list-sites if you are a super admin.', 'abilities-catalog' ),
+			'description' => __( 'Optional. On multisite, the site (blog) ID to target. Omit to act on the current site. Discover IDs with og-users/list-my-sites, or og-network/list-sites if you are a super admin.', 'abilities-catalog' ),
 		);
 
 		$schema['properties'] = $props; // Non-empty array -> serializes as object; we are the last mutator.
@@ -219,7 +219,7 @@ final class PolicyDecorator {
 	 */
 	private function appendMultisiteHint( array $args ): array {
 		$description = (string) ( $args['description'] ?? '' );
-		$hint        = __( ' On multisite, pass blog_id to target a specific site; discover site IDs with users/list-my-sites (or network/list-sites as a super admin). Omit blog_id to act on the current site.', 'abilities-catalog' );
+		$hint        = __( ' On multisite, pass blog_id to target a specific site; discover site IDs with og-users/list-my-sites (or og-network/list-sites as a super admin). Omit blog_id to act on the current site.', 'abilities-catalog' );
 
 		$args['description'] = trim( $description . $hint );
 

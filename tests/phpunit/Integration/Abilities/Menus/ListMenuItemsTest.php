@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/list-menu-items ability.
+ * Integration tests for the og-menus/list-menu-items ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,10 +38,10 @@ final class ListMenuItemsTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/list-menu-items' );
+		$ability = wp_get_ability( 'og-menus/list-menu-items' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/list-menu-items', $ability->get_name() );
+		$this->assertSame( 'og-menus/list-menu-items', $ability->get_name() );
 	}
 
 	public function test_admin_lists_menu_items(): void {
@@ -50,7 +50,7 @@ final class ListMenuItemsTest extends TestCase {
 		$this->seedItem( $menu_id, 'Home', 'https://example.com/home' );
 		$this->seedItem( $menu_id, 'About', 'https://example.com/about' );
 
-		$result = wp_get_ability( 'menus/list-menu-items' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-menu-items' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -69,7 +69,7 @@ final class ListMenuItemsTest extends TestCase {
 		$this->seedItem( $menu_a, 'A2', 'https://example.com/a2' );
 		$this->seedItem( $menu_b, 'B1', 'https://example.com/b1' );
 
-		$result = wp_get_ability( 'menus/list-menu-items' )->execute(
+		$result = wp_get_ability( 'og-menus/list-menu-items' )->execute(
 			array( 'menus' => (int) $menu_a )
 		);
 
@@ -86,7 +86,7 @@ final class ListMenuItemsTest extends TestCase {
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 		$this->seedItem( $menu_id, 'Home', 'https://example.com/home' );
 
-		$result = wp_get_ability( 'menus/list-menu-items' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-menu-items' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -107,7 +107,7 @@ final class ListMenuItemsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'menus/list-menu-items' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-menu-items' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

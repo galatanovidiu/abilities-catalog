@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `terms/delete-meta`.
+ * T2 destructive write ability: `og-terms/delete-meta`.
  *
  * Removes one or more custom fields (meta) from a term, deleting all stored
  * values for each named key. It operates only on meta keys registered with
@@ -33,7 +33,7 @@ final class DeleteTermMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/delete-meta';
+		return 'og-terms/delete-meta';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class DeleteTermMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The term ID to delete meta from. Discover IDs with terms/list-terms.', 'abilities-catalog' ),
+						'description' => __( 'The term ID to delete meta from. Discover IDs with og-terms/list-terms.', 'abilities-catalog' ),
 					),
 					'keys' => array(
 						'type'        => 'array',

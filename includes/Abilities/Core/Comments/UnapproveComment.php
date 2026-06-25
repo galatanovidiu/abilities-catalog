@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/unapprove-comment`.
+ * T1 write ability: `og-comments/unapprove-comment`.
  *
  * Net-new framing over a comment status change to `hold` (the core status for an
  * unapproved comment), forced from any current state. Calls core
@@ -33,7 +33,7 @@ final class UnapproveComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/unapprove-comment';
+		return 'og-comments/unapprove-comment';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class UnapproveComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Unapprove Comment', 'abilities-catalog' ),
-			'description'         => __( 'Unapproves a comment, forcing its status to "hold" from any current state (also clears "spam" or "trash"). Reversible: re-approve with comments/approve-comment to restore "approved". Unapproving an already-held comment is a no-op that reports the existing "hold" status. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Unapproves a comment, forcing its status to "hold" from any current state (also clears "spam" or "trash"). Reversible: re-approve with og-comments/approve-comment to restore "approved". Unapproving an already-held comment is a no-op that reports the existing "hold" status. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -50,7 +50,7 @@ final class UnapproveComment implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to unapprove. Discover valid IDs with comments/list-comments.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to unapprove. Discover valid IDs with og-comments/list-comments.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

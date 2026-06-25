@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `themes/switch-theme`.
+ * T2 destructive write ability: `og-themes/switch-theme`.
  *
  * Net-new (no themes REST update route): validates the requested stylesheet with
  * `wp_get_theme()->exists()`, rejects a present-but-broken theme via
@@ -32,7 +32,7 @@ final class SwitchTheme implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/switch-theme';
+		return 'og-themes/switch-theme';
 	}
 
 	/**
@@ -95,7 +95,7 @@ final class SwitchTheme implements Ability {
 	/**
 	 * Permission check: the current user may switch themes.
 	 *
-	 * Encodes the catalog capability for `themes/switch-theme` (`switch_themes`).
+	 * Encodes the catalog capability for `og-themes/switch-theme` (`switch_themes`).
 	 * Input shape is enforced by the schema (`required` + `minLength`), so this
 	 * callback only checks the capability.
 	 *

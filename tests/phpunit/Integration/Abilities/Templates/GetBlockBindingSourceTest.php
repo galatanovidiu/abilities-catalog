@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/get-block-binding-source output and contract.
+ * Integration tests for og-templates/get-block-binding-source output and contract.
  *
  * Covers registration, the happy path (reads the core `core/pattern-overrides`
  * source and projects its name/label/uses_context), the unknown-name error
@@ -18,18 +18,18 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/get-block-binding-source.
+ * Exercises og-templates/get-block-binding-source.
  */
 final class GetBlockBindingSourceTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'templates/get-block-binding-source' ) );
+		$this->assertTrue( wp_has_ability( 'og-templates/get-block-binding-source' ) );
 	}
 
 	public function test_returns_core_pattern_overrides_source(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-block-binding-source' )->execute(
+		$result = wp_get_ability( 'og-templates/get-block-binding-source' )->execute(
 			array( 'name' => 'core/pattern-overrides' )
 		);
 
@@ -46,7 +46,7 @@ final class GetBlockBindingSourceTest extends TestCase {
 	public function test_output_exposes_only_declared_flat_keys(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-block-binding-source' )->execute(
+		$result = wp_get_ability( 'og-templates/get-block-binding-source' )->execute(
 			array( 'name' => 'core/pattern-overrides' )
 		);
 
@@ -58,7 +58,7 @@ final class GetBlockBindingSourceTest extends TestCase {
 	public function test_unknown_name_returns_specific_not_found(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-block-binding-source' )->execute(
+		$result = wp_get_ability( 'og-templates/get-block-binding-source' )->execute(
 			array( 'name' => 'acme/nope' )
 		);
 
@@ -72,7 +72,7 @@ final class GetBlockBindingSourceTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'templates/get-block-binding-source' )->execute(
+		$result = wp_get_ability( 'og-templates/get-block-binding-source' )->execute(
 			array( 'name' => 'core/pattern-overrides' )
 		);
 
@@ -83,7 +83,7 @@ final class GetBlockBindingSourceTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'templates/get-block-binding-source' )->execute(
+		$result = wp_get_ability( 'og-templates/get-block-binding-source' )->execute(
 			array( 'name' => 'core/pattern-overrides' )
 		);
 

@@ -14,14 +14,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `content/update-post-meta`.
+ * T2 write ability: `og-content/update-post-meta`.
  *
  * Sets one or more of a post's custom fields (meta). It writes only meta keys the
  * site has registered with `show_in_rest` for the post type, and rejects any
  * unknown key — it never creates ad-hoc or internal meta. Wraps core
  * `update_post_meta()` after a per-key `edit_post_meta` capability check; the
  * registered value is sanitized by its `sanitize_callback`. Does not delete meta
- * (use `content/delete-post-meta`) and does not change other post fields. Returns
+ * (use `og-content/delete-post-meta`) and does not change other post fields. Returns
  * the post `id`, the applied `meta` values, and `edit_link` (the wp-admin editor
  * URL); surface `edit_link` so a human can review the change.
  *
@@ -33,7 +33,7 @@ final class UpdatePostMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/update-post-meta';
+		return 'og-content/update-post-meta';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class UpdatePostMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Post Meta', 'abilities-catalog' ),
-			'description'         => __( 'Sets custom fields (meta) on a post. Only meta keys registered with show_in_rest for the post type can be written; unknown keys are rejected. Returns the post id, the applied meta, and edit_link — surface edit_link so a human can review the change. Use content/list-post-meta-keys to discover writable keys.', 'abilities-catalog' ),
+			'description'         => __( 'Sets custom fields (meta) on a post. Only meta keys registered with show_in_rest for the post type can be written; unknown keys are rejected. Returns the post id, the applied meta, and edit_link — surface edit_link so a human can review the change. Use og-content/list-post-meta-keys to discover writable keys.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',

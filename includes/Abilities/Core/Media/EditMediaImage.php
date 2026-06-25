@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `media/edit-media-image`.
+ * T2 non-destructive write ability: `og-media/edit-media-image`.
  *
  * Wraps `POST /wp/v2/media/<id>/edit` via `rest_do_request()` to apply image
  * transforms (rotation, crop, or a `modifiers` array) to an existing image
@@ -34,7 +34,7 @@ final class EditMediaImage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/edit-media-image';
+		return 'og-media/edit-media-image';
 	}
 
 	/**

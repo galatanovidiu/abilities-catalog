@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed T1 read ability: `dashboard/get-activity`.
+ * Composed T1 read ability: `og-dashboard/get-activity`.
  *
  * Returns a subset of the wp-admin "Activity" dashboard widget: the most
  * recently published posts and the most recent approved comments. Built directly
@@ -26,7 +26,7 @@ final class GetActivity implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'dashboard/get-activity';
+		return 'og-dashboard/get-activity';
 	}
 
 	/**
@@ -130,7 +130,7 @@ final class GetActivity implements Ability {
 	/**
 	 * Permission check: the current user may edit posts.
 	 *
-	 * Encodes the catalog capability for `dashboard/get-activity` (`edit_posts`).
+	 * Encodes the catalog capability for `og-dashboard/get-activity` (`edit_posts`).
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may edit posts.

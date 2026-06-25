@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/list-comments ability.
+ * Integration tests for the og-comments/list-comments ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -77,16 +77,16 @@ final class ListCommentsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/list-comments');
+		$ability = wp_get_ability('og-comments/list-comments');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/list-comments', $ability->get_name());
+		$this->assertSame('og-comments/list-comments', $ability->get_name());
 	}
 
 	public function test_admin_lists_comments_with_totals(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/list-comments')->execute(array('post' => array($this->post_id)));
+		$result = wp_get_ability('og-comments/list-comments')->execute(array('post' => array($this->post_id)));
 
 		$this->assertIsArray($result);
 		$this->assertArrayHasKey('items', $result);
@@ -100,7 +100,7 @@ final class ListCommentsTest extends TestCase {
 		// context must not trigger core's rest_forbidden_context (403).
 		$this->actingAs('author');
 
-		$result = wp_get_ability('comments/list-comments')->execute(array('post' => array($this->post_id)));
+		$result = wp_get_ability('og-comments/list-comments')->execute(array('post' => array($this->post_id)));
 
 		$this->assertIsArray($result);
 		$this->assertCount(3, $result['items']);
@@ -109,7 +109,7 @@ final class ListCommentsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('comments/list-comments')->execute(array());
+		$result = wp_get_ability('og-comments/list-comments')->execute(array());
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -120,7 +120,7 @@ final class ListCommentsTest extends TestCase {
 		// view context, so moderation-only fields must be absent.
 		$this->actingAs('author');
 
-		$result = wp_get_ability('comments/list-comments')->execute(array('post' => array($this->post_id)));
+		$result = wp_get_ability('og-comments/list-comments')->execute(array('post' => array($this->post_id)));
 
 		$row = $this->rowById($result['items'], $this->known_comment_id);
 		$this->assertNotNull($row, 'The known comment must appear in the list.');
@@ -151,7 +151,7 @@ final class ListCommentsTest extends TestCase {
 	public function test_view_context_row_values_match_source_comment(): void {
 		$this->actingAs('author');
 
-		$result = wp_get_ability('comments/list-comments')->execute(array('post' => array($this->post_id)));
+		$result = wp_get_ability('og-comments/list-comments')->execute(array('post' => array($this->post_id)));
 		$row    = $this->rowById($result['items'], $this->known_comment_id);
 
 		$this->assertNotNull($row);
@@ -169,7 +169,7 @@ final class ListCommentsTest extends TestCase {
 		// and author_ip, and the shaper must surface them.
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/list-comments')->execute(
+		$result = wp_get_ability('og-comments/list-comments')->execute(
 			array(
 				'post'    => array($this->post_id),
 				'context' => 'edit',

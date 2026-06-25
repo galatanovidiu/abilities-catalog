@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed T1 read ability: `users/list-my-sites`.
+ * Composed T1 read ability: `og-users/list-my-sites`.
  *
  * Lists the sites (blogs) in a multisite network that the CURRENT user is a member
  * of, so a non-super-admin can discover the `blog_id`s a site-scoped ability's
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * this ability maps `userblog_id -> blog_id`, `blogname -> name`, `siteurl -> url`,
  * `path -> path`. An empty/no-membership result returns `array()` -> `sites: []`.
  *
- * Why this exists distinct from `network/list-sites`: that ability is `manage_sites`
+ * Why this exists distinct from `og-network/list-sites`: that ability is `manage_sites`
  * (super-admin) gated, so a plain site administrator cannot use it to learn which
  * blog_ids they may act on. This read is the non-super-admin discovery surface.
  *
@@ -42,7 +42,7 @@ final class ListMySites implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/list-my-sites';
+		return 'og-users/list-my-sites';
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class ListMySites implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List My Sites', 'abilities-catalog' ),
-			'description'         => __( 'Lists the sites (blogs) in a multisite network that the current user is a member of, returning each site\'s blog_id, name, url, and path. Use this to discover the blog_id values that a site-scoped ability accepts to target a specific site. Unlike network/list-sites (super-admin only), this works for any logged-in user and returns only the sites they belong to. Requires a multisite install: on a single-site install it returns an abilities_catalog_requires_multisite 400 error.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the sites (blogs) in a multisite network that the current user is a member of, returning each site\'s blog_id, name, url, and path. Use this to discover the blog_id values that a site-scoped ability accepts to target a specific site. Unlike og-network/list-sites (super-admin only), this works for any logged-in user and returns only the sites they belong to. Requires a multisite install: on a single-site install it returns an abilities_catalog_requires_multisite 400 error.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -112,7 +112,7 @@ final class ListMySites implements Ability {
 	 * Permission check: the caller must be logged in.
 	 *
 	 * The hard guard is `is_user_logged_in()` ONLY — deliberately NOT
-	 * `&& is_multisite()`. This diverges from `network/add-user-to-site`, whose
+	 * `&& is_multisite()`. This diverges from `og-network/add-user-to-site`, whose
 	 * `permission_callback` DOES gate on `is_multisite()`: that is acceptable there
 	 * because the ability is super-admin only and a single-site denial is fine. Here
 	 * the ability is a logged-in-user discovery tool, so the single-site case must NOT
@@ -135,7 +135,7 @@ final class ListMySites implements Ability {
 	/**
 	 * Executes the ability by listing the current user's site memberships.
 	 *
-	 * Mirrors `network/add-user-to-site`'s execute()-top multisite guard: the site
+	 * Mirrors `og-network/add-user-to-site`'s execute()-top multisite guard: the site
 	 * membership tables are meaningless on a single-site install, so a 400 is returned
 	 * before calling `get_blogs_of_user()`.
 	 *

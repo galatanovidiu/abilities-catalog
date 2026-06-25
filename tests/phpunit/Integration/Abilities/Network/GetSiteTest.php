@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/get-site ability.
+ * Integration tests for the og-network/get-site ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -34,10 +34,10 @@ final class GetSiteTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/get-site' );
+		$ability = wp_get_ability( 'og-network/get-site' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/get-site', $ability->get_name() );
+		$this->assertSame( 'og-network/get-site', $ability->get_name() );
 	}
 
 	public function test_happy_path_returns_the_seeded_site(): void {
@@ -45,7 +45,7 @@ final class GetSiteTest extends TestCase {
 
 		$blog_id = self::factory()->blog->create();
 
-		$result = wp_get_ability( 'network/get-site' )->execute( array( 'blog_id' => $blog_id ) );
+		$result = wp_get_ability( 'og-network/get-site' )->execute( array( 'blog_id' => $blog_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $blog_id, $result['blog_id'] );
@@ -60,7 +60,7 @@ final class GetSiteTest extends TestCase {
 
 		$blog_id = self::factory()->blog->create();
 
-		$result = wp_get_ability( 'network/get-site' )->execute( array( 'blog_id' => $blog_id ) );
+		$result = wp_get_ability( 'og-network/get-site' )->execute( array( 'blog_id' => $blog_id ) );
 
 		$this->assertIsArray( $result );
 
@@ -89,7 +89,7 @@ final class GetSiteTest extends TestCase {
 	public function test_unknown_id_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/get-site' )->execute( array( 'blog_id' => 99999999 ) );
+		$result = wp_get_ability( 'og-network/get-site' )->execute( array( 'blog_id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_site_invalid_id', $result->get_error_code() );
@@ -104,7 +104,7 @@ final class GetSiteTest extends TestCase {
 		// A plain site administrator is NOT a super admin and lacks manage_sites.
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/get-site' );
+		$ability = wp_get_ability( 'og-network/get-site' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'blog_id' => 1 ) ) );
 
@@ -116,7 +116,7 @@ final class GetSiteTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/get-site' );
+		$ability = wp_get_ability( 'og-network/get-site' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'blog_id' => 1 ) ) );
 
@@ -128,7 +128,7 @@ final class GetSiteTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/get-site' );
+		$ability = wp_get_ability( 'og-network/get-site' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'blog_id' => 1 ) ) );
 

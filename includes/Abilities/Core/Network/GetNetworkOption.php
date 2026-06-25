@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Core-function read ability: `network/get-network-option`.
+ * Core-function read ability: `og-network/get-network-option`.
  *
  * Reads a single network (site) option by name from the current network (or a
  * specific network on a multi-network install) and reports whether it exists
@@ -40,11 +40,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * multisite (no one holds `manage_network_options` there), and `execute()` begins
  * with an explicit `is_multisite()` guard before touching any `ms-*`/network
  * function, mirroring the "explicit guard at the top of execute() when the
- * wrapped core fn has no route to surface an error" idiom (`tools/delete-transient`).
+ * wrapped core fn has no route to surface an error" idiom (`og-tools/delete-transient`).
  *
  * Security: this is a GENERIC network-option read gated ONLY on the super-admin
  * `manage_network_options` capability (the hard guard). There is deliberately no
- * read allow-list here — unlike `settings/get-option`'s per-site allow-list —
+ * read allow-list here — unlike `og-settings/get-option`'s per-site allow-list —
  * because the owner chose generic network-option reads/writes behind the
  * network-admin cap. A super admin can already read any network option via
  * wp-admin / WP-CLI, so this is not weaker than core. Because the value is
@@ -69,7 +69,7 @@ final class GetNetworkOption implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/get-network-option';
+		return 'og-network/get-network-option';
 	}
 
 	/**
@@ -92,7 +92,7 @@ final class GetNetworkOption implements Ability {
 					'network_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'Read from one network (multi-network installs). Discover IDs with network/list-networks. Omit for the current network.', 'abilities-catalog' ),
+						'description' => __( 'Read from one network (multi-network installs). Discover IDs with og-network/list-networks. Omit for the current network.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

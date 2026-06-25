@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `terms/list-categories`.
+ * Read ability: `og-terms/list-categories`.
  *
  * Wraps `GET /wp/v2/categories` via `rest_do_request()` and returns the matching
  * category terms with pagination totals taken from the REST response headers.
@@ -26,7 +26,7 @@ final class ListCategories implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/list-categories';
+		return 'og-terms/list-categories';
 	}
 
 	/**
@@ -46,7 +46,7 @@ final class ListCategories implements Ability {
 					),
 					'parent'     => array(
 						'type'        => 'integer',
-						'description' => __( 'Limit results to terms with the given parent term ID. Pass 0 to return only top-level categories. Discover IDs with terms/list-categories.', 'abilities-catalog' ),
+						'description' => __( 'Limit results to terms with the given parent term ID. Pass 0 to return only top-level categories. Discover IDs with og-terms/list-categories.', 'abilities-catalog' ),
 					),
 					'per_page'   => array(
 						'type'        => 'integer',

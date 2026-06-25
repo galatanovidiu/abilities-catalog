@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/get-network ability.
+ * Integration tests for the og-network/get-network ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -31,16 +31,16 @@ final class GetNetworkTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/get-network' );
+		$ability = wp_get_ability( 'og-network/get-network' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/get-network', $ability->get_name() );
+		$this->assertSame( 'og-network/get-network', $ability->get_name() );
 	}
 
 	public function test_happy_path_returns_the_current_network(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/get-network' )->execute( array() );
+		$result = wp_get_ability( 'og-network/get-network' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertIsInt( $result['id'] );
@@ -56,7 +56,7 @@ final class GetNetworkTest extends TestCase {
 	public function test_result_has_exactly_the_closed_field_set(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/get-network' )->execute( array() );
+		$result = wp_get_ability( 'og-network/get-network' )->execute( array() );
 
 		$this->assertSame(
 			array( 'id', 'domain', 'path', 'site_name', 'cookie_domain', 'main_site_id' ),
@@ -67,7 +67,7 @@ final class GetNetworkTest extends TestCase {
 	public function test_unknown_network_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/get-network' )->execute( array( 'network_id' => 99999999 ) );
+		$result = wp_get_ability( 'og-network/get-network' )->execute( array( 'network_id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_network_invalid_id', $result->get_error_code() );
@@ -81,7 +81,7 @@ final class GetNetworkTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/get-network' );
+		$ability = wp_get_ability( 'og-network/get-network' );
 
 		$this->assertFalse( $ability->check_permissions( array() ) );
 
@@ -93,7 +93,7 @@ final class GetNetworkTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/get-network' );
+		$ability = wp_get_ability( 'og-network/get-network' );
 
 		$this->assertFalse( $ability->check_permissions( array() ) );
 
@@ -105,7 +105,7 @@ final class GetNetworkTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/get-network' );
+		$ability = wp_get_ability( 'og-network/get-network' );
 
 		$this->assertFalse( $ability->check_permissions( array() ) );
 

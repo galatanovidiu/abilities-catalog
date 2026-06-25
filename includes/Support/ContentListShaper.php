@@ -110,7 +110,7 @@ final class ContentListShaper {
 	 * Extends {@see self::postSummary()} with the page-specific fields the core
 	 * `/wp/v2/pages` route exposes: hierarchy (`parent`), ordering (`menu_order`),
 	 * and the assigned page `template`. Lets an agent read the page tree and
-	 * ordering without a follow-up `content/get-page` per row.
+	 * ordering without a follow-up `og-content/get-page` per row.
 	 *
 	 * @param array<string,mixed> $item A single item from a REST collection response.
 	 * @return array<string,mixed> The summary row. No content body, no `_links`.

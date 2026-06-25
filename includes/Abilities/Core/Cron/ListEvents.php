@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `cron/list-events`.
+ * T1 read ability: `og-cron/list-events`.
  *
  * Lists every scheduled WP-Cron event on the site, one flat row per occurrence
  * (a distinct timestamp + hook + args combination), so an agent can audit what
@@ -41,7 +41,7 @@ final class ListEvents implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'cron/list-events';
+		return 'og-cron/list-events';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class ListEvents implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Scheduled Events', 'abilities-catalog' ),
-			'description'         => __( 'Lists every scheduled WP-Cron event, one row per occurrence, each with its hook name, timestamp (Unix UTC seconds), gmt_date, schedule, interval, and args. Use this to audit scheduled automation and to recover the exact hook/timestamp/args needed by cron/get-event, cron/schedule-event, and cron/unschedule-event. A one-off single event reports schedule and interval as null. An empty result means nothing is scheduled.', 'abilities-catalog' ),
+			'description'         => __( 'Lists every scheduled WP-Cron event, one row per occurrence, each with its hook name, timestamp (Unix UTC seconds), gmt_date, schedule, interval, and args. Use this to audit scheduled automation and to recover the exact hook/timestamp/args needed by og-cron/get-event, og-cron/schedule-event, and og-cron/unschedule-event. A one-off single event reports schedule and interval as null. An empty result means nothing is scheduled.', 'abilities-catalog' ),
 			'category'            => 'cron',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -59,7 +59,7 @@ final class ListEvents implements Ability {
 				'properties'           => array(
 					'events' => array(
 						'type'        => 'array',
-						'description' => __( 'All scheduled events, one row per occurrence. Use cron/get-event for a single event.', 'abilities-catalog' ),
+						'description' => __( 'All scheduled events, one row per occurrence. Use og-cron/get-event for a single event.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'required'             => array( 'hook', 'timestamp', 'gmt_date', 'schedule', 'interval', 'args' ),
@@ -70,7 +70,7 @@ final class ListEvents implements Ability {
 								),
 								'timestamp' => array(
 									'type'        => 'integer',
-									'description' => __( 'Unix UTC seconds of this occurrence. This is the canonical time value; pass it to cron/get-event or cron/unschedule-event.', 'abilities-catalog' ),
+									'description' => __( 'Unix UTC seconds of this occurrence. This is the canonical time value; pass it to og-cron/get-event or og-cron/unschedule-event.', 'abilities-catalog' ),
 								),
 								'gmt_date'  => array(
 									'type'        => 'string',
@@ -86,7 +86,7 @@ final class ListEvents implements Ability {
 								),
 								'args'      => array(
 									'type'        => 'array',
-									'description' => __( 'The arguments the event was scheduled with (passed to the hook callback). These also identify the event: pass them back verbatim to cron/get-event or cron/unschedule-event. Empty for an event scheduled with no args.', 'abilities-catalog' ),
+									'description' => __( 'The arguments the event was scheduled with (passed to the hook callback). These also identify the event: pass them back verbatim to og-cron/get-event or og-cron/unschedule-event. Empty for an event scheduled with no args.', 'abilities-catalog' ),
 								),
 							),
 							'additionalProperties' => false,

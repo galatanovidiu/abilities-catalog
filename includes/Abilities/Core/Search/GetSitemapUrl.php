@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `search/get-sitemap-url`.
+ * Read ability: `og-search/get-sitemap-url`.
  *
  * Returns the site's XML sitemap index URL and whether sitemaps are enabled,
  * read directly from core. Net-new read: no REST route is dispatched.
@@ -31,7 +31,7 @@ final class GetSitemapUrl implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'search/get-sitemap-url';
+		return 'og-search/get-sitemap-url';
 	}
 
 	/**

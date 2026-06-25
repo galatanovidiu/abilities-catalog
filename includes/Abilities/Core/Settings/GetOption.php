@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-option`.
+ * T1 read ability: `og-settings/get-option`.
  *
  * The deny-by-default generic option reader. It reads a single WordPress option
  * by name, but only when that name is on the read allow-list in
@@ -36,7 +36,7 @@ final class GetOption implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-option';
+		return 'og-settings/get-option';
 	}
 
 	/**

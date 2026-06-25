@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the site-health/get-status ability.
+ * Integration tests for the og-site-health/get-status ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -19,16 +19,16 @@ use WP_Error;
 final class GetStatusTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'site-health/get-status' );
+		$ability = wp_get_ability( 'og-site-health/get-status' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'site-health/get-status', $ability->get_name() );
+		$this->assertSame( 'og-site-health/get-status', $ability->get_name() );
 	}
 
 	public function test_happy_path_returns_direct_async_summary(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'site-health/get-status' )->execute();
+		$result = wp_get_ability( 'og-site-health/get-status' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'direct', $result );
@@ -72,7 +72,7 @@ final class GetStatusTest extends TestCase {
 	public function test_async_tests_use_hyphenated_slugs(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'site-health/get-status' )->execute();
+		$result = wp_get_ability( 'og-site-health/get-status' )->execute();
 
 		foreach ( $result['async'] as $entry ) {
 			$this->assertArrayHasKey( 'test', $entry );
@@ -85,7 +85,7 @@ final class GetStatusTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'site-health/get-status' );
+		$ability = wp_get_ability( 'og-site-health/get-status' );
 
 		$this->assertFalse( $ability->check_permissions() );
 

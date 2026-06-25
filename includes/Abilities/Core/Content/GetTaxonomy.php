@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/get-taxonomy`.
+ * Read ability: `og-content/get-taxonomy`.
  *
  * Wraps `GET /wp/v2/taxonomies/<taxonomy>` via `rest_do_request()` and shapes the
  * response into a flat field set. Single-object companion to the post-type reads.
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * taxonomy. Rather than expose an `edit` context (which would tighten the
  * permission to an edit-posts holder), this ability derives them from core
  * directly — `get_taxonomy()->show_tagcloud` and `get_taxonomy()->public` —
- * exactly as the sibling `content/get-post-type` derives `viewable` and
+ * exactly as the sibling `og-content/get-post-type` derives `viewable` and
  * `supports`. That keeps the read a public `view` read.
  *
  * @since 0.1.0
@@ -34,7 +34,7 @@ final class GetTaxonomy implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-taxonomy';
+		return 'og-content/get-taxonomy';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class GetTaxonomy implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Taxonomy', 'abilities-catalog' ),
-			'description'         => __( 'Returns one registered taxonomy by its slug, including its name, description, hierarchical flag, the post types it applies to, REST base/namespace, and whether terms are public. Discover slugs with content/list-post-types (a type\'s taxonomies) or the terms abilities.', 'abilities-catalog' ),
+			'description'         => __( 'Returns one registered taxonomy by its slug, including its name, description, hierarchical flag, the post types it applies to, REST base/namespace, and whether terms are public. Discover slugs with og-content/list-post-types (a type\'s taxonomies) or the terms abilities.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -51,7 +51,7 @@ final class GetTaxonomy implements Ability {
 				'properties'           => array(
 					'taxonomy' => array(
 						'type'        => 'string',
-						'description' => __( 'The taxonomy slug, e.g. "category" or "post_tag". Discover slugs with content/list-post-types (a type\'s taxonomies) or the terms abilities.', 'abilities-catalog' ),
+						'description' => __( 'The taxonomy slug, e.g. "category" or "post_tag". Discover slugs with og-content/list-post-types (a type\'s taxonomies) or the terms abilities.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

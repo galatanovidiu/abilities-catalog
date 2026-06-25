@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/list-taxonomies ability.
+ * Integration tests for the og-terms/list-taxonomies ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -19,10 +19,10 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 final class ListTaxonomiesTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'terms/list-taxonomies' );
+		$ability = wp_get_ability( 'og-terms/list-taxonomies' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'terms/list-taxonomies', $ability->get_name() );
+		$this->assertSame( 'og-terms/list-taxonomies', $ability->get_name() );
 	}
 
 	/**
@@ -32,7 +32,7 @@ final class ListTaxonomiesTest extends TestCase {
 	public function test_returns_flat_taxonomy_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/list-taxonomies' )->execute( array() );
+		$result = wp_get_ability( 'og-terms/list-taxonomies' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -60,7 +60,7 @@ final class ListTaxonomiesTest extends TestCase {
 	public function test_built_in_taxonomies_appear(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/list-taxonomies' )->execute( array() );
+		$result = wp_get_ability( 'og-terms/list-taxonomies' )->execute( array() );
 
 		$by_slug = array();
 		foreach ( $result['items'] as $item ) {

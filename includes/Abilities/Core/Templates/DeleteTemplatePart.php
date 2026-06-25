@@ -13,9 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `templates/delete-template-part`.
+ * T2 destructive write ability: `og-templates/delete-template-part`.
  *
- * Part-first sibling of `templates/delete-template`: the route is hardcoded to
+ * Part-first sibling of `og-templates/delete-template`: the route is hardcoded to
  * `DELETE /wp/v2/template-parts/<id>` (post type `wp_template_part`) — there is no
  * `post_type` input. Dispatched with `force=true` via `rest_do_request()`. The id
  * has the form `theme//slug`; the `//` is part of the route path and is NOT
@@ -44,7 +44,7 @@ final class DeleteTemplatePart implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/delete-template-part';
+		return 'og-templates/delete-template-part';
 	}
 
 	/**
@@ -61,7 +61,7 @@ final class DeleteTemplatePart implements Ability {
 					'id' => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template part id in "theme//slug" form (e.g. "twentytwentyfive//header"). Discover ids via templates/list-template-parts.', 'abilities-catalog' ),
+						'description' => __( 'The template part id in "theme//slug" form (e.g. "twentytwentyfive//header"). Discover ids via og-templates/list-template-parts.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

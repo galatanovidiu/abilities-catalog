@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Reference T1 read ability: `content/get-post`.
+ * Reference T1 read ability: `og-content/get-post`.
  *
  * Wraps `GET /wp/v2/posts/<id>` via `rest_do_request()` and shapes the response
  * into a flat field set. Establishes the per-ability pattern for the fan-out:
@@ -29,7 +29,7 @@ final class GetPost implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-post';
+		return 'og-content/get-post';
 	}
 
 	/**
@@ -141,7 +141,7 @@ final class GetPost implements Ability {
 	/**
 	 * Permission check: delegated to the wrapped REST route.
 	 *
-	 * `content/get-post` reads through `GET /wp/v2/posts/<id>`, whose own
+	 * `og-content/get-post` reads through `GET /wp/v2/posts/<id>`, whose own
 	 * permission check enforces `read_post` on the object — granting public access
 	 * to published public posts (including anonymous callers) and denying private
 	 * or password-protected ones. Doing the object-level check here instead would

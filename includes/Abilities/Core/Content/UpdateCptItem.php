@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `content/update-cpt-item` (generic, keyed by `post_type`).
+ * T2 write ability: `og-content/update-cpt-item` (generic, keyed by `post_type`).
  *
  * Restricts `post_type` to **post-like updatable** types via a controller-aware
  * allow-test (see {@see UpdateCptItem::isPostLikeCreatable()}): the type must be
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Resolves the type's REST item route via `rest_get_route_for_post_type_items()`
  * (honoring a custom `rest_namespace`) and wraps `POST <route>/<id>` via
  * `rest_do_request()` to update an item of any registered `show_in_rest` post
- * type. Mirrors the update fan-out of `content/update-post`, but resolves the
+ * type. Mirrors the update fan-out of `og-content/update-post`, but resolves the
  * publish and author capabilities per-type from `get_post_type_object()`. Only
  * the provided fields change. The `permission_callback` uses the type-level
  * `edit_posts` capability as a coarse guard; the object-level `edit_post` check
@@ -70,7 +70,7 @@ final class UpdateCptItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/update-cpt-item';
+		return 'og-content/update-cpt-item';
 	}
 
 	/**
@@ -99,7 +99,7 @@ final class UpdateCptItem implements Ability {
 					),
 					'content'   => array(
 						'type'        => 'string',
-						'description' => __( 'The item content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
+						'description' => __( 'The item content as Gutenberg block markup, e.g. <!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph -->. Bare HTML is accepted but stored as a single classic block. Use og-templates/list-block-types to discover available blocks.', 'abilities-catalog' ),
 					),
 					'excerpt'   => array(
 						'type'        => 'string',

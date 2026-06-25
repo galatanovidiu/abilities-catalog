@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-permalinks`.
+ * T1 read ability: `og-settings/get-permalinks`.
  *
  * Returns the Permalink Settings screen values, read directly from options.
  * Net-new read: no REST route is dispatched.
@@ -24,7 +24,7 @@ final class GetPermalinks implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-permalinks';
+		return 'og-settings/get-permalinks';
 	}
 
 	/**

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `content/delete-post`.
+ * T2 destructive write ability: `og-content/delete-post`.
  *
  * Wraps `DELETE /wp/v2/posts/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the post (bypassing the Trash). The `permission_callback`
@@ -32,7 +32,7 @@ final class DeletePost implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/delete-post';
+		return 'og-content/delete-post';
 	}
 
 	/**
@@ -41,7 +41,7 @@ final class DeletePost implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Post', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a post by ID, bypassing the Trash. This cannot be undone. To remove a post recoverably, use `content/trash-post` instead.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a post by ID, bypassing the Trash. This cannot be undone. To remove a post recoverably, use `og-content/trash-post` instead.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -49,7 +49,7 @@ final class DeletePost implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The post ID to permanently delete. Obtain it from a list/get content ability (e.g. `content/list-posts` or `content/get-post`).', 'abilities-catalog' ),
+						'description' => __( 'The post ID to permanently delete. Obtain it from a list/get content ability (e.g. `og-content/list-posts` or `og-content/get-post`).', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

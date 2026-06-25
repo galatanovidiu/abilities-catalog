@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/update-widget ability.
+ * Integration tests for the og-widgets/update-widget ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -122,14 +122,14 @@ final class UpdateWidgetTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/update-widget' );
+		$ability = wp_get_ability( 'og-widgets/update-widget' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/update-widget', $ability->get_name() );
+		$this->assertSame( 'og-widgets/update-widget', $ability->get_name() );
 	}
 
 	public function test_admin_can_update_widget_content(): void {
-		$result = wp_get_ability( 'widgets/update-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/update-widget' )->execute(
 			array(
 				'id'       => $this->widget_id,
 				'instance' => array( 'raw' => array( 'content' => '<!-- wp:paragraph --><p>W3 changed</p><!-- /wp:paragraph -->' ) ),
@@ -144,7 +144,7 @@ final class UpdateWidgetTest extends TestCase {
 	}
 
 	public function test_admin_can_move_widget_to_another_sidebar(): void {
-		$result = wp_get_ability( 'widgets/update-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/update-widget' )->execute(
 			array(
 				'id'      => $this->widget_id,
 				'sidebar' => $this->test_sidebar_id,
@@ -158,7 +158,7 @@ final class UpdateWidgetTest extends TestCase {
 	}
 
 	public function test_output_shape_is_exact(): void {
-		$result = wp_get_ability( 'widgets/update-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/update-widget' )->execute(
 			array(
 				'id'      => $this->widget_id,
 				'sidebar' => $this->test_sidebar_id,
@@ -184,7 +184,7 @@ final class UpdateWidgetTest extends TestCase {
 	 * unknown instance.
 	 */
 	public function test_missing_widget_returns_404_not_generic(): void {
-		$result = wp_get_ability( 'widgets/update-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/update-widget' )->execute(
 			array(
 				'id'      => 'block-99999',
 				'sidebar' => $this->test_sidebar_id,
@@ -200,7 +200,7 @@ final class UpdateWidgetTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_widget_unchanged(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'widgets/update-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/update-widget' )->execute(
 			array(
 				'id'       => $this->widget_id,
 				'instance' => array( 'raw' => array( 'content' => '<!-- wp:paragraph --><p>denied</p><!-- /wp:paragraph -->' ) ),
@@ -217,7 +217,7 @@ final class UpdateWidgetTest extends TestCase {
 	public function test_subscriber_is_denied_and_widget_unchanged(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'widgets/update-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/update-widget' )->execute(
 			array(
 				'id'       => $this->widget_id,
 				'instance' => array( 'raw' => array( 'content' => '<!-- wp:paragraph --><p>denied</p><!-- /wp:paragraph -->' ) ),

@@ -14,19 +14,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `terms/update-meta`.
+ * T2 write ability: `og-terms/update-meta`.
  *
  * Sets one or more of a term's custom fields (meta). It writes only meta keys the
  * site has registered with `show_in_rest` for the term's taxonomy, and rejects any
  * unknown key — it never creates ad-hoc or internal meta. Wraps core
  * `update_metadata( 'term', ... )` after an object-level `edit_term` check and a
  * per-key `edit_term_meta` capability check; the registered value is sanitized by
- * its `sanitize_callback`. Does not delete meta (use `terms/delete-meta`) and does
+ * its `sanitize_callback`. Does not delete meta (use `og-terms/delete-meta`) and does
  * not change other term fields. Returns the term `id`, the applied `meta` values,
  * and `edit_link` (the wp-admin editor URL); surface `edit_link` so a human can
  * review the change.
  *
- * Mirrors `content/update-post-meta`, swapping the post metadata functions for the
+ * Mirrors `og-content/update-post-meta`, swapping the post metadata functions for the
  * generic `*_metadata( 'term', ... )` functions and resolving the registered key set
  * via {@see RegisteredMeta} keyed by the term's taxonomy as the meta subtype.
  *
@@ -38,7 +38,7 @@ final class UpdateTermMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/update-meta';
+		return 'og-terms/update-meta';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class UpdateTermMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Term Meta', 'abilities-catalog' ),
-			'description'         => __( 'Sets custom fields (meta) on a term. Only meta keys registered with show_in_rest for the term\'s taxonomy can be written; unknown keys are rejected, so internal meta is never writable. Returns the term id, the applied meta, and edit_link — surface edit_link so a human can review the change. Discover term IDs with terms/list-terms.', 'abilities-catalog' ),
+			'description'         => __( 'Sets custom fields (meta) on a term. Only meta keys registered with show_in_rest for the term\'s taxonomy can be written; unknown keys are rejected, so internal meta is never writable. Returns the term id, the applied meta, and edit_link — surface edit_link so a human can review the change. Discover term IDs with og-terms/list-terms.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -55,7 +55,7 @@ final class UpdateTermMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The term ID to update meta on. Discover IDs with terms/list-terms.', 'abilities-catalog' ),
+						'description' => __( 'The term ID to update meta on. Discover IDs with og-terms/list-terms.', 'abilities-catalog' ),
 					),
 					'meta' => array(
 						'type'                 => 'object',

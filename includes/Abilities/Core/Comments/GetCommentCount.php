@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `comments/get-comment-count`.
+ * Read ability: `og-comments/get-comment-count`.
  *
  * Wraps `wp_count_comments()` and projects its status buckets into a flat,
  * closed result. No REST route covers this read, so the ability calls the core
@@ -30,7 +30,7 @@ final class GetCommentCount implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/get-comment-count';
+		return 'og-comments/get-comment-count';
 	}
 
 	/**
@@ -48,7 +48,7 @@ final class GetCommentCount implements Ability {
 						'type'        => 'integer',
 						'minimum'     => 0,
 						'default'     => 0,
-						'description' => __( 'The post ID to scope the counts to. Omit or pass 0 for whole-site totals. Discover IDs with content/list-posts or content/list-pages.', 'abilities-catalog' ),
+						'description' => __( 'The post ID to scope the counts to. Omit or pass 0 for whole-site totals. Discover IDs with og-content/list-posts or og-content/list-pages.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

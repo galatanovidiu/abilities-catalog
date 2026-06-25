@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/delete-comment ability.
+ * Integration tests for the og-comments/delete-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -48,16 +48,16 @@ final class DeleteCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'comments/delete-comment' );
+		$ability = wp_get_ability( 'og-comments/delete-comment' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'comments/delete-comment', $ability->get_name() );
+		$this->assertSame( 'og-comments/delete-comment', $ability->get_name() );
 	}
 
 	public function test_admin_can_permanently_delete_comment(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -73,7 +73,7 @@ final class DeleteCommentTest extends TestCase {
 	public function test_negative_id_is_rejected_before_deletion(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => -$this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/delete-comment' )->execute( array( 'id' => -$this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -83,7 +83,7 @@ final class DeleteCommentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -97,7 +97,7 @@ final class DeleteCommentTest extends TestCase {
 	public function test_non_moderator_is_denied_with_403(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
@@ -112,7 +112,7 @@ final class DeleteCommentTest extends TestCase {
 	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'comments/delete-comment' )->execute( array( 'id' => 99999999 ) );
+		$result = wp_get_ability( 'og-comments/delete-comment' )->execute( array( 'id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_comment_invalid_id', $result->get_error_code() );

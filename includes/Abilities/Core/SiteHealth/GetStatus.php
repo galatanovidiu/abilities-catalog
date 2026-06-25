@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `site-health/get-status`.
+ * T1 read ability: `og-site-health/get-status`.
  *
  * Net-new. There is no single aggregate "status" REST route, so this ability
  * enumerates the registered Site Health tests via {@see WP_Site_Health::get_tests()}
@@ -35,7 +35,7 @@ final class GetStatus implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'site-health/get-status';
+		return 'og-site-health/get-status';
 	}
 
 	/**

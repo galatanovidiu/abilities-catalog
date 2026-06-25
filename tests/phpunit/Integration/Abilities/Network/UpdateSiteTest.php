@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/update-site ability.
+ * Integration tests for the og-network/update-site ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -67,10 +67,10 @@ final class UpdateSiteTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/update-site' );
+		$ability = wp_get_ability( 'og-network/update-site' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/update-site', $ability->get_name() );
+		$this->assertSame( 'og-network/update-site', $ability->get_name() );
 	}
 
 	public function test_happy_path_archives_the_site_and_reads_back(): void {
@@ -78,7 +78,7 @@ final class UpdateSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/update-site' )->execute(
+		$result = wp_get_ability( 'og-network/update-site' )->execute(
 			array(
 				'blog_id'  => $blog_id,
 				'archived' => true,
@@ -98,7 +98,7 @@ final class UpdateSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/update-site' )->execute(
+		$result = wp_get_ability( 'og-network/update-site' )->execute(
 			array(
 				'blog_id'  => $blog_id,
 				'archived' => true,
@@ -128,7 +128,7 @@ final class UpdateSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$first = wp_get_ability( 'network/update-site' )->execute(
+		$first = wp_get_ability( 'og-network/update-site' )->execute(
 			array(
 				'blog_id'  => $blog_id,
 				'archived' => true,
@@ -138,7 +138,7 @@ final class UpdateSiteTest extends TestCase {
 		$this->assertTrue( $first['archived'] );
 
 		// Re-applying the same flag is a same-state no-op, not an error.
-		$second = wp_get_ability( 'network/update-site' )->execute(
+		$second = wp_get_ability( 'og-network/update-site' )->execute(
 			array(
 				'blog_id'  => $blog_id,
 				'archived' => true,
@@ -154,7 +154,7 @@ final class UpdateSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/update-site' )->execute( array( 'blog_id' => $blog_id ) );
+		$result = wp_get_ability( 'og-network/update-site' )->execute( array( 'blog_id' => $blog_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_no_changes', $result->get_error_code() );
@@ -164,7 +164,7 @@ final class UpdateSiteTest extends TestCase {
 	public function test_unknown_id_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/update-site' )->execute(
+		$result = wp_get_ability( 'og-network/update-site' )->execute(
 			array(
 				'blog_id'  => 99999999,
 				'archived' => true,
@@ -184,7 +184,7 @@ final class UpdateSiteTest extends TestCase {
 		// A plain site administrator is NOT a super admin and lacks manage_sites.
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/update-site' );
+		$ability = wp_get_ability( 'og-network/update-site' );
 
 		$this->assertNotTrue(
 			$ability->check_permissions(
@@ -215,7 +215,7 @@ final class UpdateSiteTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/update-site' );
+		$ability = wp_get_ability( 'og-network/update-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -230,7 +230,7 @@ final class UpdateSiteTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/update-site' );
+		$ability = wp_get_ability( 'og-network/update-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

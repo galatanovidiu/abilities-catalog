@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-patterns`.
+ * Read ability: `og-templates/list-patterns`.
  *
  * Wraps `GET /wp/v2/block-patterns/patterns` via `rest_do_request()` and shapes
  * the result. Returns the flat list of registered block patterns (the read-only
  * pattern registry, not user-created `wp_block` synced patterns; for those use
- * `templates/list-synced-patterns`). Each row is projected into a closed set of
+ * `og-templates/list-synced-patterns`). Each row is projected into a closed set of
  * fields. Read-only.
  *
  * @since 0.1.0
@@ -29,7 +29,7 @@ final class ListPatterns implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-patterns';
+		return 'og-templates/list-patterns';
 	}
 
 	/**

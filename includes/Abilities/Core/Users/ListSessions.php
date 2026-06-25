@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `users/list-sessions`.
+ * T1 read ability: `og-users/list-sessions`.
  *
  * Lists a user's active login sessions — one row per device/login that is
  * still valid — so an agent can audit where a user is currently logged in.
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Sessions expose the IP address and user-agent a user logged in from, so this
  * read requires object-level `edit_user` for anyone but the user themselves —
- * the same reason `users/get-meta` requires `edit_user`. The coarse
+ * the same reason `og-users/get-meta` requires `edit_user`. The coarse
  * `permission_callback` only enforces that the caller is logged in; the
  * object-level guard lives in `execute()` so a missing user surfaces a specific
  * `rest_user_invalid_id` (404) instead of being masked as a permission denial.
@@ -42,7 +42,7 @@ final class ListSessions implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/list-sessions';
+		return 'og-users/list-sessions';
 	}
 
 	/**
@@ -60,7 +60,7 @@ final class ListSessions implements Ability {
 						'type'        => 'integer',
 						'minimum'     => 0,
 						'default'     => 0,
-						'description' => __( 'The user whose sessions to list. Omit or pass 0 for the current user. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The user whose sessions to list. Omit or pass 0 for the current user. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

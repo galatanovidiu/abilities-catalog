@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `cron/unschedule-event`.
+ * Dangerous-tier write ability: `og-cron/unschedule-event`.
  *
  * Removes ONE scheduled WP-Cron event occurrence, identified by its exact hook +
  * timestamp + args, by wrapping core `wp_unschedule_event()`. Narrow by design: it
@@ -56,7 +56,7 @@ final class UnscheduleEvent implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'cron/unschedule-event';
+		return 'og-cron/unschedule-event';
 	}
 
 	/**
@@ -65,7 +65,7 @@ final class UnscheduleEvent implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Unschedule Event', 'abilities-catalog' ),
-			'description'         => __( 'Removes one scheduled WP-Cron event by its exact hook, timestamp, and args. Unscheduling a core maintenance event (such as wp_version_check, wp_update_plugins, or wp_scheduled_delete) disables that automation until it is re-scheduled. Reversible: re-create it with cron/schedule-event using the returned previous_schedule. Removes only the single matching occurrence, not every event for the hook. Identify the event first with cron/list-events or cron/get-event; if no event matches the hook+timestamp+args this returns a 404 (abilities_catalog_cron_event_not_found).', 'abilities-catalog' ),
+			'description'         => __( 'Removes one scheduled WP-Cron event by its exact hook, timestamp, and args. Unscheduling a core maintenance event (such as wp_version_check, wp_update_plugins, or wp_scheduled_delete) disables that automation until it is re-scheduled. Reversible: re-create it with og-cron/schedule-event using the returned previous_schedule. Removes only the single matching occurrence, not every event for the hook. Identify the event first with og-cron/list-events or og-cron/get-event; if no event matches the hook+timestamp+args this returns a 404 (abilities_catalog_cron_event_not_found).', 'abilities-catalog' ),
 			'category'            => 'cron',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -74,17 +74,17 @@ final class UnscheduleEvent implements Ability {
 					'hook'      => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The action hook name of the event to remove. Get it from cron/list-events or cron/get-event.', 'abilities-catalog' ),
+						'description' => __( 'The action hook name of the event to remove. Get it from og-cron/list-events or og-cron/get-event.', 'abilities-catalog' ),
 					),
 					'timestamp' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The exact Unix UTC seconds of the occurrence to remove, taken verbatim from cron/list-events or cron/get-event. Only the event at this exact timestamp is removed.', 'abilities-catalog' ),
+						'description' => __( 'The exact Unix UTC seconds of the occurrence to remove, taken verbatim from og-cron/list-events or og-cron/get-event. Only the event at this exact timestamp is removed.', 'abilities-catalog' ),
 					),
 					'args'      => array(
 						'type'        => 'array',
 						'default'     => array(),
-						'description' => __( 'The arguments the event was scheduled with; they uniquely identify the event and must match exactly. Copy them verbatim from cron/list-events or cron/get-event. Omit for an event scheduled with no args.', 'abilities-catalog' ),
+						'description' => __( 'The arguments the event was scheduled with; they uniquely identify the event and must match exactly. Copy them verbatim from og-cron/list-events or og-cron/get-event. Omit for an event scheduled with no args.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -111,7 +111,7 @@ final class UnscheduleEvent implements Ability {
 					),
 					'previous_schedule' => array(
 						'type'        => array( 'string', 'null' ),
-						'description' => __( 'The recurrence name the removed event had (e.g. "hourly", "daily"), or null if it was a one-off single event. Pass this back as the recurrence of cron/schedule-event to re-create the event.', 'abilities-catalog' ),
+						'description' => __( 'The recurrence name the removed event had (e.g. "hourly", "daily"), or null if it was a one-off single event. Pass this back as the recurrence of og-cron/schedule-event to re-create the event.', 'abilities-catalog' ),
 					),
 					'previous_interval' => array(
 						'type'        => array( 'integer', 'null' ),
@@ -119,7 +119,7 @@ final class UnscheduleEvent implements Ability {
 					),
 					'args'              => array(
 						'type'        => 'array',
-						'description' => __( 'The arguments the removed event was scheduled with, echoed back. Pass them verbatim to cron/schedule-event to re-create the event.', 'abilities-catalog' ),
+						'description' => __( 'The arguments the removed event was scheduled with, echoed back. Pass them verbatim to og-cron/schedule-event to re-create the event.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -200,7 +200,7 @@ final class UnscheduleEvent implements Ability {
 		}
 
 		// Capture the recurrence state being destroyed so the agent can undo via
-		// cron/schedule-event. Core stores schedule=false for a one-off single event
+		// og-cron/schedule-event. Core stores schedule=false for a one-off single event
 		// (normalize to null), and only sets interval on a recurring event.
 		$previous_schedule = isset( $event->schedule ) && false !== $event->schedule
 			? (string) $event->schedule

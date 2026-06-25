@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/get-term ability (generic, taxonomy-keyed).
+ * Integration tests for the og-terms/get-term ability (generic, taxonomy-keyed).
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -39,10 +39,10 @@ final class GetTermTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/get-term');
+		$ability = wp_get_ability('og-terms/get-term');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/get-term', $ability->get_name());
+		$this->assertSame('og-terms/get-term', $ability->get_name());
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class GetTermTest extends TestCase {
 	public function test_returns_flat_term_shape(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-term')->execute(
+		$result = wp_get_ability('og-terms/get-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => $this->term_id,
@@ -75,7 +75,7 @@ final class GetTermTest extends TestCase {
 	public function test_negative_id_is_rejected_not_coerced_to_other_term(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-term')->execute(
+		$result = wp_get_ability('og-terms/get-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => -$this->term_id,
@@ -97,7 +97,7 @@ final class GetTermTest extends TestCase {
 	public function test_missing_term_surfaces_rest_term_invalid(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-term')->execute(
+		$result = wp_get_ability('og-terms/get-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => 999999,
@@ -114,7 +114,7 @@ final class GetTermTest extends TestCase {
 	public function test_unknown_taxonomy_returns_invalid_code(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-term')->execute(
+		$result = wp_get_ability('og-terms/get-term')->execute(
 			array(
 				'taxonomy' => 'no_such_taxonomy',
 				'id'       => $this->term_id,
@@ -140,7 +140,7 @@ final class GetTermTest extends TestCase {
 
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-term')->execute(
+		$result = wp_get_ability('og-terms/get-term')->execute(
 			array(
 				'taxonomy' => 'gt_private_tax',
 				'id'       => $this->term_id,
@@ -160,7 +160,7 @@ final class GetTermTest extends TestCase {
 	public function test_edit_context_denied_without_capability(): void {
 		$this->actingAs('subscriber');
 
-		$allowed = wp_get_ability('terms/get-term')->check_permissions(
+		$allowed = wp_get_ability('og-terms/get-term')->check_permissions(
 			array(
 				'taxonomy' => 'category',
 				'id'       => $this->term_id,

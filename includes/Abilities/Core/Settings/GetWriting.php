@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-writing`.
+ * T1 read ability: `og-settings/get-writing`.
  *
  * Returns the stored Writing Settings option values, read directly from options.
  * These normally match the Writing Settings screen. Net-new read: no REST route
@@ -25,7 +25,7 @@ final class GetWriting implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-writing';
+		return 'og-settings/get-writing';
 	}
 
 	/**

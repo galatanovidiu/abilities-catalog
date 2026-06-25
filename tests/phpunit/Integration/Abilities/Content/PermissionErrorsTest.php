@@ -45,7 +45,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_get_post_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => self::MISSING_ID ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => self::MISSING_ID ) );
 
 		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
 	}
@@ -59,7 +59,7 @@ final class PermissionErrorsTest extends TestCase {
 		);
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $post_id, $result['id'] );
@@ -76,7 +76,7 @@ final class PermissionErrorsTest extends TestCase {
 		);
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'content/get-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 	}
@@ -84,7 +84,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_update_post_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'    => self::MISSING_ID,
 				'title' => 'Nope',
@@ -105,7 +105,7 @@ final class PermissionErrorsTest extends TestCase {
 
 		// A different author tries to edit it.
 		$this->actingAs( 'author' );
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'    => $post_id,
 				'title' => 'Hijacked',
@@ -120,7 +120,7 @@ final class PermissionErrorsTest extends TestCase {
 		$post_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'    => $post_id,
 				'title' => 'Nope',
@@ -133,7 +133,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_delete_post_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/delete-post' )->execute( array( 'id' => self::MISSING_ID ) );
+		$result = wp_get_ability( 'og-content/delete-post' )->execute( array( 'id' => self::MISSING_ID ) );
 
 		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
 	}
@@ -144,7 +144,7 @@ final class PermissionErrorsTest extends TestCase {
 
 		// A negative id must be rejected by input validation (minimum: 1), never
 		// mapped to a positive post by absint() and permanently deleted.
-		$result = wp_get_ability( 'content/delete-post' )->execute( array( 'id' => -$post_id ) );
+		$result = wp_get_ability( 'og-content/delete-post' )->execute( array( 'id' => -$post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -154,7 +154,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_delete_page_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => self::MISSING_ID ) );
+		$result = wp_get_ability( 'og-content/delete-page' )->execute( array( 'id' => self::MISSING_ID ) );
 
 		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
 	}
@@ -162,7 +162,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_get_cpt_item_unknown_post_type_returns_400_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/get-cpt-item' )->execute(
 			array(
 				'post_type' => 'not_a_real_type',
 				'id'        => self::MISSING_ID,
@@ -175,7 +175,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_update_cpt_item_unknown_post_type_returns_400_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/update-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/update-cpt-item' )->execute(
 			array(
 				'post_type' => 'not_a_real_type',
 				'id'        => self::MISSING_ID,
@@ -197,7 +197,7 @@ final class PermissionErrorsTest extends TestCase {
 
 		// A negative id must be rejected by input validation (minimum: 1), never
 		// mapped to a positive post by absint() and silently retargeted.
-		$result = wp_get_ability( 'content/update-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/update-cpt-item' )->execute(
 			array(
 				'post_type' => 'post',
 				'id'        => -$post_id,
@@ -213,7 +213,7 @@ final class PermissionErrorsTest extends TestCase {
 	public function test_get_post_meta_missing_id_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => self::MISSING_ID ) );
+		$result = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => self::MISSING_ID ) );
 
 		$this->assertSpecificError( $result, 'rest_post_invalid_id' );
 	}
@@ -229,7 +229,7 @@ final class PermissionErrorsTest extends TestCase {
 		update_post_meta( $post_id, 'secret', 'value' );
 
 		$this->actingAs( 'author' );
-		$result = wp_get_ability( 'content/get-post-meta' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/get-post-meta' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertSpecificError( $result, 'rest_cannot_edit' );
 	}
@@ -256,7 +256,7 @@ final class PermissionErrorsTest extends TestCase {
 		// A different author must not be able to restore the revision (B1: core
 		// wp_restore_post_revision() has no capability check of its own).
 		$this->actingAs( 'author' );
-		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/restore-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $revision_id,
@@ -271,7 +271,7 @@ final class PermissionErrorsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create();
 
-		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/restore-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => self::MISSING_ID,
@@ -300,7 +300,7 @@ final class PermissionErrorsTest extends TestCase {
 		$revision_id = (int) array_key_first( $revisions );
 		$other_post  = self::factory()->post->create();
 
-		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/restore-post-revision' )->execute(
 			array(
 				'parent'      => $other_post,
 				'revision_id' => $revision_id,

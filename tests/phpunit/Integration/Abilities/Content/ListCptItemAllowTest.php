@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the post-like-listable allow-test for content/list-cpt-items.
+ * Exercises the post-like-listable allow-test for og-content/list-cpt-items.
  */
 final class ListCptItemAllowTest extends TestCase {
 
@@ -59,7 +59,7 @@ final class ListCptItemAllowTest extends TestCase {
 			array( 'post_status' => 'publish' )
 		);
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array( 'post_type' => 'post' )
 		);
 
@@ -79,7 +79,7 @@ final class ListCptItemAllowTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array( 'post_type' => self::POST_TYPE )
 		);
 
@@ -91,7 +91,7 @@ final class ListCptItemAllowTest extends TestCase {
 	public function test_template_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array( 'post_type' => 'wp_template' )
 		);
 
@@ -103,7 +103,7 @@ final class ListCptItemAllowTest extends TestCase {
 	public function test_global_styles_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array( 'post_type' => 'wp_global_styles' )
 		);
 
@@ -115,7 +115,7 @@ final class ListCptItemAllowTest extends TestCase {
 	public function test_unknown_type_returns_invalid_post_type(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array( 'post_type' => 'does_not_exist' )
 		);
 

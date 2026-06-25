@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-templates output and contract.
+ * Integration tests for og-templates/list-templates output and contract.
  *
  * Covers the happy path (returns an `items` array whose rows carry the
  * guaranteed `id` key), the output-shape guarantee (each row exposes only the
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-templates.
+ * Exercises og-templates/list-templates.
  */
 final class ListTemplatesTest extends TestCase {
 
@@ -30,7 +30,7 @@ final class ListTemplatesTest extends TestCase {
 	 * @return void
 	 */
 	private function createCustomTemplate( string $slug ): void {
-		$created = wp_get_ability( 'templates/create-template' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'    => $slug,
 				'title'   => 'About ' . $slug,
@@ -45,7 +45,7 @@ final class ListTemplatesTest extends TestCase {
 
 		$this->createCustomTemplate( 'page-list-a' );
 
-		$result = wp_get_ability( 'templates/list-templates' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-templates' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -63,7 +63,7 @@ final class ListTemplatesTest extends TestCase {
 
 		$this->createCustomTemplate( 'page-list-b' );
 
-		$result = wp_get_ability( 'templates/list-templates' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-templates' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -92,7 +92,7 @@ final class ListTemplatesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// Ensure at least one template part exists for the active theme.
-		$created = wp_get_ability( 'templates/create-template' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'      => 'list-header',
 				'post_type' => 'wp_template_part',
@@ -101,7 +101,7 @@ final class ListTemplatesTest extends TestCase {
 		);
 		$this->assertIsArray( $created );
 
-		$result = wp_get_ability( 'templates/list-templates' )->execute(
+		$result = wp_get_ability( 'og-templates/list-templates' )->execute(
 			array( 'post_type' => 'wp_template_part' )
 		);
 
@@ -122,7 +122,7 @@ final class ListTemplatesTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		// edit_theme_options is the catalog guard; a subscriber lacks it.
-		$result = wp_get_ability( 'templates/list-templates' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-templates' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

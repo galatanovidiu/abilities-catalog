@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `users/update-current-user`.
+ * T2 write ability: `og-users/update-current-user`.
  *
  * Wraps `POST /wp/v2/users/me` via `rest_do_request()` and returns the current
  * user's id, name, email, and roles. Resolves the target as the current user and
@@ -42,7 +42,7 @@ final class UpdateCurrentUser implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/update-current-user';
+		return 'og-users/update-current-user';
 	}
 
 	/**

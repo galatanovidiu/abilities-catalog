@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/create-template output and contract.
+ * Integration tests for og-templates/create-template output and contract.
  *
  * Covers a successful wp_template create (id/status/edit_link shape), the
  * wp_template_part branch creating a part record, the core slug-pattern
@@ -18,14 +18,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/create-template.
+ * Exercises og-templates/create-template.
  */
 final class CreateTemplateTest extends TestCase {
 
 	public function test_create_wp_template_returns_id_status_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/create-template' )->execute(
+		$result = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'    => 'page-about',
 				'title'   => 'About',
@@ -51,7 +51,7 @@ final class CreateTemplateTest extends TestCase {
 	public function test_create_wp_template_part_creates_part_record(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/create-template' )->execute(
+		$result = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'      => 'my-header',
 				'post_type' => 'wp_template_part',
@@ -74,7 +74,7 @@ final class CreateTemplateTest extends TestCase {
 		// "@@@" contains no character in the core slug pattern [a-zA-Z0-9_%-].
 		// The input schema mirrors that pattern, so the caller gets a
 		// validation error instead of a silently rewritten slug.
-		$result = wp_get_ability( 'templates/create-template' )->execute(
+		$result = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'  => '@@@',
 				'title' => 'Bad Slug',
@@ -88,7 +88,7 @@ final class CreateTemplateTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/create-template' );
+		$ability = wp_get_ability( 'og-templates/create-template' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

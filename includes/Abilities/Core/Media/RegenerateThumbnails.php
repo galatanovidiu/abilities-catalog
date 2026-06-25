@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `media/regenerate-thumbnails`.
+ * T2 write ability: `og-media/regenerate-thumbnails`.
  *
  * Rebuilds the resized image files (thumbnails and other sub-sizes) for one image
  * attachment from its current attached image file, then refreshes the attachment metadata. Use
@@ -32,7 +32,7 @@ final class RegenerateThumbnails implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/regenerate-thumbnails';
+		return 'og-media/regenerate-thumbnails';
 	}
 
 	/**

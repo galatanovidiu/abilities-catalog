@@ -51,7 +51,7 @@ final class ExposurePolicy {
 	 * not enabled returns false, and {@see DomainRouter::execute()} turns that into a
 	 * recoverable "disabled" error rather than running it.
 	 *
-	 * @param string $ability Full ability name, e.g. `content/get-post`.
+	 * @param string $ability Full ability name, e.g. `og-content/get-post`.
 	 * @return bool True only when the ability is on the enabled set.
 	 */
 	public function allows( string $ability ): bool {

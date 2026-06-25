@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 safe-write ability: `terms/update-category`.
+ * T1 safe-write ability: `og-terms/update-category`.
  *
  * Wraps `POST /wp/v2/categories/<id>` via `rest_do_request()` and returns the
  * updated term's id, name, slug, description, and parent. The permission check mirrors the REST
@@ -29,7 +29,7 @@ final class UpdateCategory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/update-category';
+		return 'og-terms/update-category';
 	}
 
 	/**
@@ -45,7 +45,7 @@ final class UpdateCategory implements Ability {
 				'properties'           => array(
 					'id'          => array(
 						'type'        => 'integer',
-						'description' => __( 'The category term ID (required). Discover IDs via terms/list-categories.', 'abilities-catalog' ),
+						'description' => __( 'The category term ID (required). Discover IDs via og-terms/list-categories.', 'abilities-catalog' ),
 					),
 					'name'        => array(
 						'type'        => 'string',

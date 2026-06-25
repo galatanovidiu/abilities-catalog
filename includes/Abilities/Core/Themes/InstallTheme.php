@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `themes/install-theme`.
+ * T3 dangerous write ability: `og-themes/install-theme`.
  *
  * Net-new (no themes REST install route): installs a wordpress.org-directory theme via
  * core's `Theme_Upgrader`. Input is restricted to a clean wp.org directory slug by
@@ -35,7 +35,7 @@ final class InstallTheme implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/install-theme';
+		return 'og-themes/install-theme';
 	}
 
 	/**
@@ -96,7 +96,7 @@ final class InstallTheme implements Ability {
 	/**
 	 * Permission check: the current user may install themes.
 	 *
-	 * Encodes the catalog capability for `themes/install-theme` (`install_themes`).
+	 * Encodes the catalog capability for `og-themes/install-theme` (`install_themes`).
 	 * Returns false when the required `slug` input is missing.
 	 *
 	 * @param mixed $input The validated input data.

@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier core-function write ability: `network/update-site`.
+ * Dangerous-tier core-function write ability: `og-network/update-site`.
  *
  * Updates one site (blog) in a multisite network by its `blog_id` — its status
  * flags (`public`/`archived`/`mature`/`spam`/`deleted`) and/or its `domain`/`path`.
@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Classification rationale:
  * - `readonly` is false: this is a write.
  * - `destructive` is false: toggling status flags is reversible (unset the flag)
- *   and this does NOT drop the site's tables — `network/delete-site` does that.
+ *   and this does NOT drop the site's tables — `og-network/delete-site` does that.
  * - `idempotent` is true: re-applying the same flags yields the same state.
  * - `dangerous` is true: setting `archived`/`spam`/`deleted` takes the site OFFLINE
  *   for its visitors (a notice replaces the front end) — a wide user-visible blast
@@ -71,7 +71,7 @@ final class UpdateSite implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/update-site';
+		return 'og-network/update-site';
 	}
 
 	/**
@@ -80,7 +80,7 @@ final class UpdateSite implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Site', 'abilities-catalog' ),
-			'description'         => __( 'Updates one site (blog) in a multisite network by blog_id: its status flags (public/archived/mature/spam/deleted) and/or its domain/path. Only the fields you provide are changed; supply at least one or the call returns a 400. Setting archived, spam, or deleted takes the site OFFLINE for its visitors (a notice replaces the front end), so this is a dangerous network operation; it is reversible by unsetting the flag. This is a status/soft-delete toggle — it does NOT drop the site\'s tables; use network/delete-site to permanently remove a site. An unknown blog_id returns a 404. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Updates one site (blog) in a multisite network by blog_id: its status flags (public/archived/mature/spam/deleted) and/or its domain/path. Only the fields you provide are changed; supply at least one or the call returns a 400. Setting archived, spam, or deleted takes the site OFFLINE for its visitors (a notice replaces the front end), so this is a dangerous network operation; it is reversible by unsetting the flag. This is a status/soft-delete toggle — it does NOT drop the site\'s tables; use og-network/delete-site to permanently remove a site. An unknown blog_id returns a 404. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -89,7 +89,7 @@ final class UpdateSite implements Ability {
 					'blog_id'  => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The site (blog) ID to update. Discover IDs with network/list-sites.', 'abilities-catalog' ),
+						'description' => __( 'The site (blog) ID to update. Discover IDs with og-network/list-sites.', 'abilities-catalog' ),
 					),
 					'public'   => array(
 						'type'        => 'boolean',
@@ -109,7 +109,7 @@ final class UpdateSite implements Ability {
 					),
 					'deleted'  => array(
 						'type'        => 'boolean',
-						'description' => __( 'Optional. Set true to mark the site deleted (soft-deleted/offline; this does NOT drop its tables — use network/delete-site for that), false to undelete.', 'abilities-catalog' ),
+						'description' => __( 'Optional. Set true to mark the site deleted (soft-deleted/offline; this does NOT drop its tables — use og-network/delete-site for that), false to undelete.', 'abilities-catalog' ),
 					),
 					'domain'   => array(
 						'type'        => 'string',

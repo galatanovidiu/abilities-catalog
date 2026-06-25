@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `content/delete-page`.
+ * T2 destructive write ability: `og-content/delete-page`.
  *
  * Wraps `DELETE /wp/v2/pages/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the page (bypassing the Trash). The `permission_callback`
@@ -32,7 +32,7 @@ final class DeletePage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/delete-page';
+		return 'og-content/delete-page';
 	}
 
 	/**

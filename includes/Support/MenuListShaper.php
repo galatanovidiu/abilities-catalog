@@ -82,7 +82,7 @@ final class MenuListShaper {
 	 * Keeps the fields that let an agent read the menu tree (`parent`,
 	 * `menu_order`), the link target (`type`, `object`, `object_id`, `url`), and
 	 * the owning menu (`menus`). The `menus` field is populated only in the `edit`
-	 * context, which `menus/list-menu-items` requests by default.
+	 * context, which `og-menus/list-menu-items` requests by default.
 	 *
 	 * @param array<string,mixed> $item A single item from a `/wp/v2/menu-items` response.
 	 * @return array<string,mixed> The summary row. No `_links`, no rendered `title` object.
@@ -161,7 +161,7 @@ final class MenuListShaper {
 	 * Flat summary row for a block-based navigation menu (`wp_navigation` post).
 	 *
 	 * Drops the serialized block body (`content`) for parity with the post list
-	 * rows; the full body lives behind `menus/get-navigation`.
+	 * rows; the full body lives behind `og-menus/get-navigation`.
 	 *
 	 * @param array<string,mixed> $item A single item from a `/wp/v2/navigation` response.
 	 * @return array<string,mixed> The summary row. No `content`, no `_links`, no GMT dates.
@@ -221,7 +221,7 @@ final class MenuListShaper {
 				),
 				'edit_link' => array(
 					'type'        => 'string',
-					'description' => __( 'The site-editor URL for editing the navigation menu. Use menus/get-navigation for the block content.', 'abilities-catalog' ),
+					'description' => __( 'The site-editor URL for editing the navigation menu. Use og-menus/get-navigation for the block content.', 'abilities-catalog' ),
 				),
 			),
 			'additionalProperties' => false,

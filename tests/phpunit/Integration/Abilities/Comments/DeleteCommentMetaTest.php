@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/delete-meta ability.
+ * Integration tests for the og-comments/delete-meta ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises comments/delete-meta end-to-end against a registered show_in_rest
+ * Exercises og-comments/delete-meta end-to-end against a registered show_in_rest
  * comment-meta key, plus the registered-key security gate (an internal key like
  * wp_capabilities or a _-prefixed key is rejected), the missing-comment 404, and
  * the per-key capability guard.
@@ -66,16 +66,16 @@ final class DeleteCommentMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'comments/delete-meta' );
+		$ability = wp_get_ability( 'og-comments/delete-meta' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'comments/delete-meta', $ability->get_name() );
+		$this->assertSame( 'og-comments/delete-meta', $ability->get_name() );
 	}
 
 	public function test_admin_can_delete_registered_meta(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -103,7 +103,7 @@ final class DeleteCommentMetaTest extends TestCase {
 		// Seed an internal-looking key directly so we can prove it survives.
 		update_metadata( 'comment', $this->comment_id, '_internal_state', 'secret' );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'keys' => array( 'wp_capabilities', '_internal_state' ),
@@ -138,7 +138,7 @@ final class DeleteCommentMetaTest extends TestCase {
 		);
 		update_metadata( 'comment', $this->comment_id, 'abilities_catalog_hidden_key', 'hidden' );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'keys' => array( 'abilities_catalog_hidden_key' ),
@@ -159,7 +159,7 @@ final class DeleteCommentMetaTest extends TestCase {
 	public function test_missing_comment_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => 99999999,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -175,7 +175,7 @@ final class DeleteCommentMetaTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_value_survives(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -199,7 +199,7 @@ final class DeleteCommentMetaTest extends TestCase {
 	public function test_subscriber_without_capability_is_denied_with_403(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -217,7 +217,7 @@ final class DeleteCommentMetaTest extends TestCase {
 	public function test_output_shape_is_exact_key_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-comments/delete-meta' )->execute(
 			array(
 				'id'   => $this->comment_id,
 				'keys' => array( 'abilities_catalog_test_key' ),

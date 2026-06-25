@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Projects raw REST user items into flat summary rows for the list ability.
  *
- * `users/list-users` wraps the core `GET /wp/v2/users` route. Returning
+ * `og-users/list-users` wraps the core `GET /wp/v2/users` route. Returning
  * `rest_get_server()->response_to_data()` verbatim leaked REST internals
  * (`_links`, `avatar_urls`, `meta`, the author `link`) and cost thousands of
  * tokens per call. This helper maps each item to a small, predictable summary and
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * in sync — the same pattern as {@see ContentListShaper} and {@see CommentListShaper}.
  * The always-present subset mirrors {@see \GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Users\GetUser}'s
  * flat detail fields, so the list summary and the single-user read stay consistent;
- * the full record lives behind `users/get-user`.
+ * the full record lives behind `og-users/get-user`.
  *
  * Permission-gated fields (`username`, `email`, `roles`) exist in the source row
  * only under the `edit` context, which core grants by request context and (for
@@ -115,7 +115,7 @@ final class UserListShaper {
 				'roles'       => array(
 					'type'        => 'array',
 					'items'       => array( 'type' => 'string' ),
-					'description' => __( 'Roles assigned to the user. Present only in edit context (requires "list_users" or "edit_user"). Use users/get-user for the full single user.', 'abilities-catalog' ),
+					'description' => __( 'Roles assigned to the user. Present only in edit context (requires "list_users" or "edit_user"). Use og-users/get-user for the full single user.', 'abilities-catalog' ),
 				),
 			),
 			'additionalProperties' => false,

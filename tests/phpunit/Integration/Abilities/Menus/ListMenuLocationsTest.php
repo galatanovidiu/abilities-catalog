@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/list-menu-locations ability.
+ * Integration tests for the og-menus/list-menu-locations ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -29,16 +29,16 @@ final class ListMenuLocationsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/list-menu-locations' );
+		$ability = wp_get_ability( 'og-menus/list-menu-locations' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/list-menu-locations', $ability->get_name() );
+		$this->assertSame( 'og-menus/list-menu-locations', $ability->get_name() );
 	}
 
 	public function test_admin_sees_registered_location(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/list-menu-locations' )->execute();
+		$result = wp_get_ability( 'og-menus/list-menu-locations' )->execute();
 
 		$this->assertIsArray( $result );
 		$slugs = wp_list_pluck( $result['locations'], 'location' );
@@ -51,7 +51,7 @@ final class ListMenuLocationsTest extends TestCase {
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 		set_theme_mod( 'nav_menu_locations', array( 'ac_primary' => $menu_id ) );
 
-		$result   = wp_get_ability( 'menus/list-menu-locations' )->execute();
+		$result   = wp_get_ability( 'og-menus/list-menu-locations' )->execute();
 		$location = null;
 		foreach ( $result['locations'] as $entry ) {
 			if ( 'ac_primary' === $entry['location'] ) {
@@ -70,7 +70,7 @@ final class ListMenuLocationsTest extends TestCase {
 
 		remove_theme_mod( 'nav_menu_locations' );
 
-		$result   = wp_get_ability( 'menus/list-menu-locations' )->execute();
+		$result   = wp_get_ability( 'og-menus/list-menu-locations' )->execute();
 		$location = null;
 		foreach ( $result['locations'] as $entry ) {
 			if ( 'ac_primary' === $entry['location'] ) {
@@ -88,7 +88,7 @@ final class ListMenuLocationsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'menus/list-menu-locations' )->execute();
+		$result = wp_get_ability( 'og-menus/list-menu-locations' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

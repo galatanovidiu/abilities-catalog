@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/list-sites ability.
+ * Integration tests for the og-network/list-sites ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -36,10 +36,10 @@ final class ListSitesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/list-sites' );
+		$ability = wp_get_ability( 'og-network/list-sites' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/list-sites', $ability->get_name() );
+		$this->assertSame( 'og-network/list-sites', $ability->get_name() );
 	}
 
 	public function test_seeded_site_appears_with_the_closed_row_shape(): void {
@@ -47,7 +47,7 @@ final class ListSitesTest extends TestCase {
 
 		$blog_id = self::factory()->blog->create();
 
-		$result = wp_get_ability( 'network/list-sites' )->execute( array() );
+		$result = wp_get_ability( 'og-network/list-sites' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'sites', 'total' ), array_keys( $result ) );
@@ -84,7 +84,7 @@ final class ListSitesTest extends TestCase {
 
 		self::factory()->blog->create();
 
-		$result = wp_get_ability( 'network/list-sites' )->execute( array( 'public' => true ) );
+		$result = wp_get_ability( 'og-network/list-sites' )->execute( array( 'public' => true ) );
 
 		$this->assertIsArray( $result );
 
@@ -96,7 +96,7 @@ final class ListSitesTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/list-sites' );
+		$ability = wp_get_ability( 'og-network/list-sites' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -108,7 +108,7 @@ final class ListSitesTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/list-sites' );
+		$ability = wp_get_ability( 'og-network/list-sites' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -120,7 +120,7 @@ final class ListSitesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/list-sites' );
+		$ability = wp_get_ability( 'og-network/list-sites' );
 
 		$this->assertFalse( $ability->check_permissions() );
 

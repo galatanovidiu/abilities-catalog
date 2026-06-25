@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/list-my-sites ability.
+ * Integration tests for the og-users/list-my-sites ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -57,10 +57,10 @@ final class ListMySitesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/list-my-sites' );
+		$ability = wp_get_ability( 'og-users/list-my-sites' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/list-my-sites', $ability->get_name() );
+		$this->assertSame( 'og-users/list-my-sites', $ability->get_name() );
 	}
 
 	/**
@@ -72,7 +72,7 @@ final class ListMySitesTest extends TestCase {
 	public function test_permission_is_logged_in_only(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'users/list-my-sites' );
+		$ability = wp_get_ability( 'og-users/list-my-sites' );
 
 		// A logged-in subscriber passes: no capability is required.
 		$this->assertTrue( $ability->check_permissions() );
@@ -95,7 +95,7 @@ final class ListMySitesTest extends TestCase {
 
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/list-my-sites' )->execute();
+		$result = wp_get_ability( 'og-users/list-my-sites' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_requires_multisite', $result->get_error_code() );
@@ -120,7 +120,7 @@ final class ListMySitesTest extends TestCase {
 
 		wp_set_current_user( $user_id );
 
-		$result = wp_get_ability( 'users/list-my-sites' )->execute();
+		$result = wp_get_ability( 'og-users/list-my-sites' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'sites', 'total' ), array_keys( $result ) );

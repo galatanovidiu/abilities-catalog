@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 safe-write ability: `terms/create-tag`.
+ * T1 safe-write ability: `og-terms/create-tag`.
  *
  * Wraps `POST /wp/v2/tags` via `rest_do_request()` and returns the new term's
  * id, name, slug, and public archive link. The `post_tag` taxonomy is non-hierarchical (no parent),
@@ -30,7 +30,7 @@ final class CreateTag implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/create-tag';
+		return 'og-terms/create-tag';
 	}
 
 	/**

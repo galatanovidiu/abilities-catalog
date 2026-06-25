@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `media/list-image-sizes`.
+ * T1 read ability: `og-media/list-image-sizes`.
  *
  * Lists the image sub-sizes WordPress generates for uploads — the core sizes
  * (thumbnail, medium, medium_large, large) plus any registered by the theme or
  * plugins — each with its target width, height, and crop behavior. Use it to know
- * which size names `media/regenerate-thumbnails` can produce, or to understand the
+ * which size names `og-media/regenerate-thumbnails` can produce, or to understand the
  * derivatives available for an image. Wraps core
  * `wp_get_registered_image_subsizes()`. This reports the configured sizes, not the
  * files that exist for any one attachment.
@@ -29,7 +29,7 @@ final class ListImageSizes implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/list-image-sizes';
+		return 'og-media/list-image-sizes';
 	}
 
 	/**

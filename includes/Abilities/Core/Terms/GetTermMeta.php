@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `terms/get-meta`.
+ * T1 read ability: `og-terms/get-meta`.
  *
  * Reads a term's custom fields (meta) as a key/value map, limited to the meta
  * keys the site has registered with `show_in_rest` for that term's taxonomy —
@@ -29,7 +29,7 @@ final class GetTermMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/get-meta';
+		return 'og-terms/get-meta';
 	}
 
 	/**
@@ -38,7 +38,7 @@ final class GetTermMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Term Meta', 'abilities-catalog' ),
-			'description'         => __( 'Returns a term\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the term\'s taxonomy. Requires edit access to the term (meta may carry non-public data). Discover IDs with terms/list-terms.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a term\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the term\'s taxonomy. Requires edit access to the term (meta may carry non-public data). Discover IDs with og-terms/list-terms.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -46,7 +46,7 @@ final class GetTermMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The term ID to read meta from. Discover IDs with terms/list-terms.', 'abilities-catalog' ),
+						'description' => __( 'The term ID to read meta from. Discover IDs with og-terms/list-terms.', 'abilities-catalog' ),
 					),
 					'keys' => array(
 						'type'        => 'array',

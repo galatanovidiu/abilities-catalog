@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `menus/delete-navigation`.
+ * T2 destructive write ability: `og-menus/delete-navigation`.
  *
  * Wraps `DELETE /wp/v2/navigation/<id>` via `rest_do_request()`, deleting a block
  * navigation menu (a `wp_navigation` post). Unlike classic menus, `wp_navigation`
@@ -36,7 +36,7 @@ final class DeleteNavigation implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/delete-navigation';
+		return 'og-menus/delete-navigation';
 	}
 
 	/**
@@ -53,7 +53,7 @@ final class DeleteNavigation implements Ability {
 					'id'    => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The navigation menu (wp_navigation post) ID to delete. Discover it with menus/list-navigation or menus/get-navigation.', 'abilities-catalog' ),
+						'description' => __( 'The navigation menu (wp_navigation post) ID to delete. Discover it with og-menus/list-navigation or og-menus/get-navigation.', 'abilities-catalog' ),
 					),
 					'force' => array(
 						'type'        => 'boolean',

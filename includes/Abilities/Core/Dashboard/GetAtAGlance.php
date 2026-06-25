@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed T1 read ability: `dashboard/get-at-a-glance`.
+ * Composed T1 read ability: `og-dashboard/get-at-a-glance`.
  *
  * Mirrors the wp-admin "At a Glance" dashboard widget. Returns published post
  * and page counts, approved and pending comment counts, the active theme name,
@@ -27,7 +27,7 @@ final class GetAtAGlance implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'dashboard/get-at-a-glance';
+		return 'og-dashboard/get-at-a-glance';
 	}
 
 	/**
@@ -89,7 +89,7 @@ final class GetAtAGlance implements Ability {
 	/**
 	 * Permission check: the current user may edit posts.
 	 *
-	 * Encodes the catalog capability for `dashboard/get-at-a-glance` (`edit_posts`).
+	 * Encodes the catalog capability for `og-dashboard/get-at-a-glance` (`edit_posts`).
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may edit posts.

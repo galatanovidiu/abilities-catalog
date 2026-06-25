@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/create-template-part output and contract.
+ * Integration tests for og-templates/create-template-part output and contract.
  *
  * Covers a successful part create placed in a valid area (id/status/area/
  * edit_link shape) with a read-back confirming the applied area, a
@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/create-template-part.
+ * Exercises og-templates/create-template-part.
  */
 final class CreateTemplatePartTest extends TestCase {
 
@@ -39,13 +39,13 @@ final class CreateTemplatePartTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'templates/create-template-part' ) );
+		$this->assertTrue( wp_has_ability( 'og-templates/create-template-part' ) );
 	}
 
 	public function test_create_places_part_in_requested_area_and_returns_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/create-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/create-template-part' )->execute(
 			array(
 				'slug'    => 'abilities-catalog-test-part',
 				'area'    => 'header',
@@ -79,7 +79,7 @@ final class CreateTemplatePartTest extends TestCase {
 	public function test_subscriber_is_denied_and_creates_no_part(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/create-template-part' );
+		$ability = wp_get_ability( 'og-templates/create-template-part' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -103,7 +103,7 @@ final class CreateTemplatePartTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'templates/create-template-part' );
+		$ability = wp_get_ability( 'og-templates/create-template-part' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

@@ -8,7 +8,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Integration tests for the `settings/flush-rewrite-rules` ability.
+ * Integration tests for the `og-settings/flush-rewrite-rules` ability.
  */
 final class FlushRewriteRulesTest extends TestCase {
 
@@ -41,7 +41,7 @@ final class FlushRewriteRulesTest extends TestCase {
 	 * The ability registers on the catalog.
 	 */
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'settings/flush-rewrite-rules' ) );
+		$this->assertTrue( wp_has_ability( 'og-settings/flush-rewrite-rules' ) );
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class FlushRewriteRulesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->set_permalink_structure( '/%postname%/' );
 
-		$ability = wp_get_ability( 'settings/flush-rewrite-rules' );
+		$ability = wp_get_ability( 'og-settings/flush-rewrite-rules' );
 		$result  = $ability->execute( array( 'hard' => false ) );
 
 		$this->assertIsArray( $result );
@@ -68,7 +68,7 @@ final class FlushRewriteRulesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->set_permalink_structure( '/%postname%/' );
 
-		$ability = wp_get_ability( 'settings/flush-rewrite-rules' );
+		$ability = wp_get_ability( 'og-settings/flush-rewrite-rules' );
 		$result  = $ability->execute( array() );
 
 		$this->assertIsArray( $result );
@@ -84,7 +84,7 @@ final class FlushRewriteRulesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->set_permalink_structure( '/%postname%/' );
 
-		$ability = wp_get_ability( 'settings/flush-rewrite-rules' );
+		$ability = wp_get_ability( 'og-settings/flush-rewrite-rules' );
 		$result  = $ability->execute( array() );
 
 		$this->assertIsArray( $result );
@@ -100,7 +100,7 @@ final class FlushRewriteRulesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'settings/flush-rewrite-rules' );
+		$ability = wp_get_ability( 'og-settings/flush-rewrite-rules' );
 		$result  = $ability->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
@@ -113,7 +113,7 @@ final class FlushRewriteRulesTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'settings/flush-rewrite-rules' );
+		$ability = wp_get_ability( 'og-settings/flush-rewrite-rules' );
 		$result  = $ability->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );

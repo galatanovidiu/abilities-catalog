@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the privacy/create-export-request ability.
+ * Integration tests for the og-privacy/create-export-request ability.
  *
  * Covers the happy-path create (returns request_id, status, and action_name and
  * records an export_personal_data user_request), the output shape, the
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises privacy/create-export-request create, errors, and the capability guard.
+ * Exercises og-privacy/create-export-request create, errors, and the capability guard.
  */
 final class CreateExportRequestTest extends TestCase {
 
@@ -29,7 +29,7 @@ final class CreateExportRequestTest extends TestCase {
 		// Default: send_confirmation_email omitted (false). Mirrors wp-admin's
 		// unchecked box — the request is created already confirmed, not left
 		// pending without a confirmation key (the B12 stranding bug).
-		$result = wp_get_ability( 'privacy/create-export-request' )->execute(
+		$result = wp_get_ability( 'og-privacy/create-export-request' )->execute(
 			array( 'email' => 'subject@example.com' )
 		);
 
@@ -54,7 +54,7 @@ final class CreateExportRequestTest extends TestCase {
 		// ability's success path is exercised; the key is generated before the
 		// mail call, so it is stored regardless.
 		add_filter( 'pre_wp_mail', '__return_true' );
-		$result = wp_get_ability( 'privacy/create-export-request' )->execute(
+		$result = wp_get_ability( 'og-privacy/create-export-request' )->execute(
 			array(
 				'email'                   => 'subject@example.com',
 				'send_confirmation_email' => true,
@@ -95,7 +95,7 @@ final class CreateExportRequestTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$allowed = wp_get_ability( 'privacy/create-export-request' )
+		$allowed = wp_get_ability( 'og-privacy/create-export-request' )
 			->check_permissions( array( 'email' => 'subject@example.com' ) );
 
 		$this->assertNotTrue( $allowed );

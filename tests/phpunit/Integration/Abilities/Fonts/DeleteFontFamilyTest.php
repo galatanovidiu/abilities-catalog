@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the fonts/delete-font-family ability.
+ * Integration tests for the og-fonts/delete-font-family ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -59,10 +59,10 @@ final class DeleteFontFamilyTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'fonts/delete-font-family' );
+		$ability = wp_get_ability( 'og-fonts/delete-font-family' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'fonts/delete-font-family', $ability->get_name() );
+		$this->assertSame( 'og-fonts/delete-font-family', $ability->get_name() );
 	}
 
 	public function test_admin_deletes_family_and_reports_cascade(): void {
@@ -78,7 +78,7 @@ final class DeleteFontFamilyTest extends TestCase {
 		$this->createFontFace( $family_id );
 		$this->createFontFace( $family_id );
 
-		$result = wp_get_ability( 'fonts/delete-font-family' )->execute( array( 'id' => $family_id ) );
+		$result = wp_get_ability( 'og-fonts/delete-font-family' )->execute( array( 'id' => $family_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -99,7 +99,7 @@ final class DeleteFontFamilyTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'fonts/delete-font-family' )->execute( array( 'id' => $family_id ) );
+		$result = wp_get_ability( 'og-fonts/delete-font-family' )->execute( array( 'id' => $family_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -116,14 +116,14 @@ final class DeleteFontFamilyTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'fonts/delete-font-family' )->execute( array( 'id' => 0 ) );
+		$result = wp_get_ability( 'og-fonts/delete-font-family' )->execute( array( 'id' => 0 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 
 		// A negative ID must be rejected by input validation (minimum: 1), never
 		// coerced to a positive object by absint() and silently deleted.
-		$result = wp_get_ability( 'fonts/delete-font-family' )->execute( array( 'id' => -$family_id ) );
+		$result = wp_get_ability( 'og-fonts/delete-font-family' )->execute( array( 'id' => -$family_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );

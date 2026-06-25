@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/trash-comment ability.
+ * Integration tests for the og-comments/trash-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -52,16 +52,16 @@ final class TrashCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'comments/trash-comment' );
+		$ability = wp_get_ability( 'og-comments/trash-comment' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'comments/trash-comment', $ability->get_name() );
+		$this->assertSame( 'og-comments/trash-comment', $ability->get_name() );
 	}
 
 	public function test_admin_can_trash_comment(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $this->comment_id, $result['id'] );
@@ -78,7 +78,7 @@ final class TrashCommentTest extends TestCase {
 	public function test_output_has_expected_keys(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame(
@@ -90,7 +90,7 @@ final class TrashCommentTest extends TestCase {
 	public function test_negative_id_is_rejected_before_trashing(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => -$this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => -$this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -100,9 +100,9 @@ final class TrashCommentTest extends TestCase {
 	public function test_retrashing_already_trashed_comment_returns_410(): void {
 		$this->actingAs( 'administrator' );
 
-		wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
+		wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_already_trashed', $result->get_error_code() );
@@ -111,7 +111,7 @@ final class TrashCommentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -126,7 +126,7 @@ final class TrashCommentTest extends TestCase {
 	public function test_non_moderator_is_denied_with_403(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
@@ -141,7 +141,7 @@ final class TrashCommentTest extends TestCase {
 	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'comments/trash-comment' )->execute( array( 'id' => 99999999 ) );
+		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_comment_invalid_id', $result->get_error_code() );

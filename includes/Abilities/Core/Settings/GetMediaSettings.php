@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-media`.
+ * T1 read ability: `og-settings/get-media`.
  *
  * Returns the media option values, read directly from options. The year/month
  * upload folder flag is a single-site setting and is not shown on the Media
@@ -26,7 +26,7 @@ final class GetMediaSettings implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-media';
+		return 'og-settings/get-media';
 	}
 
 	/**

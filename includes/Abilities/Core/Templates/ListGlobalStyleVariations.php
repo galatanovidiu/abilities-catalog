@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-global-style-variations`.
+ * Read ability: `og-templates/list-global-style-variations`.
  *
  * Wraps `GET /wp/v2/global-styles/themes/<stylesheet>/variations` via
  * `rest_do_request()`. Returns the style variations a theme ships (the alternate
@@ -33,7 +33,7 @@ final class ListGlobalStyleVariations implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-global-style-variations';
+		return 'og-templates/list-global-style-variations';
 	}
 
 	/**

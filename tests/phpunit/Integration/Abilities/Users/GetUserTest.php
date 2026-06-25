@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/get-user ability.
+ * Integration tests for the og-users/get-user ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -43,16 +43,16 @@ final class GetUserTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('users/get-user');
+		$ability = wp_get_ability('og-users/get-user');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('users/get-user', $ability->get_name());
+		$this->assertSame('og-users/get-user', $ability->get_name());
 	}
 
 	public function test_admin_gets_user_in_view_context(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user')->execute(array('id' => $this->known_user_id));
+		$result = wp_get_ability('og-users/get-user')->execute(array('id' => $this->known_user_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($this->known_user_id, $result['id']);
@@ -68,7 +68,7 @@ final class GetUserTest extends TestCase {
 		// for an administrator.
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user')->execute(array('id' => $this->known_user_id));
+		$result = wp_get_ability('og-users/get-user')->execute(array('id' => $this->known_user_id));
 
 		$expected = array(
 			'id',
@@ -93,7 +93,7 @@ final class GetUserTest extends TestCase {
 		// and roles, and the shaper must surface them.
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/get-user')->execute(
+		$result = wp_get_ability('og-users/get-user')->execute(
 			array(
 				'id'      => $this->known_user_id,
 				'context' => 'edit',
@@ -112,7 +112,7 @@ final class GetUserTest extends TestCase {
 
 		$missing_id = $this->known_user_id + 100000;
 
-		$result = wp_get_ability('users/get-user')->execute(array('id' => $missing_id));
+		$result = wp_get_ability('og-users/get-user')->execute(array('id' => $missing_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_user_invalid_id', $result->get_error_code());
@@ -126,7 +126,7 @@ final class GetUserTest extends TestCase {
 		// the generic permission collapse.
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('users/get-user')->execute(array('id' => $this->known_user_id));
+		$result = wp_get_ability('og-users/get-user')->execute(array('id' => $this->known_user_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_user_cannot_view', $result->get_error_code());
@@ -145,7 +145,7 @@ final class GetUserTest extends TestCase {
 		$subscriber = self::factory()->user->create(array('role' => 'subscriber'));
 		wp_set_current_user($subscriber);
 
-		$result = wp_get_ability('users/get-user')->execute(
+		$result = wp_get_ability('og-users/get-user')->execute(
 			array(
 				'id'      => $this->known_user_id,
 				'context' => 'edit',
@@ -170,7 +170,7 @@ final class GetUserTest extends TestCase {
 
 		$this->assertFalse(current_user_can('list_users'), 'Test premise: a subscriber lacks list_users.');
 
-		$result = wp_get_ability('users/get-user')->execute(array('id' => $subscriber));
+		$result = wp_get_ability('og-users/get-user')->execute(array('id' => $subscriber));
 
 		$this->assertIsArray($result, 'A user must be able to read their own profile in view context.');
 		$this->assertSame($subscriber, $result['id']);

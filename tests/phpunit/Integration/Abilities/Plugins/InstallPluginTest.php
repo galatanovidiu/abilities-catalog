@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the plugins/install-plugin ability.
+ * Integration tests for the og-plugins/install-plugin ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -25,13 +25,13 @@ use WP_Error;
 final class InstallPluginTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'plugins/install-plugin' ) );
+		$this->assertNotNull( wp_get_ability( 'og-plugins/install-plugin' ) );
 	}
 
 	public function test_empty_slug_is_rejected_by_schema_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/install-plugin' )->execute( array( 'slug' => '' ) );
+		$result = wp_get_ability( 'og-plugins/install-plugin' )->execute( array( 'slug' => '' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -40,14 +40,14 @@ final class InstallPluginTest extends TestCase {
 	public function test_malformed_slug_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/install-plugin' )->execute( array( 'slug' => 'Akismet Plugin!' ) );
+		$result = wp_get_ability( 'og-plugins/install-plugin' )->execute( array( 'slug' => 'Akismet Plugin!' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_output_status_is_constrained_to_the_core_enum(): void {
-		$schema = wp_get_ability( 'plugins/install-plugin' )->get_output_schema();
+		$schema = wp_get_ability( 'og-plugins/install-plugin' )->get_output_schema();
 
 		$this->assertSame(
 			array( 'inactive', 'active', 'network-active' ),
@@ -62,7 +62,7 @@ final class InstallPluginTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'plugins/install-plugin' )->execute( array( 'slug' => 'akismet' ) );
+		$result = wp_get_ability( 'og-plugins/install-plugin' )->execute( array( 'slug' => 'akismet' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

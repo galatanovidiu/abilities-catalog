@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `settings/update-media`.
+ * T2 non-destructive write ability: `og-settings/update-media`.
  *
  * Updates the Media Settings screen. The accepted fields mirror the matching
  * read ability {@see GetMediaSettings}: thumbnail, medium, and large image
@@ -51,7 +51,7 @@ final class UpdateMediaSettings implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-media';
+		return 'og-settings/update-media';
 	}
 
 	/**

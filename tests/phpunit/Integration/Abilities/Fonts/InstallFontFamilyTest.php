@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the fonts/install-font-family ability.
+ * Integration tests for the og-fonts/install-font-family ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -19,16 +19,16 @@ use WP_Error;
 final class InstallFontFamilyTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'fonts/install-font-family' );
+		$ability = wp_get_ability( 'og-fonts/install-font-family' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'fonts/install-font-family', $ability->get_name() );
+		$this->assertSame( 'og-fonts/install-font-family', $ability->get_name() );
 	}
 
 	public function test_admin_installs_family_and_receives_stored_font_family(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'fonts/install-font-family' )->execute(
+		$result = wp_get_ability( 'og-fonts/install-font-family' )->execute(
 			array(
 				'name'        => 'Catalog Sans',
 				'font_family' => '"Catalog Sans", sans-serif',
@@ -50,7 +50,7 @@ final class InstallFontFamilyTest extends TestCase {
 	public function test_slug_defaults_from_name_when_omitted(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'fonts/install-font-family' )->execute(
+		$result = wp_get_ability( 'og-fonts/install-font-family' )->execute(
 			array(
 				'name'        => 'Inter Display',
 				'font_family' => 'Inter, sans-serif',
@@ -65,7 +65,7 @@ final class InstallFontFamilyTest extends TestCase {
 	public function test_non_admin_is_denied(): void {
 		$this->actingAs( 'editor' );
 
-		$result = wp_get_ability( 'fonts/install-font-family' )->execute(
+		$result = wp_get_ability( 'og-fonts/install-font-family' )->execute(
 			array(
 				'name'        => 'Locked Family',
 				'font_family' => 'Locked, serif',

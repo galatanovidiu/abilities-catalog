@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/get-meta ability.
+ * Integration tests for the og-terms/get-meta ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises terms/get-meta end-to-end against a registered show_in_rest meta
+ * Exercises og-terms/get-meta end-to-end against a registered show_in_rest meta
  * key on the category taxonomy: registration, the happy-path read, the
  * security gate (unregistered/internal keys are never returned), the
  * missing-object 404 (not collapsed to permission), and capability gating.
@@ -52,10 +52,10 @@ final class GetTermMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'terms/get-meta' );
+		$ability = wp_get_ability( 'og-terms/get-meta' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'terms/get-meta', $ability->get_name() );
+		$this->assertSame( 'og-terms/get-meta', $ability->get_name() );
 	}
 
 	/**
@@ -65,7 +65,7 @@ final class GetTermMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_metadata( 'term', $this->term_id, 'abilities_catalog_test_key', 'hello term' );
 
-		$result = wp_get_ability( 'terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
+		$result = wp_get_ability( 'og-terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $this->term_id, $result['id'] );
@@ -81,7 +81,7 @@ final class GetTermMetaTest extends TestCase {
 	public function test_output_shape_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
+		$result = wp_get_ability( 'og-terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'id', 'meta' ), array_keys( $result ) );
@@ -96,7 +96,7 @@ final class GetTermMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_metadata( 'term', $this->term_id, '_internal_secret', 'do not leak' );
 
-		$result = wp_get_ability( 'terms/get-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/get-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'keys' => array( 'abilities_catalog_test_key', '_internal_secret', 'does_not_exist' ),
@@ -117,7 +117,7 @@ final class GetTermMetaTest extends TestCase {
 	public function test_missing_term_surfaces_rest_term_invalid_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/get-meta' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-terms/get-meta' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_term_invalid', $result->get_error_code() );
@@ -132,7 +132,7 @@ final class GetTermMetaTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
+		$result = wp_get_ability( 'og-terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_forbidden', $result->get_error_code() );
@@ -145,7 +145,7 @@ final class GetTermMetaTest extends TestCase {
 	public function test_user_without_edit_term_gets_403_not_404(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
+		$result = wp_get_ability( 'og-terms/get-meta' )->execute( array( 'id' => $this->term_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_forbidden', $result->get_error_code() );

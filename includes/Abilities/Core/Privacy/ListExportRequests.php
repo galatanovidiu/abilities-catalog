@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `privacy/list-export-requests`.
+ * T1 read ability: `og-privacy/list-export-requests`.
  *
  * Lists personal-data export requests. These are `user_request` custom-post-type
  * posts whose `post_name` (mapped to `action_name`) is `export_personal_data`.
@@ -32,7 +32,7 @@ final class ListExportRequests implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/list-export-requests';
+		return 'og-privacy/list-export-requests';
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-discussion ability.
+ * Integration tests for the og-settings/update-discussion ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-discussion writes the Discussion Settings screen. The two
+ * og-settings/update-discussion writes the Discussion Settings screen. The two
  * REST-registered status options go through POST /wp/v2/settings; all other
  * allow-listed keys go through update_option(). manage_options is the hard
  * capability guard; avatar_default is validated against the filtered set.
@@ -24,7 +24,7 @@ final class UpdateDiscussionTest extends TestCase {
 	public function test_admin_writes_discussion_settings(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-discussion' )->execute(
+		$result = wp_get_ability( 'og-settings/update-discussion' )->execute(
 			array(
 				'default_comment_status' => 'closed',
 				'comments_per_page'      => 25,
@@ -47,7 +47,7 @@ final class UpdateDiscussionTest extends TestCase {
 	public function test_output_shape_contains_all_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-discussion' )->execute( array() );
+		$result = wp_get_ability( 'og-settings/update-discussion' )->execute( array() );
 
 		$this->assertIsArray( $result );
 
@@ -133,7 +133,7 @@ final class UpdateDiscussionTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/update-discussion' )->execute(
+		$result = wp_get_ability( 'og-settings/update-discussion' )->execute(
 			array( 'default_comment_status' => 'closed' )
 		);
 

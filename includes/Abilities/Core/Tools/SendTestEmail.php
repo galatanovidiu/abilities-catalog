@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Net-new write ability: `tools/send-test-email`.
+ * Net-new write ability: `og-tools/send-test-email`.
  *
  * Sends ONE real test email so an agent can verify the site can deliver mail. Wraps
  * core `wp_mail()` with a fixed test subject and body; only the recipient is
@@ -52,7 +52,7 @@ final class SendTestEmail implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/send-test-email';
+		return 'og-tools/send-test-email';
 	}
 
 	/**

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/list-post-types`.
+ * Read ability: `og-content/list-post-types`.
  *
  * Wraps `GET /wp/v2/types` via `rest_do_request()`. The REST endpoint returns an
  * object keyed by post-type slug; this ability normalises it into a list of
@@ -27,7 +27,7 @@ final class ListPostTypes implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/list-post-types';
+		return 'og-content/list-post-types';
 	}
 
 	/**

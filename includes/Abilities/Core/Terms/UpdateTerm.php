@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 safe-write ability: `terms/update-term` (generic, keyed by `taxonomy`).
+ * T1 safe-write ability: `og-terms/update-term` (generic, keyed by `taxonomy`).
  *
  * Wraps `POST /wp/v2/<rest_base>/<id>` via `rest_do_request()` for any
  * `show_in_rest` taxonomy and returns the updated term's id, name, slug,
@@ -33,7 +33,7 @@ final class UpdateTerm implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/update-term';
+		return 'og-terms/update-term';
 	}
 
 	/**

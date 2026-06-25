@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/lookup-template output and contract.
+ * Integration tests for og-templates/lookup-template output and contract.
  *
  * Covers the happy-path resolution of a known slug ("index") against the active
  * theme (the hierarchy always ends with the seeded slug; the resolved id stays
@@ -19,14 +19,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/lookup-template.
+ * Exercises og-templates/lookup-template.
  */
 final class LookupTemplateTest extends TestCase {
 
 	public function test_lookup_known_slug_returns_hierarchy_and_resolved_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/lookup-template' )->execute(
+		$result = wp_get_ability( 'og-templates/lookup-template' )->execute(
 			array( 'slug' => 'index' )
 		);
 
@@ -67,7 +67,7 @@ final class LookupTemplateTest extends TestCase {
 
 		// "!!!" passes the schema (non-empty string) but sanitize_title() reduces
 		// it to "", which the in-code guard rejects with invalid_slug.
-		$result = wp_get_ability( 'templates/lookup-template' )->execute(
+		$result = wp_get_ability( 'og-templates/lookup-template' )->execute(
 			array( 'slug' => '!!!' )
 		);
 
@@ -81,7 +81,7 @@ final class LookupTemplateTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/lookup-template' );
+		$ability = wp_get_ability( 'og-templates/lookup-template' );
 
 		// edit_theme_options is the catalog guard; a subscriber lacks it.
 		$this->assertFalse( $ability->check_permissions( array( 'slug' => 'index' ) ) );

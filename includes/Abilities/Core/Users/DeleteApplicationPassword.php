@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Destructive T2 write ability: `users/delete-application-password`.
+ * Destructive T2 write ability: `og-users/delete-application-password`.
  *
  * Wraps `DELETE /wp/v2/users/<user_id>/application-passwords/<uuid>` via
  * `rest_do_request()`, permanently revoking a single application password. The
@@ -35,7 +35,7 @@ final class DeleteApplicationPassword implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/delete-application-password';
+		return 'og-users/delete-application-password';
 	}
 
 	/**
@@ -57,7 +57,7 @@ final class DeleteApplicationPassword implements Ability {
 					'uuid'    => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The UUID of the application password to revoke. Use users/list-application-passwords to discover existing UUIDs.', 'abilities-catalog' ),
+						'description' => __( 'The UUID of the application password to revoke. Use og-users/list-application-passwords to discover existing UUIDs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'uuid' ),

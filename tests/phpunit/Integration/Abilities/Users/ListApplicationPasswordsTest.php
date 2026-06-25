@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/list-application-passwords ability.
+ * Integration tests for the og-users/list-application-passwords ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -37,10 +37,10 @@ final class ListApplicationPasswordsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/list-application-passwords' );
+		$ability = wp_get_ability( 'og-users/list-application-passwords' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/list-application-passwords', $ability->get_name() );
+		$this->assertSame( 'og-users/list-application-passwords', $ability->get_name() );
 	}
 
 	public function test_admin_lists_metadata_rows_for_a_user(): void {
@@ -51,7 +51,7 @@ final class ListApplicationPasswordsTest extends TestCase {
 			array( 'name' => 'Laptop CLI' )
 		);
 
-		$result = wp_get_ability( 'users/list-application-passwords' )->execute(
+		$result = wp_get_ability( 'og-users/list-application-passwords' )->execute(
 			array( 'user_id' => $user_id )
 		);
 
@@ -72,7 +72,7 @@ final class ListApplicationPasswordsTest extends TestCase {
 			array( 'name' => 'Never Used' )
 		);
 
-		$result = wp_get_ability( 'users/list-application-passwords' )->execute(
+		$result = wp_get_ability( 'og-users/list-application-passwords' )->execute(
 			array( 'user_id' => $user_id )
 		);
 
@@ -97,7 +97,7 @@ final class ListApplicationPasswordsTest extends TestCase {
 	public function test_missing_user_returns_core_typed_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/list-application-passwords' )->execute(
+		$result = wp_get_ability( 'og-users/list-application-passwords' )->execute(
 			array( 'user_id' => 999999 )
 		);
 
@@ -121,7 +121,7 @@ final class ListApplicationPasswordsTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'users/list-application-passwords' )->execute(
+		$result = wp_get_ability( 'og-users/list-application-passwords' )->execute(
 			array( 'user_id' => $owner_id )
 		);
 

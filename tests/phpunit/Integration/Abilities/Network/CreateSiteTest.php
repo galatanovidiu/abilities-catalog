@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/create-site ability.
+ * Integration tests for the og-network/create-site ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -55,10 +55,10 @@ final class CreateSiteTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/create-site' );
+		$ability = wp_get_ability( 'og-network/create-site' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/create-site', $ability->get_name() );
+		$this->assertSame( 'og-network/create-site', $ability->get_name() );
 	}
 
 	public function test_happy_path_creates_a_site(): void {
@@ -66,7 +66,7 @@ final class CreateSiteTest extends TestCase {
 
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 
-		$result = wp_get_ability( 'network/create-site' )->execute(
+		$result = wp_get_ability( 'og-network/create-site' )->execute(
 			array(
 				'slug'     => 'ac-new-' . uniqid(),
 				'title'    => 'AC New',
@@ -89,7 +89,7 @@ final class CreateSiteTest extends TestCase {
 
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 
-		$result = wp_get_ability( 'network/create-site' )->execute(
+		$result = wp_get_ability( 'og-network/create-site' )->execute(
 			array(
 				'slug'     => 'ac-keys-' . uniqid(),
 				'title'    => 'AC Keys',
@@ -108,7 +108,7 @@ final class CreateSiteTest extends TestCase {
 	public function test_unknown_admin_id_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/create-site' )->execute(
+		$result = wp_get_ability( 'og-network/create-site' )->execute(
 			array(
 				'slug'     => 'ac-bad-admin-' . uniqid(),
 				'title'    => 'AC Bad Admin',
@@ -126,7 +126,7 @@ final class CreateSiteTest extends TestCase {
 		// A plain site administrator is NOT a super admin and lacks create_sites.
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/create-site' );
+		$ability = wp_get_ability( 'og-network/create-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -156,7 +156,7 @@ final class CreateSiteTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/create-site' );
+		$ability = wp_get_ability( 'og-network/create-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -172,7 +172,7 @@ final class CreateSiteTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/create-site' );
+		$ability = wp_get_ability( 'og-network/create-site' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

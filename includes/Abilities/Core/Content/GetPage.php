@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/get-page`.
+ * Read ability: `og-content/get-page`.
  *
  * Wraps `GET /wp/v2/pages/<id>` via `rest_do_request()` and shapes the response
  * into a flat field set. The capability is object-level `read_post`.
@@ -26,7 +26,7 @@ final class GetPage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-page';
+		return 'og-content/get-page';
 	}
 
 	/**

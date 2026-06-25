@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/update-network-option ability.
+ * Integration tests for the og-network/update-network-option ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -44,16 +44,16 @@ final class UpdateNetworkOptionTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/update-network-option' );
+		$ability = wp_get_ability( 'og-network/update-network-option' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/update-network-option', $ability->get_name() );
+		$this->assertSame( 'og-network/update-network-option', $ability->get_name() );
 	}
 
 	public function test_happy_path_writes_and_reads_back_a_string(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/update-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/update-network-option' )->execute(
 			array(
 				'option' => self::OPT_STRING,
 				'value'  => 'hello',
@@ -73,7 +73,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 	public function test_result_has_exactly_the_closed_field_set(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/update-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/update-network-option' )->execute(
 			array(
 				'option' => self::OPT_STRING,
 				'value'  => 'hello',
@@ -89,7 +89,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 	public function test_unchanged_rewrite_still_reports_updated_true(): void {
 		$this->actingAsSuperAdmin();
 
-		$ability = wp_get_ability( 'network/update-network-option' );
+		$ability = wp_get_ability( 'og-network/update-network-option' );
 		$input   = array(
 			'option' => self::OPT_STRING,
 			'value'  => 'hello',
@@ -110,7 +110,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 
 		$value = array( 'a' => 1 );
 
-		$result = wp_get_ability( 'network/update-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/update-network-option' )->execute(
 			array(
 				'option' => self::OPT_ARRAY,
 				'value'  => $value,
@@ -127,7 +127,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 		// The input schema declares option with minLength:1, so an empty string is
 		// rejected by schema validation (ability_invalid_input) before the body's own
 		// abilities_catalog_invalid_option guard is reached. Both are 400s.
-		$result = wp_get_ability( 'network/update-network-option' )->execute(
+		$result = wp_get_ability( 'og-network/update-network-option' )->execute(
 			array(
 				'option' => '',
 				'value'  => 'x',
@@ -144,7 +144,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 	public function test_plain_administrator_is_denied_and_option_unchanged(): void {
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/update-network-option' );
+		$ability = wp_get_ability( 'og-network/update-network-option' );
 
 		// The coarse permission gate (manage_network_options) refuses a plain
 		// site administrator on multisite.
@@ -179,7 +179,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/update-network-option' );
+		$ability = wp_get_ability( 'og-network/update-network-option' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -203,7 +203,7 @@ final class UpdateNetworkOptionTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/update-network-option' );
+		$ability = wp_get_ability( 'og-network/update-network-option' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

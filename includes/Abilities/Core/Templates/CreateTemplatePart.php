@@ -13,16 +13,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `templates/create-template-part`.
+ * T2 non-destructive write ability: `og-templates/create-template-part`.
  *
  * Wraps `POST /wp/v2/template-parts` (post type `wp_template_part`) via
  * `rest_do_request()`. Creates a new template part (a reusable block region such
  * as a header or footer) as a database record, identified afterwards by its
  * `theme//slug` id, and places it in an area. Unlike the general
- * `templates/create-template` — which always creates parts in the
+ * `og-templates/create-template` — which always creates parts in the
  * `uncategorized` area — this ability accepts an `area` so the caller controls
  * placement. It does NOT modify any theme file and does NOT overwrite an
- * existing customization — use `templates/update-template-part` to change one.
+ * existing customization — use `og-templates/update-template-part` to change one.
  *
  * Annotated as a non-destructive write (`destructive:false`): it only adds a new
  * record. The `permission_callback` mirrors
@@ -47,7 +47,7 @@ final class CreateTemplatePart implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/create-template-part';
+		return 'og-templates/create-template-part';
 	}
 
 	/**

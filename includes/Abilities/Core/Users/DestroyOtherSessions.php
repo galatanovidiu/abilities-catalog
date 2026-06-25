@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Write ability: `users/destroy-other-sessions`.
+ * Write ability: `og-users/destroy-other-sessions`.
  *
  * Ends the CURRENT user's login sessions on all OTHER devices, keeping the
  * caller's own session ("log out everywhere else"). Wraps core
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   a no-op that leaves the same end state (only the caller's session remains).
  *
  * Not `dangerous`: the caller keeps their own session and only the caller's own
- * other devices are affected (compare `users/destroy-all-sessions`, which can
+ * other devices are affected (compare `og-users/destroy-all-sessions`, which can
  * end every session, including the caller's, and is dangerous).
  *
  * No `meta.screen` is set: there is no dedicated wp-admin screen for ending the
@@ -53,7 +53,7 @@ final class DestroyOtherSessions implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/destroy-other-sessions';
+		return 'og-users/destroy-other-sessions';
 	}
 
 	/**
@@ -62,7 +62,7 @@ final class DestroyOtherSessions implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Destroy Other Sessions', 'abilities-catalog' ),
-			'description'         => __( 'Ends the current user\'s login sessions on all other devices, keeping this session logged in ("log out everywhere else"). Operates on the current user only; it does not accept a user ID and cannot log out another user (use users/destroy-all-sessions for an admin force-logout). Sessions are not a source of truth, so a logged-out device can simply sign back in. Requires an interactive cookie login: in an application-password or other non-cookie context there is no current session to keep and the call returns abilities_catalog_no_session (400).', 'abilities-catalog' ),
+			'description'         => __( 'Ends the current user\'s login sessions on all other devices, keeping this session logged in ("log out everywhere else"). Operates on the current user only; it does not accept a user ID and cannot log out another user (use og-users/destroy-all-sessions for an admin force-logout). Sessions are not a source of truth, so a logged-out device can simply sign back in. Requires an interactive cookie login: in an application-password or other non-cookie context there is no current session to keep and the call returns abilities_catalog_no_session (400).', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(),
 			'output_schema'       => array(

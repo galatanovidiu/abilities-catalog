@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the privacy/cancel-request ability.
+ * Integration tests for the og-privacy/cancel-request ability.
  *
  * Covers the happy-path delete (returns request_id + cancelled and removes the
  * user_request record), the permission gate denying missing/non-user_request
@@ -17,7 +17,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises privacy/cancel-request delete, errors, and the capability guard.
+ * Exercises og-privacy/cancel-request delete, errors, and the capability guard.
  */
 final class CancelRequestTest extends TestCase {
 
@@ -51,7 +51,7 @@ final class CancelRequestTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$request_id = $this->createExportRequest();
 
-		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => $request_id ) );
+		$result = wp_get_ability( 'og-privacy/cancel-request' )->execute( array( 'request_id' => $request_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $request_id, $result['request_id'] );
@@ -68,7 +68,7 @@ final class CancelRequestTest extends TestCase {
 		// The coarse permission gate now floors at manage_privacy_options only, so
 		// execute()'s specific 404 reaches the caller instead of the generic
 		// ability_invalid_permissions the object-level pre-check used to produce.
-		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => 999999 ) );
+		$result = wp_get_ability( 'og-privacy/cancel-request' )->execute( array( 'request_id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_request', $result->get_error_code() );
@@ -79,7 +79,7 @@ final class CancelRequestTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_type' => 'post' ) );
 
-		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => $post_id ) );
+		$result = wp_get_ability( 'og-privacy/cancel-request' )->execute( array( 'request_id' => $post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_request', $result->get_error_code() );
@@ -104,7 +104,7 @@ final class CancelRequestTest extends TestCase {
 		$this->assertTrue( current_user_can( 'manage_privacy_options' ) );
 		$this->assertFalse( current_user_can( 'delete_users' ) );
 
-		$result = wp_get_ability( 'privacy/cancel-request' )->execute( array( 'request_id' => $request_id ) );
+		$result = wp_get_ability( 'og-privacy/cancel-request' )->execute( array( 'request_id' => $request_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
@@ -117,7 +117,7 @@ final class CancelRequestTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		$request_id = $this->createExportRequest();
 
-		$allowed = wp_get_ability( 'privacy/cancel-request' )->check_permissions( array( 'request_id' => $request_id ) );
+		$allowed = wp_get_ability( 'og-privacy/cancel-request' )->check_permissions( array( 'request_id' => $request_id ) );
 
 		$this->assertNotTrue( $allowed );
 	}

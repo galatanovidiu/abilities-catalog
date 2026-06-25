@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/delete-menu-item ability.
+ * Integration tests for the og-menus/delete-menu-item ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,10 +21,10 @@ use WP_Error;
 final class DeleteMenuItemTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/delete-menu-item' );
+		$ability = wp_get_ability( 'og-menus/delete-menu-item' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/delete-menu-item', $ability->get_name() );
+		$this->assertSame( 'og-menus/delete-menu-item', $ability->get_name() );
 	}
 
 	public function test_admin_permanently_deletes_item(): void {
@@ -40,7 +40,7 @@ final class DeleteMenuItemTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'menus/delete-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => $item_id )
 		);
 
@@ -65,7 +65,7 @@ final class DeleteMenuItemTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'menus/delete-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => $item_id )
 		);
 
@@ -89,7 +89,7 @@ final class DeleteMenuItemTest extends TestCase {
 
 		// A negative id must be rejected by schema validation (minimum:1) before
 		// absint() could coerce -$item_id into the positive $item_id and delete it.
-		$result = wp_get_ability( 'menus/delete-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => -$item_id )
 		);
 
@@ -104,7 +104,7 @@ final class DeleteMenuItemTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent id
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/delete-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => 999999 )
 		);
 
@@ -126,7 +126,7 @@ final class DeleteMenuItemTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'menus/delete-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => $item_id )
 		);
 

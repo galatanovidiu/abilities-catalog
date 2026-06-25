@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Proves the two load-bearing gates of the multisite ability-policy decorator,
- * end-to-end through the real registered, decorated `content/create-post`
+ * end-to-end through the real registered, decorated `og-content/create-post`
  * ability (no fake BlogSwitcher — that lives in batch 01's unit tests).
  *
  * Gate 1 (retarget + balance): a super admin passing `blog_id=2` to
- * `content/create-post` lands the post on blog 2's tables; the returned
+ * `og-content/create-post` lands the post on blog 2's tables; the returned
  * `link`/`edit_link` point at blog 2 (not blog 1); and `get_current_blog_id()`
  * after `execute()` equals the pre-call blog (the switch is balanced — never
  * assert a single switch; the vendor path legitimately switches multiple times).
@@ -141,7 +141,7 @@ final class PolicyDecoratorGatesTest extends TestCase {
 
 		$before = get_current_blog_id();
 
-		$result = wp_get_ability( 'content/create-post' )->execute(
+		$result = wp_get_ability( 'og-content/create-post' )->execute(
 			array(
 				'blog_id' => $blog2,
 				'title'   => 'Retargeted draft',
@@ -191,7 +191,7 @@ final class PolicyDecoratorGatesTest extends TestCase {
 		add_user_to_blog( $blog2, $uid, 'administrator' );
 		wp_set_current_user( $uid );
 
-		$ability = wp_get_ability( 'content/create-post' );
+		$ability = wp_get_ability( 'og-content/create-post' );
 		$input   = array(
 			'blog_id' => $blog2,
 			'title'   => 'Allowed on my blog',
@@ -225,7 +225,7 @@ final class PolicyDecoratorGatesTest extends TestCase {
 		// Deliberately NOT granted any role on the main blog.
 		wp_set_current_user( $uid );
 
-		$ability = wp_get_ability( 'content/create-post' );
+		$ability = wp_get_ability( 'og-content/create-post' );
 		$input   = array(
 			'blog_id' => $main_blog,
 			'title'   => 'Should never land',

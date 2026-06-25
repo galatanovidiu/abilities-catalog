@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/set-featured-image ability.
+ * Integration tests for the og-media/set-featured-image ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,17 +13,17 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises media/set-featured-image: the dual object-level guard on both the
+ * Exercises og-media/set-featured-image: the dual object-level guard on both the
  * post and the attachment, the read-back of the set thumbnail, and the
  * specific-error-not-permission-collapse contract.
  */
 final class SetFeaturedImageTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'media/set-featured-image' );
+		$ability = wp_get_ability( 'og-media/set-featured-image' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'media/set-featured-image', $ability->get_name() );
+		$this->assertSame( 'og-media/set-featured-image', $ability->get_name() );
 	}
 
 	public function test_admin_sets_featured_image(): void {
@@ -33,7 +33,7 @@ final class SetFeaturedImageTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/set-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/set-featured-image' )->execute(
 			array(
 				'post_id'       => $post_id,
 				'attachment_id' => $attachment_id,
@@ -53,7 +53,7 @@ final class SetFeaturedImageTest extends TestCase {
 
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 
-		$result = wp_get_ability( 'media/set-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/set-featured-image' )->execute(
 			array(
 				'post_id'       => 99999999,
 				'attachment_id' => $attachment_id,
@@ -71,7 +71,7 @@ final class SetFeaturedImageTest extends TestCase {
 		$post_id  = self::factory()->post->create();
 		$other_id = self::factory()->post->create();
 
-		$result = wp_get_ability( 'media/set-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/set-featured-image' )->execute(
 			array(
 				'post_id'       => $post_id,
 				'attachment_id' => $other_id,
@@ -99,7 +99,7 @@ final class SetFeaturedImageTest extends TestCase {
 		// A different author must not be able to set the featured image.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/set-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/set-featured-image' )->execute(
 			array(
 				'post_id'       => $post_id,
 				'attachment_id' => $attachment_id,
@@ -120,7 +120,7 @@ final class SetFeaturedImageTest extends TestCase {
 		$post_id       = self::factory()->post->create();
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 
-		$ability = wp_get_ability( 'media/set-featured-image' );
+		$ability = wp_get_ability( 'og-media/set-featured-image' );
 		$first   = $ability->execute(
 			array(
 				'post_id'       => $post_id,
@@ -158,7 +158,7 @@ final class SetFeaturedImageTest extends TestCase {
 		$this->assertTrue( current_user_can( 'edit_post', $post_id ) );
 		$this->assertFalse( current_user_can( 'edit_post', $attachment_id ) );
 
-		$result = wp_get_ability( 'media/set-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/set-featured-image' )->execute(
 			array(
 				'post_id'       => $post_id,
 				'attachment_id' => $attachment_id,
@@ -168,14 +168,14 @@ final class SetFeaturedImageTest extends TestCase {
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
 		$this->assertSame( 403, $result->get_error_data()['status'] );
-		// The attachment guard — the value-add over content/update-post — fired.
+		// The attachment guard — the value-add over og-content/update-post — fired.
 		$this->assertSame( 0, (int) get_post_thumbnail_id( $post_id ) );
 	}
 
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'media/set-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/set-featured-image' )->execute(
 			array(
 				'post_id'       => 1,
 				'attachment_id' => 2,

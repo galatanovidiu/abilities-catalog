@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/create-menu-item`.
+ * T2 non-destructive write ability: `og-menus/create-menu-item`.
  *
  * Wraps `POST /wp/v2/menu-items` via `rest_do_request()` to create a classic menu
  * item (`nav_menu_item` post). The menu-items controller extends the posts
@@ -32,7 +32,7 @@ final class CreateMenuItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/create-menu-item';
+		return 'og-menus/create-menu-item';
 	}
 
 	/**
@@ -72,7 +72,7 @@ final class CreateMenuItem implements Ability {
 					'parent'     => array(
 						'type'        => 'integer',
 						'minimum'     => 0,
-						'description' => __( 'The menu item ID of the parent item, or 0 for a top-level item. Find item IDs via menus/list-menu-items.', 'abilities-catalog' ),
+						'description' => __( 'The menu item ID of the parent item, or 0 for a top-level item. Find item IDs via og-menus/list-menu-items.', 'abilities-catalog' ),
 					),
 					'menu_order' => array(
 						'type'        => 'integer',
@@ -81,7 +81,7 @@ final class CreateMenuItem implements Ability {
 					),
 					'menus'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent classic menu term ID this item belongs to. Find menu IDs via menus/list-classic-menus. If omitted, core creates an orphaned item not attached to any menu; check the "menus" output field for 0 to detect this.', 'abilities-catalog' ),
+						'description' => __( 'The parent classic menu term ID this item belongs to. Find menu IDs via og-menus/list-classic-menus. If omitted, core creates an orphaned item not attached to any menu; check the "menus" output field for 0 to detect this.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `templates/delete-template`.
+ * T2 destructive write ability: `og-templates/delete-template`.
  *
  * Wraps `DELETE /wp/v2/templates/<id>` (for `wp_template`) or
  * `DELETE /wp/v2/template-parts/<id>` (for `wp_template_part`) with `force=true`
@@ -44,7 +44,7 @@ final class DeleteTemplate implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/delete-template';
+		return 'og-templates/delete-template';
 	}
 
 	/**
@@ -61,7 +61,7 @@ final class DeleteTemplate implements Ability {
 					'id'        => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//single"). Discover ids via templates/list-templates or templates/lookup-template.', 'abilities-catalog' ),
+						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//single"). Discover ids via og-templates/list-templates or og-templates/lookup-template.', 'abilities-catalog' ),
 					),
 					'post_type' => array(
 						'type'        => 'string',

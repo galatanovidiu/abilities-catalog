@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the cron/list-schedules ability.
+ * Integration tests for the og-cron/list-schedules ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,16 +21,16 @@ use WP_Error;
 final class ListSchedulesTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'cron/list-schedules' );
+		$ability = wp_get_ability( 'og-cron/list-schedules' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'cron/list-schedules', $ability->get_name() );
+		$this->assertSame( 'og-cron/list-schedules', $ability->get_name() );
 	}
 
 	public function test_result_uses_closed_top_level_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/list-schedules' )->execute();
+		$result = wp_get_ability( 'og-cron/list-schedules' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'schedules', 'total' ), array_keys( $result ) );
@@ -42,7 +42,7 @@ final class ListSchedulesTest extends TestCase {
 	public function test_each_schedule_row_has_exactly_the_closed_field_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/list-schedules' )->execute();
+		$result = wp_get_ability( 'og-cron/list-schedules' )->execute();
 
 		$this->assertNotEmpty( $result['schedules'] );
 
@@ -60,7 +60,7 @@ final class ListSchedulesTest extends TestCase {
 	public function test_core_hourly_schedule_is_listed_with_resolved_interval(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/list-schedules' )->execute();
+		$result = wp_get_ability( 'og-cron/list-schedules' )->execute();
 
 		$by_name = array();
 		foreach ( $result['schedules'] as $row ) {
@@ -75,7 +75,7 @@ final class ListSchedulesTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'cron/list-schedules' );
+		$ability = wp_get_ability( 'og-cron/list-schedules' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -87,7 +87,7 @@ final class ListSchedulesTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'cron/list-schedules' );
+		$ability = wp_get_ability( 'og-cron/list-schedules' );
 
 		$this->assertFalse( $ability->check_permissions() );
 

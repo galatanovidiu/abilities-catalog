@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the content/get-post-type ability.
+ * Integration tests for the og-content/get-post-type ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,23 +14,23 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises content/get-post-type end-to-end: a registered post-type slug in,
+ * Exercises og-content/get-post-type end-to-end: a registered post-type slug in,
  * a flat shaped field set out. The wrapped GET /wp/v2/types/{type} route allows
  * public view reads, so the ability defers permission to it.
  */
 final class GetPostTypeTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'content/get-post-type' );
+		$ability = wp_get_ability( 'og-content/get-post-type' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'content/get-post-type', $ability->get_name() );
+		$this->assertSame( 'og-content/get-post-type', $ability->get_name() );
 	}
 
 	public function test_returns_shaped_fields_for_post_type(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array( 'type' => 'post' ) );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'post' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'post', $result['slug'] );
@@ -49,7 +49,7 @@ final class GetPostTypeTest extends TestCase {
 	public function test_hierarchical_type_is_flagged(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array( 'type' => 'page' ) );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'page' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'page', $result['slug'] );
@@ -59,7 +59,7 @@ final class GetPostTypeTest extends TestCase {
 	public function test_output_key_set_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array( 'type' => 'post' ) );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'post' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame(
@@ -71,7 +71,7 @@ final class GetPostTypeTest extends TestCase {
 	public function test_unknown_type_returns_specific_not_found_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array( 'type' => 'does-not-exist' ) );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'does-not-exist' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		// Core's specific 404, never the generic permission collapse.
@@ -92,7 +92,7 @@ final class GetPostTypeTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array( 'type' => 'ac_hidden_type' ) );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'ac_hidden_type' ) );
 
 		unregister_post_type( 'ac_hidden_type' );
 
@@ -105,7 +105,7 @@ final class GetPostTypeTest extends TestCase {
 	public function test_missing_type_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array() );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -116,7 +116,7 @@ final class GetPostTypeTest extends TestCase {
 
 		// The wrapped types/{type} view route is public, so the ability defers to
 		// it and does not collapse a logged-out reader into a permission error.
-		$result = wp_get_ability( 'content/get-post-type' )->execute( array( 'type' => 'post' ) );
+		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'post' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'post', $result['slug'] );

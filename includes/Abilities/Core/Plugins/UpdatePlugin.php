@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `plugins/update-plugin`.
+ * T3 dangerous write ability: `og-plugins/update-plugin`.
  *
  * Net-new (not REST-wrapped): updates an installed plugin to the version offered by
  * its configured update source (usually wordpress.org, possibly a third-party Update
@@ -45,7 +45,7 @@ final class UpdatePlugin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/update-plugin';
+		return 'og-plugins/update-plugin';
 	}
 
 	/**

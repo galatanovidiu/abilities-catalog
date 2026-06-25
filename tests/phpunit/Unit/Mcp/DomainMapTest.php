@@ -90,7 +90,7 @@ final class DomainMapTest extends TestCase {
 
 		$this->assertSame( 'content', $map->domainOf( 'acme/special-post' ) );
 		// The curated exact placement still resolves alongside the added one.
-		$this->assertSame( 'content', $map->domainOf( 'search/search-content' ) );
+		$this->assertSame( 'content', $map->domainOf( 'og-search/search-content' ) );
 		// Adding to an existing domain does not change the domain set.
 		$this->assertSame( $this->curatedDomains(), $map->domains() );
 	}
@@ -124,7 +124,7 @@ final class DomainMapTest extends TestCase {
 		add_filter( 'abilities_catalog_mcp_domain_map', '__return_false' );
 		$map = new DomainMap();
 
-		$this->assertSame( 'content', $map->domainOf( 'search/search-content' ) );
+		$this->assertSame( 'content', $map->domainOf( 'og-search/search-content' ) );
 		$this->assertSame( $this->curatedDomains(), $map->domains() );
 	}
 
@@ -147,7 +147,7 @@ final class DomainMapTest extends TestCase {
 		// The unusable value is skipped: the ability resolves to no domain.
 		$this->assertNull( $map->domainOf( 'acme/get-product' ) );
 		// The curated placement still resolves.
-		$this->assertSame( 'content', $map->domainOf( 'search/search-content' ) );
+		$this->assertSame( 'content', $map->domainOf( 'og-search/search-content' ) );
 		// The key still opens a domain (its tool would simply list nothing).
 		$this->assertContains( 'commerce', $map->domains() );
 	}
@@ -285,27 +285,27 @@ final class DomainMapTest extends TestCase {
 	 */
 	public static function abilityDomainPairs(): array {
 		return array(
-			'post -> content'           => array( 'content/get-post', 'content' ),
-			'term -> content'           => array( 'terms/create-category', 'content' ),
-			'comment -> content'        => array( 'comments/get-comment', 'content' ),
-			'search exception->content' => array( 'search/search-content', 'content' ),
-			'media -> media'            => array( 'media/list-image-sizes', 'media' ),
-			'theme -> appearance'       => array( 'themes/list-themes', 'appearance' ),
-			'menu -> appearance'        => array( 'menus/list-menus', 'appearance' ),
-			'template -> design'        => array( 'templates/list-templates', 'design' ),
-			'font -> design'            => array( 'fonts/list-font-families', 'design' ),
-			'plugin -> plugins'         => array( 'plugins/list-plugins', 'plugins' ),
-			'user -> users'             => array( 'users/list-users', 'users' ),
-			'setting -> settings'       => array( 'settings/get-option', 'settings' ),
-			'connector -> settings'     => array( 'connectors/list-connectors', 'settings' ),
-			'tool -> tools'             => array( 'tools/export-content', 'tools' ),
-			'privacy -> tools'          => array( 'privacy/generate-export', 'tools' ),
-			'cron -> tools'             => array( 'cron/list-events', 'tools' ),
-			'widget -> appearance'      => array( 'widgets/list-widgets', 'appearance' ),
-			'site-health -> self'       => array( 'site-health/get-status', 'site-health' ),
-			'update -> updates'         => array( 'updates/run-update', 'updates' ),
-			'dashboard -> self'         => array( 'dashboard/get-activity', 'dashboard' ),
-			'network -> network'        => array( 'network/list-sites', 'network' ),
+			'post -> content'           => array( 'og-content/get-post', 'content' ),
+			'term -> content'           => array( 'og-terms/create-category', 'content' ),
+			'comment -> content'        => array( 'og-comments/get-comment', 'content' ),
+			'search exception->content' => array( 'og-search/search-content', 'content' ),
+			'media -> media'            => array( 'og-media/list-image-sizes', 'media' ),
+			'theme -> appearance'       => array( 'og-themes/list-themes', 'appearance' ),
+			'menu -> appearance'        => array( 'og-menus/list-menus', 'appearance' ),
+			'template -> design'        => array( 'og-templates/list-templates', 'design' ),
+			'font -> design'            => array( 'og-fonts/list-font-families', 'design' ),
+			'plugin -> plugins'         => array( 'og-plugins/list-plugins', 'plugins' ),
+			'user -> users'             => array( 'og-users/list-users', 'users' ),
+			'setting -> settings'       => array( 'og-settings/get-option', 'settings' ),
+			'connector -> settings'     => array( 'og-connectors/list-connectors', 'settings' ),
+			'tool -> tools'             => array( 'og-tools/export-content', 'tools' ),
+			'privacy -> tools'          => array( 'og-privacy/generate-export', 'tools' ),
+			'cron -> tools'             => array( 'og-cron/list-events', 'tools' ),
+			'widget -> appearance'      => array( 'og-widgets/list-widgets', 'appearance' ),
+			'site-health -> self'       => array( 'og-site-health/get-status', 'site-health' ),
+			'update -> updates'         => array( 'og-updates/run-update', 'updates' ),
+			'dashboard -> self'         => array( 'og-dashboard/get-activity', 'dashboard' ),
+			'network -> network'        => array( 'og-network/list-sites', 'network' ),
 			'core site -> settings'     => array( 'core/get-site-info', 'settings' ),
 			'core user -> users'        => array( 'core/get-user-info', 'users' ),
 			'core env -> site-health'   => array( 'core/get-environment-info', 'site-health' ),

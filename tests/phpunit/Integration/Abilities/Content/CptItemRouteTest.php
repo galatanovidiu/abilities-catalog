@@ -53,7 +53,7 @@ final class CptItemRouteTest extends TestCase {
 	public function test_create_resolves_custom_rest_namespace(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'title'     => 'New widget',
@@ -79,7 +79,7 @@ final class CptItemRouteTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/list-cpt-items' )->execute(
+		$result = wp_get_ability( 'og-content/list-cpt-items' )->execute(
 			array( 'post_type' => self::POST_TYPE )
 		);
 
@@ -99,7 +99,7 @@ final class CptItemRouteTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/update-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/update-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'id'        => $post_id,
@@ -113,7 +113,7 @@ final class CptItemRouteTest extends TestCase {
 	}
 
 	public function test_update_cpt_item_points_at_post_editor_screen(): void {
-		$ability = wp_get_ability( 'content/update-cpt-item' );
+		$ability = wp_get_ability( 'og-content/update-cpt-item' );
 
 		$this->assertNotNull( $ability );
 
@@ -134,7 +134,7 @@ final class CptItemRouteTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'id'        => $post_id,

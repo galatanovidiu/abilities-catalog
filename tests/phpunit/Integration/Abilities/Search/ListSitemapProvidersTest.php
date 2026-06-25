@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the `search/list-sitemap-providers` ability.
+ * Integration tests for the `og-search/list-sitemap-providers` ability.
  *
  * Covers registration, the happy-path provider listing (the three core
  * providers and their object subtypes), the closed output shape, and the
@@ -17,7 +17,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises search/list-sitemap-providers.
+ * Exercises og-search/list-sitemap-providers.
  */
 final class ListSitemapProvidersTest extends TestCase {
 
@@ -31,13 +31,13 @@ final class ListSitemapProvidersTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'search/list-sitemap-providers' ) );
+		$this->assertTrue( wp_has_ability( 'og-search/list-sitemap-providers' ) );
 	}
 
 	public function test_lists_core_providers_with_subtypes(): void {
 		$this->actingAs( 'editor' );
 
-		$result = wp_get_ability( 'search/list-sitemap-providers' )->execute();
+		$result = wp_get_ability( 'og-search/list-sitemap-providers' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'providers', 'total' ), array_keys( $result ) );
@@ -65,7 +65,7 @@ final class ListSitemapProvidersTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'search/list-sitemap-providers' )->execute();
+		$result = wp_get_ability( 'og-search/list-sitemap-providers' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -74,7 +74,7 @@ final class ListSitemapProvidersTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'search/list-sitemap-providers' )->execute();
+		$result = wp_get_ability( 'og-search/list-sitemap-providers' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

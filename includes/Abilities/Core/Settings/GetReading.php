@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-reading`.
+ * T1 read ability: `og-settings/get-reading`.
  *
  * Returns the stored Reading Settings option values, read directly from options.
  * These normally match the Reading Settings screen, but the screen's own
@@ -26,7 +26,7 @@ final class GetReading implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-reading';
+		return 'og-settings/get-reading';
 	}
 
 	/**

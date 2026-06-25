@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/grant-super-admin ability.
+ * Integration tests for the og-network/grant-super-admin ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -47,10 +47,10 @@ final class GrantSuperAdminTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/grant-super-admin' );
+		$ability = wp_get_ability( 'og-network/grant-super-admin' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/grant-super-admin', $ability->get_name() );
+		$this->assertSame( 'og-network/grant-super-admin', $ability->get_name() );
 	}
 
 	public function test_grants_super_admin(): void {
@@ -61,7 +61,7 @@ final class GrantSuperAdminTest extends TestCase {
 
 		$this->assertFalse( is_super_admin( $target ) );
 
-		$result = wp_get_ability( 'network/grant-super-admin' )->execute( array( 'user_id' => $target ) );
+		$result = wp_get_ability( 'og-network/grant-super-admin' )->execute( array( 'user_id' => $target ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'granted', 'user_id', 'is_super_admin' ), array_keys( $result ) );
@@ -79,7 +79,7 @@ final class GrantSuperAdminTest extends TestCase {
 		$target = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		$this->granted[] = $target;
 
-		$ability = wp_get_ability( 'network/grant-super-admin' );
+		$ability = wp_get_ability( 'og-network/grant-super-admin' );
 		$ability->execute( array( 'user_id' => $target ) );
 
 		// Second grant for the same user: granted is false, but the end state holds.
@@ -93,7 +93,7 @@ final class GrantSuperAdminTest extends TestCase {
 	public function test_unknown_user_returns_404_not_permission_collapse(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/grant-super-admin' )->execute( array( 'user_id' => 99999999 ) );
+		$result = wp_get_ability( 'og-network/grant-super-admin' )->execute( array( 'user_id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_user_invalid_id', $result->get_error_code() );
@@ -106,7 +106,7 @@ final class GrantSuperAdminTest extends TestCase {
 
 		$target = self::factory()->user->create( array( 'role' => 'administrator' ) );
 
-		$ability = wp_get_ability( 'network/grant-super-admin' );
+		$ability = wp_get_ability( 'og-network/grant-super-admin' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'user_id' => $target ) ) );
 
@@ -127,7 +127,7 @@ final class GrantSuperAdminTest extends TestCase {
 
 		$target = self::factory()->user->create( array( 'role' => 'administrator' ) );
 
-		$ability = wp_get_ability( 'network/grant-super-admin' );
+		$ability = wp_get_ability( 'og-network/grant-super-admin' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'user_id' => $target ) ) );
 
@@ -141,7 +141,7 @@ final class GrantSuperAdminTest extends TestCase {
 
 		$target = self::factory()->user->create( array( 'role' => 'administrator' ) );
 
-		$ability = wp_get_ability( 'network/grant-super-admin' );
+		$ability = wp_get_ability( 'og-network/grant-super-admin' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'user_id' => $target ) ) );
 

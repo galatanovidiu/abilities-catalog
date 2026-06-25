@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `site-health/run-tests`.
+ * T1 read ability: `og-site-health/run-tests`.
  *
  * Wraps `GET /wp-site-health/v1/tests/<test>` via `rest_do_request()`. The core
  * Site Health REST controller exposes one route per test (for example
@@ -45,7 +45,7 @@ final class RunTests implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'site-health/run-tests';
+		return 'og-site-health/run-tests';
 	}
 
 	/**

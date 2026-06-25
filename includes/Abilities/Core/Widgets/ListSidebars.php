@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `widgets/list-sidebars`.
+ * Read ability: `og-widgets/list-sidebars`.
  *
  * Wraps `GET /wp/v2/sidebars` via `rest_do_request()` and returns each registered
  * sidebar (widget area) with its ordered widget instance ids, including the special
@@ -33,7 +33,7 @@ final class ListSidebars implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/list-sidebars';
+		return 'og-widgets/list-sidebars';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class ListSidebars implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Sidebars', 'abilities-catalog' ),
-			'description'         => __( 'Lists the site\'s sidebars (widget areas), each with its id, name, description, status (active or inactive), and the ordered ids of the widgets it holds. Includes the special "wp_inactive_widgets" holding area. Use a returned sidebar id as the target for widgets/create-widget, and widgets/get-sidebar for one sidebar.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the site\'s sidebars (widget areas), each with its id, name, description, status (active or inactive), and the ordered ids of the widgets it holds. Includes the special "wp_inactive_widgets" holding area. Use a returned sidebar id as the target for og-widgets/create-widget, and og-widgets/get-sidebar for one sidebar.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -52,7 +52,7 @@ final class ListSidebars implements Ability {
 					'items' => array(
 						'type'        => 'array',
 						'items'       => self::sidebarItemSchema(),
-						'description' => __( 'The list of sidebars as flat rows. Use widgets/get-sidebar for a single sidebar.', 'abilities-catalog' ),
+						'description' => __( 'The list of sidebars as flat rows. Use og-widgets/get-sidebar for a single sidebar.', 'abilities-catalog' ),
 					),
 					'total' => array(
 						'type'        => 'integer',

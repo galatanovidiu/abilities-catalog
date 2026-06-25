@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Ordinary core-function write ability: `network/add-user-to-site`.
+ * Ordinary core-function write ability: `og-network/add-user-to-site`.
  *
  * Adds an existing user to a site (blog) in a multisite network with a role —
  * membership only, the user account already exists. Mirrors the Network Admin ->
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Classification rationale:
  * - `readonly` false: this is a write (it grants membership/role on a site).
- * - `destructive` false: membership is reversible (network/remove-user-from-site),
+ * - `destructive` false: membership is reversible (og-network/remove-user-from-site),
  *   and the user account itself is untouched.
  * - `idempotent` true: re-adding with the same role leaves the same end state.
  * - NOT `dangerous`: site membership is an ordinary super-admin write, not a
@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Multisite only: the membership tables do not exist on a single site, so
  * `execute()` returns a 400 before touching any `ms-*` function, mirroring the
  * "explicit guard at the top of execute() when the wrapped core fn has no route to
- * surface an error" idiom (`tools/delete-transient`, `network/get-site`).
+ * surface an error" idiom (`og-tools/delete-transient`, `og-network/get-site`).
  *
  * Security note: `add_user_to_blog()` performs NO capability check of its own. The
  * `permission_callback` (`is_multisite() && current_user_can( 'manage_sites' )`,
@@ -57,7 +57,7 @@ final class AddUserToSite implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/add-user-to-site';
+		return 'og-network/add-user-to-site';
 	}
 
 	/**
@@ -66,7 +66,7 @@ final class AddUserToSite implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Add User to Site', 'abilities-catalog' ),
-			'description'         => __( 'Adds an existing user to a site (blog) in a multisite network with a given role (membership only — the user account already exists). Re-adding a user updates their role on that site, so this is idempotent. blog_id, user_id, and role must all be valid: discover sites with network/list-sites, users with users/list-users, and role slugs with users/list-roles. An unknown site or user returns a 404; an unknown role returns a 400. Remove a user with network/remove-user-from-site. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Adds an existing user to a site (blog) in a multisite network with a given role (membership only — the user account already exists). Re-adding a user updates their role on that site, so this is idempotent. blog_id, user_id, and role must all be valid: discover sites with og-network/list-sites, users with og-users/list-users, and role slugs with og-users/list-roles. An unknown site or user returns a 404; an unknown role returns a 400. Remove a user with og-network/remove-user-from-site. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -75,17 +75,17 @@ final class AddUserToSite implements Ability {
 					'blog_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The site (blog) ID to add the user to. Discover IDs with network/list-sites.', 'abilities-catalog' ),
+						'description' => __( 'The site (blog) ID to add the user to. Discover IDs with og-network/list-sites.', 'abilities-catalog' ),
 					),
 					'user_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of an EXISTING user to add. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The ID of an EXISTING user to add. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 					'role'    => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The role slug to assign on that site, e.g. "editor" or "author". Discover valid slugs with users/list-roles. An unknown role is rejected with a 400.', 'abilities-catalog' ),
+						'description' => __( 'The role slug to assign on that site, e.g. "editor" or "author". Discover valid slugs with og-users/list-roles. An unknown role is rejected with a 400.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -191,7 +191,7 @@ final class AddUserToSite implements Ability {
 		if ( '' === $role || ! get_role( $role ) ) {
 			return new WP_Error(
 				'abilities_catalog_invalid_role',
-				__( 'Unknown role. Discover valid role slugs with users/list-roles.', 'abilities-catalog' ),
+				__( 'Unknown role. Discover valid role slugs with og-users/list-roles.', 'abilities-catalog' ),
 				array( 'status' => 400 )
 			);
 		}

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the plugins/update-plugin ability.
+ * Integration tests for the og-plugins/update-plugin ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -26,13 +26,13 @@ use WP_Error;
 final class UpdatePluginTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'plugins/update-plugin' ) );
+		$this->assertNotNull( wp_get_ability( 'og-plugins/update-plugin' ) );
 	}
 
 	public function test_empty_plugin_is_rejected_by_schema_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/update-plugin' )->execute( array( 'plugin' => '' ) );
+		$result = wp_get_ability( 'og-plugins/update-plugin' )->execute( array( 'plugin' => '' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -41,7 +41,7 @@ final class UpdatePluginTest extends TestCase {
 	public function test_malformed_plugin_path_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/update-plugin' )->execute( array( 'plugin' => '../evil' ) );
+		$result = wp_get_ability( 'og-plugins/update-plugin' )->execute( array( 'plugin' => '../evil' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -50,14 +50,14 @@ final class UpdatePluginTest extends TestCase {
 	public function test_not_installed_plugin_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/update-plugin' )->execute( array( 'plugin' => 'does-not-exist/does-not-exist' ) );
+		$result = wp_get_ability( 'og-plugins/update-plugin' )->execute( array( 'plugin' => 'does-not-exist/does-not-exist' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_plugin_not_found', $result->get_error_code() );
 	}
 
 	public function test_output_schema_exposes_versions_and_reactivated(): void {
-		$schema = wp_get_ability( 'plugins/update-plugin' )->get_output_schema();
+		$schema = wp_get_ability( 'og-plugins/update-plugin' )->get_output_schema();
 
 		$this->assertSame(
 			array( 'plugin', 'version', 'previous_version', 'updated', 'reactivated' ),
@@ -87,7 +87,7 @@ final class UpdatePluginTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'plugins/update-plugin' )->execute( array( 'plugin' => 'hello' ) );
+		$result = wp_get_ability( 'og-plugins/update-plugin' )->execute( array( 'plugin' => 'hello' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'hello', $result['plugin'] );
@@ -99,7 +99,7 @@ final class UpdatePluginTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'plugins/update-plugin' )->execute( array( 'plugin' => 'hello' ) );
+		$result = wp_get_ability( 'og-plugins/update-plugin' )->execute( array( 'plugin' => 'hello' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

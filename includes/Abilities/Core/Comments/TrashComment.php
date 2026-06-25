@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/trash-comment`.
+ * T1 write ability: `og-comments/trash-comment`.
  *
  * Wraps `DELETE /wp/v2/comments/<id>` with `force=false` via `rest_do_request()`,
  * moving the comment to the trash (recoverable, not a permanent delete). The
@@ -36,7 +36,7 @@ final class TrashComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/trash-comment';
+		return 'og-comments/trash-comment';
 	}
 
 	/**
@@ -45,7 +45,7 @@ final class TrashComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Trash Comment', 'abilities-catalog' ),
-			'description'         => __( 'Moves a comment to the trash (recoverable). Requires the moderate_comments capability or edit permission on the comment. Discover comment IDs with comments/list-comments or comments/get-comment first. Returns a 501 error if trashing is disabled or unsupported on the site, and a 410 already-trashed error if the comment is already in the trash. Trashing a top-level note also trashes its child notes; standard comments do not cascade. Reversible: restore the comment to its prior status with comments/untrash-comment.', 'abilities-catalog' ),
+			'description'         => __( 'Moves a comment to the trash (recoverable). Requires the moderate_comments capability or edit permission on the comment. Discover comment IDs with og-comments/list-comments or og-comments/get-comment first. Returns a 501 error if trashing is disabled or unsupported on the site, and a 410 already-trashed error if the comment is already in the trash. Trashing a top-level note also trashes its child notes; standard comments do not cascade. Reversible: restore the comment to its prior status with og-comments/untrash-comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -53,7 +53,7 @@ final class TrashComment implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to trash. Find it with comments/list-comments or comments/get-comment.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to trash. Find it with og-comments/list-comments or og-comments/get-comment.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -73,7 +73,7 @@ final class TrashComment implements Ability {
 					),
 					'previous_status' => array(
 						'type'        => 'string',
-						'description' => __( 'The comment status before it was trashed. This is the status comments/untrash-comment restores to.', 'abilities-catalog' ),
+						'description' => __( 'The comment status before it was trashed. This is the status og-comments/untrash-comment restores to.', 'abilities-catalog' ),
 					),
 					'post'            => array(
 						'type'        => 'integer',

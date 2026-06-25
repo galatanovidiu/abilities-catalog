@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the themes/install-theme ability.
+ * Integration tests for the og-themes/install-theme ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -24,16 +24,16 @@ use WP_Error;
 final class InstallThemeTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'themes/install-theme' );
+		$ability = wp_get_ability( 'og-themes/install-theme' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'themes/install-theme', $ability->get_name() );
+		$this->assertSame( 'og-themes/install-theme', $ability->get_name() );
 	}
 
 	public function test_empty_slug_is_rejected_by_schema_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/install-theme' )->execute( array( 'slug' => '' ) );
+		$result = wp_get_ability( 'og-themes/install-theme' )->execute( array( 'slug' => '' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -42,14 +42,14 @@ final class InstallThemeTest extends TestCase {
 	public function test_malformed_slug_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/install-theme' )->execute( array( 'slug' => 'Twenty TwentyFive!' ) );
+		$result = wp_get_ability( 'og-themes/install-theme' )->execute( array( 'slug' => 'Twenty TwentyFive!' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_input_schema_constrains_slug(): void {
-		$schema = wp_get_ability( 'themes/install-theme' )->get_input_schema();
+		$schema = wp_get_ability( 'og-themes/install-theme' )->get_input_schema();
 
 		$this->assertSame( 1, $schema['properties']['slug']['minLength'] );
 		$this->assertSame( '^[a-z0-9-]+$', $schema['properties']['slug']['pattern'] );
@@ -57,7 +57,7 @@ final class InstallThemeTest extends TestCase {
 	}
 
 	public function test_output_schema_is_the_install_contract(): void {
-		$schema = wp_get_ability( 'themes/install-theme' )->get_output_schema();
+		$schema = wp_get_ability( 'og-themes/install-theme' )->get_output_schema();
 
 		$this->assertSame(
 			array( 'installed', 'stylesheet', 'name' ),
@@ -72,7 +72,7 @@ final class InstallThemeTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'themes/install-theme' )->execute( array( 'slug' => 'twentytwentyfive' ) );
+		$result = wp_get_ability( 'og-themes/install-theme' )->execute( array( 'slug' => 'twentytwentyfive' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

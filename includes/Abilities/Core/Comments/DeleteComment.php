@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `comments/delete-comment`.
+ * T2 destructive write ability: `og-comments/delete-comment`.
  *
  * Wraps `DELETE /wp/v2/comments/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the comment (bypassing the trash). The `permission_callback`
@@ -39,7 +39,7 @@ final class DeleteComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/delete-comment';
+		return 'og-comments/delete-comment';
 	}
 
 	/**
@@ -48,7 +48,7 @@ final class DeleteComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Comment', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes a comment by ID, bypassing the trash. Requires the moderate_comments capability or edit permission on the comment. Discover comment IDs with comments/list-comments or comments/get-comment first. This cannot be undone.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes a comment by ID, bypassing the trash. Requires the moderate_comments capability or edit permission on the comment. Discover comment IDs with og-comments/list-comments or og-comments/get-comment first. This cannot be undone.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -56,7 +56,7 @@ final class DeleteComment implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to permanently delete. Find it with comments/list-comments or comments/get-comment.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to permanently delete. Find it with og-comments/list-comments or og-comments/get-comment.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

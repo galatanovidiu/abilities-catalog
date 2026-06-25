@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/delete-site ability.
+ * Integration tests for the og-network/delete-site ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -68,10 +68,10 @@ final class DeleteSiteTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/delete-site' );
+		$ability = wp_get_ability( 'og-network/delete-site' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/delete-site', $ability->get_name() );
+		$this->assertSame( 'og-network/delete-site', $ability->get_name() );
 	}
 
 	public function test_happy_path_permanently_deletes_the_site(): void {
@@ -79,7 +79,7 @@ final class DeleteSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/delete-site' )->execute( array( 'blog_id' => $blog_id ) );
+		$result = wp_get_ability( 'og-network/delete-site' )->execute( array( 'blog_id' => $blog_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -94,7 +94,7 @@ final class DeleteSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/delete-site' )->execute( array( 'blog_id' => $blog_id ) );
+		$result = wp_get_ability( 'og-network/delete-site' )->execute( array( 'blog_id' => $blog_id ) );
 
 		$this->assertIsArray( $result );
 
@@ -113,7 +113,7 @@ final class DeleteSiteTest extends TestCase {
 
 		$main_id = get_main_site_id();
 
-		$result = wp_get_ability( 'network/delete-site' )->execute( array( 'blog_id' => $main_id ) );
+		$result = wp_get_ability( 'og-network/delete-site' )->execute( array( 'blog_id' => $main_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_cannot_delete_main_site', $result->get_error_code() );
@@ -126,7 +126,7 @@ final class DeleteSiteTest extends TestCase {
 	public function test_unknown_id_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/delete-site' )->execute( array( 'blog_id' => 99999999 ) );
+		$result = wp_get_ability( 'og-network/delete-site' )->execute( array( 'blog_id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'site_not_exist', $result->get_error_code() );
@@ -143,7 +143,7 @@ final class DeleteSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$ability = wp_get_ability( 'network/delete-site' );
+		$ability = wp_get_ability( 'og-network/delete-site' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'blog_id' => $blog_id ) ) );
 
@@ -160,7 +160,7 @@ final class DeleteSiteTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/delete-site' );
+		$ability = wp_get_ability( 'og-network/delete-site' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'blog_id' => 2 ) ) );
 
@@ -172,7 +172,7 @@ final class DeleteSiteTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/delete-site' );
+		$ability = wp_get_ability( 'og-network/delete-site' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'blog_id' => 2 ) ) );
 

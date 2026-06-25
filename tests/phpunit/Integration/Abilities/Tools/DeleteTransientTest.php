@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the tools/delete-transient ability.
+ * Integration tests for the og-tools/delete-transient ability.
  *
  * Covers registration, the output-shape contract (deleted/key), a happy-path
  * delete with a get_transient read-back, the network/site-transient variant, the
@@ -19,16 +19,16 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises tools/delete-transient registration, delete semantics, and the gate.
+ * Exercises og-tools/delete-transient registration, delete semantics, and the gate.
  */
 final class DeleteTransientTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'tools/delete-transient' ) );
+		$this->assertNotNull( wp_get_ability( 'og-tools/delete-transient' ) );
 	}
 
 	public function test_output_schema_requires_deleted_and_key(): void {
-		$schema = wp_get_ability( 'tools/delete-transient' )->get_output_schema();
+		$schema = wp_get_ability( 'og-tools/delete-transient' )->get_output_schema();
 
 		$this->assertFalse( $schema['additionalProperties'] );
 		$this->assertSame( array( 'deleted', 'key' ), $schema['required'] );
@@ -40,7 +40,7 @@ final class DeleteTransientTest extends TestCase {
 		set_transient( 'ac_test_transient', 'cached-value', HOUR_IN_SECONDS );
 		$this->assertSame( 'cached-value', get_transient( 'ac_test_transient' ) );
 
-		$result = wp_get_ability( 'tools/delete-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/delete-transient' )->execute(
 			array( 'key' => 'ac_test_transient' )
 		);
 
@@ -60,7 +60,7 @@ final class DeleteTransientTest extends TestCase {
 		set_site_transient( 'ac_test_site_transient', 'site-cached', HOUR_IN_SECONDS );
 		$this->assertSame( 'site-cached', get_site_transient( 'ac_test_site_transient' ) );
 
-		$result = wp_get_ability( 'tools/delete-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/delete-transient' )->execute(
 			array(
 				'key'     => 'ac_test_site_transient',
 				'network' => true,
@@ -75,7 +75,7 @@ final class DeleteTransientTest extends TestCase {
 	public function test_missing_transient_is_a_benign_no_op(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/delete-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/delete-transient' )->execute(
 			array( 'key' => 'ac_transient_that_does_not_exist' )
 		);
 
@@ -89,7 +89,7 @@ final class DeleteTransientTest extends TestCase {
 
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'tools/delete-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/delete-transient' )->execute(
 			array( 'key' => 'ac_guard_transient' )
 		);
 
@@ -105,7 +105,7 @@ final class DeleteTransientTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'tools/delete-transient' )->execute(
+		$result = wp_get_ability( 'og-tools/delete-transient' )->execute(
 			array( 'key' => 'ac_guard_transient_sub' )
 		);
 

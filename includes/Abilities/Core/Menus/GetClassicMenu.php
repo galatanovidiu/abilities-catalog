@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `menus/get-classic-menu`.
+ * Read ability: `og-menus/get-classic-menu`.
  *
  * Wraps `GET /wp/v2/menus/<id>` via `rest_do_request()` and shapes the response
  * into a flat field set for a single classic menu (`nav_menu` term). Adds the
@@ -28,7 +28,7 @@ final class GetClassicMenu implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/get-classic-menu';
+		return 'og-menus/get-classic-menu';
 	}
 
 	/**
@@ -45,7 +45,7 @@ final class GetClassicMenu implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The classic menu term ID. Use menus/list-classic-menus to discover the ID.', 'abilities-catalog' ),
+						'description' => __( 'The classic menu term ID. Use og-menus/list-classic-menus to discover the ID.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',

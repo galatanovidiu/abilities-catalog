@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/get-navigation ability.
+ * Integration tests for the og-menus/get-navigation ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -19,10 +19,10 @@ use WP_Error;
 final class GetNavigationTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/get-navigation' );
+		$ability = wp_get_ability( 'og-menus/get-navigation' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/get-navigation', $ability->get_name() );
+		$this->assertSame( 'og-menus/get-navigation', $ability->get_name() );
 	}
 
 	public function test_admin_reads_navigation_by_id(): void {
@@ -37,7 +37,7 @@ final class GetNavigationTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
+		$result = wp_get_ability( 'og-menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( (int) $nav_id, $result['id'] );
@@ -65,11 +65,11 @@ final class GetNavigationTest extends TestCase {
 		);
 
 		// Read returns the serialized markup...
-		$read = wp_get_ability( 'menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
+		$read = wp_get_ability( 'og-menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
 		$this->assertSame( $markup, $read['content'] );
 
 		// ...which writes back through update-navigation unchanged.
-		$updated = wp_get_ability( 'menus/update-navigation' )->execute(
+		$updated = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'      => $nav_id,
 				'content' => $read['content'],
@@ -92,7 +92,7 @@ final class GetNavigationTest extends TestCase {
 		);
 
 		// The view context still yields rendered HTML (no serialized block comment).
-		$result = wp_get_ability( 'menus/get-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/get-navigation' )->execute(
 			array(
 				'id'      => $nav_id,
 				'context' => 'view',
@@ -114,7 +114,7 @@ final class GetNavigationTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
+		$result = wp_get_ability( 'og-menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'edit_link', $result );
@@ -133,7 +133,7 @@ final class GetNavigationTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
+		$result = wp_get_ability( 'og-menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

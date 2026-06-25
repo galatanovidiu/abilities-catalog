@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/approve-comment`.
+ * T1 write ability: `og-comments/approve-comment`.
  *
  * Net-new framing over a comment status change to `approve`. Calls core
  * `wp_set_comment_status()` directly rather than the REST update path: the REST
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * flips `comment_approved` and skips the unspam/untrash restore path, leaving the
  * `_wp_trash_meta_status` meta stale. Re-approving an already-approved comment is a
  * benign no-op that reports the existing `approved` status. By contrast,
- * `comments/unapprove-comment` accepts any state, so the asymmetry is deliberate.
+ * `og-comments/unapprove-comment` accepts any state, so the asymmetry is deliberate.
  *
  * @since 0.2.0
  */
@@ -39,7 +39,7 @@ final class ApproveComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/approve-comment';
+		return 'og-comments/approve-comment';
 	}
 
 	/**
@@ -48,7 +48,7 @@ final class ApproveComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Approve Comment', 'abilities-catalog' ),
-			'description'         => __( 'Approves a "hold"/"unapproved" comment, setting its status to "approved". May trigger the post-author notification email. A "spam" or "trash" comment is rejected with a 409 "rest_comment_wrong_state" error (unspam or restore it first), because approving such a comment would skip the proper restore path and leave stale trash meta. Re-approving an already-approved comment is a benign no-op that reports the existing "approved" status. (By contrast, comments/unapprove-comment accepts any state, so the asymmetry is deliberate.) Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Approves a "hold"/"unapproved" comment, setting its status to "approved". May trigger the post-author notification email. A "spam" or "trash" comment is rejected with a 409 "rest_comment_wrong_state" error (unspam or restore it first), because approving such a comment would skip the proper restore path and leave stale trash meta. Re-approving an already-approved comment is a benign no-op that reports the existing "approved" status. (By contrast, og-comments/unapprove-comment accepts any state, so the asymmetry is deliberate.) Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -139,7 +139,7 @@ final class ApproveComment implements Ability {
 		// path first. wp_set_comment_status( $id, 'approve' ) only flips
 		// comment_approved; it does not clear _wp_trash_meta_status, so approving a
 		// spam/trash comment skips the unspam/untrash restore and leaves stale meta.
-		// Reject before mutating anything. Contrast comments/unapprove-comment, which
+		// Reject before mutating anything. Contrast og-comments/unapprove-comment, which
 		// accepts any state.
 		$current_status = (string) wp_get_comment_status( $id );
 		if ( in_array( $current_status, array( 'spam', 'trash' ), true ) ) {

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `content/trash-post`.
+ * T1 write ability: `og-content/trash-post`.
  *
  * Wraps `DELETE /wp/v2/posts/<id>` with `force=false` via `rest_do_request()`,
  * moving the post to Trash (recoverable). The `permission_callback` enforces the
@@ -33,7 +33,7 @@ final class TrashPost implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/trash-post';
+		return 'og-content/trash-post';
 	}
 
 	/**

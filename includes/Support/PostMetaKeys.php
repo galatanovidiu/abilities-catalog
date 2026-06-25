@@ -11,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Resolves the registered, REST-visible meta keys for a post type.
  *
- * The post-meta abilities (`content/get-post-meta`, `content/update-post-meta`,
- * `content/delete-post-meta`, `content/list-post-meta-keys`) only operate on meta
+ * The post-meta abilities (`og-content/get-post-meta`, `og-content/update-post-meta`,
+ * `og-content/delete-post-meta`, `og-content/list-post-meta-keys`) only operate on meta
  * keys that core exposes through a post's REST `meta` field. This class mirrors
  * {@see \WP_REST_Meta_Fields::get_registered_fields()} so the abilities see exactly
  * the same set the REST API does and never read or write arbitrary or internal meta:

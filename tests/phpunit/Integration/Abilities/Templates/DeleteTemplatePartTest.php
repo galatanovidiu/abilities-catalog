@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/delete-template-part output and contract.
+ * Integration tests for og-templates/delete-template-part output and contract.
  *
  * Covers a successful delete of a user-created custom template part (deleted:true
  * plus the flattened previous snapshot: canonical id, title, slug, area,
@@ -21,7 +21,7 @@ use WP_Error;
 use WP_REST_Request;
 
 /**
- * Exercises templates/delete-template-part.
+ * Exercises og-templates/delete-template-part.
  */
 final class DeleteTemplatePartTest extends TestCase {
 
@@ -83,7 +83,7 @@ final class DeleteTemplatePartTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'templates/delete-template-part' ) );
+		$this->assertTrue( wp_has_ability( 'og-templates/delete-template-part' ) );
 	}
 
 	public function test_delete_user_part_returns_deleted_and_flattened_previous(): void {
@@ -91,7 +91,7 @@ final class DeleteTemplatePartTest extends TestCase {
 
 		$id = $this->seedCustomPart( 'abilities-catalog-doomed-part' );
 
-		$result = wp_get_ability( 'templates/delete-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/delete-template-part' )->execute(
 			array( 'id' => $id )
 		);
 
@@ -120,7 +120,7 @@ final class DeleteTemplatePartTest extends TestCase {
 
 		$id = $this->seedCustomPart( 'abilities-catalog-shape-part' );
 
-		$result = wp_get_ability( 'templates/delete-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/delete-template-part' )->execute(
 			array( 'id' => $id )
 		);
 
@@ -134,7 +134,7 @@ final class DeleteTemplatePartTest extends TestCase {
 	public function test_unknown_id_preserves_specific_error_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/delete-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/delete-template-part' )->execute(
 			array( 'id' => get_stylesheet() . '//abilities-catalog-nope-xyz' )
 		);
 
@@ -151,7 +151,7 @@ final class DeleteTemplatePartTest extends TestCase {
 		// Switch to a subscriber and attempt the delete.
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/delete-template-part' );
+		$ability = wp_get_ability( 'og-templates/delete-template-part' );
 		$this->assertFalse( $ability->check_permissions( array( 'id' => $id ) ) );
 
 		$result = $ability->execute( array( 'id' => $id ) );
@@ -165,7 +165,7 @@ final class DeleteTemplatePartTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'templates/delete-template-part' );
+		$ability = wp_get_ability( 'og-templates/delete-template-part' );
 		$this->assertFalse(
 			$ability->check_permissions(
 				array( 'id' => get_stylesheet() . '//abilities-catalog-loggedout-part' )

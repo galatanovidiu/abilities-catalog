@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the content/delete-post-revision ability.
+ * Integration tests for the og-content/delete-post-revision ability.
  *
  * Permanently deletes one saved revision of a post. The wrapped core function
  * `wp_delete_post_revision()` performs no capability check, so the ability's
@@ -55,7 +55,7 @@ final class DeletePostRevisionTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'content/delete-post-revision' ) );
+		$this->assertTrue( wp_has_ability( 'og-content/delete-post-revision' ) );
 	}
 
 	public function test_delete_removes_the_revision(): void {
@@ -66,7 +66,7 @@ final class DeletePostRevisionTest extends TestCase {
 		// Sanity: the revision exists before deletion.
 		$this->assertInstanceOf( WP_Post::class, wp_get_post_revision( $revision_id ) );
 
-		$result = wp_get_ability( 'content/delete-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $revision_id,
@@ -93,7 +93,7 @@ final class DeletePostRevisionTest extends TestCase {
 		$post_id = self::factory()->post->create();
 
 		// A normal post is not a revision.
-		$result = wp_get_ability( 'content/delete-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $post_id,
@@ -114,7 +114,7 @@ final class DeletePostRevisionTest extends TestCase {
 		[ $post_id, $revision_id ] = $this->makePostWithRevision();
 		$other_post                = self::factory()->post->create();
 
-		$result = wp_get_ability( 'content/delete-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-revision' )->execute(
 			array(
 				'parent'      => $other_post,
 				'revision_id' => $revision_id,
@@ -143,7 +143,7 @@ final class DeletePostRevisionTest extends TestCase {
 		// guard in execute() returns the specific 403, not a permission collapse.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'content/delete-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $revision_id,
@@ -166,7 +166,7 @@ final class DeletePostRevisionTest extends TestCase {
 
 		[ $post_id, $revision_id ] = $this->makePostWithRevision();
 
-		$result = wp_get_ability( 'content/delete-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/delete-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $revision_id,

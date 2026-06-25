@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `templates/update-template`.
+ * T2 destructive write ability: `og-templates/update-template`.
  *
  * Wraps `POST /wp/v2/templates/<id>` (for `wp_template`) or
  * `POST /wp/v2/template-parts/<id>` (for `wp_template_part`) via
@@ -43,7 +43,7 @@ final class UpdateTemplate implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/update-template';
+		return 'og-templates/update-template';
 	}
 
 	/**
@@ -60,7 +60,7 @@ final class UpdateTemplate implements Ability {
 					'id'          => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//home"). Discover ids via templates/list-templates or templates/lookup-template.', 'abilities-catalog' ),
+						'description' => __( 'The template id in "theme//slug" form (e.g. "twentytwentyfive//home"). Discover ids via og-templates/list-templates or og-templates/lookup-template.', 'abilities-catalog' ),
 					),
 					'post_type'   => array(
 						'type'        => 'string',

@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `terms/detach-post-terms`.
+ * T2 write ability: `og-terms/detach-post-terms`.
  *
  * Removes taxonomy terms from a post's assignments without rewriting the rest of
  * the post. Terms may be given as IDs, slugs, or names. This removes only the
  * association between the post and the terms; the terms themselves are not deleted
- * (use `terms/delete-term` for that), so the change is reversible by re-attaching.
+ * (use `og-terms/delete-term` for that), so the change is reversible by re-attaching.
  * Wraps core `wp_remove_object_terms()`. Returns the post `id`, `taxonomy`, the
  * remaining `term_ids`, and `edit_link` (the wp-admin editor URL); surface
  * `edit_link` so a human can review the post.
@@ -31,7 +31,7 @@ final class DetachPostTerms implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/detach-post-terms';
+		return 'og-terms/detach-post-terms';
 	}
 
 	/**
@@ -56,7 +56,7 @@ final class DetachPostTerms implements Ability {
 					'terms'    => array(
 						'type'        => 'array',
 						'minItems'    => 1,
-						'description' => __( 'Terms to remove, as term IDs (integers) or slugs/names (strings). Discover the post\'s current term IDs/slugs with terms/list-terms or terms/get-term.', 'abilities-catalog' ),
+						'description' => __( 'Terms to remove, as term IDs (integers) or slugs/names (strings). Discover the post\'s current term IDs/slugs with og-terms/list-terms or og-terms/get-term.', 'abilities-catalog' ),
 						'items'       => array(
 							'type' => array( 'integer', 'string' ),
 						),

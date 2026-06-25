@@ -11,10 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Core-function read ability: `cron/list-schedules`.
+ * Core-function read ability: `og-cron/list-schedules`.
  *
  * Lists the registered WP-Cron recurrence schedules — the valid `recurrence`
- * values for `cron/schedule-event` — each with its display name and interval in
+ * values for `og-cron/schedule-event` — each with its display name and interval in
  * seconds. Wraps `wp_get_schedules()` (wp-includes/cron.php), which returns the
  * four core schedules (`hourly`, `twicedaily`, `daily`, `weekly`) plus any added
  * by plugins through the `cron_schedules` filter, keyed by schedule name with an
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The schedule list is not itself sensitive, but it is gated on `manage_options`
  * to stay consistent with the rest of the cron cluster (it pairs with
- * `cron/schedule-event`, which requires `manage_options`).
+ * `og-cron/schedule-event`, which requires `manage_options`).
  *
  * @since 0.1.0
  */
@@ -33,7 +33,7 @@ final class ListSchedules implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'cron/list-schedules';
+		return 'og-cron/list-schedules';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class ListSchedules implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Schedules', 'abilities-catalog' ),
-			'description'         => __( 'Lists the registered WP-Cron recurrence schedules — the valid recurrence values for cron/schedule-event — each with its display name and interval in seconds. Always returns at least the four core schedules (hourly, twicedaily, daily, weekly); plugins can add more.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the registered WP-Cron recurrence schedules — the valid recurrence values for og-cron/schedule-event — each with its display name and interval in seconds. Always returns at least the four core schedules (hourly, twicedaily, daily, weekly); plugins can add more.', 'abilities-catalog' ),
 			'category'            => 'cron',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -58,7 +58,7 @@ final class ListSchedules implements Ability {
 							'properties'           => array(
 								'name'     => array(
 									'type'        => 'string',
-									'description' => __( 'The schedule identifier to pass as the recurrence of cron/schedule-event (e.g. "hourly", "daily").', 'abilities-catalog' ),
+									'description' => __( 'The schedule identifier to pass as the recurrence of og-cron/schedule-event (e.g. "hourly", "daily").', 'abilities-catalog' ),
 								),
 								'display'  => array(
 									'type'        => 'string',
@@ -100,7 +100,7 @@ final class ListSchedules implements Ability {
 	 *
 	 * The schedule list itself is not sensitive, but it is gated on
 	 * `manage_options` for consistency with the rest of the cron cluster: this
-	 * read pairs with `cron/schedule-event`, which requires `manage_options`
+	 * read pairs with `og-cron/schedule-event`, which requires `manage_options`
 	 * because scheduling mutates the site-wide `cron` option. Keeping the read
 	 * at the same baseline means an agent that can list schedules can also act
 	 * on them.

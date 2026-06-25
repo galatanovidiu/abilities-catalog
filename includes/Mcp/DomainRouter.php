@@ -172,7 +172,7 @@ final class DomainRouter {
 			// a member of that site" — point the agent at the sites it can act on, the same
 			// recovery the invalid-blog_id error gives (PLAN Decision 3 / spec A3).
 			if ( isset( $input['blog_id'] ) ) {
-				$message .= ' ' . __( 'You targeted a specific site with blog_id and may not be able to act on it; list the sites you can act on with users/list-my-sites.', 'abilities-catalog' );
+				$message .= ' ' . __( 'You targeted a specific site with blog_id and may not be able to act on it; list the sites you can act on with og-users/list-my-sites.', 'abilities-catalog' );
 			}
 
 			return new WP_Error( 'forbidden', $message, array( 'status' => 403 ) );
@@ -289,7 +289,7 @@ final class DomainRouter {
 	 * First names the ability-name patterns this domain owns ({@see DomainMap::namePatternsOf()}),
 	 * because the dominant guessing failure is that the domain tool name is not the ability
 	 * prefix — an agent reaches the `content` tool and guesses `content/search-posts` when the
-	 * real ability is `search/search-content`. Naming the prefixes turns that wrong guess into a
+	 * real ability is `og-search/search-content`. Naming the prefixes turns that wrong guess into a
 	 * right one without a round-trip. These are taxonomy facts, not an edit-distance "did you
 	 * mean", so they cannot point at a wrong-but-close ability.
 	 *

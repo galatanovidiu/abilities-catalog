@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/edit-media-image ability.
+ * Integration tests for the og-media/edit-media-image ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,13 +13,13 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises media/edit-media-image: a rotation edit over a real uploaded image
+ * Exercises og-media/edit-media-image: a rotation edit over a real uploaded image
  * (happy path + output shape), the missing-object guard, and the capability gate.
  */
 final class EditMediaImageTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'media/edit-media-image' ) );
+		$this->assertNotNull( wp_get_ability( 'og-media/edit-media-image' ) );
 	}
 
 	public function test_rotation_creates_new_attachment(): void {
@@ -31,7 +31,7 @@ final class EditMediaImageTest extends TestCase {
 		$src = wp_get_attachment_image_url( $attachment_id, 'full' );
 		$this->assertIsString( $src );
 
-		$result = wp_get_ability( 'media/edit-media-image' )->execute(
+		$result = wp_get_ability( 'og-media/edit-media-image' )->execute(
 			array(
 				'id'       => $attachment_id,
 				'src'      => $src,
@@ -57,7 +57,7 @@ final class EditMediaImageTest extends TestCase {
 		// The admin clears the coarse upload_files guard, so a non-existent id now
 		// reaches the route and surfaces its specific error rather than being collapsed
 		// to the opaque ability_invalid_permissions an object-level pre-check produced.
-		$result = wp_get_ability( 'media/edit-media-image' )->execute(
+		$result = wp_get_ability( 'og-media/edit-media-image' )->execute(
 			array(
 				'id'  => 999999,
 				'src' => 'https://example.com/missing.jpg',
@@ -80,7 +80,7 @@ final class EditMediaImageTest extends TestCase {
 		// check — a specific 403, not the generic collapse.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/edit-media-image' )->execute(
+		$result = wp_get_ability( 'og-media/edit-media-image' )->execute(
 			array(
 				'id'       => $attachment_id,
 				'src'      => $src,
@@ -102,7 +102,7 @@ final class EditMediaImageTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'media/edit-media-image' )->execute(
+		$result = wp_get_ability( 'og-media/edit-media-image' )->execute(
 			array(
 				'id'       => $attachment_id,
 				'src'      => $src,

@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `site-health/get-info`.
+ * T1 read ability: `og-site-health/get-info`.
  *
  * Net-new. Returns the Site Health "Info" debug data from
  * {@see WP_Debug_Data::debug_data()}, with private values redacted. Core marks
@@ -32,7 +32,7 @@ final class GetInfo implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'site-health/get-info';
+		return 'og-site-health/get-info';
 	}
 
 	/**

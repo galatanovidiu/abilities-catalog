@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `media/get-media-file`.
+ * Read ability: `og-media/get-media-file`.
  *
  * Net-new (no core REST route returns file bytes). Reads an attachment file from
  * disk and returns it base64-encoded, with a hard size ceiling. Above the ceiling
@@ -33,7 +33,7 @@ final class GetMediaFile implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/get-media-file';
+		return 'og-media/get-media-file';
 	}
 
 	/**
@@ -50,12 +50,12 @@ final class GetMediaFile implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The attachment (media item) ID. Discover IDs via media/list-media or search/search-content.', 'abilities-catalog' ),
+						'description' => __( 'The attachment (media item) ID. Discover IDs via og-media/list-media or og-search/search-content.', 'abilities-catalog' ),
 					),
 					'size' => array(
 						'type'        => 'string',
 						'default'     => 'full',
-						'description' => __( 'Image size name (e.g. "thumbnail", "medium", "full"). Discover valid size names via media/list-image-sizes. Falls back to "full" if the size is unavailable.', 'abilities-catalog' ),
+						'description' => __( 'Image size name (e.g. "thumbnail", "medium", "full"). Discover valid size names via og-media/list-image-sizes. Falls back to "full" if the size is unavailable.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

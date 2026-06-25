@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `plugins/activate-plugin`.
+ * T2 destructive write ability: `og-plugins/activate-plugin`.
  *
  * Wraps `POST /wp/v2/plugins/<plugin>` with `status=active` via `rest_do_request()`,
  * activating an installed plugin. This performs site-level activation only; it cannot
@@ -35,7 +35,7 @@ final class ActivatePlugin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/activate-plugin';
+		return 'og-plugins/activate-plugin';
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class ActivatePlugin implements Ability {
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin file path without the .php extension — the "plugin" value returned by plugins/list-plugins, e.g. "akismet/akismet" or "hello" (for hello.php). Not the human-readable plugin name ("Hello Dolly") and not a value ending in ".php".', 'abilities-catalog' ),
+						'description' => __( 'The plugin file path without the .php extension — the "plugin" value returned by og-plugins/list-plugins, e.g. "akismet/akismet" or "hello" (for hello.php). Not the human-readable plugin name ("Hello Dolly") and not a value ending in ".php".', 'abilities-catalog' ),
 						'minLength'   => 1,
 						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 					),

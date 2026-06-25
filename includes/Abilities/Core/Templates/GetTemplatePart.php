@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/get-template-part`.
+ * Read ability: `og-templates/get-template-part`.
  *
  * Wraps `GET /wp/v2/template-parts/<id>` via `rest_do_request()`. The id has the
  * form `theme//slug`; the `//` separator is part of the route path and is built
@@ -29,7 +29,7 @@ final class GetTemplatePart implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/get-template-part';
+		return 'og-templates/get-template-part';
 	}
 
 	/**
@@ -38,7 +38,7 @@ final class GetTemplatePart implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Template Part', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single site-editor template part by its "theme//slug" id, including its block markup and area (header, footer, etc.). For full templates use templates/get-template.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single site-editor template part by its "theme//slug" id, including its block markup and area (header, footer, etc.). For full templates use og-templates/get-template.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -47,7 +47,7 @@ final class GetTemplatePart implements Ability {
 					'id'      => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template part id in "theme//slug" form (e.g. "twentytwentyfour//header"). Discover ids with templates/list-template-parts.', 'abilities-catalog' ),
+						'description' => __( 'The template part id in "theme//slug" form (e.g. "twentytwentyfour//header"). Discover ids with og-templates/list-template-parts.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
