@@ -28,10 +28,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * This server is the alternative: a flat, taxonomy-free surface of four **bounded**
  * discovery tools backed by {@see AbilityIndex} — `overview` (a capability map), `search`
- * (ranked keyword retrieval), `describe` and `execute`. Discovery cost depends on the
- * result set, not the catalog size. It coexists with the curated server and the adapter
- * default server on its own route ({@see restRoute()}); each is a separate consumer of the
- * one ability registry, gated by the same {@see ExposurePolicy} and per-ability capability.
+ * (ranked keyword retrieval), `describe` and `execute` — plus the standalone `knowledge`
+ * tool (OKF recipes and guidelines, shared with the curated server via
+ * {@see KnowledgeToolFactory}). Discovery cost depends on the result set, not the catalog
+ * size. It coexists with the curated server and the adapter default server on its own route
+ * ({@see restRoute()}); each is a separate consumer of the one ability registry, gated by
+ * the same {@see ExposurePolicy} and per-ability capability.
  *
  * @since 0.3.0
  */
@@ -91,7 +93,7 @@ final class SearchServer {
 	}
 
 	/**
-	 * Creates the search server with its four discovery tools on `mcp_adapter_init`.
+	 * Creates the search server with its four discovery tools plus the knowledge tool on `mcp_adapter_init`.
 	 *
 	 * `create_server()` returns the adapter on success or a `WP_Error`; a failure is logged
 	 * under WP_DEBUG and otherwise swallowed so a server that cannot boot never breaks the
@@ -127,7 +129,8 @@ final class SearchServer {
 	}
 
 	/**
-	 * Builds the four bounded discovery tools, all backed by one {@see AbilityIndex}.
+	 * Builds the four bounded discovery tools (all backed by one {@see AbilityIndex}) plus
+	 * the standalone knowledge tool.
 	 *
 	 * A tool the adapter rejects is logged and skipped rather than aborting the server.
 	 *
@@ -225,6 +228,19 @@ final class SearchServer {
 
 			$tools[] = $tool;
 		}
+
+		// The cross-cutting knowledge tool is a standalone tool, not folded into the
+		// discovery surface: the same `knowledge` tool the curated server exposes, built
+		// from the one shared {@see KnowledgeToolFactory} so its description and schema do
+		// not drift between the two endpoints.
+		$knowledge = KnowledgeToolFactory::create( $permission );
+		if ( is_wp_error( $knowledge ) ) {
+			self::log( 'Failed to build the "knowledge" tool: ' . $knowledge->get_error_message() );
+
+			return $tools;
+		}
+
+		$tools[] = $knowledge;
 
 		return $tools;
 	}
