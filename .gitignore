@@ -8,8 +8,9 @@ Thumbs.db
 /abilities-catalog.zip
 
 # Local wp-env config (machine-specific plugin paths)
-/.wp-env.json
+/.wp-env.local.json
 /.wp-env.override.json
+/.wp-env.multisite.json
 
 # Local MCP client config — holds an Application Password; never commit.
 # Pattern covers stray duplicates too (e.g. ".mcp copy.json").
