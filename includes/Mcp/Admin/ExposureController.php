@@ -9,10 +9,8 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp\Admin;
 
-use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainMap;
-use GalatanOvidiu\AbilitiesCatalog\Mcp\DomainRouter;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy;
-use GalatanOvidiu\AbilitiesCatalog\Mcp\Server;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\SearchServer;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -26,16 +24,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The settings page is a React app; this controller is its only data path. `GET`
  * returns the whole screen state — the server enable flag, whether a constant locks
- * it, the endpoint URL, and every ability grouped by domain with its risk flags and
+ * it, the endpoint URL, and every ability grouped by category with its risk flags and
  * exposure state. `POST` applies a partial change (a single toggle the page saves on
- * the spot, or a per-domain bulk) and returns the fresh state. Both require
+ * the spot, or a per-category bulk) and returns the fresh state. Both require
  * `manage_options`, since exposing an admin-power ability over MCP is itself an
  * admin-power act.
  *
  * The controller is a thin adapter: {@see ExposurePolicy} owns the storage and the
- * deny-by-default rule, {@see DomainMap}/{@see DomainRouter} own the taxonomy and the
- * per-ability metadata. It registers unconditionally (independent of the server's
- * enable flag) so the page can be configured, and the server turned on, from one place.
+ * deny-by-default rule; the grouping reads the live registry directly, bucketing each
+ * ability by its own declared category ({@see \WP_Ability::get_category()}) and labelling
+ * the groups from {@see wp_get_ability_categories()}. It registers unconditionally
+ * (independent of the server's enable flag) so the page can be configured, and the
+ * server turned on, from one place.
  *
  * @since 0.2.0
  */
@@ -149,52 +149,72 @@ final class ExposureController {
 	/**
 	 * Builds the screen state from the live registry and the stored exposure set.
 	 *
-	 * @return array{server_enabled:bool,server_enabled_locked:bool,endpoint:string,enabled_count:int,total_count:int,domains:list<array{slug:string,label:string,abilities:list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool,enabled:bool}>}>}
+	 * Groups every registered ability by its declared category, then orders and labels the
+	 * groups from the registered category list (which carries the human label and blurb).
+	 * The `domains` key name is retained for the React app's sake; each entry is a category.
+	 *
+	 * @return array{server_enabled:bool,server_enabled_locked:bool,endpoint:string,enabled_count:int,total_count:int,domains:list<array{slug:string,label:string,description:string,abilities:list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool,enabled:bool}>}>}
 	 *         The settings-screen state.
 	 */
 	private static function state(): array {
-		$map    = new DomainMap();
-		$router = new DomainRouter( $map, new ExposurePolicy() );
+		$policy = new ExposurePolicy();
 
-		$domains       = array();
+		// Bucket every registered ability by its own declared category.
+		$by_category   = array();
 		$enabled_count = 0;
 		$total_count   = 0;
-		foreach ( $map->domains() as $slug ) {
-			$abilities = $router->list( $slug );
+		foreach ( wp_get_abilities() as $name => $ability ) {
+			$slug        = (string) $ability->get_category();
+			$meta        = $ability->get_meta();
+			$annotations = is_array( $meta['annotations'] ?? null ) ? $meta['annotations'] : array();
+			$is_enabled  = $policy->allows( (string) $name );
 
-			$total_count += count( $abilities );
-			foreach ( $abilities as $ability ) {
-				if ( ! $ability['enabled'] ) {
-					continue;
-				}
+			$by_category[ $slug ][] = array(
+				'name'        => (string) $name,
+				'label'       => $ability->get_label(),
+				'description' => $ability->get_description(),
+				'readonly'    => true === ( $annotations['readonly'] ?? null ),
+				'destructive' => true === ( $annotations['destructive'] ?? null ),
+				'dangerous'   => true === ( $annotations['dangerous'] ?? null ),
+				'enabled'     => $is_enabled,
+			);
 
-				++$enabled_count;
+			++$total_count;
+			$enabled_count += $is_enabled ? 1 : 0;
+		}
+
+		// Sort each category's abilities by name so the list reads alphabetically.
+		foreach ( $by_category as $slug => $rows ) {
+			usort( $rows, static fn ( array $a, array $b ): int => strcmp( $a['name'], $b['name'] ) );
+			$by_category[ $slug ] = $rows;
+		}
+
+		// Label the groups from the registered category list, skipping empty ones.
+		$groups = array();
+		foreach ( wp_get_ability_categories() as $category ) {
+			$slug = $category->get_slug();
+			if ( empty( $by_category[ $slug ] ) ) {
+				continue;
 			}
 
-			$domains[] = array(
-				'slug'      => $slug,
-				'label'     => self::domainLabel( $slug ),
-				'abilities' => $abilities,
+			$groups[] = array(
+				'slug'        => $slug,
+				'label'       => $category->get_label(),
+				'description' => $category->get_description(),
+				'abilities'   => $by_category[ $slug ],
 			);
 		}
+
+		// Order the category groups alphabetically by label.
+		usort( $groups, static fn ( array $a, array $b ): int => strcmp( $a['label'], $b['label'] ) );
 
 		return array(
 			'server_enabled'        => abilities_catalog_mcp_is_enabled(),
 			'server_enabled_locked' => abilities_catalog_mcp_is_enable_locked(),
-			'endpoint'              => rest_url( ltrim( Server::restRoute(), '/' ) ),
+			'endpoint'              => rest_url( ltrim( SearchServer::restRoute(), '/' ) ),
 			'enabled_count'         => $enabled_count,
 			'total_count'           => $total_count,
-			'domains'               => $domains,
+			'domains'               => $groups,
 		);
-	}
-
-	/**
-	 * Turns a domain slug into a human label for the accordion header.
-	 *
-	 * @param string $slug The domain slug, e.g. `site-health`.
-	 * @return string The label, e.g. `Site Health`.
-	 */
-	private static function domainLabel( string $slug ): string {
-		return ucwords( str_replace( '-', ' ', $slug ) );
 	}
 }

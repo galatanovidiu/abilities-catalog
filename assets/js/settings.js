@@ -9,7 +9,13 @@
 ( function ( wp ) {
 	'use strict';
 
-	if ( ! wp || ! wp.element || ! wp.components || ! wp.apiFetch || ! wp.i18n ) {
+	if (
+		! wp ||
+		! wp.element ||
+		! wp.components ||
+		! wp.apiFetch ||
+		! wp.i18n
+	) {
 		return;
 	}
 
@@ -45,15 +51,31 @@
 	 */
 	function riskOf( ability ) {
 		if ( ability.dangerous ) {
-			return { label: __( 'dangerous', 'abilities-catalog' ), bg: '#f4c7c3', fg: '#8a1f1f' };
+			return {
+				label: __( 'dangerous', 'abilities-catalog' ),
+				bg: '#f4c7c3',
+				fg: '#8a1f1f',
+			};
 		}
 		if ( ability.destructive ) {
-			return { label: __( 'destructive', 'abilities-catalog' ), bg: '#fbdcc8', fg: '#9c3a1a' };
+			return {
+				label: __( 'destructive', 'abilities-catalog' ),
+				bg: '#fbdcc8',
+				fg: '#9c3a1a',
+			};
 		}
 		if ( ability.readonly ) {
-			return { label: __( 'read', 'abilities-catalog' ), bg: '#d7ecd9', fg: '#1e4620' };
+			return {
+				label: __( 'read', 'abilities-catalog' ),
+				bg: '#d7ecd9',
+				fg: '#1e4620',
+			};
 		}
-		return { label: __( 'write', 'abilities-catalog' ), bg: '#ffe7bd', fg: '#7a4e00' };
+		return {
+			label: __( 'write', 'abilities-catalog' ),
+			bg: '#ffe7bd',
+			fg: '#7a4e00',
+		};
 	}
 
 	/**
@@ -97,8 +119,15 @@
 		var total = 0;
 		var domains = state.domains.map( function ( domain ) {
 			var abilities = domain.abilities.map( function ( ability ) {
-				if ( Object.prototype.hasOwnProperty.call( changes, ability.name ) ) {
-					return Object.assign( {}, ability, { enabled: changes[ ability.name ] } );
+				if (
+					Object.prototype.hasOwnProperty.call(
+						changes,
+						ability.name
+					)
+				) {
+					return Object.assign( {}, ability, {
+						enabled: changes[ ability.name ],
+					} );
 				}
 				return ability;
 			} );
@@ -225,7 +254,13 @@
 					setLoading( false );
 				} )
 				.catch( function ( err ) {
-					setError( ( err && err.message ) || __( 'Could not load settings.', 'abilities-catalog' ) );
+					setError(
+						( err && err.message ) ||
+							__(
+								'Could not load settings.',
+								'abilities-catalog'
+							)
+					);
 					setLoading( false );
 				} );
 		}, [] );
@@ -255,11 +290,19 @@
 					flash( __( 'Saved.', 'abilities-catalog' ) );
 				} )
 				.catch( function ( err ) {
-					flash( ( err && err.message ) || __( 'Save failed.', 'abilities-catalog' ) );
+					flash(
+						( err && err.message ) ||
+							__( 'Save failed.', 'abilities-catalog' )
+					);
 					return apiFetch( { path: REST_PATH } )
 						.then( reconcile )
 						.catch( function () {
-							flash( __( 'Could not confirm the saved state — reload to be sure.', 'abilities-catalog' ) );
+							flash(
+								__(
+									'Could not confirm the saved state — reload to be sure.',
+									'abilities-catalog'
+								)
+							);
 						} );
 				} );
 		}
@@ -308,9 +351,11 @@
 			var query = search.trim().toLowerCase();
 			var names = [];
 			domains.forEach( function ( domain ) {
-				matchingAbilities( domain, query ).forEach( function ( ability ) {
-					names.push( ability.name );
-				} );
+				matchingAbilities( domain, query ).forEach(
+					function ( ability ) {
+						names.push( ability.name );
+					}
+				);
 			} );
 			return names;
 		}
@@ -332,14 +377,16 @@
 			var dangerous = 0;
 			var destructive = 0;
 			state.domains.forEach( function ( domain ) {
-				matchingAbilities( domain, query ).forEach( function ( ability ) {
-					names.push( ability.name );
-					if ( ability.dangerous ) {
-						dangerous++;
-					} else if ( ability.destructive ) {
-						destructive++;
+				matchingAbilities( domain, query ).forEach(
+					function ( ability ) {
+						names.push( ability.name );
+						if ( ability.dangerous ) {
+							dangerous++;
+						} else if ( ability.destructive ) {
+							destructive++;
+						}
 					}
-				} );
+				);
 			} );
 
 			if ( names.length === 0 ) {
@@ -351,7 +398,12 @@
 				return;
 			}
 
-			setPendingEnable( { names: names, total: names.length, dangerous: dangerous, destructive: destructive } );
+			setPendingEnable( {
+				names: names,
+				total: names.length,
+				dangerous: dangerous,
+				destructive: destructive,
+			} );
 		}
 
 		function confirmEnableAll() {
@@ -369,7 +421,12 @@
 				}, 1500 );
 			};
 			var fail = function () {
-				flash( __( 'Copy is unavailable here — select the endpoint and copy it manually.', 'abilities-catalog' ) );
+				flash(
+					__(
+						'Copy is unavailable here — select the endpoint and copy it manually.',
+						'abilities-catalog'
+					)
+				);
 			};
 
 			if ( navigator.clipboard && navigator.clipboard.writeText ) {
@@ -391,11 +448,19 @@
 		}
 
 		if ( loading ) {
-			return el( 'div', { style: { padding: '24px' } }, el( Spinner, null ) );
+			return el(
+				'div',
+				{ style: { padding: '24px' } },
+				el( Spinner, null )
+			);
 		}
 
 		if ( error ) {
-			return el( Notice, { status: 'error', isDismissible: false }, error );
+			return el(
+				Notice,
+				{ status: 'error', isDismissible: false },
+				error
+			);
 		}
 
 		var query = search.trim().toLowerCase();
@@ -407,11 +472,16 @@
 			el(
 				'p',
 				{ style: { maxWidth: '720px', color: '#50575e' } },
-				__( 'The server exposes the ability catalog over the Model Context Protocol. Every ability is disabled by default; enable only the ones an agent should be allowed to run. Disabled abilities stay visible to a connected agent but refuse to execute. Capability checks still apply on top of these settings.', 'abilities-catalog' )
+				__(
+					'The server exposes the ability catalog over the Model Context Protocol. Every ability is disabled by default; enable only the ones an agent should be allowed to run. Disabled abilities stay visible to a connected agent but refuse to execute. Capability checks still apply on top of these settings.',
+					'abilities-catalog'
+				)
 			),
 			serverCard( state, toggleServer, copyEndpoint, copied ),
 			connectPanel( state ),
-			el( 'div', { style: { margin: '16px 0', maxWidth: '420px' } },
+			el(
+				'div',
+				{ style: { margin: '16px 0', maxWidth: '420px' } },
 				el( SearchControl, {
 					__nextHasNoMarginBottom: true,
 					value: search,
@@ -422,25 +492,46 @@
 			),
 			el(
 				'div',
-				{ style: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', margin: '4px 0 12px' } },
+				{
+					style: {
+						display: 'flex',
+						alignItems: 'center',
+						gap: '12px',
+						flexWrap: 'wrap',
+						margin: '4px 0 12px',
+					},
+				},
 				el(
 					'span',
 					{ style: { color: '#50575e' } },
 					sprintf(
 						/* translators: 1: number of enabled abilities, 2: total abilities. */
-						__( '%1$d of %2$d abilities enabled.', 'abilities-catalog' ),
+						__(
+							'%1$d of %2$d abilities enabled.',
+							'abilities-catalog'
+						),
 						state.enabled_count,
 						state.total_count
 					)
 				),
 				el(
 					Button,
-					{ variant: 'secondary', size: 'small', onClick: requestEnableAll },
+					{
+						variant: 'secondary',
+						size: 'small',
+						onClick: requestEnableAll,
+					},
 					__( 'Enable all', 'abilities-catalog' )
 				),
 				el(
 					Button,
-					{ variant: 'tertiary', size: 'small', onClick: function () { bulkAll( false ); } },
+					{
+						variant: 'tertiary',
+						size: 'small',
+						onClick: function () {
+							bulkAll( false );
+						},
+					},
 					__( 'Disable all', 'abilities-catalog' )
 				)
 			),
@@ -448,14 +539,30 @@
 				Panel,
 				null,
 				state.domains.map( function ( domain ) {
-					return domainPanel( domain, query, toggleAbility, bulkDomain );
+					return domainPanel(
+						domain,
+						query,
+						toggleAbility,
+						bulkDomain
+					);
 				} )
 			),
-			pendingEnable ? enableAllModal( pendingEnable, confirmEnableAll, function () { setPendingEnable( null ); } ) : null,
+			pendingEnable
+				? enableAllModal( pendingEnable, confirmEnableAll, function () {
+						setPendingEnable( null );
+				  } )
+				: null,
 			notice
 				? el(
 						'div',
-						{ style: { position: 'fixed', bottom: '24px', left: '180px', zIndex: 99999 } },
+						{
+							style: {
+								position: 'fixed',
+								bottom: '24px',
+								left: '180px',
+								zIndex: 99999,
+							},
+						},
 						el( Snackbar, null, notice )
 				  )
 				: null
@@ -473,8 +580,14 @@
 	 */
 	function serverCard( state, toggleServer, copyEndpoint, copied ) {
 		var help = state.server_enabled_locked
-			? __( 'Locked by the ABILITIES_CATALOG_MCP_ENABLED constant in wp-config.php.', 'abilities-catalog' )
-			: __( 'Off by default. When on, the enabled abilities are reachable by an authenticated agent at the endpoint below.', 'abilities-catalog' );
+			? __(
+					'Locked by the ABILITIES_CATALOG_MCP_ENABLED constant in wp-config.php.',
+					'abilities-catalog'
+			  )
+			: __(
+					'Off by default. When on, the enabled abilities are reachable by an authenticated agent at the endpoint below.',
+					'abilities-catalog'
+			  );
 
 		return el(
 			Card,
@@ -492,17 +605,42 @@
 				} ),
 				el(
 					'div',
-					{ style: { marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } },
-					el( 'span', { style: { color: '#50575e' } }, __( 'Endpoint:', 'abilities-catalog' ) ),
+					{
+						style: {
+							marginTop: '12px',
+							display: 'flex',
+							alignItems: 'center',
+							gap: '8px',
+							flexWrap: 'wrap',
+						},
+					},
+					el(
+						'span',
+						{ style: { color: '#50575e' } },
+						__( 'Endpoint:', 'abilities-catalog' )
+					),
 					el(
 						'code',
-						{ style: { padding: '2px 6px', background: '#f0f0f1', borderRadius: '3px', wordBreak: 'break-all' } },
+						{
+							style: {
+								padding: '2px 6px',
+								background: '#f0f0f1',
+								borderRadius: '3px',
+								wordBreak: 'break-all',
+							},
+						},
 						state.endpoint
 					),
 					el(
 						Button,
-						{ variant: 'secondary', size: 'small', onClick: copyEndpoint },
-						copied ? __( 'Copied', 'abilities-catalog' ) : __( 'Copy', 'abilities-catalog' )
+						{
+							variant: 'secondary',
+							size: 'small',
+							onClick: copyEndpoint,
+						},
+						copied
+							? __( 'Copied', 'abilities-catalog' )
+							: __( 'Copy', 'abilities-catalog' )
 					)
 				),
 				! state.server_enabled
@@ -512,7 +650,10 @@
 							el(
 								Notice,
 								{ status: 'warning', isDismissible: false },
-								__( 'The server is disabled. These exposure settings take effect once it is enabled.', 'abilities-catalog' )
+								__(
+									'The server is disabled. These exposure settings take effect once it is enabled.',
+									'abilities-catalog'
+								)
 							)
 					  )
 					: null
@@ -539,7 +680,9 @@
 			'      "command": "npx",\n' +
 			'      "args": [ "-y", "@automattic/mcp-wordpress-remote@latest" ],\n' +
 			'      "env": {\n' +
-			'        "WP_API_URL": "' + state.endpoint + '",\n' +
+			'        "WP_API_URL": "' +
+			state.endpoint +
+			'",\n' +
 			'        "WP_API_USERNAME": "your-username",\n' +
 			'        "WP_API_PASSWORD": "your application password"\n' +
 			'      }\n' +
@@ -552,33 +695,62 @@
 			{ style: { marginBottom: '16px' } },
 			el(
 				PanelBody,
-				{ title: __( 'Connect a client', 'abilities-catalog' ), initialOpen: false },
+				{
+					title: __( 'Connect a client', 'abilities-catalog' ),
+					initialOpen: false,
+				},
 				el(
 					'p',
 					{ style: { marginTop: 0 } },
-					__( 'An MCP client connects to the endpoint above and signs in as a WordPress user with an Application Password. You need three things:', 'abilities-catalog' )
+					__(
+						'An MCP client connects to the endpoint above and signs in as a WordPress user with an Application Password. You need three things:',
+						'abilities-catalog'
+					)
 				),
 				el(
 					'ol',
 					{ style: { margin: '0 0 12px', paddingLeft: '20px' } },
-					el( 'li', null, __( 'The endpoint URL shown above.', 'abilities-catalog' ) ),
-					el( 'li', null, __( 'A WordPress username — the agent acts as this user.', 'abilities-catalog' ) ),
+					el(
+						'li',
+						null,
+						__(
+							'The endpoint URL shown above.',
+							'abilities-catalog'
+						)
+					),
+					el(
+						'li',
+						null,
+						__(
+							'A WordPress username — the agent acts as this user.',
+							'abilities-catalog'
+						)
+					),
 					el(
 						'li',
 						null,
 						el(
 							'a',
 							{ href: 'profile.php#application-passwords' },
-							__( 'An Application Password for that user (Users → Profile → Application Passwords).', 'abilities-catalog' )
+							__(
+								'An Application Password for that user (Users → Profile → Application Passwords).',
+								'abilities-catalog'
+							)
 						),
 						' ',
-						__( 'Creating one requires the site to run over HTTPS.', 'abilities-catalog' )
+						__(
+							'Creating one requires the site to run over HTTPS.',
+							'abilities-catalog'
+						)
 					)
 				),
 				el(
 					'p',
 					{ style: { marginBottom: '4px' } },
-					__( 'Most clients (such as Claude Desktop or Cursor) connect through the @automattic/mcp-wordpress-remote proxy. Add it to your MCP client config:', 'abilities-catalog' )
+					__(
+						'Most clients (such as Claude Desktop or Cursor) connect through the @automattic/mcp-wordpress-remote proxy. Add it to your MCP client config:',
+						'abilities-catalog'
+					)
 				),
 				el(
 					'pre',
@@ -598,7 +770,10 @@
 				el(
 					'p',
 					{ style: { marginBottom: 0, color: '#50575e' } },
-					__( 'A client that speaks remote (Streamable HTTP) MCP can call the endpoint directly, authenticating with the header Authorization: Basic <base64 of "username:application-password">. Either way the agent acts as the chosen user, so enable only the abilities it needs — and back up your site first.', 'abilities-catalog' )
+					__(
+						'A client that speaks remote (Streamable HTTP) MCP can call the endpoint directly, authenticating with the header Authorization: Basic <base64 of "username:application-password">. Either way the agent acts as the chosen user, so enable only the abilities it needs — and back up your site first.',
+						'abilities-catalog'
+					)
 				)
 			)
 		);
@@ -618,13 +793,19 @@
 	function enableAllModal( pending, onConfirm, onCancel ) {
 		return el(
 			Modal,
-			{ title: __( 'Enable all shown abilities?', 'abilities-catalog' ), onRequestClose: onCancel },
+			{
+				title: __( 'Enable all shown abilities?', 'abilities-catalog' ),
+				onRequestClose: onCancel,
+			},
 			el(
 				'p',
 				null,
 				sprintf(
 					/* translators: %d: number of abilities. */
-					__( 'This enables %d abilities for execution over MCP.', 'abilities-catalog' ),
+					__(
+						'This enables %d abilities for execution over MCP.',
+						'abilities-catalog'
+					),
 					pending.total
 				)
 			),
@@ -633,18 +814,36 @@
 				{ status: 'warning', isDismissible: false },
 				sprintf(
 					/* translators: 1: dangerous count, 2: destructive count. */
-					__( 'Includes %1$d dangerous and %2$d destructive abilities (for example installing plugins or themes) that any authenticated agent could then run over the network.', 'abilities-catalog' ),
+					__(
+						'Includes %1$d dangerous and %2$d destructive abilities (for example installing plugins or themes) that any authenticated agent could then run over the network.',
+						'abilities-catalog'
+					),
 					pending.dangerous,
 					pending.destructive
 				)
 			),
 			el(
 				'div',
-				{ style: { display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' } },
-				el( Button, { variant: 'tertiary', onClick: onCancel }, __( 'Cancel', 'abilities-catalog' ) ),
+				{
+					style: {
+						display: 'flex',
+						gap: '8px',
+						justifyContent: 'flex-end',
+						marginTop: '16px',
+					},
+				},
 				el(
 					Button,
-					{ variant: 'primary', isDestructive: pending.dangerous > 0, onClick: onConfirm },
+					{ variant: 'tertiary', onClick: onCancel },
+					__( 'Cancel', 'abilities-catalog' )
+				),
+				el(
+					Button,
+					{
+						variant: 'primary',
+						isDestructive: pending.dangerous > 0,
+						onClick: onConfirm,
+					},
 					__( 'Enable all', 'abilities-catalog' )
 				)
 			)
@@ -652,12 +851,15 @@
 	}
 
 	/**
-	 * Renders one domain's collapsible panel.
+	 * Renders one category's collapsible panel.
 	 *
-	 * @param {Object}   domain        The domain.
+	 * Opens with the category description, then a master switch that is on only when every
+	 * shown ability is enabled and that toggles them all, then the per-ability switches.
+	 *
+	 * @param {Object}   domain        The category (response key kept as `domain`).
 	 * @param {string}   query         The lower-cased search query.
 	 * @param {Function} toggleAbility Per-ability handler.
-	 * @param {Function} bulkDomain    Per-domain bulk handler.
+	 * @param {Function} bulkDomain    Per-category bulk handler.
 	 * @return {Object|null} The panel element, or null when search hides it.
 	 */
 	function domainPanel( domain, query, toggleAbility, bulkDomain ) {
@@ -674,47 +876,111 @@
 			domain.abilities.length
 		);
 
+		// The master switch reads as on only when nothing shown is still disabled, so a
+		// single off ability leaves it off — and toggling it acts on the shown set.
+		var allEnabled = visible.every( function ( ability ) {
+			return ability.enabled;
+		} );
+
 		// Fold the search state into the key so the panel remounts (and re-reads
 		// initialOpen) when search toggles on or off — PanelBody is uncontrolled and
 		// reads initialOpen only at mount, so matching domains auto-open while searching
 		// and collapse again when the query is cleared.
 		return el(
 			PanelBody,
-			{ key: domain.slug + ':' + ( query ? 'q' : '' ), title: title, initialOpen: !! query },
+			{
+				key: domain.slug + ':' + ( query ? 'q' : '' ),
+				title: title,
+				initialOpen: !! query,
+			},
+			domain.description
+				? el(
+						'p',
+						{
+							style: {
+								marginTop: 0,
+								marginBottom: '12px',
+								color: '#50575e',
+							},
+						},
+						domain.description
+				  )
+				: null,
 			el(
 				'div',
-				{ style: { display: 'flex', gap: '8px', marginBottom: '8px' } },
-				el(
-					Button,
-					{ variant: 'secondary', size: 'small', onClick: function () { bulkDomain( domain, true ); } },
-					__( 'Enable all', 'abilities-catalog' )
-				),
-				el(
-					Button,
-					{ variant: 'tertiary', size: 'small', onClick: function () { bulkDomain( domain, false ); } },
-					__( 'Disable all', 'abilities-catalog' )
-				)
+				{
+					style: {
+						paddingBottom: '8px',
+						marginBottom: '4px',
+						borderBottom: '1px solid #dcdcde',
+					},
+				},
+				el( ToggleControl, {
+					__nextHasNoMarginBottom: true,
+					checked: allEnabled,
+					onChange: function ( value ) {
+						bulkDomain( domain, value );
+					},
+					label: el(
+						'strong',
+						null,
+						__( 'Enable all', 'abilities-catalog' )
+					),
+				} )
 			),
 			visible.map( function ( ability ) {
 				return el(
 					'div',
-					{ key: ability.name, style: { padding: '6px 0', borderTop: '1px solid #f0f0f1' } },
+					{
+						key: ability.name,
+						style: {
+							padding: '6px 0',
+							borderTop: '1px solid #f0f0f1',
+						},
+					},
 					el( ToggleControl, {
 						__nextHasNoMarginBottom: true,
 						checked: !! ability.enabled,
-						onChange: function ( value ) { toggleAbility( ability.name, value ); },
+						onChange: function ( value ) {
+							toggleAbility( ability.name, value );
+						},
 						label: el(
 							'span',
-							{ style: { display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } },
+							{
+								style: {
+									display: 'inline-flex',
+									alignItems: 'center',
+									gap: '8px',
+									flexWrap: 'wrap',
+								},
+							},
 							el( 'strong', null, ability.label || ability.name ),
 							RiskBadge( ability )
 						),
 						help: el(
 							Fragment,
 							null,
-							el( 'code', { style: { fontSize: '11px', color: '#646970' } }, ability.name ),
+							el(
+								'code',
+								{
+									style: {
+										fontSize: '11px',
+										color: '#646970',
+									},
+								},
+								ability.name
+							),
 							ability.description
-								? el( 'div', { style: { marginTop: '2px', color: '#50575e' } }, ability.description )
+								? el(
+										'div',
+										{
+											style: {
+												marginTop: '2px',
+												color: '#50575e',
+											},
+										},
+										ability.description
+								  )
 								: null
 						),
 					} )
