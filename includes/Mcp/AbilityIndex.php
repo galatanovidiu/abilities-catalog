@@ -58,6 +58,13 @@ final class AbilityIndex {
 	private ExposurePolicy $policy;
 
 	/**
+	 * The stemmed search corpus, built once per instance from the live registry.
+	 *
+	 * @var list<array<string,mixed>>|null
+	 */
+	private ?array $corpus = null;
+
+	/**
 	 * Field weights for keyword scoring: a hit in the name outranks one in the description.
 	 */
 	private const FIELD_WEIGHTS = array(
@@ -79,8 +86,9 @@ final class AbilityIndex {
 	 * Query words too common to discriminate; dropped before scoring.
 	 *
 	 * Without this, "the"/"a"/"to" match nearly every ability and make `total_matched`
-	 * meaningless. This is a deliberately small list — proper stemming and synonyms are the
-	 * upgrade path (alongside semantic search) if keyword recall proves insufficient.
+	 * meaningless. Common-but-real words (e.g. "list") are handled separately by the IDF
+	 * weighting in {@see idf()}; a synonym layer is the remaining upgrade path (alongside
+	 * semantic search) if keyword recall proves insufficient.
 	 *
 	 * @var list<string>
 	 */
@@ -194,11 +202,14 @@ final class AbilityIndex {
 	/**
 	 * Ranked keyword search over the registry, capped to a small result set.
 	 *
-	 * Scores each ability by weighted substring hits of the query words across its name,
-	 * label, keywords and description, scaled by how many query words matched, with a bonus
-	 * when the whole phrase appears in the name or label. Abilities scoring zero are
-	 * dropped. An optional category narrows the corpus. The reply reports how many abilities
-	 * matched in total so the agent knows whether to refine.
+	 * Each query word and every ability field is reduced to a Porter stem first, so an
+	 * inflected query ("listing plugins") matches differently-inflected metadata ("list
+	 * plugin"). Scores each ability by its stem hits across name, label, keywords and
+	 * description, weighting each hit by the stem's inverse document frequency (a rare,
+	 * discriminating word outweighs a common one like "list"), then scaling by how much of
+	 * the query matched, with a bonus when the whole phrase appears in the name or label.
+	 * Abilities scoring zero are dropped. An optional category narrows the corpus. The reply
+	 * reports how many abilities matched in total so the agent knows whether to refine.
 	 *
 	 * A query that matches nothing is not a dead end: the reply also carries the category map
 	 * (the same orientation {@see overview()} gives) so the agent can re-orient and retry with
@@ -214,34 +225,26 @@ final class AbilityIndex {
 		$q     = strtolower( trim( $query ) );
 		$words = self::significantWords( $q );
 
+		$corpus = $this->corpus();
+		$idf    = $this->idf( $corpus, $words );
+
 		$scored = array();
-		foreach ( wp_get_abilities() as $ability ) {
-			$slug = (string) $ability->get_category();
-			if ( null !== $category && '' !== $category && $slug !== $category ) {
+		foreach ( $corpus as $row ) {
+			if ( null !== $category && '' !== $category && $row['category'] !== $category ) {
 				continue;
 			}
 
-			$name  = $ability->get_name();
-			$meta  = $ability->get_meta();
-			$score = $this->score(
-				$words,
-				$q,
-				$name,
-				(string) $ability->get_label(),
-				(string) $ability->get_description(),
-				implode( ' ', (array) ( $meta['keywords'] ?? array() ) )
-			);
-
+			$score = $this->score( $words, $q, $row, $idf );
 			if ( $score <= 0 ) {
 				continue;
 			}
 
 			$scored[] = array(
-				'name'        => $name,
-				'label'       => $ability->get_label(),
-				'description' => $ability->get_description(),
-				'category'    => $slug,
-				'enabled'     => $this->policy->allows( $name ),
+				'name'        => $row['name'],
+				'label'       => $row['label'],
+				'description' => $row['description'],
+				'category'    => $row['category'],
+				'enabled'     => $row['enabled'],
 				'_score'      => $score,
 			);
 		}
@@ -348,10 +351,11 @@ final class AbilityIndex {
 	}
 
 	/**
-	 * Splits a query into discriminating words: drops stopwords and 1-2 char tokens.
+	 * Splits a query into discriminating word stems: drops stopwords and 1-2 char tokens,
+	 * then stems each survivor so an inflected query matches the corpus.
 	 *
 	 * @param string $query The lowercased query.
-	 * @return list<string> The significant words (falls back to all 1+ char words if every word was a stopword).
+	 * @return list<string> The significant stems (falls back to the raw words if every word was a stopword).
 	 */
 	private static function significantWords( string $query ): array {
 		$all = preg_split( '/[^a-z0-9]+/', $query, -1, PREG_SPLIT_NO_EMPTY ) ?: array();
@@ -362,7 +366,7 @@ final class AbilityIndex {
 				continue;
 			}
 
-			$kept[] = $word;
+			$kept[] = PorterStemmer::stem( $word );
 		}
 
 		// A query that is all stopwords (e.g. "get it") still gets something to match on.
@@ -370,44 +374,142 @@ final class AbilityIndex {
 	}
 
 	/**
-	 * Scores one ability against the query (0 = no match).
+	 * Builds (and memoizes) the stemmed search corpus from the live registry.
 	 *
-	 * @param list<string> $words       The lowercased query words.
-	 * @param string       $phrase      The full lowercased query.
-	 * @param string       $name        The ability name.
-	 * @param string       $label       The ability label.
-	 * @param string       $description The ability description.
-	 * @param string       $keywords    The space-joined keywords meta.
+	 * Each row carries the fields a result needs (name, label, description, category,
+	 * enabled) plus, for matching: the lowercased name (substring-matched, since it is the
+	 * literal an agent copies into execute) and a stemmed token set per human field. The
+	 * union set `all_stems` backs the document-frequency count {@see idf()} uses.
+	 *
+	 * @return list<array<string,mixed>> The corpus rows.
+	 */
+	private function corpus(): array {
+		if ( null !== $this->corpus ) {
+			return $this->corpus;
+		}
+
+		$rows = array();
+		foreach ( wp_get_abilities() as $ability ) {
+			$name          = $ability->get_name();
+			$meta          = $ability->get_meta();
+			$label_stems   = self::stemSet( (string) $ability->get_label() );
+			$keyword_stems = self::stemSet( implode( ' ', (array) ( $meta['keywords'] ?? array() ) ) );
+			$desc_stems    = self::stemSet( (string) $ability->get_description() );
+
+			$rows[] = array(
+				'name'          => $name,
+				'label'         => $ability->get_label(),
+				'description'   => $ability->get_description(),
+				'category'      => (string) $ability->get_category(),
+				'enabled'       => $this->policy->allows( $name ),
+				'name_lc'       => strtolower( $name ),
+				'label_stems'   => $label_stems,
+				'keyword_stems' => $keyword_stems,
+				'desc_stems'    => $desc_stems,
+				'all_stems'     => $label_stems + $keyword_stems + $desc_stems
+					+ self::stemSet( str_replace( array( '-', '/', '_' ), ' ', $name ) ),
+			);
+		}
+
+		$this->corpus = $rows;
+
+		return $rows;
+	}
+
+	/**
+	 * Tokenizes text into a set of stems (deduped), dropping stopwords and 1-2 char tokens.
+	 *
+	 * Returns a map stem => true so membership is a cheap `isset()`.
+	 *
+	 * @param string $text The text to tokenize.
+	 * @return array<string,true> The stem set.
+	 */
+	private static function stemSet( string $text ): array {
+		$set = array();
+		foreach ( preg_split( '/[^a-z0-9]+/', strtolower( $text ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $token ) {
+			if ( strlen( $token ) < 3 || in_array( $token, self::STOPWORDS, true ) ) {
+				continue;
+			}
+
+			$set[ PorterStemmer::stem( $token ) ] = true;
+		}
+
+		return $set;
+	}
+
+	/**
+	 * Inverse-document-frequency weight per query stem, over the whole corpus.
+	 *
+	 * A stem in few abilities is discriminating and gets a high weight; one in nearly every
+	 * ability (e.g. "list") gets a weight near 1, so it barely moves the ranking. The `+ 1`
+	 * smoothing keeps any match contributing at least its field weight, so a common word
+	 * still counts — it just stops dominating the score.
+	 *
+	 * @param list<array<string,mixed>> $corpus The corpus rows.
+	 * @param list<string>              $words  The query stems.
+	 * @return array<string,float> stem => idf weight.
+	 */
+	private function idf( array $corpus, array $words ): array {
+		$n   = max( 1, count( $corpus ) );
+		$idf = array();
+		foreach ( array_unique( $words ) as $word ) {
+			$df = 0;
+			foreach ( $corpus as $row ) {
+				if ( ! isset( $row['all_stems'][ $word ] )
+					&& ( '' === $row['name_lc'] || false === strpos( $row['name_lc'], $word ) ) ) {
+					continue;
+				}
+
+				++$df;
+			}
+
+			$idf[ $word ] = log( $n / max( 1, $df ) ) + 1.0;
+		}
+
+		return $idf;
+	}
+
+	/**
+	 * Scores one corpus row against the query stems (0 = no match).
+	 *
+	 * A query stem hits the name by substring (the name is an identifier, not prose) and the
+	 * human fields by stem-set membership. Each field's weight is scaled by the stem's IDF, so
+	 * a rare discriminating word outweighs a common one. The score is then scaled by how much
+	 * of the query matched, with a bonus when the whole phrase appears verbatim in name/label.
+	 *
+	 * @param list<string>         $words  The query stems.
+	 * @param string               $phrase The full lowercased query.
+	 * @param array<string,mixed>  $row    The corpus row.
+	 * @param array<string,float>  $idf    stem => idf weight (from {@see idf()}).
 	 * @return float The relevance score.
 	 */
-	private function score( array $words, string $phrase, string $name, string $label, string $description, string $keywords ): float {
+	private function score( array $words, string $phrase, array $row, array $idf ): float {
 		if ( empty( $words ) ) {
 			return 0.0;
 		}
 
-		$fields = array(
-			'name'        => strtolower( $name ),
-			'label'       => strtolower( $label ),
-			'keywords'    => strtolower( $keywords ),
-			'description' => strtolower( $description ),
-		);
-
 		$score   = 0.0;
 		$matched = 0;
 		foreach ( $words as $word ) {
-			$hit = false;
-			foreach ( self::FIELD_WEIGHTS as $field => $weight ) {
-				if ( '' === $fields[ $field ] || false === strpos( $fields[ $field ], $word ) ) {
-					continue;
-				}
-
-				$score += $weight;
-				$hit    = true;
+			$contribution = 0.0;
+			if ( '' !== $row['name_lc'] && false !== strpos( $row['name_lc'], $word ) ) {
+				$contribution += self::FIELD_WEIGHTS['name'];
 			}
-			if ( ! $hit ) {
+			if ( isset( $row['label_stems'][ $word ] ) ) {
+				$contribution += self::FIELD_WEIGHTS['label'];
+			}
+			if ( isset( $row['keyword_stems'][ $word ] ) ) {
+				$contribution += self::FIELD_WEIGHTS['keywords'];
+			}
+			if ( isset( $row['desc_stems'][ $word ] ) ) {
+				$contribution += self::FIELD_WEIGHTS['description'];
+			}
+
+			if ( $contribution <= 0.0 ) {
 				continue;
 			}
 
+			$score += $contribution * ( $idf[ $word ] ?? 1.0 );
 			++$matched;
 		}
 
@@ -417,7 +519,7 @@ final class AbilityIndex {
 
 		// Reward covering more of the query, and a full-phrase hit in the name/label.
 		$score *= $matched / count( $words );
-		if ( false !== strpos( $fields['name'] . ' ' . $fields['label'], $phrase ) ) {
+		if ( false !== strpos( $row['name_lc'] . ' ' . strtolower( (string) $row['label'] ), $phrase ) ) {
 			$score += 10.0;
 		}
 
