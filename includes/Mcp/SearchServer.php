@@ -11,6 +11,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
+use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
 use WP\MCP\Transport\HttpTransport;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -105,6 +106,13 @@ final class SearchServer {
 	 * @return void
 	 */
 	public function createServer( McpAdapter $adapter ): void {
+		/** This filter is documented in includes/Mcp/Server.php */
+		$observability_handler = apply_filters( 'abilities_catalog_mcp_observability_handler', null );
+		if ( ! is_string( $observability_handler )
+			|| ! is_a( $observability_handler, McpObservabilityHandlerInterface::class, true ) ) {
+			$observability_handler = null;
+		}
+
 		$result = $adapter->create_server(
 			self::SERVER_ID,
 			self::ROUTE_NAMESPACE,
@@ -114,7 +122,7 @@ final class SearchServer {
 			ABILITIES_CATALOG_VERSION,
 			array( HttpTransport::class ),
 			null,
-			null,
+			$observability_handler,
 			$this->tools(),
 			array(),
 			array(),
