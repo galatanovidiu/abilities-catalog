@@ -68,6 +68,14 @@ final class AbilityIndex {
 	);
 
 	/**
+	 * How many sample abilities {@see overview()} lists per category.
+	 *
+	 * Enough to seed an agent's search vocabulary (so it learns what words a query can
+	 * use instead of guessing blind), few enough to keep overview O(categories).
+	 */
+	private const OVERVIEW_EXAMPLES = 5;
+
+	/**
 	 * Query words too common to discriminate; dropped before scoring.
 	 *
 	 * Without this, "the"/"a"/"to" match nearly every ability and make `total_matched`
@@ -125,7 +133,9 @@ final class AbilityIndex {
 	 * Returns the capability map: one row per non-empty category, biggest first.
 	 *
 	 * Each row carries the category's human label and description (the registered blurb)
-	 * plus how many abilities it holds and how many of those the exposure gate has enabled.
+	 * plus how many abilities it holds, how many of those the exposure gate has enabled, and
+	 * a few example abilities (name + label) as vocabulary seeds — so an agent reading the
+	 * map sees what it can search for instead of guessing a query blind.
 	 * The result is O(categories), so it stays small even with thousands of abilities — the
 	 * cheap orientation read an agent makes once to see what a site can do.
 	 *
@@ -134,17 +144,25 @@ final class AbilityIndex {
 	public function overview(): array {
 		$abilities = wp_get_abilities();
 
-		$counts  = array();
-		$enabled = array();
+		$counts   = array();
+		$enabled  = array();
+		$examples = array();
 		foreach ( $abilities as $ability ) {
+			$name             = $ability->get_name();
 			$slug             = (string) $ability->get_category();
 			$counts[ $slug ]  = ( $counts[ $slug ] ?? 0 ) + 1;
-			$enabled[ $slug ] = $enabled[ $slug ] ?? 0;
-			if ( ! $this->policy->allows( $ability->get_name() ) ) {
+			$enabled[ $slug ] = ( $enabled[ $slug ] ?? 0 ) + ( $this->policy->allows( $name ) ? 1 : 0 );
+
+			// Keep the first few abilities per category as vocabulary seeds for search.
+			$examples[ $slug ] = $examples[ $slug ] ?? array();
+			if ( count( $examples[ $slug ] ) >= self::OVERVIEW_EXAMPLES ) {
 				continue;
 			}
 
-			++$enabled[ $slug ];
+			$examples[ $slug ][] = array(
+				'name'  => $name,
+				'label' => (string) $ability->get_label(),
+			);
 		}
 
 		$rows = array();
@@ -160,6 +178,7 @@ final class AbilityIndex {
 				'description' => $category->get_description(),
 				'abilities'   => $counts[ $slug ],
 				'enabled'     => $enabled[ $slug ],
+				'examples'    => $examples[ $slug ] ?? array(),
 			);
 		}
 
@@ -181,10 +200,14 @@ final class AbilityIndex {
 	 * dropped. An optional category narrows the corpus. The reply reports how many abilities
 	 * matched in total so the agent knows whether to refine.
 	 *
+	 * A query that matches nothing is not a dead end: the reply also carries the category map
+	 * (the same orientation {@see overview()} gives) so the agent can re-orient and retry with
+	 * real vocabulary instead of guessing again.
+	 *
 	 * @param string      $query    The natural-language/keyword query.
 	 * @param string|null $category Restrict to this category slug, or null for all.
 	 * @param int         $limit    Max results (clamped to 1..50).
-	 * @return array{query: string, returned: int, total_matched: int, abilities: list<array<string,mixed>>} The ranked hits.
+	 * @return array{query: string, returned: int, total_matched: int, abilities: list<array<string,mixed>>, no_match?: bool, categories?: list<array<string,mixed>>, next_step?: string} The ranked hits, plus the category map when nothing matched.
 	 */
 	public function search( string $query, ?string $category, int $limit ): array {
 		$limit = max( 1, min( 50, $limit ) );
@@ -232,12 +255,23 @@ final class AbilityIndex {
 		}
 		unset( $hit );
 
-		return array(
+		$result = array(
 			'query'         => $query,
 			'returned'      => count( $hits ),
 			'total_matched' => $total,
 			'abilities'     => $hits,
 		);
+
+		// A query that matched nothing means the agent guessed words the catalog does not
+		// index. Hand back the category map (with example abilities) so it can see what this
+		// site actually offers and retry with real vocabulary rather than guessing again.
+		if ( 0 === $total ) {
+			$result['no_match']   = true;
+			$result['categories'] = $this->overview()['categories'];
+			$result['next_step']  = 'No ability matched this query. Read "categories" below to see what this site can do, then call search-abilities again using words from an example name or label (or pass a category slug to narrow).';
+		}
+
+		return $result;
 	}
 
 	/**
