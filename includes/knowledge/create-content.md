@@ -1,71 +1,10 @@
-<?php
-/**
- * The create-content skill: how to author coherent Gutenberg content.
- *
- * @package AbilitiesCatalog
- */
+---
+type: Skill
+title: Author coherent Gutenberg content
+description: Before creating or updating a post, page, or custom post type whose body should be blocks that match the active theme.
+---
 
-declare(strict_types=1);
-
-namespace GalatanOvidiu\AbilitiesCatalog\Mcp\Skills;
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
-
-/**
- * The first built-in skill: a recipe for authoring block content that fits the theme.
- *
- * A skill is a task-oriented recipe that spans several domains — here `design`
- * (block types, patterns, fonts, styles), `media` (images), and `content` (the
- * create/update abilities). The recipe is *static procedural text that references
- * the read abilities for live data*; it never embeds that data, because the block,
- * pattern, font, and style sets differ per site and per theme (spec §10).
- *
- * {@see SkillsRegistry} registers this skill with {@see body()} as a callable, so the
- * long recipe text is not built until a `get` actually asks for it. The id, title,
- * and when-to-use are short and load eagerly so `list` and the tool description stay
- * cheap.
- *
- * @since 0.2.0
- */
-final class CreateContent {
-
-	/**
-	 * The stable skill id, used by the skills tool's `get` action.
-	 */
-	public const ID = 'create-content';
-
-	/**
-	 * The short human title shown by `list`.
-	 *
-	 * @return string The skill title.
-	 */
-	public static function title(): string {
-		return __( 'Author coherent Gutenberg content', 'abilities-catalog' );
-	}
-
-	/**
-	 * The one-line routing hint: when an agent should reach for this skill.
-	 *
-	 * @return string The when-to-use hint.
-	 */
-	public static function whenToUse(): string {
-		return __( 'Before creating or updating a post, page, or custom post type whose body should be blocks that match the active theme.', 'abilities-catalog' );
-	}
-
-	/**
-	 * The full recipe body, built only when `get` asks for it.
-	 *
-	 * Procedural guidance plus the names of the read abilities to call for live
-	 * data. It deliberately does not list the actual blocks, patterns, fonts, or
-	 * styles — those are read per site through the abilities named here.
-	 *
-	 * @return string The recipe body.
-	 */
-	public static function body(): string {
-		return __(
-			'Recipe: author coherent Gutenberg block content.
+Recipe: author coherent Gutenberg block content.
 
 Goal: produce post or page content as valid block markup that matches the active theme, then save it through a content ability. Do not guess which blocks, patterns, fonts, or colors exist — read them from the catalog first, because they differ per site and per theme.
 
@@ -97,8 +36,4 @@ Prefer a pattern from Step 1 when one fits, then fill in its text. Otherwise bui
 STEP 4 - CREATE THE CONTENT
 Through the "content" tool: content execute content/create-post for a post, content/create-page for a page, or content/create-cpt-item for a custom post type. Pass the composed block markup as the content field. To revise existing content instead, use content/update-post, content/update-page, or content/update-cpt-item.
 
-This recipe points at live data on purpose. Re-read Step 1 for each site: the block, pattern, font, and style sets change between themes and installs.',
-			'abilities-catalog'
-		);
-	}
-}
+This recipe points at live data on purpose. Re-read Step 1 for each site: the block, pattern, font, and style sets change between themes and installs.

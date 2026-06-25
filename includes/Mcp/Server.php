@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Knowledge\KnowledgeRegistry;
+use GalatanOvidiu\AbilitiesCatalog\Mcp\Knowledge\KnowledgeTool;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
 use WP\MCP\Transport\HttpTransport;
@@ -197,16 +199,17 @@ final class Server {
 	}
 
 	/**
-	 * Builds the curated domain tools plus the cross-cutting skills tool.
+	 * Builds the curated domain tools plus the cross-cutting knowledge tool.
 	 *
 	 * Iterates the {@see DomainMap} so the curated domains and any a third party
 	 * opens through the `abilities_catalog_mcp_domain_map` filter are all exposed, then
-	 * appends the one {@see SkillsTool} that serves task recipes across domains. A tool
-	 * the adapter rejects is logged and skipped rather than aborting the whole server,
-	 * so one bad tool never costs the others. The server exposes a curated subset of the
-	 * registered abilities, so an ability no domain owns is intentionally left unexposed.
+	 * appends the one {@see KnowledgeTool} that serves OKF concepts (recipes and
+	 * guidelines) across domains. A tool the adapter rejects is logged and skipped
+	 * rather than aborting the whole server, so one bad tool never costs the others. The
+	 * server exposes a curated subset of the registered abilities, so an ability no
+	 * domain owns is intentionally left unexposed.
 	 *
-	 * The domain tools and the skills tool share the same coarse permission floor.
+	 * The domain tools and the knowledge tool share the same coarse permission floor.
 	 *
 	 * @return list<\WP\MCP\Domain\Tools\McpTool> The tools to register.
 	 */
@@ -228,14 +231,14 @@ final class Server {
 			$tools[] = $tool;
 		}
 
-		$skills = $this->skillsTool( $permission );
-		if ( is_wp_error( $skills ) ) {
-			self::log( 'Failed to build the "skills" tool: ' . $skills->get_error_message() );
+		$knowledge = $this->knowledgeTool( $permission );
+		if ( is_wp_error( $knowledge ) ) {
+			self::log( 'Failed to build the "knowledge" tool: ' . $knowledge->get_error_message() );
 
 			return self::mergeCustomTools( $tools, $this->customTools( $tools ) );
 		}
 
-		$tools[] = $skills;
+		$tools[] = $knowledge;
 
 		return self::mergeCustomTools( $tools, $this->customTools( $tools ) );
 	}
@@ -243,7 +246,7 @@ final class Server {
 	/**
 	 * Runs the `abilities_catalog_mcp_tools` filter so a third party can ship a whole tool.
 	 *
-	 * @param list<\WP\MCP\Domain\Tools\McpTool> $tools The curated domain tools plus the skills tool.
+	 * @param list<\WP\MCP\Domain\Tools\McpTool> $tools The curated domain tools plus the knowledge tool.
 	 * @return mixed The filter result (validated by {@see mergeCustomTools()}).
 	 */
 	private function customTools( array $tools ) {
@@ -253,13 +256,13 @@ final class Server {
 		 * Append `McpTool` instances to ship a whole custom tool (spec §12). On a name
 		 * collision with a curated tool, the custom tool wins and a `_doing_it_wrong()`
 		 * notice fires; custom names must otherwise be unique, since the adapter silently
-		 * drops duplicates. The curated domain and skills tools are always kept, so a filter
-		 * that returns a different array cannot lose them — it can only add to, or override a
-		 * named slot in, the curated set.
+		 * drops duplicates. The curated domain and knowledge tools are always kept, so a
+		 * filter that returns a different array cannot lose them — it can only add to, or
+		 * override a named slot in, the curated set.
 		 *
 		 * @since 0.2.0
 		 *
-		 * @param list<\WP\MCP\Domain\Tools\McpTool> $tools The curated domain tools plus the skills tool.
+		 * @param list<\WP\MCP\Domain\Tools\McpTool> $tools The curated domain tools plus the knowledge tool.
 		 */
 		return apply_filters( 'abilities_catalog_mcp_tools', $tools );
 	}
@@ -276,7 +279,7 @@ final class Server {
 	 * never breaks the server. Public and pure (it does not read the filter) so the merge
 	 * rules are testable without booting a server.
 	 *
-	 * @param list<\WP\MCP\Domain\Tools\McpTool> $curated  The curated domain + skills tools.
+	 * @param list<\WP\MCP\Domain\Tools\McpTool> $curated  The curated domain + knowledge tools.
 	 * @param mixed                              $filtered The `abilities_catalog_mcp_tools` filter result.
 	 * @return list<\WP\MCP\Domain\Tools\McpTool> The merged, name-deduplicated tools.
 	 */
@@ -330,58 +333,40 @@ final class Server {
 	}
 
 	/**
-	 * Builds the cross-cutting skills tool.
+	 * Builds the cross-cutting knowledge tool.
 	 *
-	 * The skills tool is not a domain — it serves lazily-loaded, agent-invocable task
-	 * recipes that span several domains (spec §10). It shares the domain tools' coarse
-	 * permission floor; like every `execute`, a recipe's value still depends on the
-	 * abilities it points at, each of which keeps its own capability gate.
+	 * The knowledge tool is not a domain — it serves OKF concepts (task recipes and
+	 * authoring guidelines) that span several domains. It shares the domain tools'
+	 * coarse permission floor; like every `execute`, a concept's value still depends on
+	 * the abilities it points at, each of which keeps its own capability gate.
 	 *
 	 * @param callable $permission The shared coarse permission floor.
-	 * @return \WP\MCP\Domain\Tools\McpTool|\WP_Error The skills tool, or a `WP_Error` when the adapter rejects the config.
+	 * @return \WP\MCP\Domain\Tools\McpTool|\WP_Error The knowledge tool, or a `WP_Error` when the adapter rejects the config.
 	 */
-	private function skillsTool( callable $permission ) {
-		$registry = new SkillsRegistry();
-
+	private function knowledgeTool( callable $permission ) {
 		return McpTool::fromArray(
 			array(
-				'name'        => 'skills',
-				'description' => $this->skillsDescription( $registry ),
-				'inputSchema' => SkillsTool::inputSchema(),
-				'handler'     => array( new SkillsTool( $registry ), 'handle' ),
+				'name'        => 'knowledge',
+				'description' => $this->knowledgeDescription(),
+				'inputSchema' => KnowledgeTool::inputSchema(),
+				'handler'     => array( new KnowledgeTool( new KnowledgeRegistry() ), 'handle' ),
 				'permission'  => $permission,
 			)
 		);
 	}
 
 	/**
-	 * The hand-written description for the skills tool, with a live skill index.
+	 * The hand-written description for the knowledge tool.
 	 *
-	 * A short capability blurb, then a one-line index of the registered skills (id —
-	 * when-to-use) so a small set is discoverable with zero round trips, then the
-	 * shared action protocol. The index is read from the registry's {@see
-	 * SkillsRegistry::list()}, so third-party skills added through the
-	 * `abilities_catalog_mcp_skills` filter appear here too — without building any
-	 * recipe body.
+	 * When to use it / what it returns / what it contains / why. It carries no live
+	 * concept index — that would force a full bundle scan on every request for a number
+	 * the agent does not act on; the no-uri call returns the index when the agent wants
+	 * it.
 	 *
-	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\SkillsRegistry $registry The skills registry.
 	 * @return string The tool description.
 	 */
-	private function skillsDescription( SkillsRegistry $registry ): string {
-		$blurb = __( 'Task recipes that teach multi-ability workflows spanning several domains, e.g. authoring coherent Gutenberg content. Each recipe is procedural guidance that points you at the read abilities for live data; it does not embed that data.', 'abilities-catalog' );
-
-		$entries = array();
-		foreach ( $registry->list() as $skill ) {
-			$entries[] = sprintf( '%s — %s', $skill['id'], $skill['when_to_use'] );
-		}
-
-		$index = empty( $entries ) ? '' : ' ' . sprintf(
-			/* translators: %s: a list of "skill-id — when to use it" entries, separated by "; ". */
-			__( 'Available skills: %s.', 'abilities-catalog' ),
-			implode( '; ', $entries )
-		);
-
-		return $blurb . $index . ' ' . __( 'Call "list" to see all skills, "get" with an id for the full recipe.', 'abilities-catalog' );
+	private function knowledgeDescription(): string {
+		return __( 'Reference and procedure for working this site through the domain tools — task recipes (authoring coherent Gutenberg content, organizing terms, moderating comments, editing an image, configuring the homepage, exporting content) and authoring guidelines. Call it with no uri to get the index: live site facts plus every available concept grouped by type. Call it with a uri (e.g. core/create-content) for one concept. A concept points you at the read abilities for live data; it does not embed that data, which differs per site.', 'abilities-catalog' );
 	}
 
 	/**
@@ -418,24 +403,7 @@ final class Server {
 	 * @return string The tool description.
 	 */
 	private function description( string $domain, DomainMap $map ): string {
-		return $this->domainBlurb( $domain, $map ) . ' ' . $this->skillsPointer() . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
-	}
-
-	/**
-	 * The cross-tool pointer to the skills tool, shared by every domain description.
-	 *
-	 * Multi-step tasks — authoring content, organizing with terms, moderating
-	 * comments, editing an image, configuring the homepage, exporting content — have a
-	 * ready-made recipe on the separate `skills` tool. An agent routes on the domain
-	 * tools, so the skills tool is easy to overlook (in evaluation it was consulted on
-	 * no task at all); the pointer therefore lives on each domain description and names
-	 * the action to call, so reaching the recipe is a single step. It is phrased as a
-	 * suggestion ("may have"), since a one-call task has no matching recipe.
-	 *
-	 * @return string The skills pointer sentence, without surrounding spaces.
-	 */
-	private function skillsPointer(): string {
-		return __( 'For a multi-step task, the separate "skills" tool may have a ready-made recipe — check it with action "list" before composing your own sequence of calls.', 'abilities-catalog' );
+		return $this->domainBlurb( $domain, $map ) . ' ' . __( 'Workflow: call "list" to get this domain\'s exact ability names, then "describe" to get an ability\'s exact input schema, then "execute" to run it. Do not guess ability names or input fields — list and describe first.', 'abilities-catalog' );
 	}
 
 	/**
