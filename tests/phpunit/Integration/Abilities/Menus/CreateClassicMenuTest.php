@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/create-classic-menu ability.
+ * Integration tests for the og-menus/create-classic-menu ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -29,16 +29,16 @@ final class CreateClassicMenuTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/create-classic-menu' );
+		$ability = wp_get_ability( 'og-menus/create-classic-menu' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/create-classic-menu', $ability->get_name() );
+		$this->assertSame( 'og-menus/create-classic-menu', $ability->get_name() );
 	}
 
 	public function test_admin_creates_menu(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/create-classic-menu' )->execute(
 			array( 'name' => 'Header Menu' )
 		);
 
@@ -55,7 +55,7 @@ final class CreateClassicMenuTest extends TestCase {
 	public function test_created_menu_returns_assigned_locations(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/create-classic-menu' )->execute(
 			array(
 				'name'      => 'Located Menu',
 				'locations' => array( 'ac_primary' ),
@@ -69,7 +69,7 @@ final class CreateClassicMenuTest extends TestCase {
 	public function test_explicit_empty_name_surfaces_core_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/create-classic-menu' )->execute(
 			array( 'name' => '' )
 		);
 
@@ -82,7 +82,7 @@ final class CreateClassicMenuTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'menus/create-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/create-classic-menu' )->execute(
 			array( 'name' => 'Denied Menu' )
 		);
 

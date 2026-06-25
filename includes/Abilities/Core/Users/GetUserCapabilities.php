@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed read ability: `users/get-user-capabilities`.
+ * Composed read ability: `og-users/get-user-capabilities`.
  *
  * Returns one user's EFFECTIVE capability set and role slugs by user ID. The
  * effective set is more than the role list: core resolves role-derived caps and
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * core exposes no dedicated route for the resolved cap map alone. All functions
  * used live in wp-includes, so no wp-admin includes are loaded.
  *
- * Distinct from `users/get-user`, which returns the role list (and the raw
+ * Distinct from `og-users/get-user`, which returns the role list (and the raw
  * `allcaps` object only in edit context); this ability resolves and flattens the
  * granted effective caps into a sorted string list.
  *
@@ -44,7 +44,7 @@ final class GetUserCapabilities implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/get-user-capabilities';
+		return 'og-users/get-user-capabilities';
 	}
 
 	/**
@@ -53,7 +53,7 @@ final class GetUserCapabilities implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get User Capabilities', 'abilities-catalog' ),
-			'description'         => __( 'Returns one user\'s effective capabilities and roles by ID. The capability list is the fully resolved set — role-derived capabilities and per-user grants merged together — as a sorted list of granted capability names; role slugs that core mixes into the map are filtered out. Use this when you need the actual permissions a user holds; use users/get-user for the user profile and its role list, which does not resolve the effective capability set.', 'abilities-catalog' ),
+			'description'         => __( 'Returns one user\'s effective capabilities and roles by ID. The capability list is the fully resolved set — role-derived capabilities and per-user grants merged together — as a sorted list of granted capability names; role slugs that core mixes into the map are filtered out. Use this when you need the actual permissions a user holds; use og-users/get-user for the user profile and its role list, which does not resolve the effective capability set.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -62,7 +62,7 @@ final class GetUserCapabilities implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The user ID. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The user ID. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -120,9 +120,9 @@ final class GetUserCapabilities implements Ability {
 	 * which never exposes this map to a caller who cannot edit the target.
 	 *
 	 * `list_users` is deliberately too weak: it lets a caller see a user's role
-	 * (as `users/get-user` and the Users screen show), but not the resolved
+	 * (as `og-users/get-user` and the Users screen show), but not the resolved
 	 * effective capability set this ability returns. Reading one's OWN effective
-	 * caps is already served by `users/get-current-user`, so this ability is for
+	 * caps is already served by `og-users/get-current-user`, so this ability is for
 	 * arbitrary users and `edit_users` is the correct coarse guard.
 	 *
 	 * @param mixed $input The validated input data.

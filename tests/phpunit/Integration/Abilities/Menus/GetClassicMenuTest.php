@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/get-classic-menu ability.
+ * Integration tests for the og-menus/get-classic-menu ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -31,10 +31,10 @@ final class GetClassicMenuTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/get-classic-menu' );
+		$ability = wp_get_ability( 'og-menus/get-classic-menu' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/get-classic-menu', $ability->get_name() );
+		$this->assertSame( 'og-menus/get-classic-menu', $ability->get_name() );
 	}
 
 	public function test_admin_reads_menu_by_id(): void {
@@ -42,7 +42,7 @@ final class GetClassicMenuTest extends TestCase {
 
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
+		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( (int) $menu_id, $result['id'] );
@@ -54,7 +54,7 @@ final class GetClassicMenuTest extends TestCase {
 
 		$menu_id = wp_create_nav_menu( 'No Meta Menu' );
 
-		$result = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
+		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertIsObject( $result['meta'] );
@@ -78,7 +78,7 @@ final class GetClassicMenuTest extends TestCase {
 			);
 		}
 
-		$result = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
+		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 2, $result['count'] );
@@ -89,7 +89,7 @@ final class GetClassicMenuTest extends TestCase {
 
 		$menu_id = wp_create_nav_menu( 'Empty Count Menu' );
 
-		$result = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
+		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 0, $result['count'] );
@@ -101,7 +101,7 @@ final class GetClassicMenuTest extends TestCase {
 		$menu_id = wp_create_nav_menu( 'Assigned Menu' );
 		set_theme_mod( 'nav_menu_locations', array( 'ac_primary' => $menu_id ) );
 
-		$result = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
+		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertIsArray( $result['locations'] );
@@ -111,7 +111,7 @@ final class GetClassicMenuTest extends TestCase {
 
 		// An unassigned menu reports an empty locations list.
 		$other_id = wp_create_nav_menu( 'Unassigned Menu' );
-		$other    = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $other_id ) );
+		$other    = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $other_id ) );
 
 		$this->assertIsArray( $other );
 		$this->assertSame( array(), $other['locations'] );
@@ -122,7 +122,7 @@ final class GetClassicMenuTest extends TestCase {
 
 		$menu_id = wp_create_nav_menu( 'Guarded Menu' );
 
-		$result = wp_get_ability( 'menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
+		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

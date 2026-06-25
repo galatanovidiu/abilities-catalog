@@ -45,7 +45,7 @@ final class ServerTest extends TestCase {
 
 		// The exposure gate is deny-by-default; enable the one ability the end-to-end
 		// execute round-trip runs so the gate lets it through to the capability check.
-		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'content/get-post' ) );
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'og-content/get-post' ) );
 
 		if ( ! class_exists( McpAdapter::class ) ) {
 			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
@@ -100,14 +100,14 @@ final class ServerTest extends TestCase {
 		// depend on registration timing): only an ability that is BOTH curated (mapped
 		// to a domain) AND enabled in the exposure gate is published, so the second
 		// endpoint honors the same deny-by-default gate as the curated server. set_up()
-		// enabled only content/get-post.
-		$enabled_mapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'content/get-post' );
+		// enabled only og-content/get-post.
+		$enabled_mapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'og-content/get-post' );
 		$this->assertTrue(
 			$enabled_mapped['meta']['mcp']['public'] ?? false,
 			'A curated, exposure-enabled ability should be marked mcp.public for the default server.'
 		);
 
-		$disabled_mapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'content/create-post' );
+		$disabled_mapped = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), 'og-content/create-post' );
 		$this->assertArrayNotHasKey(
 			'mcp',
 			$disabled_mapped['meta'],
@@ -181,7 +181,7 @@ final class ServerTest extends TestCase {
 		$result = $tool->execute(
 			array(
 				'action'  => 'execute',
-				'ability' => 'content/get-post',
+				'ability' => 'og-content/get-post',
 				'input'   => array( 'id' => $post_id ),
 			)
 		);

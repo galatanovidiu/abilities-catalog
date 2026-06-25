@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/update-global-styles output and contract.
+ * Integration tests for og-templates/update-global-styles output and contract.
  *
  * Covers a happy-path update returning the shaped output (id plus the stored
  * title/settings/styles, settings/styles cast to objects), the wrong-capability
@@ -21,7 +21,7 @@ use WP_Error;
 use WP_Theme_JSON_Resolver;
 
 /**
- * Exercises templates/update-global-styles.
+ * Exercises og-templates/update-global-styles.
  */
 final class UpdateGlobalStylesTest extends TestCase {
 
@@ -47,7 +47,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 		$id = $this->globalStylesId();
 		$this->assertGreaterThan( 0, $id );
 
-		$result = wp_get_ability( 'templates/update-global-styles' )->execute(
+		$result = wp_get_ability( 'og-templates/update-global-styles' )->execute(
 			array(
 				'id'       => $id,
 				'title'    => 'Catalog Styles',
@@ -73,7 +73,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 
 		$id = $this->globalStylesId();
 
-		$result = wp_get_ability( 'templates/update-global-styles' )->execute(
+		$result = wp_get_ability( 'og-templates/update-global-styles' )->execute(
 			array(
 				'id'    => $id,
 				'title' => 'Shape',
@@ -93,7 +93,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 		$id = $this->globalStylesId();
 
 		// Clearing both sections leaves empty objects, which must encode as `{}`.
-		$result = wp_get_ability( 'templates/update-global-styles' )->execute(
+		$result = wp_get_ability( 'og-templates/update-global-styles' )->execute(
 			array(
 				'id'       => $id,
 				'settings' => array(),
@@ -110,7 +110,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		$id      = $this->globalStylesId();
-		$ability = wp_get_ability( 'templates/update-global-styles' );
+		$ability = wp_get_ability( 'og-templates/update-global-styles' );
 
 		// A subscriber lacks edit_post on the global-styles post.
 		$this->assertFalse(
@@ -125,7 +125,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		$id      = $this->globalStylesId();
-		$ability = wp_get_ability( 'templates/update-global-styles' );
+		$ability = wp_get_ability( 'og-templates/update-global-styles' );
 
 		// Strip unfiltered_html (the meta cap edit_css maps to) for this request,
 		// so the user keeps edit_post on the post but loses the edit_css gate.
@@ -171,7 +171,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 		// With the coarse edit_theme_options guard, a non-existent id reaches the route,
 		// which returns its specific error instead of the generic ability_invalid_permissions
 		// the object-level pre-check produced (resolving the B2 permission-contract decision).
-		$result = wp_get_ability( 'templates/update-global-styles' )->execute(
+		$result = wp_get_ability( 'og-templates/update-global-styles' )->execute(
 			array( 'id' => 999999 )
 		);
 

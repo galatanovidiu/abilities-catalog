@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `terms/delete-tag`.
+ * T2 destructive write ability: `og-terms/delete-tag`.
  *
  * Wraps `DELETE /wp/v2/tags/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting the tag term (taxonomy terms have no Trash). The
@@ -33,7 +33,7 @@ final class DeleteTag implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/delete-tag';
+		return 'og-terms/delete-tag';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class DeleteTag implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The tag term ID to permanently delete. Find it via terms/list-tags or terms/get-tag.', 'abilities-catalog' ),
+						'description' => __( 'The tag term ID to permanently delete. Find it via og-terms/list-tags or og-terms/get-tag.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

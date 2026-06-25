@@ -14,11 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `users/list-users`.
+ * Read ability: `og-users/list-users`.
  *
  * Wraps `GET /wp/v2/users` via `rest_do_request()` and returns flat summary rows
  * (via {@see UserListShaper}) plus the total counts from the REST response
- * headers. The full record lives behind `users/get-user`. Encodes the catalog
+ * headers. The full record lives behind `og-users/get-user`. Encodes the catalog
  * capability `list_users`. Read-only.
  *
  * @since 0.1.0
@@ -29,7 +29,7 @@ final class ListUsers implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/list-users';
+		return 'og-users/list-users';
 	}
 
 	/**
@@ -98,7 +98,7 @@ final class ListUsers implements Ability {
 					'items'       => array(
 						'type'        => 'array',
 						'items'       => UserListShaper::userItemSchema(),
-						'description' => __( 'The list of users as flat summary rows. Use users/get-user for the full single user.', 'abilities-catalog' ),
+						'description' => __( 'The list of users as flat summary rows. Use og-users/get-user for the full single user.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',

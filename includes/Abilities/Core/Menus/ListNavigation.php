@@ -14,14 +14,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `menus/list-navigation`.
+ * Read ability: `og-menus/list-navigation`.
  *
  * Wraps `GET /wp/v2/navigation` via `rest_do_request()` and returns the
  * collection of block-based navigation menus (`wp_navigation` post type) plus
  * its total counts. Each row is projected by {@see MenuListShaper} into a flat,
  * closed summary; the serialized block body (`content`), `_links`, and
  * GMT-duplicate dates are never returned (the body lives behind
- * `menus/get-navigation`). Read-only.
+ * `og-menus/get-navigation`). Read-only.
  *
  * @since 0.1.0
  */
@@ -31,7 +31,7 @@ final class ListNavigation implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/list-navigation';
+		return 'og-menus/list-navigation';
 	}
 
 	/**

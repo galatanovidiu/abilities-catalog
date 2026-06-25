@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/revoke-super-admin ability.
+ * Integration tests for the og-network/revoke-super-admin ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -51,10 +51,10 @@ final class RevokeSuperAdminTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/revoke-super-admin' );
+		$ability = wp_get_ability( 'og-network/revoke-super-admin' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/revoke-super-admin', $ability->get_name() );
+		$this->assertSame( 'og-network/revoke-super-admin', $ability->get_name() );
 	}
 
 	public function test_revokes_super_admin_and_reports_end_state(): void {
@@ -65,7 +65,7 @@ final class RevokeSuperAdminTest extends TestCase {
 		$this->granted[] = $target;
 		$this->assertTrue( is_super_admin( $target ) );
 
-		$result = wp_get_ability( 'network/revoke-super-admin' )->execute( array( 'user_id' => $target ) );
+		$result = wp_get_ability( 'og-network/revoke-super-admin' )->execute( array( 'user_id' => $target ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'revoked', 'user_id', 'is_super_admin' ), array_keys( $result ) );
@@ -83,7 +83,7 @@ final class RevokeSuperAdminTest extends TestCase {
 		$target = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		$this->assertFalse( is_super_admin( $target ) );
 
-		$result = wp_get_ability( 'network/revoke-super-admin' )->execute( array( 'user_id' => $target ) );
+		$result = wp_get_ability( 'og-network/revoke-super-admin' )->execute( array( 'user_id' => $target ) );
 
 		$this->assertIsArray( $result );
 		$this->assertFalse( $result['revoked'] );
@@ -93,7 +93,7 @@ final class RevokeSuperAdminTest extends TestCase {
 	public function test_unknown_user_returns_specific_404(): void {
 		$this->actingAsSuperAdmin();
 
-		$result = wp_get_ability( 'network/revoke-super-admin' )->execute( array( 'user_id' => 99999999 ) );
+		$result = wp_get_ability( 'og-network/revoke-super-admin' )->execute( array( 'user_id' => 99999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_user_invalid_id', $result->get_error_code() );
@@ -112,7 +112,7 @@ final class RevokeSuperAdminTest extends TestCase {
 		// A plain administrator (not a super admin) is denied.
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/revoke-super-admin' );
+		$ability = wp_get_ability( 'og-network/revoke-super-admin' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'user_id' => $target ) ) );
 
@@ -131,7 +131,7 @@ final class RevokeSuperAdminTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/revoke-super-admin' );
+		$ability = wp_get_ability( 'og-network/revoke-super-admin' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'user_id' => 1 ) ) );
 
@@ -143,7 +143,7 @@ final class RevokeSuperAdminTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/revoke-super-admin' );
+		$ability = wp_get_ability( 'og-network/revoke-super-admin' );
 
 		$this->assertNotTrue( $ability->check_permissions( array( 'user_id' => 1 ) ) );
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/update-classic-menu ability.
+ * Integration tests for the og-menus/update-classic-menu ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -30,17 +30,17 @@ final class UpdateClassicMenuTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/update-classic-menu' );
+		$ability = wp_get_ability( 'og-menus/update-classic-menu' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/update-classic-menu', $ability->get_name() );
+		$this->assertSame( 'og-menus/update-classic-menu', $ability->get_name() );
 	}
 
 	public function test_admin_updates_menu_name(): void {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'   => $menu_id,
 				'name' => 'Footer Menu',
@@ -61,7 +61,7 @@ final class UpdateClassicMenuTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'        => $menu_id,
 				'locations' => array( 'ac_primary' ),
@@ -79,7 +79,7 @@ final class UpdateClassicMenuTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		wp_get_ability( 'menus/update-classic-menu' )->execute(
+		wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'        => $menu_id,
 				'locations' => array( 'ac_primary' ),
@@ -88,7 +88,7 @@ final class UpdateClassicMenuTest extends TestCase {
 		$assigned = get_nav_menu_locations();
 		$this->assertSame( (int) $menu_id, (int) ( $assigned['ac_primary'] ?? 0 ) );
 
-		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'        => $menu_id,
 				'locations' => array(),
@@ -106,7 +106,7 @@ final class UpdateClassicMenuTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'   => $menu_id,
 				'name' => 'Denied Menu',
@@ -120,7 +120,7 @@ final class UpdateClassicMenuTest extends TestCase {
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'   => -37,
 				'name' => 'Bad Menu',
@@ -136,7 +136,7 @@ final class UpdateClassicMenuTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent menu
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/update-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'   => 999999,
 				'name' => 'Renamed',

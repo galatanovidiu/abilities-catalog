@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `privacy/create-export-request`.
+ * T2 non-destructive write ability: `og-privacy/create-export-request`.
  *
  * Creates a personal-data export request for an email address by wrapping the
  * core function `wp_create_user_request()`. The `send_confirmation_email` flag
@@ -39,7 +39,7 @@ final class CreateExportRequest implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/create-export-request';
+		return 'og-privacy/create-export-request';
 	}
 
 	/**

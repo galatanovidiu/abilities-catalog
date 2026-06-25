@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-patterns output and contract.
+ * Integration tests for og-templates/list-patterns output and contract.
  *
  * Covers the happy path (returns an `items` array whose rows carry the two
  * guaranteed keys), the output-shape guarantee (each row exposes only the
@@ -18,14 +18,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-patterns.
+ * Exercises og-templates/list-patterns.
  */
 final class ListPatternsTest extends TestCase {
 
 	public function test_returns_items_with_guaranteed_keys(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-patterns' )->execute();
+		$result = wp_get_ability( 'og-templates/list-patterns' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -43,7 +43,7 @@ final class ListPatternsTest extends TestCase {
 	public function test_rows_expose_only_declared_closed_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-patterns' )->execute();
+		$result = wp_get_ability( 'og-templates/list-patterns' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -75,7 +75,7 @@ final class ListPatternsTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		// edit_posts is the catalog guard; a subscriber lacks it.
-		$result = wp_get_ability( 'templates/list-patterns' )->execute();
+		$result = wp_get_ability( 'og-templates/list-patterns' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

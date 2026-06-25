@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the themes/set-theme-mod ability.
+ * Integration tests for the og-themes/set-theme-mod ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * themes/set-theme-mod wraps core `set_theme_mod()` (which checks no capability),
+ * og-themes/set-theme-mod wraps core `set_theme_mod()` (which checks no capability),
  * repeats the `edit_theme_options` guard at the top of execute(), and reads the
  * value back to report `set`.
  */
@@ -34,16 +34,16 @@ final class SetThemeModTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'themes/set-theme-mod' );
+		$ability = wp_get_ability( 'og-themes/set-theme-mod' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'themes/set-theme-mod', $ability->get_name() );
+		$this->assertSame( 'og-themes/set-theme-mod', $ability->get_name() );
 	}
 
 	public function test_admin_sets_a_string_theme_mod(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/set-theme-mod' )->execute(
+		$result = wp_get_ability( 'og-themes/set-theme-mod' )->execute(
 			array(
 				'name'  => self::TEST_MOD,
 				'value' => 'midnight',
@@ -68,7 +68,7 @@ final class SetThemeModTest extends TestCase {
 			'size'  => 12,
 		);
 
-		$result = wp_get_ability( 'themes/set-theme-mod' )->execute(
+		$result = wp_get_ability( 'og-themes/set-theme-mod' )->execute(
 			array(
 				'name'  => self::TEST_MOD,
 				'value' => $value,
@@ -84,7 +84,7 @@ final class SetThemeModTest extends TestCase {
 	public function test_logged_out_is_denied_and_does_not_set(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'themes/set-theme-mod' )->execute(
+		$result = wp_get_ability( 'og-themes/set-theme-mod' )->execute(
 			array(
 				'name'  => self::TEST_MOD,
 				'value' => 'should-not-store',
@@ -101,7 +101,7 @@ final class SetThemeModTest extends TestCase {
 	public function test_subscriber_is_denied_and_does_not_set(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'themes/set-theme-mod' )->execute(
+		$result = wp_get_ability( 'og-themes/set-theme-mod' )->execute(
 			array(
 				'name'  => self::TEST_MOD,
 				'value' => 'should-not-store',

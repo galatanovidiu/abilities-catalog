@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the post-like-creatable allow-test for content/create-cpt-item.
+ * Exercises the post-like-creatable allow-test for og-content/create-cpt-item.
  */
 final class CreateCptItemAllowTest extends TestCase {
 
@@ -54,7 +54,7 @@ final class CreateCptItemAllowTest extends TestCase {
 	public function test_supported_builtin_post_type_still_creates(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => 'post',
 				'title'     => 'Hello',
@@ -70,7 +70,7 @@ final class CreateCptItemAllowTest extends TestCase {
 	public function test_supported_custom_post_type_still_creates(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'title'     => 'New widget',
@@ -87,7 +87,7 @@ final class CreateCptItemAllowTest extends TestCase {
 	public function test_global_styles_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => 'wp_global_styles',
 				'title'     => 'Nope',
@@ -102,7 +102,7 @@ final class CreateCptItemAllowTest extends TestCase {
 	public function test_attachment_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => 'attachment',
 				'title'     => 'Nope',
@@ -116,7 +116,7 @@ final class CreateCptItemAllowTest extends TestCase {
 	public function test_navigation_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => 'wp_navigation',
 				'title'     => 'Nope',
@@ -130,7 +130,7 @@ final class CreateCptItemAllowTest extends TestCase {
 	public function test_unknown_type_returns_invalid_post_type(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array( 'post_type' => 'does_not_exist' )
 		);
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/delete-user ability.
+ * Integration tests for the og-users/delete-user ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -57,17 +57,17 @@ final class DeleteUserTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/delete-user' );
+		$ability = wp_get_ability( 'og-users/delete-user' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/delete-user', $ability->get_name() );
+		$this->assertSame( 'og-users/delete-user', $ability->get_name() );
 	}
 
 	public function test_admin_deletes_user_with_reassign(): void {
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
-		$result = wp_get_ability( 'users/delete-user' )->execute(
+		$result = wp_get_ability( 'og-users/delete-user' )->execute(
 			array(
 				'id'       => $victim,
 				'reassign' => $this->reassign_target,
@@ -85,7 +85,7 @@ final class DeleteUserTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
-		$result = wp_get_ability( 'users/delete-user' )->execute(
+		$result = wp_get_ability( 'og-users/delete-user' )->execute(
 			array(
 				'id'       => $victim,
 				'reassign' => $this->reassign_target,
@@ -120,7 +120,7 @@ final class DeleteUserTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$missing_id = 999999;
 
-		$result = wp_get_ability( 'users/delete-user' )->execute(
+		$result = wp_get_ability( 'og-users/delete-user' )->execute(
 			array(
 				'id'       => $missing_id,
 				'reassign' => $this->reassign_target,
@@ -136,7 +136,7 @@ final class DeleteUserTest extends TestCase {
 		$this->actingAs( 'editor' );
 		$victim = $this->createVictim();
 
-		$result = wp_get_ability( 'users/delete-user' )->execute(
+		$result = wp_get_ability( 'og-users/delete-user' )->execute(
 			array(
 				'id'       => $victim,
 				'reassign' => $this->reassign_target,
@@ -155,7 +155,7 @@ final class DeleteUserTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
-		$result = wp_get_ability( 'users/delete-user' )->execute(
+		$result = wp_get_ability( 'og-users/delete-user' )->execute(
 			array(
 				'id'       => $victim,
 				'reassign' => 888888,
@@ -177,7 +177,7 @@ final class DeleteUserTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
-		$result = wp_get_ability( 'users/delete-user' )->execute(
+		$result = wp_get_ability( 'og-users/delete-user' )->execute(
 			array(
 				'id'       => $victim,
 				'reassign' => $victim,

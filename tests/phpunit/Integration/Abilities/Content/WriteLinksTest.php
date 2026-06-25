@@ -25,7 +25,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_create_post_returns_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-post' )->execute(
+		$result = wp_get_ability( 'og-content/create-post' )->execute(
 			array(
 				'title'   => 'Draft one',
 				'content' => '<!-- wp:paragraph --><p>Body.</p><!-- /wp:paragraph -->',
@@ -48,7 +48,7 @@ final class WriteLinksTest extends TestCase {
 			DIR_TESTDATA . '/images/canola.jpg'
 		);
 
-		$result = wp_get_ability( 'content/create-post' )->execute(
+		$result = wp_get_ability( 'og-content/create-post' )->execute(
 			array(
 				'title'          => 'Tagged draft',
 				'content'        => '<!-- wp:paragraph --><p>Body.</p><!-- /wp:paragraph -->',
@@ -69,7 +69,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_create_post_returns_empty_terms_when_none_assigned(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-post' )->execute(
+		$result = wp_get_ability( 'og-content/create-post' )->execute(
 			array( 'title' => 'Plain draft' )
 		);
 
@@ -82,7 +82,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_create_page_returns_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-page' )->execute( array( 'title' => 'A page' ) );
+		$result = wp_get_ability( 'og-content/create-page' )->execute( array( 'title' => 'A page' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'A page', $result['title'] );
@@ -92,7 +92,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_create_cpt_item_returns_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/create-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/create-cpt-item' )->execute(
 			array(
 				'post_type' => 'post',
 				'title'     => 'Via cpt',
@@ -108,7 +108,7 @@ final class WriteLinksTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_title' => 'Old' ) );
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'    => $post_id,
 				'title' => 'New title',
@@ -131,7 +131,7 @@ final class WriteLinksTest extends TestCase {
 			DIR_TESTDATA . '/images/canola.jpg'
 		);
 
-		$result = wp_get_ability( 'content/update-post' )->execute(
+		$result = wp_get_ability( 'og-content/update-post' )->execute(
 			array(
 				'id'             => $post_id,
 				'slug'           => 'updated-slug',
@@ -153,7 +153,7 @@ final class WriteLinksTest extends TestCase {
 
 		// The `minimum: 1` input guard rejects a non-positive id at the schema
 		// boundary, before execute() builds a REST path that would coerce -7 to 7.
-		$result = wp_get_ability( 'content/update-post' )->execute( array( 'id' => -7 ) );
+		$result = wp_get_ability( 'og-content/update-post' )->execute( array( 'id' => -7 ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -168,7 +168,7 @@ final class WriteLinksTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/update-page' )->execute(
+		$result = wp_get_ability( 'og-content/update-page' )->execute(
 			array(
 				'id'    => $page_id,
 				'title' => 'New page',
@@ -184,7 +184,7 @@ final class WriteLinksTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_title' => 'Old cpt' ) );
 
-		$result = wp_get_ability( 'content/update-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/update-cpt-item' )->execute(
 			array(
 				'post_type' => 'post',
 				'id'        => $post_id,
@@ -206,7 +206,7 @@ final class WriteLinksTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'To trash', $result['title'] );
@@ -220,7 +220,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_trash_post_rejects_non_positive_id(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => -5 ) );
+		$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => -5 ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -235,7 +235,7 @@ final class WriteLinksTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -244,7 +244,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_trash_post_missing_object_returns_invalid_id(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
@@ -260,8 +260,8 @@ final class WriteLinksTest extends TestCase {
 			)
 		);
 
-		wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
-		$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+		wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertSame( 'rest_already_trashed', $result->get_error_code() );
@@ -283,7 +283,7 @@ final class WriteLinksTest extends TestCase {
 		add_filter( 'rest_post_trashable', $filter );
 
 		try {
-			$result = wp_get_ability( 'content/trash-post' )->execute( array( 'id' => $post_id ) );
+			$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => $post_id ) );
 		} finally {
 			remove_filter( 'rest_post_trashable', $filter );
 		}
@@ -303,7 +303,7 @@ final class WriteLinksTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/trash-page' )->execute( array( 'id' => $page_id ) );
+		$result = wp_get_ability( 'og-content/trash-page' )->execute( array( 'id' => $page_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'Page to trash', $result['title'] );
@@ -316,7 +316,7 @@ final class WriteLinksTest extends TestCase {
 	public function test_trash_page_rejects_non_positive_id(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/trash-page' )->execute( array( 'id' => -12 ) );
+		$result = wp_get_ability( 'og-content/trash-page' )->execute( array( 'id' => -12 ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -326,7 +326,7 @@ final class WriteLinksTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create( array( 'post_title' => 'Doomed' ) );
 
-		$result = wp_get_ability( 'content/delete-post' )->execute( array( 'id' => $post_id ) );
+		$result = wp_get_ability( 'og-content/delete-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -343,7 +343,7 @@ final class WriteLinksTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => $page_id ) );
+		$result = wp_get_ability( 'og-content/delete-page' )->execute( array( 'id' => $page_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -368,7 +368,7 @@ final class WriteLinksTest extends TestCase {
 		$revisions   = wp_get_post_revisions( $post_id );
 		$revision_id = (int) array_key_first( $revisions );
 
-		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/restore-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $revision_id,

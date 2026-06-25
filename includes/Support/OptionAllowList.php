@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Deny-by-default allow-list for the generic `settings/update-option` ability.
+ * Deny-by-default allow-list for the generic `og-settings/update-option` ability.
  *
  * Only the options named in {@see self::ALLOWED} may be written through the generic
  * option-update ability. Everything else is refused, explicitly including

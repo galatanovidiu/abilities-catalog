@@ -10,13 +10,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Projects raw `/wp/v2/plugins` REST items into flat summary rows for the
- * `plugins/list-plugins` ability.
+ * `og-plugins/list-plugins` ability.
  *
  * The plugins route returns each plugin with a rendered `description` object,
  * `author`/`author_uri`/`plugin_uri`, `requires_wp`/`requires_php`, `textdomain`,
  * and `_links`. Returning that verbatim leaks REST internals and breaks the
  * project-wide list-ability rule. This shaper maps each item to a small,
- * predictable row (the full detail lives behind `plugins/get-plugin`) and exposes
+ * predictable row (the full detail lives behind `og-plugins/get-plugin`) and exposes
  * the matching `output_schema` fragment so the runtime shape and the declared
  * schema stay in sync.
  *
@@ -55,7 +55,7 @@ final class PluginListShaper {
 			'properties'           => array(
 				'plugin'       => array(
 					'type'        => 'string',
-					'description' => __( 'The plugin file path (use plugins/get-plugin for full details).', 'abilities-catalog' ),
+					'description' => __( 'The plugin file path (use og-plugins/get-plugin for full details).', 'abilities-catalog' ),
 				),
 				'status'       => array(
 					'type'        => 'string',

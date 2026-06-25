@@ -54,12 +54,12 @@ final class VendorExposureGateTest extends TestCase {
 	/**
 	 * A curated ability the owner has ENABLED (matches ServerTest's choice).
 	 */
-	private const ENABLED_ABILITY = 'content/get-post';
+	private const ENABLED_ABILITY = 'og-content/get-post';
 
 	/**
 	 * A curated ability the owner has left DISABLED (matches ServerTest's choice).
 	 */
-	private const DISABLED_ABILITY = 'content/create-post';
+	private const DISABLED_ABILITY = 'og-content/create-post';
 
 	/**
 	 * The hook tables this class mutates, snapshotted in {@see set_up()} and restored
@@ -109,7 +109,7 @@ final class VendorExposureGateTest extends TestCase {
 	 * and the exposure option.
 	 *
 	 * Order matters. The hook tables are restored FIRST so no test-added publish filter
-	 * survives, THEN the live `content/get-post` is re-registered from its clean
+	 * survives, THEN the live `og-content/get-post` is re-registered from its clean
 	 * `args()` — through an isolated dispatch with no Server publish filter active — so
 	 * its registered meta carries NO `mcp` key again. Without this, a test that stamped
 	 * the flag onto the live ability (case 2's re-registration) would leave it stamped,
@@ -161,8 +161,8 @@ final class VendorExposureGateTest extends TestCase {
 	/**
 	 * A disabled ability is REFUSED on the vendor execute path (the deliverable).
 	 *
-	 * With only `content/get-post` enabled, the publish filter gives the disabled
-	 * `content/create-post` NO `meta.mcp.public` (the same assertion `ServerTest`
+	 * With only `og-content/get-post` enabled, the publish filter gives the disabled
+	 * `og-content/create-post` NO `meta.mcp.public` (the same assertion `ServerTest`
 	 * makes), and `ExecuteAbilityAbility::check_permission()` refuses it with the exact
 	 * code `ability_not_public_mcp` — not a generic capability collapse.
 	 *
@@ -207,7 +207,7 @@ final class VendorExposureGateTest extends TestCase {
 	/**
 	 * An enabled ability PASSES the exposure layer on the vendor path (control).
 	 *
-	 * With `content/get-post` enabled, the publish filter stamps `meta.mcp.public ===
+	 * With `og-content/get-post` enabled, the publish filter stamps `meta.mcp.public ===
 	 * true`, and the real `check_ability_mcp_exposure` — read off the live registered
 	 * ability — returns `true` for that name instead of refusing it. This proves the
 	 * test would catch a gate that wrongly refuses everything, not only one that wrongly
@@ -341,7 +341,7 @@ final class VendorExposureGateTest extends TestCase {
 	 * publish filter, so this re-registration runs with no Server publish filter in
 	 * `wp_register_ability_args` — the freshly registered meta therefore carries NO
 	 * `mcp` key. This is what undoes case 2's {@see republishThroughRegistration()},
-	 * which would otherwise leave `mcp.public` stamped on the live `content/get-post`
+	 * which would otherwise leave `mcp.public` stamped on the live `og-content/get-post`
 	 * and break `RegistryTest::test_single_site_decorator_is_a_no_op_for_every_ability`.
 	 *
 	 * @param string $ability_name The ability to restore (must be a curated content ability).

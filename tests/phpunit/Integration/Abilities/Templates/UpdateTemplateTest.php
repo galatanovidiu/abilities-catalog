@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/update-template output and contract.
+ * Integration tests for og-templates/update-template output and contract.
  *
  * Covers a successful wp_template update (id/type/status/title/edit_link shape),
  * the wp_template_part branch (type/area reporting), clearing a field with an
@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/update-template.
+ * Exercises og-templates/update-template.
  */
 final class UpdateTemplateTest extends TestCase {
 
@@ -31,7 +31,7 @@ final class UpdateTemplateTest extends TestCase {
 	 * @return string The created template id in "theme//slug" form.
 	 */
 	private function createTemplate( string $slug, string $post_type = 'wp_template', string $content = '<!-- wp:paragraph --><p>before</p><!-- /wp:paragraph -->' ): string {
-		$created = wp_get_ability( 'templates/create-template' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'      => $slug,
 				'post_type' => $post_type,
@@ -50,7 +50,7 @@ final class UpdateTemplateTest extends TestCase {
 
 		$id = $this->createTemplate( 'page-update-me' );
 
-		$result = wp_get_ability( 'templates/update-template' )->execute(
+		$result = wp_get_ability( 'og-templates/update-template' )->execute(
 			array(
 				'id'      => $id,
 				'title'   => 'Updated',
@@ -84,7 +84,7 @@ final class UpdateTemplateTest extends TestCase {
 
 		$id = $this->createTemplate( 'header-update-me', 'wp_template_part' );
 
-		$result = wp_get_ability( 'templates/update-template' )->execute(
+		$result = wp_get_ability( 'og-templates/update-template' )->execute(
 			array(
 				'id'        => $id,
 				'post_type' => 'wp_template_part',
@@ -111,7 +111,7 @@ final class UpdateTemplateTest extends TestCase {
 			'<!-- wp:paragraph --><p>has content</p><!-- /wp:paragraph -->'
 		);
 
-		$result = wp_get_ability( 'templates/update-template' )->execute(
+		$result = wp_get_ability( 'og-templates/update-template' )->execute(
 			array(
 				'id'      => $id,
 				'content' => '',
@@ -131,7 +131,7 @@ final class UpdateTemplateTest extends TestCase {
 	public function test_missing_template_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/update-template' )->execute(
+		$result = wp_get_ability( 'og-templates/update-template' )->execute(
 			array(
 				'id'    => get_stylesheet() . '//does-not-exist',
 				'title' => 'Nope',
@@ -146,7 +146,7 @@ final class UpdateTemplateTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/update-template' );
+		$ability = wp_get_ability( 'og-templates/update-template' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

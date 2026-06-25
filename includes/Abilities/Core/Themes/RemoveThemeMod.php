@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Write ability: `themes/remove-theme-mod`.
+ * Write ability: `og-themes/remove-theme-mod`.
  *
  * Removes one theme modification ("theme mod" — a customizer setting) by name
  * from the active theme, reverting that setting to the theme's built-in default.
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Classification rationale:
  * - `readonly` is false: this is a write (it removes a stored customizer value).
  * - `destructive` is false: it only reverts the named mod to the theme's default
- *   and is reversible — re-set the same value with `themes/set-theme-mod`. (It is
+ *   and is reversible — re-set the same value with `og-themes/set-theme-mod`. (It is
  *   a write, so the boolean must still be declared, hence present and set to false.)
  * - `idempotent` is true: removing an already-unset mod is a no-op; removing the
  *   same name twice leaves the same end state (the mod is not set).
@@ -47,7 +47,7 @@ final class RemoveThemeMod implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/remove-theme-mod';
+		return 'og-themes/remove-theme-mod';
 	}
 
 	/**
@@ -56,7 +56,7 @@ final class RemoveThemeMod implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Remove Theme Mod', 'abilities-catalog' ),
-			'description'         => __( 'Removes one theme modification (a customizer setting) by name from the active theme, reverting it to the theme\'s default. This changes front-end appearance and is reversible: re-apply the value with themes/set-theme-mod. A false "removed" result is not an error: it means no mod was set under that name, so nothing changed. Discover mod names with themes/list-theme-mods.', 'abilities-catalog' ),
+			'description'         => __( 'Removes one theme modification (a customizer setting) by name from the active theme, reverting it to the theme\'s default. This changes front-end appearance and is reversible: re-apply the value with og-themes/set-theme-mod. A false "removed" result is not an error: it means no mod was set under that name, so nothing changed. Discover mod names with og-themes/list-theme-mods.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -65,7 +65,7 @@ final class RemoveThemeMod implements Ability {
 					'name' => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The theme mod (customizer setting) name to remove, e.g. "background_color". Discover the set names with themes/list-theme-mods.', 'abilities-catalog' ),
+						'description' => __( 'The theme mod (customizer setting) name to remove, e.g. "background_color". Discover the set names with og-themes/list-theme-mods.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

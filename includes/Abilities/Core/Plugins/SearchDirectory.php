@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `plugins/search-directory`.
+ * Read ability: `og-plugins/search-directory`.
  *
  * Searches the public WordPress.org plugin directory via core `plugins_api()`
  * (`query_plugins`). NOTE: this makes an OUTBOUND HTTP request to the
  * WordPress.org API; it reads remote data and changes nothing on the site.
  * Returns a shaped list (slug, name, version, rating, active installs, short
  * description, author) so an agent can find a plugin slug to then install with
- * the dangerous `plugins/install-plugin` ability. Read-only.
+ * the dangerous `og-plugins/install-plugin` ability. Read-only.
  *
  * Gated on `install_plugins` — the capability needed to act on a result — so the
  * search pairs with the install ability and is not exposed to users who could not
@@ -34,7 +34,7 @@ final class SearchDirectory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/search-directory';
+		return 'og-plugins/search-directory';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class SearchDirectory implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Search Plugin Directory', 'abilities-catalog' ),
-			'description'         => __( 'Searches the WordPress.org plugin directory by keyword and returns matches (slug, name, version, rating, active installs, short description, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with plugins/install-plugin to install one.', 'abilities-catalog' ),
+			'description'         => __( 'Searches the WordPress.org plugin directory by keyword and returns matches (slug, name, version, rating, active installs, short description, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with og-plugins/install-plugin to install one.', 'abilities-catalog' ),
 			'category'            => 'plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -145,7 +145,7 @@ final class SearchDirectory implements Ability {
 	 * Permission check: `install_plugins` (the capability to act on a result).
 	 *
 	 * The directory search is read-only, but it is gated on the install capability
-	 * so it pairs with `plugins/install-plugin` and is not exposed to users who
+	 * so it pairs with `og-plugins/install-plugin` and is not exposed to users who
 	 * could not install anyway. The hard server-side guard.
 	 *
 	 * @param mixed $input The validated input data.

@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `updates/run-update`.
+ * T3 dangerous write ability: `og-updates/run-update`.
  *
  * Runs plugin, theme, or translation updates synchronously through core's bulk
  * upgraders, guarded by the shared {@see UpgradeRunner} lock (filesystem guard +
@@ -44,7 +44,7 @@ final class RunUpdate implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'updates/run-update';
+		return 'og-updates/run-update';
 	}
 
 	/**

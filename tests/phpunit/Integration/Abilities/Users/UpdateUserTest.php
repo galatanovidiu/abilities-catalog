@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/update-user ability.
+ * Integration tests for the og-users/update-user ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -43,16 +43,16 @@ final class UpdateUserTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/update-user' );
+		$ability = wp_get_ability( 'og-users/update-user' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/update-user', $ability->get_name() );
+		$this->assertSame( 'og-users/update-user', $ability->get_name() );
 	}
 
 	public function test_admin_updates_name_and_email_with_flat_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-user' )->execute(
 			array(
 				'id'    => $this->target,
 				'name'  => 'Renamed Author',
@@ -82,7 +82,7 @@ final class UpdateUserTest extends TestCase {
 		// user is untouched, proving the edit_user guard still holds through the route.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'users/update-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-user' )->execute(
 			array(
 				'id'   => $this->target,
 				'name' => 'Should Not Change',
@@ -102,7 +102,7 @@ final class UpdateUserTest extends TestCase {
 		// id surfaces the route's specific 404, not a permission collapse.
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-user' )->execute(
 			array(
 				'id'   => 999999,
 				'name' => 'Ghost',
@@ -127,7 +127,7 @@ final class UpdateUserTest extends TestCase {
 		$this->assertTrue( current_user_can( 'edit_user', $this->target ) );
 		$this->assertFalse( current_user_can( 'promote_user', $this->target ) );
 
-		$result = wp_get_ability( 'users/update-user' )->execute(
+		$result = wp_get_ability( 'og-users/update-user' )->execute(
 			array(
 				'id'    => $this->target,
 				'roles' => array( 'editor' ),

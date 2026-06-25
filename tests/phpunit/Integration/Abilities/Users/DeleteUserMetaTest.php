@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/delete-meta ability.
+ * Integration tests for the og-users/delete-meta ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises users/delete-meta end-to-end against a registered show_in_rest user
+ * Exercises og-users/delete-meta end-to-end against a registered show_in_rest user
  * meta key, plus the registered-key gate (the security property), the object-level
  * permission guard, and the per-key delete capability.
  */
@@ -65,14 +65,14 @@ final class DeleteUserMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'users/delete-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-users/delete-meta' ) );
 	}
 
 	public function test_happy_path_removes_key(): void {
 		$this->actingAs( 'administrator' );
 		update_metadata( 'user', $this->user_id, 'abilities_catalog_test_key', 'to be removed' );
 
-		$result = wp_get_ability( 'users/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-users/delete-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -91,7 +91,7 @@ final class DeleteUserMetaTest extends TestCase {
 
 		// wp_capabilities is internal/unregistered — deleting it would corrupt the
 		// user's roles; it must be rejected as an unknown key.
-		$result = wp_get_ability( 'users/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-users/delete-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'keys' => array( 'abilities_catalog_test_key', 'wp_capabilities' ),
@@ -108,7 +108,7 @@ final class DeleteUserMetaTest extends TestCase {
 	public function test_missing_user_returns_invalid_id_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-users/delete-meta' )->execute(
 			array(
 				'id'   => 999999,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -126,7 +126,7 @@ final class DeleteUserMetaTest extends TestCase {
 		update_metadata( 'user', $this->user_id, 'abilities_catalog_test_key', 'still here' );
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'users/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-users/delete-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -147,7 +147,7 @@ final class DeleteUserMetaTest extends TestCase {
 		// The administrator can edit the user (passes the object guard) but the
 		// auth_callback denies delete_user_meta for this key, so the per-key check
 		// fails with a specific 403 — and the value survives.
-		$result = wp_get_ability( 'users/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-users/delete-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'keys' => array( 'abilities_catalog_guarded_key' ),
@@ -165,7 +165,7 @@ final class DeleteUserMetaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_metadata( 'user', $this->user_id, 'abilities_catalog_test_key', 'x' );
 
-		$result = wp_get_ability( 'users/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-users/delete-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'keys' => array( 'abilities_catalog_test_key' ),

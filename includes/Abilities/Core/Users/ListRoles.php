@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed T1 read ability: `users/list-roles`.
+ * Composed T1 read ability: `og-users/list-roles`.
  *
  * Lists every registered WordPress role with its slug, human display name, the
  * capabilities granted to it, and the number of users currently in that role.
@@ -32,7 +32,7 @@ final class ListRoles implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/list-roles';
+		return 'og-users/list-roles';
 	}
 
 	/**
@@ -41,7 +41,7 @@ final class ListRoles implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Roles', 'abilities-catalog' ),
-			'description'         => __( 'Lists every registered user role with its slug, display name, the capabilities granted to it, and the number of users currently assigned to it. Read-only view of the site permission model; use users/list-users to enumerate the users themselves.', 'abilities-catalog' ),
+			'description'         => __( 'Lists every registered user role with its slug, display name, the capabilities granted to it, and the number of users currently assigned to it. Read-only view of the site permission model; use og-users/list-users to enumerate the users themselves.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -57,7 +57,7 @@ final class ListRoles implements Ability {
 							'properties'           => array(
 								'slug'         => array(
 									'type'        => 'string',
-									'description' => __( 'The role identifier used by core (e.g. "administrator", "editor"). Pass this to users/create-user or users/update-user as the role value.', 'abilities-catalog' ),
+									'description' => __( 'The role identifier used by core (e.g. "administrator", "editor"). Pass this to og-users/create-user or og-users/update-user as the role value.', 'abilities-catalog' ),
 								),
 								'name'         => array(
 									'type'        => 'string',

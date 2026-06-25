@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-general`.
+ * T1 read ability: `og-settings/get-general`.
  *
  * Returns the General Settings screen values, read directly from options and
  * site info helpers. Net-new read: no REST route is dispatched.
@@ -24,7 +24,7 @@ final class GetGeneral implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-general';
+		return 'og-settings/get-general';
 	}
 
 	/**

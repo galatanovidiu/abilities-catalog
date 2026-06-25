@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/list-widget-types ability.
+ * Integration tests for the og-widgets/list-widget-types ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,16 +38,16 @@ final class ListWidgetTypesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/list-widget-types' );
+		$ability = wp_get_ability( 'og-widgets/list-widget-types' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/list-widget-types', $ability->get_name() );
+		$this->assertSame( 'og-widgets/list-widget-types', $ability->get_name() );
 	}
 
 	public function test_admin_lists_widget_types_including_block(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/list-widget-types' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-widget-types' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -63,7 +63,7 @@ final class ListWidgetTypesTest extends TestCase {
 	public function test_row_has_exactly_the_closed_field_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/list-widget-types' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-widget-types' )->execute();
 		$block  = $this->rowById( $result['items'], 'block' );
 
 		$this->assertNotNull( $block );
@@ -83,7 +83,7 @@ final class ListWidgetTypesTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'widgets/list-widget-types' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-widget-types' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -92,7 +92,7 @@ final class ListWidgetTypesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'widgets/list-widget-types' )->execute();
+		$result = wp_get_ability( 'og-widgets/list-widget-types' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

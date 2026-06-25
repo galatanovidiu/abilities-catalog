@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/delete-media ability.
+ * Integration tests for the og-media/delete-media ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use WP_Error;
 final class DeleteMediaTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'media/delete-media' );
+		$ability = wp_get_ability( 'og-media/delete-media' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'media/delete-media', $ability->get_name() );
+		$this->assertSame( 'og-media/delete-media', $ability->get_name() );
 	}
 
 	public function test_admin_deletes_media_and_reports_previous_identity(): void {
@@ -40,7 +40,7 @@ final class DeleteMediaTest extends TestCase {
 		);
 		update_post_meta( $attachment_id, '_wp_attachment_image_alt', 'A canola field' );
 
-		$result = wp_get_ability( 'media/delete-media' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -58,7 +58,7 @@ final class DeleteMediaTest extends TestCase {
 
 		$attachment_id = self::factory()->attachment->create();
 
-		$result = wp_get_ability( 'media/delete-media' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -70,14 +70,14 @@ final class DeleteMediaTest extends TestCase {
 
 		$attachment_id = self::factory()->attachment->create();
 
-		$result = wp_get_ability( 'media/delete-media' )->execute( array( 'id' => 0 ) );
+		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => 0 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 
 		// A negative ID must be rejected by input validation (minimum: 1), never
 		// coerced to a positive object by absint() and silently deleted.
-		$result = wp_get_ability( 'media/delete-media' )->execute( array( 'id' => -$attachment_id ) );
+		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => -$attachment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -90,7 +90,7 @@ final class DeleteMediaTest extends TestCase {
 		// opaque ability_invalid_permissions an object-level pre-check produced.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/delete-media' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
@@ -105,7 +105,7 @@ final class DeleteMediaTest extends TestCase {
 		// generic collapse — and the attachment is not removed.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/delete-media' )->execute( array( 'id' => $attachment_id ) );
+		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `comments/update-meta`.
+ * T2 write ability: `og-comments/update-meta`.
  *
  * Sets one or more of a comment's custom fields (meta). It writes only meta keys
  * the site has registered with `show_in_rest` for comments, and rejects any
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `update_metadata()`/`add_metadata()` functions (the same path `update_post_meta`
  * uses for posts) after a per-key `edit_comment_meta` capability check; the
  * registered value is sanitized by its `sanitize_callback`. Does not delete meta
- * (use `comments/delete-meta`) and does not change other comment fields. Returns
+ * (use `og-comments/delete-meta`) and does not change other comment fields. Returns
  * the comment `id`, the applied `meta` values, and `edit_link` (the wp-admin
  * comment editor URL); surface `edit_link` so a human can review the change.
  *
@@ -33,7 +33,7 @@ final class UpdateCommentMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/update-meta';
+		return 'og-comments/update-meta';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class UpdateCommentMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Comment Meta', 'abilities-catalog' ),
-			'description'         => __( 'Sets custom fields (meta) on a comment. Only meta keys registered with show_in_rest for comments can be written; unknown keys are rejected. Returns the comment id, the applied meta, and edit_link — surface edit_link so a human can review the change. Discover comment IDs with comments/list-comments.', 'abilities-catalog' ),
+			'description'         => __( 'Sets custom fields (meta) on a comment. Only meta keys registered with show_in_rest for comments can be written; unknown keys are rejected. Returns the comment id, the applied meta, and edit_link — surface edit_link so a human can review the change. Discover comment IDs with og-comments/list-comments.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -50,7 +50,7 @@ final class UpdateCommentMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to update meta on. Discover IDs with comments/list-comments.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to update meta on. Discover IDs with og-comments/list-comments.', 'abilities-catalog' ),
 					),
 					'meta' => array(
 						'type'                 => 'object',

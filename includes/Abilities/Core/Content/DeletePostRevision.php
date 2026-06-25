@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Destructive write ability: `content/delete-post-revision`.
+ * Destructive write ability: `og-content/delete-post-revision`.
  *
  * Permanently deletes one saved revision of a post by wrapping the core function
  * `wp_delete_post_revision()`. This is a net-new write: it does NOT dispatch a
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Deleting a revision removes only that historical snapshot — the post's current
  * content is unaffected — but the snapshot itself is gone for good. Unlike
- * `content/restore-post-revision` (which saves the pre-restore state as a fresh
+ * `og-content/restore-post-revision` (which saves the pre-restore state as a fresh
  * revision and is therefore `destructive:false`), this operation writes no
  * recovery point and cannot be undone, so it is `destructive:true`.
  *
@@ -41,7 +41,7 @@ final class DeletePostRevision implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/delete-post-revision';
+		return 'og-content/delete-post-revision';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class DeletePostRevision implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Delete Post Revision', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes one saved revision of a post. The post\'s current content is unaffected; only that historical snapshot is removed. This cannot be undone. The revision must belong to the given parent post. To roll the post back to an older revision instead of deleting one, use content/restore-post-revision.', 'abilities-catalog' ),
+			'description'         => __( 'Permanently deletes one saved revision of a post. The post\'s current content is unaffected; only that historical snapshot is removed. This cannot be undone. The revision must belong to the given parent post. To roll the post back to an older revision instead of deleting one, use og-content/restore-post-revision.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -61,7 +61,7 @@ final class DeletePostRevision implements Ability {
 					),
 					'revision_id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The revision ID to delete. Discover IDs with content/list-post-revisions.', 'abilities-catalog' ),
+						'description' => __( 'The revision ID to delete. Discover IDs with og-content/list-post-revisions.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'parent', 'revision_id' ),

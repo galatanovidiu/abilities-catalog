@@ -25,12 +25,12 @@ final class AbilityIndexTest extends TestCase {
 	/**
 	 * A real, no-input read ability enabled in the gate for these tests.
 	 */
-	private const ENABLED = 'dashboard/get-at-a-glance';
+	private const ENABLED = 'og-dashboard/get-at-a-glance';
 
 	/**
 	 * A real ability deliberately left OUT of the enabled set (gate must refuse it).
 	 */
-	private const DISABLED = 'content/create-post';
+	private const DISABLED = 'og-content/create-post';
 
 	/**
 	 * Enables exactly one ability and loads the adapter bundle (or skips).
@@ -124,7 +124,7 @@ final class AbilityIndexTest extends TestCase {
 		$result = $this->index()->search( 'create post', null, 5 );
 
 		$names = array_column( $result['abilities'], 'name' );
-		$this->assertContains( self::DISABLED, $names, 'A "create post" query should surface content/create-post.' );
+		$this->assertContains( self::DISABLED, $names, 'A "create post" query should surface og-content/create-post.' );
 
 		$this->assertLessThanOrEqual( 5, $result['returned'] );
 		$this->assertSame( $result['returned'], count( $result['abilities'] ) );

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for search/search-content output fidelity and guards.
+ * Integration tests for og-search/search-content output fidelity and guards.
  *
  * Covers the happy-path post-search shape, the term-result `type` normalization
  * (core sets the row type to the taxonomy slug, the ability must report the
@@ -20,7 +20,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises search/search-content.
+ * Exercises og-search/search-content.
  */
 final class SearchContentTest extends TestCase {
 
@@ -34,7 +34,7 @@ final class SearchContentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'search/search-content' )->execute(
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array(
 				'search' => 'Findable widget',
 				'type'   => 'post',
@@ -60,7 +60,7 @@ final class SearchContentTest extends TestCase {
 
 		self::factory()->category->create( array( 'name' => 'Findable taxonomy term' ) );
 
-		$result = wp_get_ability( 'search/search-content' )->execute(
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array(
 				'search' => 'Findable taxonomy',
 				'type'   => 'term',
@@ -90,7 +90,7 @@ final class SearchContentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'search/search-content' )->execute(
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array(
 				'search'   => 'Paginated marker',
 				'per_page' => 2,
@@ -110,7 +110,7 @@ final class SearchContentTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'search/search-content' )->execute(
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array( 'search' => 'anything' )
 		);
 
@@ -147,7 +147,7 @@ final class SearchContentTest extends TestCase {
 		);
 
 		// A page past the result set yields an empty list, not a fabricated row.
-		$result = wp_get_ability( 'search/search-content' )->execute(
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array(
 				'search'   => 'page-bound marker',
 				'page'     => 999,

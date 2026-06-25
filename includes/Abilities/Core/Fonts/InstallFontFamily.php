@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `fonts/install-font-family`.
+ * T2 non-destructive write ability: `og-fonts/install-font-family`.
  *
  * Creates a `wp_font_family` post by wrapping `POST /wp/v2/font-families` via
  * `rest_do_request()`. The REST route expects a single `font_family_settings`
@@ -42,7 +42,7 @@ final class InstallFontFamily implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'fonts/install-font-family';
+		return 'og-fonts/install-font-family';
 	}
 
 	/**

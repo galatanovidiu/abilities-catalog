@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `menus/delete-menu-item`.
+ * T2 destructive write ability: `og-menus/delete-menu-item`.
  *
  * Wraps `DELETE /wp/v2/menu-items/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting a classic menu item (`nav_menu_item` post). Menu items have
@@ -35,7 +35,7 @@ final class DeleteMenuItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/delete-menu-item';
+		return 'og-menus/delete-menu-item';
 	}
 
 	/**
@@ -52,7 +52,7 @@ final class DeleteMenuItem implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The menu item ID to permanently delete. Find item IDs via menus/list-menu-items.', 'abilities-catalog' ),
+						'description' => __( 'The menu item ID to permanently delete. Find item IDs via og-menus/list-menu-items.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `connectors/get-connector`.
+ * T1 read ability: `og-connectors/get-connector`.
  *
  * Returns a single connector by ID (`wp_get_connector()`) as a strict,
  * non-secret field set: `id`, `name`, `type`, and the distinct usability signals
@@ -43,7 +43,7 @@ final class GetConnector implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'connectors/get-connector';
+		return 'og-connectors/get-connector';
 	}
 
 	/**
@@ -59,7 +59,7 @@ final class GetConnector implements Ability {
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'string',
-						'description' => __( 'The connector identifier. Discover IDs via the connectors/list-connectors ability.', 'abilities-catalog' ),
+						'description' => __( 'The connector identifier. Discover IDs via the og-connectors/list-connectors ability.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

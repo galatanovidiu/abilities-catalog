@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `themes/get-active-theme`.
+ * Read ability: `og-themes/get-active-theme`.
  *
  * Wraps `GET /wp/v2/themes` filtered to the active theme via `rest_do_request()`
  * and shapes the first item into a flat field set. Falls back to `wp_get_theme()`
@@ -27,7 +27,7 @@ final class GetActiveTheme implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/get-active-theme';
+		return 'og-themes/get-active-theme';
 	}
 
 	/**

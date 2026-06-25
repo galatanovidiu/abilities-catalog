@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `content/trash-page`.
+ * T1 write ability: `og-content/trash-page`.
  *
  * Wraps `DELETE /wp/v2/pages/<id>` with `force=false` via `rest_do_request()`,
  * moving the page to Trash (recoverable). The `permission_callback` enforces the
@@ -31,7 +31,7 @@ final class TrashPage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/trash-page';
+		return 'og-content/trash-page';
 	}
 
 	/**
@@ -48,7 +48,7 @@ final class TrashPage implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The page ID to move to Trash. Obtain it from a list/get content ability (e.g. `content/list-pages` or `content/get-page`).', 'abilities-catalog' ),
+						'description' => __( 'The page ID to move to Trash. Obtain it from a list/get content ability (e.g. `og-content/list-pages` or `og-content/get-page`).', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

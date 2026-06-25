@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the tools/send-test-email ability.
+ * Integration tests for the og-tools/send-test-email ability.
  *
  * Covers registration, the output-shape contract (sent/to), a happy-path send to the
  * admin email and to an explicit recipient (asserted against the WP mock mailer, never
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises tools/send-test-email registration, send semantics, and the gate.
+ * Exercises og-tools/send-test-email registration, send semantics, and the gate.
  */
 final class SendTestEmailTest extends TestCase {
 
@@ -44,14 +44,14 @@ final class SendTestEmailTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'tools/send-test-email' );
+		$ability = wp_get_ability( 'og-tools/send-test-email' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'tools/send-test-email', $ability->get_name() );
+		$this->assertSame( 'og-tools/send-test-email', $ability->get_name() );
 	}
 
 	public function test_output_schema_requires_sent_and_to(): void {
-		$schema = wp_get_ability( 'tools/send-test-email' )->get_output_schema();
+		$schema = wp_get_ability( 'og-tools/send-test-email' )->get_output_schema();
 
 		$this->assertFalse( $schema['additionalProperties'] );
 		$this->assertSame( array( 'sent', 'to' ), $schema['required'] );
@@ -60,7 +60,7 @@ final class SendTestEmailTest extends TestCase {
 	public function test_sends_to_admin_email_by_default(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/send-test-email' )->execute( array() );
+		$result = wp_get_ability( 'og-tools/send-test-email' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'sent', 'to' ), array_keys( $result ) );
@@ -76,7 +76,7 @@ final class SendTestEmailTest extends TestCase {
 	public function test_sends_to_explicit_recipient(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/send-test-email' )->execute( array( 'to' => 'someone@example.com' ) );
+		$result = wp_get_ability( 'og-tools/send-test-email' )->execute( array( 'to' => 'someone@example.com' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['sent'] );
@@ -89,7 +89,7 @@ final class SendTestEmailTest extends TestCase {
 	public function test_invalid_recipient_is_rejected(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'tools/send-test-email' )->execute( array( 'to' => 'not-an-email' ) );
+		$result = wp_get_ability( 'og-tools/send-test-email' )->execute( array( 'to' => 'not-an-email' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_invalid_email', $result->get_error_code() );
@@ -103,7 +103,7 @@ final class SendTestEmailTest extends TestCase {
 	public function test_subscriber_is_denied_and_no_mail_sent(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'tools/send-test-email' )->execute( array() );
+		$result = wp_get_ability( 'og-tools/send-test-email' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -113,7 +113,7 @@ final class SendTestEmailTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_no_mail_sent(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'tools/send-test-email' )->execute( array() );
+		$result = wp_get_ability( 'og-tools/send-test-email' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

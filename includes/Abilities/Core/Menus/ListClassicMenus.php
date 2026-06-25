@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `menus/list-classic-menus`.
+ * Read ability: `og-menus/list-classic-menus`.
  *
  * Wraps `GET /wp/v2/menus` via `rest_do_request()` and returns the collection
  * of classic menus (`nav_menu` terms) plus its total counts. Each row is
@@ -30,7 +30,7 @@ final class ListClassicMenus implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/list-classic-menus';
+		return 'og-menus/list-classic-menus';
 	}
 
 	/**

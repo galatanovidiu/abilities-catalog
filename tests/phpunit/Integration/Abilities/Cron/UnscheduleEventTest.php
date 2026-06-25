@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the cron/unschedule-event ability.
+ * Integration tests for the og-cron/unschedule-event ability.
  *
  * Covers registration, the output-shape contract, a happy-path unschedule of a
  * recurring event with a wp_next_scheduled read-back and previous_schedule capture,
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises cron/unschedule-event registration, removal semantics, and the gate.
+ * Exercises og-cron/unschedule-event registration, removal semantics, and the gate.
  */
 final class UnscheduleEventTest extends TestCase {
 
@@ -31,7 +31,7 @@ final class UnscheduleEventTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'cron/unschedule-event' ) );
+		$this->assertNotNull( wp_get_ability( 'og-cron/unschedule-event' ) );
 	}
 
 	public function test_unschedules_recurring_event_and_reads_back_gone(): void {
@@ -41,7 +41,7 @@ final class UnscheduleEventTest extends TestCase {
 		wp_schedule_event( $timestamp, 'hourly', self::TEST_HOOK );
 		$this->assertNotFalse( wp_next_scheduled( self::TEST_HOOK ) );
 
-		$result = wp_get_ability( 'cron/unschedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/unschedule-event' )->execute(
 			array(
 				'hook'      => self::TEST_HOOK,
 				'timestamp' => $timestamp,
@@ -66,7 +66,7 @@ final class UnscheduleEventTest extends TestCase {
 		$timestamp = time() + HOUR_IN_SECONDS;
 		wp_schedule_event( $timestamp, 'hourly', self::TEST_HOOK );
 
-		$result = wp_get_ability( 'cron/unschedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/unschedule-event' )->execute(
 			array(
 				'hook'      => self::TEST_HOOK,
 				'timestamp' => $timestamp,
@@ -83,7 +83,7 @@ final class UnscheduleEventTest extends TestCase {
 	public function test_missing_event_returns_specific_404_not_could_not_set_or_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/unschedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/unschedule-event' )->execute(
 			array(
 				'hook'      => 'no_such_cron_hook',
 				'timestamp' => 2000000000,
@@ -106,7 +106,7 @@ final class UnscheduleEventTest extends TestCase {
 
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'cron/unschedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/unschedule-event' )->execute(
 			array(
 				'hook'      => self::TEST_HOOK,
 				'timestamp' => $timestamp,
@@ -126,7 +126,7 @@ final class UnscheduleEventTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'cron/unschedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/unschedule-event' )->execute(
 			array(
 				'hook'      => self::TEST_HOOK,
 				'timestamp' => $timestamp,

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/update-navigation ability.
+ * Integration tests for the og-menus/update-navigation ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,10 +38,10 @@ final class UpdateNavigationTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/update-navigation' );
+		$ability = wp_get_ability( 'og-menus/update-navigation' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/update-navigation', $ability->get_name() );
+		$this->assertSame( 'og-menus/update-navigation', $ability->get_name() );
 	}
 
 	/**
@@ -49,7 +49,7 @@ final class UpdateNavigationTest extends TestCase {
 	 * status degrades to publish. It is dropped from the enum (B7).
 	 */
 	public function test_status_enum_excludes_future(): void {
-		$enum = wp_get_ability( 'menus/update-navigation' )->get_input_schema()['properties']['status']['enum'];
+		$enum = wp_get_ability( 'og-menus/update-navigation' )->get_input_schema()['properties']['status']['enum'];
 
 		$this->assertNotContains( 'future', $enum );
 		$this->assertSame( array( 'draft', 'pending', 'private', 'publish' ), $enum );
@@ -59,7 +59,7 @@ final class UpdateNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->makeNavigation();
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'    => $nav_id,
 				'title' => 'Renamed Navigation',
@@ -75,7 +75,7 @@ final class UpdateNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->makeNavigation();
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'    => $nav_id,
 				'title' => 'Shaped',
@@ -95,7 +95,7 @@ final class UpdateNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->makeNavigation( 'Has A Title' );
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'    => $nav_id,
 				'title' => '',
@@ -111,7 +111,7 @@ final class UpdateNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->makeNavigation( 'Navigation', '<!-- wp:page-list /-->' );
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'      => $nav_id,
 				'content' => '',
@@ -125,7 +125,7 @@ final class UpdateNavigationTest extends TestCase {
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'    => -7,
 				'title' => 'Bad',
@@ -141,7 +141,7 @@ final class UpdateNavigationTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'    => $nav_id,
 				'title' => 'Denied',
@@ -156,7 +156,7 @@ final class UpdateNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$nav_id = $this->makeNavigation();
 
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'     => $nav_id,
 				'status' => 'bogus',
@@ -173,7 +173,7 @@ final class UpdateNavigationTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent id
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/update-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/update-navigation' )->execute(
 			array(
 				'id'    => 999999,
 				'title' => 'Renamed',

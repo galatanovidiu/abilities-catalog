@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `themes/delete-theme`.
+ * T3 dangerous write ability: `og-themes/delete-theme`.
  *
  * Net-new (no themes REST delete route): permanently deletes an installed theme with
  * core's `delete_theme()`. The theme must exist; the active theme and the parent
@@ -32,7 +32,7 @@ final class DeleteTheme implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/delete-theme';
+		return 'og-themes/delete-theme';
 	}
 
 	/**
@@ -92,7 +92,7 @@ final class DeleteTheme implements Ability {
 	/**
 	 * Permission check: the current user may delete themes.
 	 *
-	 * Encodes the catalog capability for `themes/delete-theme` (`delete_themes`).
+	 * Encodes the catalog capability for `og-themes/delete-theme` (`delete_themes`).
 	 * Returns false when the required `stylesheet` input is missing.
 	 *
 	 * @param mixed $input The validated input data.

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/add-user-to-site ability.
+ * Integration tests for the og-network/add-user-to-site ability.
  *
  * @package AbilitiesCatalog\Tests
  *
@@ -82,10 +82,10 @@ final class AddUserToSiteTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'network/add-user-to-site' );
+		$ability = wp_get_ability( 'og-network/add-user-to-site' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'network/add-user-to-site', $ability->get_name() );
+		$this->assertSame( 'og-network/add-user-to-site', $ability->get_name() );
 	}
 
 	public function test_happy_path_adds_user_with_role(): void {
@@ -94,7 +94,7 @@ final class AddUserToSiteTest extends TestCase {
 		$blog_id = $this->seedSite();
 		$user_id = self::factory()->user->create();
 
-		$result = wp_get_ability( 'network/add-user-to-site' )->execute(
+		$result = wp_get_ability( 'og-network/add-user-to-site' )->execute(
 			array(
 				'blog_id' => $blog_id,
 				'user_id' => $user_id,
@@ -118,7 +118,7 @@ final class AddUserToSiteTest extends TestCase {
 		$blog_id = $this->seedSite();
 		$user_id = self::factory()->user->create();
 
-		$result = wp_get_ability( 'network/add-user-to-site' )->execute(
+		$result = wp_get_ability( 'og-network/add-user-to-site' )->execute(
 			array(
 				'blog_id' => $blog_id,
 				'user_id' => $user_id,
@@ -146,7 +146,7 @@ final class AddUserToSiteTest extends TestCase {
 		$blog_id = $this->seedSite();
 		$user_id = self::factory()->user->create();
 
-		$ability = wp_get_ability( 'network/add-user-to-site' );
+		$ability = wp_get_ability( 'og-network/add-user-to-site' );
 
 		$ability->execute(
 			array(
@@ -179,7 +179,7 @@ final class AddUserToSiteTest extends TestCase {
 
 		$blog_id = $this->seedSite();
 
-		$result = wp_get_ability( 'network/add-user-to-site' )->execute(
+		$result = wp_get_ability( 'og-network/add-user-to-site' )->execute(
 			array(
 				'blog_id' => $blog_id,
 				'user_id' => 99999999,
@@ -198,7 +198,7 @@ final class AddUserToSiteTest extends TestCase {
 
 		$user_id = self::factory()->user->create();
 
-		$result = wp_get_ability( 'network/add-user-to-site' )->execute(
+		$result = wp_get_ability( 'og-network/add-user-to-site' )->execute(
 			array(
 				'blog_id' => 99999999,
 				'user_id' => $user_id,
@@ -218,7 +218,7 @@ final class AddUserToSiteTest extends TestCase {
 		$blog_id = $this->seedSite();
 		$user_id = self::factory()->user->create();
 
-		$result = wp_get_ability( 'network/add-user-to-site' )->execute(
+		$result = wp_get_ability( 'og-network/add-user-to-site' )->execute(
 			array(
 				'blog_id' => $blog_id,
 				'user_id' => $user_id,
@@ -242,7 +242,7 @@ final class AddUserToSiteTest extends TestCase {
 		// A plain site administrator is NOT a super admin and lacks manage_sites.
 		$this->actingAs( 'administrator' );
 
-		$ability = wp_get_ability( 'network/add-user-to-site' );
+		$ability = wp_get_ability( 'og-network/add-user-to-site' );
 		$input   = array(
 			'blog_id' => $blog_id,
 			'user_id' => $user_id,
@@ -265,7 +265,7 @@ final class AddUserToSiteTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'network/add-user-to-site' );
+		$ability = wp_get_ability( 'og-network/add-user-to-site' );
 		$input   = array(
 			'blog_id' => $blog_id,
 			'user_id' => $user_id,
@@ -287,7 +287,7 @@ final class AddUserToSiteTest extends TestCase {
 
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'network/add-user-to-site' );
+		$ability = wp_get_ability( 'og-network/add-user-to-site' );
 		$input   = array(
 			'blog_id' => $blog_id,
 			'user_id' => $user_id,

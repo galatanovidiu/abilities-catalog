@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/list-users ability.
+ * Integration tests for the og-users/list-users ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -60,16 +60,16 @@ final class ListUsersTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('users/list-users');
+		$ability = wp_get_ability('og-users/list-users');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('users/list-users', $ability->get_name());
+		$this->assertSame('og-users/list-users', $ability->get_name());
 	}
 
 	public function test_admin_lists_users_with_totals(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/list-users')->execute(array('per_page' => 100));
+		$result = wp_get_ability('og-users/list-users')->execute(array('per_page' => 100));
 
 		$this->assertIsArray($result);
 		$this->assertArrayHasKey('items', $result);
@@ -81,7 +81,7 @@ final class ListUsersTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('users/list-users')->execute(array());
+		$result = wp_get_ability('og-users/list-users')->execute(array());
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -93,7 +93,7 @@ final class ListUsersTest extends TestCase {
 		// an administrator.
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/list-users')->execute(array('per_page' => 100));
+		$result = wp_get_ability('og-users/list-users')->execute(array('per_page' => 100));
 		$row    = $this->rowById($result['items'], $this->known_user_id);
 		$this->assertNotNull($row, 'The known user must appear in the list.');
 
@@ -117,7 +117,7 @@ final class ListUsersTest extends TestCase {
 	public function test_view_context_row_values_match_source_user(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/list-users')->execute(array('per_page' => 100));
+		$result = wp_get_ability('og-users/list-users')->execute(array('per_page' => 100));
 		$row    = $this->rowById($result['items'], $this->known_user_id);
 
 		$this->assertNotNull($row);
@@ -133,7 +133,7 @@ final class ListUsersTest extends TestCase {
 		// email, and roles, and the shaper must surface them.
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('users/list-users')->execute(
+		$result = wp_get_ability('og-users/list-users')->execute(
 			array(
 				'per_page' => 100,
 				'context'  => 'edit',

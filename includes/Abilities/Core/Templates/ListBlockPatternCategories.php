@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-block-pattern-categories`.
+ * Read ability: `og-templates/list-block-pattern-categories`.
  *
  * Wraps `GET /wp/v2/block-patterns/categories` via `rest_do_request()`. Returns
  * the registered block-pattern categories (the taxonomy that groups block
  * patterns, e.g. "Headers", "Footers", "Call to Action"), each with its name and
- * label. Pairs with `templates/list-patterns` so an agent can group patterns by
+ * label. Pairs with `og-templates/list-patterns` so an agent can group patterns by
  * category. Read-only.
  *
  * @since 0.5.0
@@ -29,7 +29,7 @@ final class ListBlockPatternCategories implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-block-pattern-categories';
+		return 'og-templates/list-block-pattern-categories';
 	}
 
 	/**

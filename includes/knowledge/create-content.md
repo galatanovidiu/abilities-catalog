@@ -21,19 +21,19 @@ WordPress stores content as block markup: HTML wrapped in block comments. A bloc
 The inner HTML must match what the block renders, including its class names. Markup that does not match is flagged as broken in the editor.
 
 STEP 1 - LEARN WHAT IS AVAILABLE (all reads, through the "design" tool)
-- design execute templates/list-block-types: the block types registered on this site. Use only these names; never invent a block.
-- design execute templates/list-patterns and templates/list-block-pattern-categories: ready-made block compositions to reuse instead of hand-building layout.
-- design execute templates/list-synced-patterns: reusable blocks whose content stays in sync across uses.
-- design execute templates/get-global-styles and templates/get-theme-styles: the theme color palette, typography, and spacing presets. Reference these preset slugs so content inherits the theme instead of hard-coded values.
-- design execute fonts/list-font-collections and fonts/list-font-families: the fonts available or installable. Use a registered font; do not assume one.
+- design execute og-templates/list-block-types: the block types registered on this site. Use only these names; never invent a block.
+- design execute og-templates/list-patterns and og-templates/list-block-pattern-categories: ready-made block compositions to reuse instead of hand-building layout.
+- design execute og-templates/list-synced-patterns: reusable blocks whose content stays in sync across uses.
+- design execute og-templates/get-global-styles and og-templates/get-theme-styles: the theme color palette, typography, and spacing presets. Reference these preset slugs so content inherits the theme instead of hard-coded values.
+- design execute og-fonts/list-font-collections and og-fonts/list-font-families: the fonts available or installable. Use a registered font; do not assume one.
 
 STEP 2 - FOR IMAGES, UPLOAD FIRST
-Through the "media" tool: media execute media/upload-media to add the file, then reference the returned attachment id and URL in an image block. Do not paste external image URLs into content.
+Through the "media" tool: media execute og-media/upload-media to add the file, then reference the returned attachment id and URL in an image block. Do not paste external image URLs into content.
 
 STEP 3 - COMPOSE THE MARKUP
-Prefer a pattern from Step 1 when one fits, then fill in its text. Otherwise build from core blocks (heading, paragraph, list, image, columns, group, quote). Apply theme presets from the global styles rather than inline colors or font sizes. Validate every block name against templates/list-block-types.
+Prefer a pattern from Step 1 when one fits, then fill in its text. Otherwise build from core blocks (heading, paragraph, list, image, columns, group, quote). Apply theme presets from the global styles rather than inline colors or font sizes. Validate every block name against og-templates/list-block-types.
 
 STEP 4 - CREATE THE CONTENT
-Through the "content" tool: content execute content/create-post for a post, content/create-page for a page, or content/create-cpt-item for a custom post type. Pass the composed block markup as the content field. To revise existing content instead, use content/update-post, content/update-page, or content/update-cpt-item.
+Through the "content" tool: content execute og-content/create-post for a post, og-content/create-page for a page, or og-content/create-cpt-item for a custom post type. Pass the composed block markup as the content field. To revise existing content instead, use og-content/update-post, og-content/update-page, or og-content/update-cpt-item.
 
 This recipe points at live data on purpose. Re-read Step 1 for each site: the block, pattern, font, and style sets change between themes and installs.

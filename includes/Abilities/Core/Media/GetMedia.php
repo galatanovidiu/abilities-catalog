@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `media/get-media`.
+ * Read ability: `og-media/get-media`.
  *
  * Wraps `GET /wp/v2/media/<id>` via `rest_do_request()` and shapes the response
  * into a flat field set. Read-only; REST enforces per-object visibility.
@@ -26,7 +26,7 @@ final class GetMedia implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/get-media';
+		return 'og-media/get-media';
 	}
 
 	/**
@@ -119,7 +119,7 @@ final class GetMedia implements Ability {
 	/**
 	 * Permission check: delegated to the wrapped REST route.
 	 *
-	 * `media/get-media` reads through `GET /wp/v2/media/<id>`, whose own permission
+	 * `og-media/get-media` reads through `GET /wp/v2/media/<id>`, whose own permission
 	 * check enforces visibility on the object — public access to published (or
 	 * published-parent) attachments, `edit_post` for `edit` context, and denial of
 	 * private items. Doing the object-level check here instead would (a) narrow core

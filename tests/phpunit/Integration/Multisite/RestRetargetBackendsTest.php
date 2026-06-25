@@ -25,11 +25,11 @@ use WP_Theme_JSON_Resolver;
  * `get_current_blog_id()` equals the pre-call blog (the vendor path legitimately
  * switches multiple times, so the contract is balance, never "single switch").
  *
- * Backends covered: term tables (terms/create-term), CPT + theme_mods option
- * (templates/update-global-styles), an option array (widgets/create-widget,
- * which writes the widget_block option), a plain option (settings/update-option),
- * the per-site cron option (cron/schedule-event), and post-meta on a post created
- * on blog 2 (content/update-post-meta). media/upload is deliberately excluded
+ * Backends covered: term tables (og-terms/create-term), CPT + theme_mods option
+ * (og-templates/update-global-styles), an option array (og-widgets/create-widget,
+ * which writes the widget_block option), a plain option (og-settings/update-option),
+ * the per-site cron option (og-cron/schedule-event), and post-meta on a post created
+ * on blog 2 (og-content/update-post-meta). media/upload is deliberately excluded
  * (per-blog upload-path isolation is flaky under wp-env FS_METHOD=direct).
  *
  * @group multisite
@@ -105,7 +105,7 @@ final class RestRetargetBackendsTest extends TestCase {
 	}
 
 	/**
-	 * TERM TABLES: terms/create-term lands the term in blog 2's term tables.
+	 * TERM TABLES: og-terms/create-term lands the term in blog 2's term tables.
 	 */
 	public function test_create_term_lands_on_target_blog(): void {
 		$this->actingAsSuperAdmin();
@@ -113,7 +113,7 @@ final class RestRetargetBackendsTest extends TestCase {
 		$blog2  = $this->seedSite();
 		$before = get_current_blog_id();
 
-		$result = wp_get_ability( 'terms/create-term' )->execute(
+		$result = wp_get_ability( 'og-terms/create-term' )->execute(
 			array(
 				'blog_id'  => $blog2,
 				'taxonomy' => 'category',
@@ -145,7 +145,7 @@ final class RestRetargetBackendsTest extends TestCase {
 	}
 
 	/**
-	 * CPT + theme_mods OPTION: templates/update-global-styles writes the
+	 * CPT + theme_mods OPTION: og-templates/update-global-styles writes the
 	 * global-styles post (a wp_global_styles CPT) on blog 2.
 	 */
 	public function test_update_global_styles_lands_on_target_blog(): void {
@@ -164,7 +164,7 @@ final class RestRetargetBackendsTest extends TestCase {
 
 		$this->assertGreaterThan( 0, $gs_id );
 
-		$result = wp_get_ability( 'templates/update-global-styles' )->execute(
+		$result = wp_get_ability( 'og-templates/update-global-styles' )->execute(
 			array(
 				'blog_id'  => $blog2,
 				'id'       => $gs_id,
@@ -196,7 +196,7 @@ final class RestRetargetBackendsTest extends TestCase {
 	}
 
 	/**
-	 * OPTION ARRAY: widgets/create-widget writes the widget_block option array on
+	 * OPTION ARRAY: og-widgets/create-widget writes the widget_block option array on
 	 * blog 2.
 	 */
 	public function test_create_widget_lands_on_target_blog(): void {
@@ -207,7 +207,7 @@ final class RestRetargetBackendsTest extends TestCase {
 
 		$marker = 'W3 retarget widget ' . uniqid();
 
-		$result = wp_get_ability( 'widgets/create-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/create-widget' )->execute(
 			array(
 				'blog_id'  => $blog2,
 				'id_base'  => 'block',
@@ -243,7 +243,7 @@ final class RestRetargetBackendsTest extends TestCase {
 	}
 
 	/**
-	 * OPTION: settings/update-option sets the value on blog 2 and leaves blog 1
+	 * OPTION: og-settings/update-option sets the value on blog 2 and leaves blog 1
 	 * unchanged.
 	 */
 	public function test_update_option_lands_on_target_blog(): void {
@@ -254,7 +254,7 @@ final class RestRetargetBackendsTest extends TestCase {
 
 		$blog1_name_before = get_option( 'blogname' );
 
-		$result = wp_get_ability( 'settings/update-option' )->execute(
+		$result = wp_get_ability( 'og-settings/update-option' )->execute(
 			array(
 				'blog_id' => $blog2,
 				'name'    => 'blogname',
@@ -279,7 +279,7 @@ final class RestRetargetBackendsTest extends TestCase {
 	}
 
 	/**
-	 * PER-SITE CRON OPTION: cron/schedule-event lands the event in blog 2's cron
+	 * PER-SITE CRON OPTION: og-cron/schedule-event lands the event in blog 2's cron
 	 * option, not blog 1's.
 	 */
 	public function test_schedule_event_lands_on_target_blog(): void {
@@ -292,7 +292,7 @@ final class RestRetargetBackendsTest extends TestCase {
 		$timestamp = time() + HOUR_IN_SECONDS;
 		$this->trackCronHook( $blog2, $hook );
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'blog_id'   => $blog2,
 				'hook'      => $hook,
@@ -316,7 +316,7 @@ final class RestRetargetBackendsTest extends TestCase {
 	}
 
 	/**
-	 * POST-META: content/update-post-meta writes meta on a post created on blog 2,
+	 * POST-META: og-content/update-post-meta writes meta on a post created on blog 2,
 	 * landing in blog 2's postmeta table.
 	 */
 	public function test_update_post_meta_lands_on_target_blog(): void {
@@ -340,7 +340,7 @@ final class RestRetargetBackendsTest extends TestCase {
 		$post_id = self::factory()->post->create();
 		restore_current_blog();
 
-		$result = wp_get_ability( 'content/update-post-meta' )->execute(
+		$result = wp_get_ability( 'og-content/update-post-meta' )->execute(
 			array(
 				'blog_id' => $blog2,
 				'id'      => $post_id,

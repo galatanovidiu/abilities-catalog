@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-block-binding-sources output and contract.
+ * Integration tests for og-templates/list-block-binding-sources output and contract.
  *
  * Covers registration, the happy path (an editor receives the registered
  * sources including the core source registered on init, with a positive total
@@ -18,18 +18,18 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-block-binding-sources.
+ * Exercises og-templates/list-block-binding-sources.
  */
 final class ListBlockBindingSourcesTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'templates/list-block-binding-sources' ) );
+		$this->assertTrue( wp_has_ability( 'og-templates/list-block-binding-sources' ) );
 	}
 
 	public function test_editor_receives_registered_sources(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-block-binding-sources' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-binding-sources' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'sources', $result );
@@ -51,7 +51,7 @@ final class ListBlockBindingSourcesTest extends TestCase {
 	public function test_row_carries_name_label_and_uses_context_array(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-block-binding-sources' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-binding-sources' )->execute();
 
 		$this->assertNotEmpty( $result['sources'] );
 
@@ -71,7 +71,7 @@ final class ListBlockBindingSourcesTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'templates/list-block-binding-sources' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-binding-sources' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -81,7 +81,7 @@ final class ListBlockBindingSourcesTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		// edit_posts is the catalog guard; a subscriber lacks it.
-		$result = wp_get_ability( 'templates/list-block-binding-sources' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-binding-sources' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

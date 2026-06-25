@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/list-post-revisions`.
+ * Read ability: `og-content/list-post-revisions`.
  *
  * Wraps `GET /wp/v2/posts/<parent>/revisions` via `rest_do_request()`. The
  * capability is object-level `edit_post` on the parent post.
@@ -27,7 +27,7 @@ final class ListPostRevisions implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/list-post-revisions';
+		return 'og-content/list-post-revisions';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class ListPostRevisions implements Ability {
 				'properties'           => array(
 					'parent'  => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent post ID. Use content/list-posts, content/list-pages, or content/get-post to find it.', 'abilities-catalog' ),
+						'description' => __( 'The parent post ID. Use og-content/list-posts, og-content/list-pages, or og-content/get-post to find it.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -62,7 +62,7 @@ final class ListPostRevisions implements Ability {
 					'items'       => array(
 						'type'        => 'array',
 						'items'       => ContentListShaper::revisionItemSchema(),
-						'description' => __( 'The list of revisions as flat summary rows. Use content/get-post-revision for a single revision body.', 'abilities-catalog' ),
+						'description' => __( 'The list of revisions as flat summary rows. Use og-content/get-post-revision for a single revision body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',

@@ -12,13 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `network/revoke-super-admin`.
+ * Dangerous-tier write ability: `og-network/revoke-super-admin`.
  *
  * Removes a user's network-wide super-admin privileges by wrapping core
  * `revoke_super_admin( $user_id )` (wp-includes/capabilities.php:1263), then
  * reads the authoritative end state back with `is_super_admin( $user_id )`
  * (wp-includes/capabilities.php:1181). The inverse of
- * `network/grant-super-admin`.
+ * `og-network/grant-super-admin`.
  *
  * Core return semantics (verified against wp-includes/capabilities.php:1263):
  * `revoke_super_admin()` returns a bare `bool`. It returns `false` — WITHOUT it
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Classification rationale:
  * - `readonly` is false: this is a write (it changes the `site_admins` site option).
- * - `destructive` is false: revoking is reversible via `network/grant-super-admin`.
+ * - `destructive` is false: revoking is reversible via `og-network/grant-super-admin`.
  * - `idempotent` is true: revoking a non-super-admin is a same-state no-op.
  * - `dangerous` is true: this changes who controls the whole network and can lock
  *   out the last remaining super admin. There is no `Support/` guard (no
@@ -60,7 +60,7 @@ final class RevokeSuperAdmin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/revoke-super-admin';
+		return 'og-network/revoke-super-admin';
 	}
 
 	/**
@@ -69,7 +69,7 @@ final class RevokeSuperAdmin implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Revoke Super Admin', 'abilities-catalog' ),
-			'description'         => __( 'Revokes a user\'s NETWORK-WIDE super-admin privileges. This is a dangerous operation: reverse it with network/grant-super-admin. is_super_admin in the result is the authoritative end state — revoked may be false when the user was not a super admin (a no-op) or when the site pins its super-admin list in wp-config (which this tool cannot change). Caution: WordPress does not stop you from revoking the last remaining super admin or your own privileges, which can lock the network\'s super-admin functions; verify another super admin remains (network/list-super-admins) first. An unknown user_id returns a 404. Requires a multisite install and the manage_network_users (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Revokes a user\'s NETWORK-WIDE super-admin privileges. This is a dangerous operation: reverse it with og-network/grant-super-admin. is_super_admin in the result is the authoritative end state — revoked may be false when the user was not a super admin (a no-op) or when the site pins its super-admin list in wp-config (which this tool cannot change). Caution: WordPress does not stop you from revoking the last remaining super admin or your own privileges, which can lock the network\'s super-admin functions; verify another super admin remains (og-network/list-super-admins) first. An unknown user_id returns a 404. Requires a multisite install and the manage_network_users (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -78,7 +78,7 @@ final class RevokeSuperAdmin implements Ability {
 					'user_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the user to revoke super-admin privileges from. Discover IDs with network/list-super-admins.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the user to revoke super-admin privileges from. Discover IDs with og-network/list-super-admins.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

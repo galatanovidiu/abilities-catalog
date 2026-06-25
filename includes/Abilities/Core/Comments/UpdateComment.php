@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/update-comment`.
+ * T1 write ability: `og-comments/update-comment`.
  *
  * Wraps `POST /wp/v2/comments/<id>` via `rest_do_request()` and returns the
  * comment's id, content, status, author, date, and edit link. The
@@ -32,7 +32,7 @@ final class UpdateComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/update-comment';
+		return 'og-comments/update-comment';
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-general ability.
+ * Integration tests for the og-settings/update-general ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-general writes a field-gated subset of the General Settings
+ * og-settings/update-general writes a field-gated subset of the General Settings
  * screen through POST /wp/v2/settings. manage_options is the hard capability
  * guard; the site URL and admin email keys are rejected all-or-nothing; invalid
  * timezone and uninstalled locale input are rejected before any write.
@@ -22,13 +22,13 @@ use WP_Error;
 final class UpdateGeneralTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/update-general' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/update-general' ) );
 	}
 
 	public function test_admin_writes_general_settings(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-general' )->execute(
+		$result = wp_get_ability( 'og-settings/update-general' )->execute(
 			array(
 				'title'         => 'Catalog Test Site',
 				'description'   => 'A tagline',
@@ -66,7 +66,7 @@ final class UpdateGeneralTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// Empty language selects English; output mirrors GetGeneral's get_locale().
-		$result = wp_get_ability( 'settings/update-general' )->execute(
+		$result = wp_get_ability( 'og-settings/update-general' )->execute(
 			array( 'language' => '' )
 		);
 
@@ -86,7 +86,7 @@ final class UpdateGeneralTest extends TestCase {
 
 		$before = get_option( 'timezone_string' );
 
-		$result = wp_get_ability( 'settings/update-general' )->execute(
+		$result = wp_get_ability( 'og-settings/update-general' )->execute(
 			array( 'timezone' => 'Mars/Phobos' )
 		);
 
@@ -100,7 +100,7 @@ final class UpdateGeneralTest extends TestCase {
 
 		$before = get_option( 'WPLANG' );
 
-		$result = wp_get_ability( 'settings/update-general' )->execute(
+		$result = wp_get_ability( 'og-settings/update-general' )->execute(
 			array( 'language' => 'xx_NOT_INSTALLED' )
 		);
 
@@ -129,7 +129,7 @@ final class UpdateGeneralTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/update-general' )->execute(
+		$result = wp_get_ability( 'og-settings/update-general' )->execute(
 			array( 'title' => 'Should Not Apply' )
 		);
 

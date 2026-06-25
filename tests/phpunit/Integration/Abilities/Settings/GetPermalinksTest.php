@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/get-permalinks ability.
+ * Integration tests for the og-settings/get-permalinks ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/get-permalinks is a net-new read of the stored permalink option values.
+ * og-settings/get-permalinks is a net-new read of the stored permalink option values.
  * It always returns all three string fields; manage_options is the hard guard.
  */
 final class GetPermalinksTest extends TestCase {
@@ -31,13 +31,13 @@ final class GetPermalinksTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/get-permalinks' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/get-permalinks' ) );
 	}
 
 	public function test_execute_returns_all_string_fields_in_order(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/get-permalinks' )->execute();
+		$result = wp_get_ability( 'og-settings/get-permalinks' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( self::FIELDS, array_keys( $result ) );
@@ -50,7 +50,7 @@ final class GetPermalinksTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/get-permalinks' )->execute();
+		$result = wp_get_ability( 'og-settings/get-permalinks' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

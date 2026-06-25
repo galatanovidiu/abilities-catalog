@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/get-comment ability.
+ * Integration tests for the og-comments/get-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -47,16 +47,16 @@ final class GetCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/get-comment');
+		$ability = wp_get_ability('og-comments/get-comment');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/get-comment', $ability->get_name());
+		$this->assertSame('og-comments/get-comment', $ability->get_name());
 	}
 
 	public function test_admin_can_read_comment_fields(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/get-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/get-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($this->comment_id, $result['id']);
@@ -68,7 +68,7 @@ final class GetCommentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('comments/get-comment')->execute(array('id' => $this->comment_id));
+		$result = wp_get_ability('og-comments/get-comment')->execute(array('id' => $this->comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());

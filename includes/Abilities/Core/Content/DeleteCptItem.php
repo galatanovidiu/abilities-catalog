@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `content/delete-cpt-item` (generic, keyed by `post_type`).
+ * T2 destructive write ability: `og-content/delete-cpt-item` (generic, keyed by `post_type`).
  *
  * Restricts `post_type` to **post-like deletable** types via the same allow-test
  * the create/update siblings use (see {@see DeleteCptItem::isPostLikeDeletable()}):
@@ -58,7 +58,7 @@ final class DeleteCptItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/delete-cpt-item';
+		return 'og-content/delete-cpt-item';
 	}
 
 	/**

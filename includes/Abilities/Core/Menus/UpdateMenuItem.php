@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/update-menu-item`.
+ * T2 non-destructive write ability: `og-menus/update-menu-item`.
  *
  * Wraps `POST /wp/v2/menu-items/<id>` via `rest_do_request()` to update a classic
  * menu item (`nav_menu_item` post). The menu-items controller extends the posts
@@ -30,7 +30,7 @@ final class UpdateMenuItem implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/update-menu-item';
+		return 'og-menus/update-menu-item';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class UpdateMenuItem implements Ability {
 					'id'         => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The menu item ID to update. Find item IDs via menus/list-menu-items.', 'abilities-catalog' ),
+						'description' => __( 'The menu item ID to update. Find item IDs via og-menus/list-menu-items.', 'abilities-catalog' ),
 					),
 					'title'      => array(
 						'type'        => 'string',
@@ -83,7 +83,7 @@ final class UpdateMenuItem implements Ability {
 					),
 					'menus'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The parent classic menu term ID this item belongs to. Find menu IDs via menus/list-classic-menus.', 'abilities-catalog' ),
+						'description' => __( 'The parent classic menu term ID this item belongs to. Find menu IDs via og-menus/list-classic-menus.', 'abilities-catalog' ),
 					),
 					'status'     => array(
 						'type'        => 'string',

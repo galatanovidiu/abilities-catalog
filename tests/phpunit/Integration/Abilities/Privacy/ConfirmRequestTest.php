@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the privacy/confirm-request ability.
+ * Integration tests for the og-privacy/confirm-request ability.
  *
  * Covers the happy-path confirm (returns request_id, status, and action_name and
  * moves the record to request-confirmed), the missing/non-confirmable error
@@ -20,7 +20,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises privacy/confirm-request confirm, errors, and the capability guard.
+ * Exercises og-privacy/confirm-request confirm, errors, and the capability guard.
  */
 final class ConfirmRequestTest extends TestCase {
 
@@ -108,7 +108,7 @@ final class ConfirmRequestTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		$request_id = $this->createExportRequest();
 
-		$allowed = wp_get_ability( 'privacy/confirm-request' )->check_permissions( array( 'request_id' => $request_id ) );
+		$allowed = wp_get_ability( 'og-privacy/confirm-request' )->check_permissions( array( 'request_id' => $request_id ) );
 
 		$this->assertNotTrue( $allowed );
 	}
@@ -121,7 +121,7 @@ final class ConfirmRequestTest extends TestCase {
 	public function test_routed_missing_request_id_surfaces_404(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'privacy/confirm-request' )->execute( array( 'request_id' => 999999 ) );
+		$result = wp_get_ability( 'og-privacy/confirm-request' )->execute( array( 'request_id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'invalid_request', $result->get_error_code() );
@@ -143,7 +143,7 @@ final class ConfirmRequestTest extends TestCase {
 		$this->assertTrue( current_user_can( 'manage_privacy_options' ) );
 		$this->assertFalse( current_user_can( 'delete_users' ) );
 
-		$result = wp_get_ability( 'privacy/confirm-request' )->execute( array( 'request_id' => $request_id ) );
+		$result = wp_get_ability( 'og-privacy/confirm-request' )->execute( array( 'request_id' => $request_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_cannot_confirm', $result->get_error_code() );

@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/list-posts`.
+ * Read ability: `og-content/list-posts`.
  *
  * Wraps `GET /wp/v2/posts` via `rest_do_request()` and returns the collection
  * plus its total counts. Read-only; REST enforces per-row visibility underneath.
@@ -27,7 +27,7 @@ final class ListPosts implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/list-posts';
+		return 'og-content/list-posts';
 	}
 
 	/**
@@ -102,7 +102,7 @@ final class ListPosts implements Ability {
 					'items'       => array(
 						'type'        => 'array',
 						'items'       => ContentListShaper::postItemSchema(),
-						'description' => __( 'The list of posts as flat summary rows. Use content/get-post for a single post body.', 'abilities-catalog' ),
+						'description' => __( 'The list of posts as flat summary rows. Use og-content/get-post for a single post body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',

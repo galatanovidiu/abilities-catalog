@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the plugins/deactivate-plugin ability.
+ * Integration tests for the og-plugins/deactivate-plugin ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -30,14 +30,14 @@ final class DeactivatePluginTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'plugins/deactivate-plugin' ) );
+		$this->assertNotNull( wp_get_ability( 'og-plugins/deactivate-plugin' ) );
 	}
 
 	public function test_deactivates_an_active_plugin(): void {
 		$this->actingAs( 'administrator' );
 		activate_plugin( self::PLUGIN . '.php' );
 
-		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
+		$result = wp_get_ability( 'og-plugins/deactivate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( self::PLUGIN, $result['plugin'] );
@@ -50,7 +50,7 @@ final class DeactivatePluginTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		deactivate_plugins( self::PLUGIN . '.php' );
 
-		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
+		$result = wp_get_ability( 'og-plugins/deactivate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'inactive', $result['status'] );
@@ -62,7 +62,7 @@ final class DeactivatePluginTest extends TestCase {
 	 * so the ability is classified idempotent (the no-op above is what that declares).
 	 */
 	public function test_idempotent_annotation_is_true(): void {
-		$annotations = wp_get_ability( 'plugins/deactivate-plugin' )->get_meta()['annotations'];
+		$annotations = wp_get_ability( 'og-plugins/deactivate-plugin' )->get_meta()['annotations'];
 
 		$this->assertTrue( $annotations['idempotent'] );
 	}
@@ -70,7 +70,7 @@ final class DeactivatePluginTest extends TestCase {
 	public function test_missing_plugin_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => 'does-not-exist/does-not-exist' ) );
+		$result = wp_get_ability( 'og-plugins/deactivate-plugin' )->execute( array( 'plugin' => 'does-not-exist/does-not-exist' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_plugin_not_found', $result->get_error_code() );
@@ -79,7 +79,7 @@ final class DeactivatePluginTest extends TestCase {
 	public function test_empty_plugin_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => '' ) );
+		$result = wp_get_ability( 'og-plugins/deactivate-plugin' )->execute( array( 'plugin' => '' ) );
 
 		// The schema now carries minLength:1, so an empty value is a deterministic
 		// input error (it previously fell through to execute() with a vaguer code).
@@ -91,7 +91,7 @@ final class DeactivatePluginTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// The plugin-path pattern rejects a traversal-shaped value before execute().
-		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => '../evil' ) );
+		$result = wp_get_ability( 'og-plugins/deactivate-plugin' )->execute( array( 'plugin' => '../evil' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -100,7 +100,7 @@ final class DeactivatePluginTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'plugins/deactivate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
+		$result = wp_get_ability( 'og-plugins/deactivate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -21,10 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * assignment (spec §11). It is a *curated* taxonomy, not a naive first-segment
  * split: most abilities land by their name prefix, but the prefixes are
  * deliberately grouped (themes+menus+widgets form "appearance"; templates+fonts
- * form "design"; `privacy/*` and `cron/*` join "tools" while `settings/*`
- * privacy-policy settings stay in "settings"; multisite `network/*` is its own
+ * form "design"; `og-privacy/*` and `og-cron/*` join "tools" while `og-settings/*`
+ * privacy-policy settings stay in "settings"; multisite `og-network/*` is its own
  * domain), and a few abilities are placed by exact name
- * where no prefix fits (`search/search-content` joins "content"; core's own
+ * where no prefix fits (`og-search/search-content` joins "content"; core's own
  * read-only `core/*` info abilities join the domains whose data they mirror).
  *
  * The server exposes a *curated subset* of the registered abilities, not all of
@@ -58,25 +58,25 @@ final class DomainMap {
 	 * @var array<string, list<string>>
 	 */
 	private const DOMAIN_PREFIXES = array(
-		'content'     => array( 'content', 'terms', 'comments' ),
-		'media'       => array( 'media' ),
-		'appearance'  => array( 'themes', 'menus', 'widgets' ),
-		'design'      => array( 'templates', 'fonts' ),
-		'plugins'     => array( 'plugins' ),
-		'users'       => array( 'users' ),
-		'settings'    => array( 'settings', 'connectors' ),
-		'tools'       => array( 'tools', 'privacy', 'cron' ),
-		'site-health' => array( 'site-health' ),
-		'updates'     => array( 'updates' ),
-		'dashboard'   => array( 'dashboard' ),
-		'network'     => array( 'network' ),
+		'content'     => array( 'og-content', 'og-terms', 'og-comments' ),
+		'media'       => array( 'og-media' ),
+		'appearance'  => array( 'og-themes', 'og-menus', 'og-widgets' ),
+		'design'      => array( 'og-templates', 'og-fonts' ),
+		'plugins'     => array( 'og-plugins' ),
+		'users'       => array( 'og-users' ),
+		'settings'    => array( 'og-settings', 'og-connectors' ),
+		'tools'       => array( 'og-tools', 'og-privacy', 'og-cron' ),
+		'site-health' => array( 'og-site-health' ),
+		'updates'     => array( 'og-updates' ),
+		'dashboard'   => array( 'og-dashboard' ),
+		'network'     => array( 'og-network' ),
 	);
 
 	/**
 	 * Domain slug => exact ability names a prefix cannot capture.
 	 *
 	 * Checked before the prefix rules so an explicit placement always wins. Two
-	 * kinds land here: full-text search, whose `search/` prefix is not a domain;
+	 * kinds land here: full-text search, whose `og-search/` prefix is not a domain;
 	 * and the read-only `core/*` info abilities WordPress core itself registers,
 	 * each placed in the domain whose data it mirrors (site facts in "settings",
 	 * the current user in "users", the runtime environment in "site-health"). Any
@@ -86,7 +86,7 @@ final class DomainMap {
 	 * @var array<string, list<string>>
 	 */
 	private const DOMAIN_INCLUDES = array(
-		'content'     => array( 'search/search-content' ),
+		'content'     => array( 'og-search/search-content' ),
 		'settings'    => array( 'core/get-site-info' ),
 		'users'       => array( 'core/get-user-info' ),
 		'site-health' => array( 'core/get-environment-info' ),
@@ -146,7 +146,7 @@ final class DomainMap {
 	 * matches no domain (and which is not explicitly placed) is unmapped — the
 	 * caller decides what an unmapped ability means.
 	 *
-	 * @param string $ability Full ability name, e.g. `content/get-post`.
+	 * @param string $ability Full ability name, e.g. `og-content/get-post`.
 	 * @return string|null The owning domain slug, or null when unmapped.
 	 */
 	public function domainOf( string $ability ): ?string {
@@ -182,8 +182,8 @@ final class DomainMap {
 	 * exact-name placements.
 	 *
 	 * The {@see DomainRouter} appends these to an unknown-ability recovery error. The domain
-	 * tool name is not the ability prefix — the `content` tool owns `content/`, `terms/`,
-	 * `comments/` and the exact `search/search-content` — so an agent that guessed a name
+	 * tool name is not the ability prefix — the `content` tool owns `og-content/`, `og-terms/`,
+	 * `og-comments/` and the exact `og-search/search-content` — so an agent that guessed a name
 	 * (e.g. `content/search-posts`) sees the real prefixes to retry with, without a round-trip
 	 * to `list`. These are taxonomy facts about the domain, independent of the guessed name, so
 	 * naming them is not a fuzzy "did you mean" suggestion.
@@ -193,7 +193,7 @@ final class DomainMap {
 	 * falls back to the plain "call list" hint.
 	 *
 	 * @param string $domain The domain slug.
-	 * @return list<string> The owned name patterns, e.g. `['content/*', 'terms/*', 'comments/*', 'search/search-content']`.
+	 * @return list<string> The owned name patterns, e.g. `['og-content/*', 'og-terms/*', 'og-comments/*', 'og-search/search-content']`.
 	 */
 	public function namePatternsOf( string $domain ): array {
 		$patterns = array();

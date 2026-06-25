@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/delete-page cascade-effect reporting.
+ * Integration tests for og-content/delete-page cascade-effect reporting.
  *
  * Permanently deleting a page has secondary mutations that are otherwise
  * invisible to the caller: deleting the front page or posts page resets the
@@ -18,7 +18,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
- * Exercises content/delete-page cascade reporting.
+ * Exercises og-content/delete-page cascade reporting.
  */
 final class DeletePageCascadeTest extends TestCase {
 
@@ -35,7 +35,7 @@ final class DeletePageCascadeTest extends TestCase {
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $page_id );
 
-		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => $page_id ) );
+		$result = wp_get_ability( 'og-content/delete-page' )->execute( array( 'id' => $page_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -58,7 +58,7 @@ final class DeletePageCascadeTest extends TestCase {
 		);
 		update_option( 'page_for_posts', $page_id );
 
-		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => $page_id ) );
+		$result = wp_get_ability( 'og-content/delete-page' )->execute( array( 'id' => $page_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['was_posts_page'] );
@@ -97,7 +97,7 @@ final class DeletePageCascadeTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => $parent_id ) );
+		$result = wp_get_ability( 'og-content/delete-page' )->execute( array( 'id' => $parent_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertTrue( $result['deleted'] );
@@ -118,7 +118,7 @@ final class DeletePageCascadeTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/delete-page' )->execute( array( 'id' => $page_id ) );
+		$result = wp_get_ability( 'og-content/delete-page' )->execute( array( 'id' => $page_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertFalse( $result['was_front_page'] );

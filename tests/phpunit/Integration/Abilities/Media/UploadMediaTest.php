@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/upload-media ability.
+ * Integration tests for the og-media/upload-media ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises media/upload-media: a single-create happy path with metadata in the
+ * Exercises og-media/upload-media: a single-create happy path with metadata in the
  * flat output, the oversized-payload 413 guard, invalid base64, the capability
  * gate, and core's disallowed-file-type rejection (not collapsed to permission).
  */
@@ -27,16 +27,16 @@ final class UploadMediaTest extends TestCase {
 	private const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC';
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'media/upload-media' );
+		$ability = wp_get_ability( 'og-media/upload-media' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'media/upload-media', $ability->get_name() );
+		$this->assertSame( 'og-media/upload-media', $ability->get_name() );
 	}
 
 	public function test_admin_uploads_png_and_gets_flat_metadata(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'media/upload-media' )->execute(
+		$result = wp_get_ability( 'og-media/upload-media' )->execute(
 			array(
 				'file'        => self::PNG_BASE64,
 				'filename'    => 'pixel.png',
@@ -67,7 +67,7 @@ final class UploadMediaTest extends TestCase {
 		// size precheck rejects it before base64_decode runs.
 		$oversized = str_repeat( 'A', 12 * 1024 * 1024 );
 
-		$result = wp_get_ability( 'media/upload-media' )->execute(
+		$result = wp_get_ability( 'og-media/upload-media' )->execute(
 			array(
 				'file'     => $oversized,
 				'filename' => 'big.png',
@@ -82,7 +82,7 @@ final class UploadMediaTest extends TestCase {
 	public function test_invalid_base64_returns_400(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'media/upload-media' )->execute(
+		$result = wp_get_ability( 'og-media/upload-media' )->execute(
 			array(
 				'file'     => '!!! not base64 !!!',
 				'filename' => 'broken.png',
@@ -96,7 +96,7 @@ final class UploadMediaTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'media/upload-media' )->execute(
+		$result = wp_get_ability( 'og-media/upload-media' )->execute(
 			array(
 				'file'     => self::PNG_BASE64,
 				'filename' => 'pixel.png',
@@ -121,7 +121,7 @@ final class UploadMediaTest extends TestCase {
 		// with a specific 403 instead of the generic collapse.
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/upload-media' )->execute(
+		$result = wp_get_ability( 'og-media/upload-media' )->execute(
 			array(
 				'file'     => self::PNG_BASE64,
 				'filename' => 'pixel.png',
@@ -139,7 +139,7 @@ final class UploadMediaTest extends TestCase {
 
 		// A .php payload is not an allowed upload type; core rejects it with a
 		// specific error rather than a permission denial.
-		$result = wp_get_ability( 'media/upload-media' )->execute(
+		$result = wp_get_ability( 'og-media/upload-media' )->execute(
 			array(
 				'file'     => base64_encode( '<?php echo 1;' ),
 				'filename' => 'evil.php',

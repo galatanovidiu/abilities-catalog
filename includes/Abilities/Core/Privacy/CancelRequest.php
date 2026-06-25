@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `privacy/cancel-request`.
+ * T2 destructive write ability: `og-privacy/cancel-request`.
  *
  * Permanently deletes a personal-data request record by wrapping the core
  * function `wp_delete_post($request_id, true)`. The deleted thing is the
@@ -53,7 +53,7 @@ final class CancelRequest implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/cancel-request';
+		return 'og-privacy/cancel-request';
 	}
 
 	/**
@@ -70,7 +70,7 @@ final class CancelRequest implements Ability {
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the user_request post to delete. Find request IDs with privacy/list-export-requests or privacy/list-erase-requests.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the user_request post to delete. Find request IDs with og-privacy/list-export-requests or og-privacy/list-erase-requests.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'request_id' ),

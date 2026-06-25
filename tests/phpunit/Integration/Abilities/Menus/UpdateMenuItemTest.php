@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/update-menu-item ability.
+ * Integration tests for the og-menus/update-menu-item ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -42,17 +42,17 @@ final class UpdateMenuItemTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/update-menu-item' );
+		$ability = wp_get_ability( 'og-menus/update-menu-item' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/update-menu-item', $ability->get_name() );
+		$this->assertSame( 'og-menus/update-menu-item', $ability->get_name() );
 	}
 
 	public function test_admin_updates_title_and_url(): void {
 		$this->actingAs( 'administrator' );
 		$item_id = $this->makeItem();
 
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => $item_id,
 				'title' => 'Updated Home',
@@ -70,7 +70,7 @@ final class UpdateMenuItemTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$item_id = $this->makeItem();
 
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => $item_id,
 				'title' => 'Shaped',
@@ -104,7 +104,7 @@ final class UpdateMenuItemTest extends TestCase {
 		);
 		$this->assertSame( 'Custom Label', get_post( $item_id )->post_title );
 
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => $item_id,
 				'title' => '',
@@ -119,7 +119,7 @@ final class UpdateMenuItemTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$item_id = $this->makeItem();
 
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'     => $item_id,
 				'status' => 'draft',
@@ -133,7 +133,7 @@ final class UpdateMenuItemTest extends TestCase {
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => -7,
 				'title' => 'Bad',
@@ -149,7 +149,7 @@ final class UpdateMenuItemTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => $item_id,
 				'title' => 'Denied',
@@ -166,7 +166,7 @@ final class UpdateMenuItemTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent item
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/update-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => 999999,
 				'title' => 'Renamed',

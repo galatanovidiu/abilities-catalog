@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `templates/update-template-part`.
+ * T2 destructive write ability: `og-templates/update-template-part`.
  *
  * Wraps `POST /wp/v2/template-parts/<id>` via `rest_do_request()`. The route is
  * hardcoded to the template-parts collection (post type `wp_template_part`,
- * rest_base `template-parts`); unlike the general `templates/update-template`,
+ * rest_base `template-parts`); unlike the general `og-templates/update-template`,
  * there is no `post_type` input. The part id has the form `theme//slug` (e.g.
  * `twentytwentyfour//header`); the `//` separator is part of the route path and
  * is built by concatenation, never URL-encoded. The outer ability `/run` call is
@@ -49,7 +49,7 @@ final class UpdateTemplatePart implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/update-template-part';
+		return 'og-templates/update-template-part';
 	}
 
 	/**
@@ -58,7 +58,7 @@ final class UpdateTemplatePart implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Update Template Part', 'abilities-catalog' ),
-			'description'         => __( 'Updates a template part (a reusable block region such as a header or footer) by its "theme//slug" id. Change its content, title, description, or area. Creates or replaces a database override that changes site-wide layout: a part like the header or footer renders on most pages, so the blast radius is high. Recoverable by deleting the override with templates/delete-template-part. Only the provided fields change; sending content, title, or description as an empty string clears it (area cannot be cleared this way). Returns the resulting area and edit_link (the Site Editor URL) — surface edit_link so a human can review the result.', 'abilities-catalog' ),
+			'description'         => __( 'Updates a template part (a reusable block region such as a header or footer) by its "theme//slug" id. Change its content, title, description, or area. Creates or replaces a database override that changes site-wide layout: a part like the header or footer renders on most pages, so the blast radius is high. Recoverable by deleting the override with og-templates/delete-template-part. Only the provided fields change; sending content, title, or description as an empty string clears it (area cannot be cleared this way). Returns the resulting area and edit_link (the Site Editor URL) — surface edit_link so a human can review the result.', 'abilities-catalog' ),
 			'category'            => 'templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -66,7 +66,7 @@ final class UpdateTemplatePart implements Ability {
 					'id'          => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The template part id in "theme//slug" form (e.g. "twentytwentyfour//header"). Discover ids via templates/list-template-parts.', 'abilities-catalog' ),
+						'description' => __( 'The template part id in "theme//slug" form (e.g. "twentytwentyfour//header"). Discover ids via og-templates/list-template-parts.', 'abilities-catalog' ),
 					),
 					'content'     => array(
 						'type'        => 'string',

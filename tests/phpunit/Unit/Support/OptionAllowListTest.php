@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * The write allow-list is deny-by-default. Site-defining, security-sensitive, and
- * serialized options must never be writable through settings/update-option.
+ * serialized options must never be writable through og-settings/update-option.
  */
 final class OptionAllowListTest extends TestCase {
 

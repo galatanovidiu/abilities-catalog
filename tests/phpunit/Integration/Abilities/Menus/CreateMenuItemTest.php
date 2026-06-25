@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/create-menu-item ability.
+ * Integration tests for the og-menus/create-menu-item ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,17 +21,17 @@ use WP_Error;
 final class CreateMenuItemTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/create-menu-item' );
+		$ability = wp_get_ability( 'og-menus/create-menu-item' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/create-menu-item', $ability->get_name() );
+		$this->assertSame( 'og-menus/create-menu-item', $ability->get_name() );
 	}
 
 	public function test_admin_creates_custom_item_in_menu(): void {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/create-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/create-menu-item' )->execute(
 			array(
 				'title' => 'Home',
 				'url'   => 'https://example.com/home',
@@ -55,7 +55,7 @@ final class CreateMenuItemTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Shape Menu' );
 
-		$result = wp_get_ability( 'menus/create-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/create-menu-item' )->execute(
 			array(
 				'title' => 'Docs',
 				'url'   => 'https://example.com/docs',
@@ -72,7 +72,7 @@ final class CreateMenuItemTest extends TestCase {
 	public function test_omitting_menus_creates_orphaned_item(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/create-menu-item' )->execute(
 			array(
 				'title' => 'Orphan',
 				'url'   => 'https://example.com/orphan',
@@ -88,7 +88,7 @@ final class CreateMenuItemTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Draft Menu' );
 
-		$result = wp_get_ability( 'menus/create-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/create-menu-item' )->execute(
 			array(
 				'title'  => 'Pending Item',
 				'url'    => 'https://example.com/pending',
@@ -108,7 +108,7 @@ final class CreateMenuItemTest extends TestCase {
 		// Core only validates object_id when "object" is omitted (it resolves the
 		// object from the ID in that path). With "object" absent and a bogus ID,
 		// core rejects with rest_post_invalid_id.
-		$result = wp_get_ability( 'menus/create-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/create-menu-item' )->execute(
 			array(
 				'type'      => 'post_type',
 				'object_id' => 999999,
@@ -123,7 +123,7 @@ final class CreateMenuItemTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'menus/create-menu-item' )->execute(
+		$result = wp_get_ability( 'og-menus/create-menu-item' )->execute(
 			array(
 				'title' => 'Denied',
 				'url'   => 'https://example.com/denied',

@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `tools/get-transient`.
+ * Read ability: `og-tools/get-transient`.
  *
  * Reads a single transient's current value by name so an agent can inspect cached
  * state (for example the update-check transient). Wraps core `get_transient()` for a
@@ -45,7 +45,7 @@ final class GetTransient implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/get-transient';
+		return 'og-tools/get-transient';
 	}
 
 	/**

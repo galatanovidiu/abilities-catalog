@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `plugins/delete-plugin`.
+ * T3 dangerous write ability: `og-plugins/delete-plugin`.
  *
  * Wraps `DELETE /wp/v2/plugins/<plugin>` via `rest_do_request()`, permanently
  * deleting an installed plugin's files. The plugins controller requires the plugin to
@@ -37,7 +37,7 @@ final class DeletePlugin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/delete-plugin';
+		return 'og-plugins/delete-plugin';
 	}
 
 	/**

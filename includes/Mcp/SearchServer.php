@@ -185,7 +185,7 @@ final class SearchServer {
 					'properties' => array(
 						'name' => array(
 							'type'        => 'string',
-							'description' => 'The exact ability name, e.g. "content/create-post".',
+							'description' => 'The exact ability name, e.g. "og-content/create-post".',
 						),
 					),
 					'required'   => array( 'name' ),

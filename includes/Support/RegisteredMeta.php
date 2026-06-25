@@ -11,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Resolves the registered, REST-visible meta keys for any meta object type.
  *
- * The user/term/comment meta abilities (`users/get-meta`, `terms/update-meta`,
- * `comments/delete-meta`, and their siblings) only operate on meta keys that core
+ * The user/term/comment meta abilities (`og-users/get-meta`, `og-terms/update-meta`,
+ * `og-comments/delete-meta`, and their siblings) only operate on meta keys that core
  * exposes through the object's REST `meta` field. This class mirrors
  * {@see \WP_REST_Meta_Fields::get_registered_fields()} — the base class every
  * per-type meta-fields controller extends — so the abilities see exactly the same

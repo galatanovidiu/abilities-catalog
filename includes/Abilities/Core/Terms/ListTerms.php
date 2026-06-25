@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Generic read ability: `terms/list-terms`.
+ * Generic read ability: `og-terms/list-terms`.
  *
  * Wraps `GET /wp/v2/<rest_base>` for any REST-exposed taxonomy keyed by the
  * `taxonomy` input. Pagination totals come from the REST response headers.
@@ -27,7 +27,7 @@ final class ListTerms implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/list-terms';
+		return 'og-terms/list-terms';
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class ListTerms implements Ability {
 					),
 					'parent'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Limit results to terms with the given parent term ID (hierarchical taxonomies only). Pass 0 to return only top-level terms. Discover IDs with terms/list-terms.', 'abilities-catalog' ),
+						'description' => __( 'Limit results to terms with the given parent term ID (hierarchical taxonomies only). Pass 0 to return only top-level terms. Discover IDs with og-terms/list-terms.', 'abilities-catalog' ),
 					),
 					'per_page' => array(
 						'type'        => 'integer',

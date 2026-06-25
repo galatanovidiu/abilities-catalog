@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/list-rewrite-rules ability.
+ * Integration tests for the og-settings/list-rewrite-rules ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -15,7 +15,7 @@ use stdClass;
 use WP_Error;
 
 /**
- * settings/list-rewrite-rules is a net-new read of the stored rewrite_rules
+ * og-settings/list-rewrite-rules is a net-new read of the stored rewrite_rules
  * option. It always returns the four fields; manage_options is the hard guard.
  * The rules map is cast to an object so an empty map serializes as {}.
  */
@@ -51,7 +51,7 @@ final class ListRewriteRulesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/list-rewrite-rules' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/list-rewrite-rules' ) );
 	}
 
 	public function test_execute_returns_rules_when_pretty_permalinks_enabled(): void {
@@ -59,7 +59,7 @@ final class ListRewriteRulesTest extends TestCase {
 
 		$this->set_permalink_structure( '/%postname%/' );
 
-		$result = wp_get_ability( 'settings/list-rewrite-rules' )->execute();
+		$result = wp_get_ability( 'og-settings/list-rewrite-rules' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( self::FIELDS, array_keys( $result ) );
@@ -79,7 +79,7 @@ final class ListRewriteRulesTest extends TestCase {
 		// Plain permalinks store no rewrite rules.
 		$this->set_permalink_structure( '' );
 
-		$result = wp_get_ability( 'settings/list-rewrite-rules' )->execute();
+		$result = wp_get_ability( 'og-settings/list-rewrite-rules' )->execute();
 
 		$this->assertSame( '', $result['permalink_structure'] );
 		$this->assertFalse( $result['using_permalinks'] );
@@ -91,7 +91,7 @@ final class ListRewriteRulesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/list-rewrite-rules' )->execute();
+		$result = wp_get_ability( 'og-settings/list-rewrite-rules' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -100,7 +100,7 @@ final class ListRewriteRulesTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'settings/list-rewrite-rules' )->execute();
+		$result = wp_get_ability( 'og-settings/list-rewrite-rules' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

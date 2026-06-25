@@ -4,7 +4,7 @@
  *
  * Locks the intent that every content-bearing write field steers an agent toward
  * Gutenberg block markup (so bare text no longer falls back to a classic block)
- * and points at templates/list-block-types.
+ * and points at og-templates/list-block-types.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -25,12 +25,12 @@ final class ContentFieldDescriptionTest extends TestCase {
 	 */
 	public static function contentAbilities(): array {
 		return array(
-			'create-post'     => array( 'content/create-post' ),
-			'create-page'     => array( 'content/create-page' ),
-			'create-cpt-item' => array( 'content/create-cpt-item' ),
-			'update-post'     => array( 'content/update-post' ),
-			'update-page'     => array( 'content/update-page' ),
-			'update-cpt-item' => array( 'content/update-cpt-item' ),
+			'create-post'     => array( 'og-content/create-post' ),
+			'create-page'     => array( 'og-content/create-page' ),
+			'create-cpt-item' => array( 'og-content/create-cpt-item' ),
+			'update-post'     => array( 'og-content/update-post' ),
+			'update-page'     => array( 'og-content/update-page' ),
+			'update-cpt-item' => array( 'og-content/update-cpt-item' ),
 		);
 	}
 
@@ -45,7 +45,7 @@ final class ContentFieldDescriptionTest extends TestCase {
 		$description = (string) ( $schema['properties']['content']['description'] ?? '' );
 
 		$this->assertStringContainsString( 'wp:', $description, "{$ability_name} content field should show a block-markup example." );
-		$this->assertStringContainsString( 'templates/list-block-types', $description, "{$ability_name} content field should point at block-type discovery." );
+		$this->assertStringContainsString( 'og-templates/list-block-types', $description, "{$ability_name} content field should point at block-type discovery." );
 		$this->assertStringNotContainsString( 'HTML allowed; sanitized by WordPress', $description );
 	}
 }

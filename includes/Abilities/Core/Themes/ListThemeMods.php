@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `themes/list-theme-mods`.
+ * Read ability: `og-themes/list-theme-mods`.
  *
  * Lists the active theme's customizer modifications ("theme mods") as a flat
  * name-to-value map. Theme mods are the per-theme settings the Customizer
@@ -44,7 +44,7 @@ final class ListThemeMods implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/list-theme-mods';
+		return 'og-themes/list-theme-mods';
 	}
 
 	/**
@@ -53,7 +53,7 @@ final class ListThemeMods implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Theme Mods', 'abilities-catalog' ),
-			'description'         => __( 'Returns the active theme\'s customizer modifications ("theme mods") as a name-to-value map, plus the active theme slug and a total count. Theme mods are the per-theme Customizer settings (e.g. custom_logo, header_textcolor, background_color, and any theme- or plugin-registered setting). The map is empty ({}) when the theme has no saved mods. Discover a single value with themes/get-theme-mod; change one with themes/set-theme-mod or themes/remove-theme-mod.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the active theme\'s customizer modifications ("theme mods") as a name-to-value map, plus the active theme slug and a total count. Theme mods are the per-theme Customizer settings (e.g. custom_logo, header_textcolor, background_color, and any theme- or plugin-registered setting). The map is empty ({}) when the theme has no saved mods. Discover a single value with og-themes/get-theme-mod; change one with og-themes/set-theme-mod or og-themes/remove-theme-mod.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(),
 			'output_schema'       => array(

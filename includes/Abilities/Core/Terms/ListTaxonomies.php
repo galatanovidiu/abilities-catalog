@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `terms/list-taxonomies`.
+ * Read ability: `og-terms/list-taxonomies`.
  *
  * Wraps `GET /wp/v2/taxonomies` via `rest_do_request()`. The REST endpoint
  * returns an object keyed by taxonomy slug; this ability converts it into a
@@ -27,7 +27,7 @@ final class ListTaxonomies implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/list-taxonomies';
+		return 'og-terms/list-taxonomies';
 	}
 
 	/**
@@ -36,7 +36,7 @@ final class ListTaxonomies implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Taxonomies', 'abilities-catalog' ),
-			'description'         => __( 'Returns the registered taxonomies that are exposed in the REST API. Use a returned "slug" as the "taxonomy" input to terms/list-terms. The default "view" context returns public taxonomies.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the registered taxonomies that are exposed in the REST API. Use a returned "slug" as the "taxonomy" input to og-terms/list-terms. The default "view" context returns public taxonomies.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -67,7 +67,7 @@ final class ListTaxonomies implements Ability {
 								),
 								'slug'         => array(
 									'type'        => 'string',
-									'description' => __( 'Taxonomy slug; pass as the "taxonomy" input to terms/list-terms.', 'abilities-catalog' ),
+									'description' => __( 'Taxonomy slug; pass as the "taxonomy" input to og-terms/list-terms.', 'abilities-catalog' ),
 								),
 								'types'        => array(
 									'type'        => 'array',

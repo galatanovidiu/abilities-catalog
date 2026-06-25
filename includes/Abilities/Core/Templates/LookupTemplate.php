@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/lookup-template`.
+ * Read ability: `og-templates/lookup-template`.
  *
  * Resolves which site-editor template would render a given slug, using core's
  * template-resolution functions ({@see get_template_hierarchy()} and
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * template hierarchy WordPress would try and the first template in that hierarchy
  * that actually exists for the active theme (its "theme//slug" id and title).
  * Use this to find the right template id before reading it with
- * `templates/get-template` or changing it with `templates/update-template`.
+ * `og-templates/get-template` or changing it with `og-templates/update-template`.
  * Read-only.
  *
  * @since 0.5.0
@@ -31,7 +31,7 @@ final class LookupTemplate implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/lookup-template';
+		return 'og-templates/lookup-template';
 	}
 
 	/**
@@ -104,7 +104,7 @@ final class LookupTemplate implements Ability {
 	/**
 	 * Permission check: `edit_theme_options` (catalog capability for template data).
 	 *
-	 * Matches the `templates/get-template` sibling and the templates REST
+	 * Matches the `og-templates/get-template` sibling and the templates REST
 	 * controller `permissions_check`; never weaker than reading a template.
 	 *
 	 * @param mixed $input The validated input data.

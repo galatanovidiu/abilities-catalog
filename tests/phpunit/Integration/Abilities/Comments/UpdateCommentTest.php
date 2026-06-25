@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/update-comment ability.
+ * Integration tests for the og-comments/update-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -47,16 +47,16 @@ final class UpdateCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/update-comment');
+		$ability = wp_get_ability('og-comments/update-comment');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/update-comment', $ability->get_name());
+		$this->assertSame('og-comments/update-comment', $ability->get_name());
 	}
 
 	public function test_admin_can_update_comment_content(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'      => $this->comment_id,
 				'content' => 'Updated comment body.',
@@ -71,7 +71,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_output_shape_carries_author_date_and_edit_link(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'          => $this->comment_id,
 				'author_name' => 'Renamed Author',
@@ -97,7 +97,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_malformed_author_email_surfaces_core_validation_error(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'           => $this->comment_id,
 				'author_email' => 'not-an-email',
@@ -125,7 +125,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_valid_author_email_is_stored(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'           => $this->comment_id,
 				'author_email' => 'new.email@example.com',
@@ -157,7 +157,7 @@ final class UpdateCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'          => $this->comment_id,
 				'author_name' => '',
@@ -187,7 +187,7 @@ final class UpdateCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'           => $this->comment_id,
 				'author_email' => '',
@@ -212,7 +212,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_explicit_empty_content_surfaces_core_validation_error(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'      => $this->comment_id,
 				'content' => '',
@@ -232,7 +232,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_non_positive_id_is_rejected_by_schema(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'      => -17,
 				'content' => 'Should never reach core.',
@@ -246,7 +246,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'      => $this->comment_id,
 				'content' => 'Should be denied.',
@@ -264,7 +264,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_non_moderator_is_denied_with_403(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'      => $this->comment_id,
 				'content' => 'Should be denied.',
@@ -283,7 +283,7 @@ final class UpdateCommentTest extends TestCase {
 	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/update-comment')->execute(
+		$result = wp_get_ability('og-comments/update-comment')->execute(
 			array(
 				'id'      => 99999999,
 				'content' => 'Should 404.',

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/delete-term ability (generic, taxonomy-keyed).
+ * Integration tests for the og-terms/delete-term ability (generic, taxonomy-keyed).
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,10 +21,10 @@ use WP_Error;
 final class DeleteTermTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'terms/delete-term' );
+		$ability = wp_get_ability( 'og-terms/delete-term' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'terms/delete-term', $ability->get_name() );
+		$this->assertSame( 'og-terms/delete-term', $ability->get_name() );
 	}
 
 	/**
@@ -48,7 +48,7 @@ final class DeleteTermTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'terms/delete-term' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-term' )->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => $id,
@@ -75,7 +75,7 @@ final class DeleteTermTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		$id      = self::factory()->category->create( array( 'name' => 'Guarded' ) );
-		$ability = wp_get_ability( 'terms/delete-term' );
+		$ability = wp_get_ability( 'og-terms/delete-term' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -96,7 +96,7 @@ final class DeleteTermTest extends TestCase {
 
 		$id = self::factory()->category->create( array( 'name' => 'Safe' ) );
 
-		$result = wp_get_ability( 'terms/delete-term' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-term' )->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => -$id,
@@ -131,7 +131,7 @@ final class DeleteTermTest extends TestCase {
 				'name'     => 'Hidden',
 			)
 		);
-		$ability = wp_get_ability( 'terms/delete-term' );
+		$ability = wp_get_ability( 'og-terms/delete-term' );
 
 		$this->assertFalse(
 			$ability->check_permissions(
@@ -164,7 +164,7 @@ final class DeleteTermTest extends TestCase {
 		// An admin holds the taxonomy's delete_terms cap (the coarse guard), so a
 		// non-existent id reaches the route and surfaces its specific 404 instead of
 		// the opaque ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'terms/delete-term' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-term' )->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => 999999,

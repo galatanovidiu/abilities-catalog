@@ -40,7 +40,7 @@ final class DomainToolHandlerTest extends TestCase {
 	 */
 	public function set_up(): void {
 		parent::set_up();
-		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'content/get-post', 'content/create-post' ) );
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'og-content/get-post', 'og-content/create-post' ) );
 		$this->handler = new DomainToolHandler( new DomainRouter( new DomainMap(), new ExposurePolicy() ), 'content' );
 	}
 
@@ -73,10 +73,10 @@ final class DomainToolHandlerTest extends TestCase {
 	 * @return void
 	 */
 	public function test_describe_action_returns_object(): void {
-		$result = $this->handler->handle( array( 'action' => 'describe', 'ability' => 'content/get-post' ) );
+		$result = $this->handler->handle( array( 'action' => 'describe', 'ability' => 'og-content/get-post' ) );
 
 		$this->assertIsArray( $result );
-		$this->assertSame( 'content/get-post', $result['name'] );
+		$this->assertSame( 'og-content/get-post', $result['name'] );
 	}
 
 	/**
@@ -91,7 +91,7 @@ final class DomainToolHandlerTest extends TestCase {
 		$result = $this->handler->handle(
 			array(
 				'action'  => 'execute',
-				'ability' => 'content/get-post',
+				'ability' => 'og-content/get-post',
 				'input'   => array( 'id' => $post_id ),
 			)
 		);
@@ -131,7 +131,7 @@ final class DomainToolHandlerTest extends TestCase {
 	 * @return void
 	 */
 	public function test_out_of_domain_execute_is_a_folded_error(): void {
-		$result = $this->handler->handle( array( 'action' => 'execute', 'ability' => 'media/list-image-sizes' ) );
+		$result = $this->handler->handle( array( 'action' => 'execute', 'ability' => 'og-media/list-image-sizes' ) );
 
 		$this->assertWPError( $result );
 		$this->assertSame( 'abilities_catalog_mcp_unknown_ability', $result->get_error_code() );
@@ -149,7 +149,7 @@ final class DomainToolHandlerTest extends TestCase {
 		$result = $this->handler->handle(
 			array(
 				'action'  => 'execute',
-				'ability' => 'content/get-post',
+				'ability' => 'og-content/get-post',
 				'input'   => 'not-an-object',
 			)
 		);
@@ -170,7 +170,7 @@ final class DomainToolHandlerTest extends TestCase {
 		$result = $this->handler->handle(
 			array(
 				'action'  => 'execute',
-				'ability' => 'content/create-post',
+				'ability' => 'og-content/create-post',
 				'input'   => array( 'title' => 'Nope' ),
 			)
 		);

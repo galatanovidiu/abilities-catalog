@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * as a `font_faces` array. Returning either verbatim leaks REST internals and
  * breaks the project-wide list-ability rule. This shaper maps each item to a
  * small, predictable row (the full family settings and faces live behind
- * `fonts/get-font-family`) and exposes the matching `output_schema` fragment so
+ * `og-fonts/get-font-family`) and exposes the matching `output_schema` fragment so
  * the runtime shape and the declared schema stay in sync.
  *
  * This is NOT under `includes/Abilities/`, so the Registry never treats it as an
@@ -76,7 +76,7 @@ final class FontListShaper {
 	 *
 	 * Flattens the descriptive fields out of `font_family_settings` and reduces the
 	 * `font_faces` array to a count; the full settings and face IDs live behind
-	 * `fonts/get-font-family`.
+	 * `og-fonts/get-font-family`.
 	 *
 	 * @param array<string,mixed> $item A single item from a `/wp/v2/font-families` response.
 	 * @return array<string,mixed> The summary row. No nested `font_family_settings`, no `_links`.
@@ -127,7 +127,7 @@ final class FontListShaper {
 				),
 				'font_faces_count'   => array(
 					'type'        => 'integer',
-					'description' => __( 'The number of font faces in the family. Use fonts/get-font-family for the face IDs.', 'abilities-catalog' ),
+					'description' => __( 'The number of font faces in the family. Use og-fonts/get-font-family for the face IDs.', 'abilities-catalog' ),
 				),
 			),
 			'additionalProperties' => false,

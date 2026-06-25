@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the tools/export-content ability.
+ * Integration tests for the og-tools/export-content ability.
  *
  * Covers registration, the input schema (the dead `post_type` field is gone),
  * the output-schema contract (`content_type` is required), the `export`
@@ -19,16 +19,16 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises tools/export-content registration, schema, and capability gate.
+ * Exercises og-tools/export-content registration, schema, and capability gate.
  */
 final class ExportContentTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'tools/export-content' ) );
+		$this->assertNotNull( wp_get_ability( 'og-tools/export-content' ) );
 	}
 
 	public function test_input_schema_omits_dead_post_type_field(): void {
-		$schema     = wp_get_ability( 'tools/export-content' )->get_input_schema();
+		$schema     = wp_get_ability( 'og-tools/export-content' )->get_input_schema();
 		$properties = $schema['properties'];
 
 		// `export_wp()` has no `post_type` argument, so the field must not be advertised.
@@ -37,7 +37,7 @@ final class ExportContentTest extends TestCase {
 	}
 
 	public function test_output_schema_requires_content_type(): void {
-		$schema = wp_get_ability( 'tools/export-content' )->get_output_schema();
+		$schema = wp_get_ability( 'og-tools/export-content' )->get_output_schema();
 
 		// `content_type` is always returned, so the output contract must require it.
 		$this->assertContains( 'content_type', $schema['required'] );
@@ -55,7 +55,7 @@ final class ExportContentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'tools/export-content' )->execute( array( 'content' => 'post' ) );
+		$result = wp_get_ability( 'og-tools/export-content' )->execute( array( 'content' => 'post' ) );
 
 		$this->assertIsArray( $result, 'export_wp() header emission must no longer break execution.' );
 		$this->assertStringStartsWith( 'text/xml', $result['content_type'] );
@@ -75,7 +75,7 @@ final class ExportContentTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'tools/export-content' )->execute( array( 'content' => 'all' ) );
+		$result = wp_get_ability( 'og-tools/export-content' )->execute( array( 'content' => 'all' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -84,7 +84,7 @@ final class ExportContentTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'tools/export-content' )->execute( array( 'content' => 'all' ) );
+		$result = wp_get_ability( 'og-tools/export-content' )->execute( array( 'content' => 'all' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

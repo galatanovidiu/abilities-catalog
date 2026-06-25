@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/list-widgets ability.
+ * Integration tests for the og-widgets/list-widgets ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -103,17 +103,17 @@ final class ListWidgetsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/list-widgets' );
+		$ability = wp_get_ability( 'og-widgets/list-widgets' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/list-widgets', $ability->get_name() );
+		$this->assertSame( 'og-widgets/list-widgets', $ability->get_name() );
 	}
 
 	public function test_admin_lists_widget_with_correct_id_base(): void {
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget( 'wp_inactive_widgets' );
 
-		$result = wp_get_ability( 'widgets/list-widgets' )->execute( array() );
+		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -132,7 +132,7 @@ final class ListWidgetsTest extends TestCase {
 		$inactive_id = $this->createBlockWidget( 'wp_inactive_widgets' );
 		$active_id   = $this->createBlockWidget( $this->test_sidebar );
 
-		$result = wp_get_ability( 'widgets/list-widgets' )->execute( array( 'sidebar' => $this->test_sidebar ) );
+		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array( 'sidebar' => $this->test_sidebar ) );
 
 		$this->assertNotNull(
 			$this->rowById( $result['items'], $active_id ),
@@ -150,7 +150,7 @@ final class ListWidgetsTest extends TestCase {
 	public function test_unknown_sidebar_returns_empty_result(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/list-widgets' )->execute( array( 'sidebar' => 'no-such-sidebar' ) );
+		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array( 'sidebar' => 'no-such-sidebar' ) );
 
 		$this->assertSame( array(), $result['items'] );
 		$this->assertSame( 0, $result['total'] );
@@ -160,7 +160,7 @@ final class ListWidgetsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget( 'wp_inactive_widgets' );
 
-		$result = wp_get_ability( 'widgets/list-widgets' )->execute( array() );
+		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array() );
 		$row    = $this->rowById( $result['items'], $widget_id );
 
 		$this->assertNotNull( $row );
@@ -180,7 +180,7 @@ final class ListWidgetsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'widgets/list-widgets' )->execute( array() );
+		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -189,7 +189,7 @@ final class ListWidgetsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'widgets/list-widgets' )->execute( array() );
+		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

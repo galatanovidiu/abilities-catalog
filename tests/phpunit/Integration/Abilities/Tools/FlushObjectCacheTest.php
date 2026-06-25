@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the tools/flush-object-cache ability.
+ * Integration tests for the og-tools/flush-object-cache ability.
  *
  * Covers registration, the output-shape contract (flushed/persistent), a happy-path
  * flush with a wp_cache_get read-back proving the cached entry is gone, the
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises tools/flush-object-cache registration, flush semantics, and the gate.
+ * Exercises og-tools/flush-object-cache registration, flush semantics, and the gate.
  */
 final class FlushObjectCacheTest extends TestCase {
 
@@ -31,14 +31,14 @@ final class FlushObjectCacheTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'tools/flush-object-cache' );
+		$ability = wp_get_ability( 'og-tools/flush-object-cache' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'tools/flush-object-cache', $ability->get_name() );
+		$this->assertSame( 'og-tools/flush-object-cache', $ability->get_name() );
 	}
 
 	public function test_output_schema_requires_flushed_and_persistent(): void {
-		$schema = wp_get_ability( 'tools/flush-object-cache' )->get_output_schema();
+		$schema = wp_get_ability( 'og-tools/flush-object-cache' )->get_output_schema();
 
 		$this->assertFalse( $schema['additionalProperties'] );
 		$this->assertSame( array( 'flushed', 'persistent' ), $schema['required'] );
@@ -50,7 +50,7 @@ final class FlushObjectCacheTest extends TestCase {
 		wp_cache_set( 'k', 'v', self::TEST_GROUP );
 		$this->assertSame( 'v', wp_cache_get( 'k', self::TEST_GROUP ) );
 
-		$result = wp_get_ability( 'tools/flush-object-cache' )->execute();
+		$result = wp_get_ability( 'og-tools/flush-object-cache' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'flushed', 'persistent' ), array_keys( $result ) );
@@ -66,7 +66,7 @@ final class FlushObjectCacheTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'tools/flush-object-cache' )->execute();
+		$result = wp_get_ability( 'og-tools/flush-object-cache' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -75,7 +75,7 @@ final class FlushObjectCacheTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'tools/flush-object-cache' )->execute();
+		$result = wp_get_ability( 'og-tools/flush-object-cache' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -131,11 +131,11 @@ final class BlogSwitchRunner {
 		}
 
 		if ( (int) $site->archived || (int) $site->deleted || (int) $site->spam ) {
-			return $this->invalid( __( 'That site is not available (archived, deleted, or spam). Discover sites you can act on with users/list-my-sites.', 'abilities-catalog' ) );
+			return $this->invalid( __( 'That site is not available (archived, deleted, or spam). Discover sites you can act on with og-users/list-my-sites.', 'abilities-catalog' ) );
 		}
 
 		if ( (int) $site->network_id !== ( $this->current_network_id )() ) {
-			return $this->invalid( __( 'That site belongs to a different network. Discover sites you can act on with users/list-my-sites.', 'abilities-catalog' ) );
+			return $this->invalid( __( 'That site belongs to a different network. Discover sites you can act on with og-users/list-my-sites.', 'abilities-catalog' ) );
 		}
 
 		return null;
@@ -152,7 +152,7 @@ final class BlogSwitchRunner {
 	private function invalid( ?string $message = null ): \WP_Error {
 		return new \WP_Error(
 			'abilities_catalog_invalid_blog_id',
-			$message ?? __( 'Invalid blog_id: no such site on this network. Discover valid site IDs with users/list-my-sites.', 'abilities-catalog' ),
+			$message ?? __( 'Invalid blog_id: no such site on this network. Discover valid site IDs with og-users/list-my-sites.', 'abilities-catalog' ),
 			array( 'status' => 404 )
 		);
 	}

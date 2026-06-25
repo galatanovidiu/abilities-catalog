@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/destroy-all-sessions ability.
+ * Integration tests for the og-users/destroy-all-sessions ability.
  *
  * Covers registration, the output-shape contract (destroyed/user_id/sessions_ended),
  * a happy-path destroy of a seeded user's sessions with a get_all() read-back proving
@@ -20,7 +20,7 @@ use WP_Error;
 use WP_Session_Tokens;
 
 /**
- * Exercises users/destroy-all-sessions registration, destroy semantics, and the gate.
+ * Exercises og-users/destroy-all-sessions registration, destroy semantics, and the gate.
  */
 final class DestroyAllSessionsTest extends TestCase {
 
@@ -55,17 +55,17 @@ final class DestroyAllSessionsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/destroy-all-sessions' );
+		$ability = wp_get_ability( 'og-users/destroy-all-sessions' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/destroy-all-sessions', $ability->get_name() );
+		$this->assertSame( 'og-users/destroy-all-sessions', $ability->get_name() );
 	}
 
 	public function test_happy_path_ends_all_sessions(): void {
 		$this->actingAs( 'administrator' );
 		$this->seedSessions( 3 );
 
-		$result = wp_get_ability( 'users/destroy-all-sessions' )->execute(
+		$result = wp_get_ability( 'og-users/destroy-all-sessions' )->execute(
 			array( 'user_id' => $this->user_id )
 		);
 
@@ -84,7 +84,7 @@ final class DestroyAllSessionsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->seedSessions( 1 );
 
-		$result = wp_get_ability( 'users/destroy-all-sessions' )->execute(
+		$result = wp_get_ability( 'og-users/destroy-all-sessions' )->execute(
 			array( 'user_id' => $this->user_id )
 		);
 
@@ -96,7 +96,7 @@ final class DestroyAllSessionsTest extends TestCase {
 	public function test_missing_user_returns_404_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/destroy-all-sessions' )->execute(
+		$result = wp_get_ability( 'og-users/destroy-all-sessions' )->execute(
 			array( 'user_id' => 99999999 )
 		);
 
@@ -110,7 +110,7 @@ final class DestroyAllSessionsTest extends TestCase {
 		$this->seedSessions( 2 );
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'users/destroy-all-sessions' )->execute(
+		$result = wp_get_ability( 'og-users/destroy-all-sessions' )->execute(
 			array( 'user_id' => $this->user_id )
 		);
 
@@ -124,7 +124,7 @@ final class DestroyAllSessionsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'users/destroy-all-sessions' )->execute(
+		$result = wp_get_ability( 'og-users/destroy-all-sessions' )->execute(
 			array( 'user_id' => $this->user_id )
 		);
 

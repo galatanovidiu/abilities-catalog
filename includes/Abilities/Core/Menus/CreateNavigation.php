@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/create-navigation`.
+ * T2 non-destructive write ability: `og-menus/create-navigation`.
  *
  * Wraps `POST /wp/v2/navigation` via `rest_do_request()` to create a block-based
  * navigation menu (`wp_navigation` post). The block content lives in `content` as
@@ -32,7 +32,7 @@ final class CreateNavigation implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/create-navigation';
+		return 'og-menus/create-navigation';
 	}
 
 	/**

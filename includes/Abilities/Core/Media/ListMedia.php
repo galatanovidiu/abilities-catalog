@@ -14,13 +14,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `media/list-media`.
+ * Read ability: `og-media/list-media`.
  *
  * Wraps `GET /wp/v2/media` via `rest_do_request()` and returns the collection
  * plus its total counts. Each row is projected by {@see MediaListShaper} into a
  * flat, closed summary; the heavy raw fields (`media_details`, `meta`,
  * `class_list`, `_links`) are never returned (file bytes live behind
- * `media/get-media-file`). The `media_type` and `mime_type` filters accept one or
+ * `og-media/get-media-file`). The `media_type` and `mime_type` filters accept one or
  * more values, mirroring the core collection params. Read-only; REST enforces
  * per-row visibility underneath.
  *
@@ -32,7 +32,7 @@ final class ListMedia implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/list-media';
+		return 'og-media/list-media';
 	}
 
 	/**

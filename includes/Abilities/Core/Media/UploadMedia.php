@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `media/upload-media`.
+ * T2 non-destructive write ability: `og-media/upload-media`.
  *
  * Wraps `POST /wp/v2/media` via `rest_do_request()` to create a new attachment
  * from base64-encoded file bytes, setting any provided metadata fields (title,
@@ -49,7 +49,7 @@ final class UploadMedia implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/upload-media';
+		return 'og-media/upload-media';
 	}
 
 	/**

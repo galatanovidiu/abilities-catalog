@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the connectors/get-connector ability.
+ * Integration tests for the og-connectors/get-connector ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use WP_Connector_Registry;
 use WP_Error;
 
 /**
- * Exercises connectors/get-connector end-to-end: the flat field set, the
+ * Exercises og-connectors/get-connector end-to-end: the flat field set, the
  * distinct authentication/key-source/connected states, the not-found error,
  * the permission guard, and the no-secret-leak invariant.
  */
@@ -108,13 +108,13 @@ final class GetConnectorTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'connectors/get-connector' ) );
+		$this->assertNotNull( wp_get_ability( 'og-connectors/get-connector' ) );
 	}
 
 	public function test_none_method_connector_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/get-connector' )->execute(
+		$result = wp_get_ability( 'og-connectors/get-connector' )->execute(
 			array( 'id' => self::NONE_ID )
 		);
 
@@ -139,7 +139,7 @@ final class GetConnectorTest extends TestCase {
 	public function test_apikey_connector_without_key_is_not_configured(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/get-connector' )->execute(
+		$result = wp_get_ability( 'og-connectors/get-connector' )->execute(
 			array( 'id' => self::APIKEY_EMPTY_ID )
 		);
 
@@ -154,7 +154,7 @@ final class GetConnectorTest extends TestCase {
 	public function test_apikey_connector_with_database_key_is_configured_and_connected(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/get-connector' )->execute(
+		$result = wp_get_ability( 'og-connectors/get-connector' )->execute(
 			array( 'id' => self::APIKEY_SET_ID )
 		);
 
@@ -172,7 +172,7 @@ final class GetConnectorTest extends TestCase {
 	public function test_unknown_id_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/get-connector' )->execute(
+		$result = wp_get_ability( 'og-connectors/get-connector' )->execute(
 			array( 'id' => 'no_such_connector' )
 		);
 
@@ -184,7 +184,7 @@ final class GetConnectorTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'connectors/get-connector' )->execute(
+		$result = wp_get_ability( 'og-connectors/get-connector' )->execute(
 			array( 'id' => self::NONE_ID )
 		);
 

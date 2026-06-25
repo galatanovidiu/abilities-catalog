@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `privacy/create-erase-request`.
+ * T2 non-destructive write ability: `og-privacy/create-erase-request`.
  *
  * Creates a personal-data erasure request for an email address by wrapping the
  * core function `wp_create_user_request()`. The `send_confirmation_email` flag
@@ -43,7 +43,7 @@ final class CreateEraseRequest implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/create-erase-request';
+		return 'og-privacy/create-erase-request';
 	}
 
 	/**

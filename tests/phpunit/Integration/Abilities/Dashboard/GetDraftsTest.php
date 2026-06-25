@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the dashboard/get-drafts ability.
+ * Integration tests for the og-dashboard/get-drafts ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use WP_Error;
 final class GetDraftsTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'dashboard/get-drafts' );
+		$ability = wp_get_ability( 'og-dashboard/get-drafts' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'dashboard/get-drafts', $ability->get_name() );
+		$this->assertSame( 'og-dashboard/get-drafts', $ability->get_name() );
 	}
 
 	public function test_returns_own_drafts_with_closed_shape(): void {
@@ -37,7 +37,7 @@ final class GetDraftsTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'dashboard/get-drafts' )->execute( array( 'number' => 5 ) );
+		$result = wp_get_ability( 'og-dashboard/get-drafts' )->execute( array( 'number' => 5 ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -64,7 +64,7 @@ final class GetDraftsTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'dashboard/get-drafts' )->execute( array( 'number' => 5 ) );
+		$result = wp_get_ability( 'og-dashboard/get-drafts' )->execute( array( 'number' => 5 ) );
 
 		$rows = array_filter(
 			$result['items'],
@@ -88,7 +88,7 @@ final class GetDraftsTest extends TestCase {
 
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'dashboard/get-drafts' )->execute( array( 'number' => 20 ) );
+		$result = wp_get_ability( 'og-dashboard/get-drafts' )->execute( array( 'number' => 20 ) );
 
 		$ids = wp_list_pluck( $result['items'], 'id' );
 		$this->assertNotContains( $other_draft, $ids );
@@ -97,7 +97,7 @@ final class GetDraftsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'dashboard/get-drafts' )->execute( array() );
+		$result = wp_get_ability( 'og-dashboard/get-drafts' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

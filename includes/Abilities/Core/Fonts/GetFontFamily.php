@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `fonts/get-font-family`.
+ * Read ability: `og-fonts/get-font-family`.
  *
  * Wraps `GET /wp/v2/font-families/<id>` via `rest_do_request()` and shapes the
  * response into a flat field set. Read-only; requires `edit_theme_options`.
@@ -26,7 +26,7 @@ final class GetFontFamily implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'fonts/get-font-family';
+		return 'og-fonts/get-font-family';
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class GetFontFamily implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The font family post ID. Discover IDs with `fonts/list-font-families`.', 'abilities-catalog' ),
+						'description' => __( 'The font family post ID. Discover IDs with `og-fonts/list-font-families`.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',

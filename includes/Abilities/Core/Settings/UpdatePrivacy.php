@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `settings/update-privacy`.
+ * T2 non-destructive write ability: `og-settings/update-privacy`.
  *
  * Updates the Privacy Settings screen: the page assigned as the privacy policy
  * page (`wp_page_for_privacy_policy`). Mirrors the matching read ability
@@ -29,7 +29,7 @@ final class UpdatePrivacy implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-privacy';
+		return 'og-settings/update-privacy';
 	}
 
 	/**

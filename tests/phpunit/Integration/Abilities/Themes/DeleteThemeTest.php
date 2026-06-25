@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the themes/delete-theme ability.
+ * Integration tests for the og-themes/delete-theme ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -79,10 +79,10 @@ final class DeleteThemeTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'themes/delete-theme' );
+		$ability = wp_get_ability( 'og-themes/delete-theme' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'themes/delete-theme', $ability->get_name() );
+		$this->assertSame( 'og-themes/delete-theme', $ability->get_name() );
 	}
 
 	public function test_admin_deletes_theme_and_returns_name(): void {
@@ -90,7 +90,7 @@ final class DeleteThemeTest extends TestCase {
 
 		$dir = $this->createTheme( 'catalog-throwaway', 'Catalog Throwaway' );
 
-		$result = wp_get_ability( 'themes/delete-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/delete-theme' )->execute(
 			array( 'stylesheet' => 'catalog-throwaway' )
 		);
 
@@ -104,7 +104,7 @@ final class DeleteThemeTest extends TestCase {
 	public function test_unknown_stylesheet_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/delete-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/delete-theme' )->execute(
 			array( 'stylesheet' => 'this-theme-does-not-exist' )
 		);
 
@@ -116,7 +116,7 @@ final class DeleteThemeTest extends TestCase {
 	public function test_active_theme_is_refused_as_in_use(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/delete-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/delete-theme' )->execute(
 			array( 'stylesheet' => get_stylesheet() )
 		);
 
@@ -128,7 +128,7 @@ final class DeleteThemeTest extends TestCase {
 	public function test_empty_stylesheet_is_rejected_as_invalid_input(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/delete-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/delete-theme' )->execute(
 			array( 'stylesheet' => '' )
 		);
 

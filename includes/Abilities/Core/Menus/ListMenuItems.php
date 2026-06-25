@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `menus/list-menu-items`.
+ * Read ability: `og-menus/list-menu-items`.
  *
  * Wraps `GET /wp/v2/menu-items` via `rest_do_request()` and returns the
  * collection of classic menu items (`nav_menu_item` posts) plus its total
@@ -32,7 +32,7 @@ final class ListMenuItems implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/list-menu-items';
+		return 'og-menus/list-menu-items';
 	}
 
 	/**

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dangerous-tier write ability: `users/destroy-all-sessions`.
+ * Dangerous-tier write ability: `og-users/destroy-all-sessions`.
  *
  * Ends ALL of a user's login sessions on every device by wrapping core
  * `WP_Session_Tokens::get_instance( $user_id )->destroy_all()`, which clears the
@@ -57,7 +57,7 @@ final class DestroyAllSessions implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/destroy-all-sessions';
+		return 'og-users/destroy-all-sessions';
 	}
 
 	/**
@@ -75,7 +75,7 @@ final class DestroyAllSessions implements Ability {
 						'type'        => 'integer',
 						'minimum'     => 0,
 						'default'     => 0,
-						'description' => __( 'The user whose sessions to end. Omit or pass 0 to target the current user (which logs you out too). Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The user whose sessions to end. Omit or pass 0 to target the current user (which logs you out too). Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

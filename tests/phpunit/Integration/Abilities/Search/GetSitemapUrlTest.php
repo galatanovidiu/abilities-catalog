@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for search/get-sitemap-url.
+ * Integration tests for og-search/get-sitemap-url.
  *
  * Covers the happy-path output shape (the index URL and the enabled flag),
  * the enabled flag tracking the blog_public Reading setting, the exact output
@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises search/get-sitemap-url.
+ * Exercises og-search/get-sitemap-url.
  */
 final class GetSitemapUrlTest extends TestCase {
 
@@ -40,14 +40,14 @@ final class GetSitemapUrlTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'search/get-sitemap-url' ) );
+		$this->assertTrue( wp_has_ability( 'og-search/get-sitemap-url' ) );
 	}
 
 	public function test_returns_index_url_and_enabled_flag(): void {
 		$this->actingAs( 'administrator' );
 		update_option( 'blog_public', 1 );
 
-		$result = wp_get_ability( 'search/get-sitemap-url' )->execute();
+		$result = wp_get_ability( 'og-search/get-sitemap-url' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'sitemap_url', 'enabled' ), array_keys( $result ) );
@@ -68,7 +68,7 @@ final class GetSitemapUrlTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		update_option( 'blog_public', 0 );
 
-		$result = wp_get_ability( 'search/get-sitemap-url' )->execute();
+		$result = wp_get_ability( 'og-search/get-sitemap-url' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertFalse( $result['enabled'] );
@@ -79,7 +79,7 @@ final class GetSitemapUrlTest extends TestCase {
 	public function test_editor_is_allowed(): void {
 		$this->actingAs( 'editor' );
 
-		$result = wp_get_ability( 'search/get-sitemap-url' )->execute();
+		$result = wp_get_ability( 'og-search/get-sitemap-url' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'sitemap_url', $result );
@@ -88,7 +88,7 @@ final class GetSitemapUrlTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'search/get-sitemap-url' )->execute();
+		$result = wp_get_ability( 'og-search/get-sitemap-url' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -97,7 +97,7 @@ final class GetSitemapUrlTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'search/get-sitemap-url' )->execute();
+		$result = wp_get_ability( 'og-search/get-sitemap-url' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

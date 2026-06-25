@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `terms/list-tags`.
+ * Read ability: `og-terms/list-tags`.
  *
  * Wraps `GET /wp/v2/tags` via `rest_do_request()` and returns the matching
  * post-tag terms with pagination totals taken from the REST response headers.
@@ -26,7 +26,7 @@ final class ListTags implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/list-tags';
+		return 'og-terms/list-tags';
 	}
 
 	/**
@@ -35,7 +35,7 @@ final class ListTags implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Tags', 'abilities-catalog' ),
-			'description'         => __( 'Returns a paginated list of post-tag terms, optionally filtered by search string. Each item is a raw tag term object; the result includes "total" and "total_pages" counts. Use this for the "post_tag" taxonomy; for the "category" taxonomy use terms/list-categories, and for an arbitrary taxonomy use terms/list-terms.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a paginated list of post-tag terms, optionally filtered by search string. Each item is a raw tag term object; the result includes "total" and "total_pages" counts. Use this for the "post_tag" taxonomy; for the "category" taxonomy use og-terms/list-categories, and for an arbitrary taxonomy use og-terms/list-terms.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',

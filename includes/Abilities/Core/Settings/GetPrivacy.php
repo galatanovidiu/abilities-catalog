@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-privacy`.
+ * T1 read ability: `og-settings/get-privacy`.
  *
  * Returns the Privacy Settings screen value, read directly from options.
  * Net-new read: no REST route is dispatched. Guarded by the dedicated
@@ -25,7 +25,7 @@ final class GetPrivacy implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-privacy';
+		return 'og-settings/get-privacy';
 	}
 
 	/**

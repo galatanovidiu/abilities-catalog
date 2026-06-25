@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `network/list-networks`.
+ * T1 read ability: `og-network/list-networks`.
  *
  * Lists the networks in a WordPress multisite installation, one flat row per
  * network with its id, domain, path, and display name (site_name). The
- * network-level companion list to `network/get-network`. Most installs have a
+ * network-level companion list to `og-network/get-network`. Most installs have a
  * single network; a multi-network install has more.
  *
  * Built on `get_networks()` (wp-includes/ms-network.php:63 → `WP_Network[]`, or
@@ -47,7 +47,7 @@ final class ListNetworks implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/list-networks';
+		return 'og-network/list-networks';
 	}
 
 	/**
@@ -56,7 +56,7 @@ final class ListNetworks implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Networks', 'abilities-catalog' ),
-			'description'         => __( 'Lists the networks in a WordPress multisite installation (usually one; more on a multi-network install), one row per network with its id, domain, path, and display name (site_name). Use network/get-network for one network\'s full detail including its main site id. Requires a multisite install and the manage_network (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the networks in a WordPress multisite installation (usually one; more on a multi-network install), one row per network with its id, domain, path, and display name (site_name). Use og-network/get-network for one network\'s full detail including its main site id. Requires a multisite install and the manage_network (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -87,14 +87,14 @@ final class ListNetworks implements Ability {
 				'properties'           => array(
 					'networks' => array(
 						'type'        => 'array',
-						'description' => __( 'The networks matching the query, one flat row per network. Use network/get-network for a single network\'s full detail.', 'abilities-catalog' ),
+						'description' => __( 'The networks matching the query, one flat row per network. Use og-network/get-network for a single network\'s full detail.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'required'             => array( 'id', 'domain', 'path', 'site_name' ),
 							'properties'           => array(
 								'id'        => array(
 									'type'        => 'integer',
-									'description' => __( 'The network ID; pass to network/get-network.', 'abilities-catalog' ),
+									'description' => __( 'The network ID; pass to og-network/get-network.', 'abilities-catalog' ),
 								),
 								'domain'    => array(
 									'type'        => 'string',

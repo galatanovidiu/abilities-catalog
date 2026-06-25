@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the themes/switch-theme ability.
+ * Integration tests for the og-themes/switch-theme ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -92,10 +92,10 @@ final class SwitchThemeTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'themes/switch-theme' );
+		$ability = wp_get_ability( 'og-themes/switch-theme' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'themes/switch-theme', $ability->get_name() );
+		$this->assertSame( 'og-themes/switch-theme', $ability->get_name() );
 	}
 
 	public function test_admin_switches_theme_and_returns_previous_and_name(): void {
@@ -104,7 +104,7 @@ final class SwitchThemeTest extends TestCase {
 		$this->original_stylesheet = get_stylesheet();
 		$this->createTheme( 'catalog-switch-target', 'Catalog Switch Target' );
 
-		$result = wp_get_ability( 'themes/switch-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/switch-theme' )->execute(
 			array( 'stylesheet' => 'catalog-switch-target' )
 		);
 
@@ -119,7 +119,7 @@ final class SwitchThemeTest extends TestCase {
 	public function test_unknown_stylesheet_returns_not_found(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/switch-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/switch-theme' )->execute(
 			array( 'stylesheet' => 'this-theme-does-not-exist' )
 		);
 
@@ -146,7 +146,7 @@ final class SwitchThemeTest extends TestCase {
 		$this->fixture_stylesheet = 'catalog-broken-child';
 		wp_clean_themes_cache();
 
-		$result = wp_get_ability( 'themes/switch-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/switch-theme' )->execute(
 			array( 'stylesheet' => 'catalog-broken-child' )
 		);
 
@@ -161,7 +161,7 @@ final class SwitchThemeTest extends TestCase {
 	public function test_empty_stylesheet_is_rejected_as_invalid_input(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/switch-theme' )->execute(
+		$result = wp_get_ability( 'og-themes/switch-theme' )->execute(
 			array( 'stylesheet' => '' )
 		);
 

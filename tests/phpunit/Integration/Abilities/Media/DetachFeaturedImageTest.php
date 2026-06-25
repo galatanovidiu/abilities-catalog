@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/detach-featured-image ability.
+ * Integration tests for the og-media/detach-featured-image ability.
  *
  * Detaching removes only the post-to-attachment association; the attachment
  * survives. A post with no featured image is a benign no-op (detached:false).
@@ -34,7 +34,7 @@ final class DetachFeaturedImageTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'media/detach-featured-image' ) );
+		$this->assertTrue( wp_has_ability( 'og-media/detach-featured-image' ) );
 	}
 
 	public function test_detach_removes_featured_image(): void {
@@ -45,7 +45,7 @@ final class DetachFeaturedImageTest extends TestCase {
 		set_post_thumbnail( $post_id, $attachment_id );
 		$this->assertSame( $attachment_id, (int) get_post_thumbnail_id( $post_id ) );
 
-		$result = wp_get_ability( 'media/detach-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/detach-featured-image' )->execute(
 			array( 'post_id' => $post_id )
 		);
 
@@ -64,7 +64,7 @@ final class DetachFeaturedImageTest extends TestCase {
 
 		$post_id = self::factory()->post->create();
 
-		$result = wp_get_ability( 'media/detach-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/detach-featured-image' )->execute(
 			array( 'post_id' => $post_id )
 		);
 
@@ -76,7 +76,7 @@ final class DetachFeaturedImageTest extends TestCase {
 	public function test_missing_post_returns_404(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'media/detach-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/detach-featured-image' )->execute(
 			array( 'post_id' => 99999999 )
 		);
 
@@ -97,7 +97,7 @@ final class DetachFeaturedImageTest extends TestCase {
 
 		$this->actingAs( 'author' );
 
-		$result = wp_get_ability( 'media/detach-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/detach-featured-image' )->execute(
 			array( 'post_id' => $post_id )
 		);
 
@@ -115,7 +115,7 @@ final class DetachFeaturedImageTest extends TestCase {
 
 		$post_id = self::factory()->post->create();
 
-		$result = wp_get_ability( 'media/detach-featured-image' )->execute(
+		$result = wp_get_ability( 'og-media/detach-featured-image' )->execute(
 			array( 'post_id' => $post_id )
 		);
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/get-role ability.
+ * Integration tests for the og-users/get-role ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,16 +21,16 @@ use WP_Error;
 final class GetRoleTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/get-role' );
+		$ability = wp_get_ability( 'og-users/get-role' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/get-role', $ability->get_name() );
+		$this->assertSame( 'og-users/get-role', $ability->get_name() );
 	}
 
 	public function test_happy_path_returns_role_matching_core(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'editor' ) );
+		$result = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'editor' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'editor', $result['slug'] );
@@ -57,7 +57,7 @@ final class GetRoleTest extends TestCase {
 	public function test_capabilities_are_sorted_and_granted_only(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'administrator' ) );
+		$result = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'administrator' ) );
 
 		$sorted = $result['capabilities'];
 		sort( $sorted );
@@ -70,7 +70,7 @@ final class GetRoleTest extends TestCase {
 	public function test_result_has_exactly_the_closed_field_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'subscriber' ) );
+		$result = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'subscriber' ) );
 
 		$this->assertSame(
 			array( 'slug', 'name', 'capabilities', 'user_count' ),
@@ -85,11 +85,11 @@ final class GetRoleTest extends TestCase {
 	public function test_user_count_reflects_assigned_users(): void {
 		$this->actingAs( 'administrator' );
 
-		$before = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'subscriber' ) )['user_count'];
+		$before = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'subscriber' ) )['user_count'];
 
 		self::factory()->user->create( array( 'role' => 'subscriber' ) );
 
-		$after = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'subscriber' ) )['user_count'];
+		$after = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'subscriber' ) )['user_count'];
 
 		$this->assertSame( $before + 1, $after );
 	}
@@ -100,7 +100,7 @@ final class GetRoleTest extends TestCase {
 		// `editor` has no users in a fresh install. count_users()['avail_roles']
 		// omits zero-count roles, so the `?? 0` default is the only reason an
 		// empty role still surfaces a count.
-		$result = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'editor' ) );
+		$result = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'editor' ) );
 
 		$this->assertSame( 0, $result['user_count'] );
 	}
@@ -108,7 +108,7 @@ final class GetRoleTest extends TestCase {
 	public function test_missing_role_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/get-role' )->execute( array( 'slug' => 'no-such-role' ) );
+		$result = wp_get_ability( 'og-users/get-role' )->execute( array( 'slug' => 'no-such-role' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_role_not_found', $result->get_error_code() );
@@ -122,7 +122,7 @@ final class GetRoleTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'users/get-role' );
+		$ability = wp_get_ability( 'og-users/get-role' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'slug' => 'editor' ) ) );
 
@@ -134,7 +134,7 @@ final class GetRoleTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'users/get-role' );
+		$ability = wp_get_ability( 'og-users/get-role' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'slug' => 'editor' ) ) );
 

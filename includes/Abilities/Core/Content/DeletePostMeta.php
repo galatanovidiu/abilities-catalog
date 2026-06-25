@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `content/delete-post-meta`.
+ * T2 destructive write ability: `og-content/delete-post-meta`.
  *
  * Removes one or more custom fields (meta) from a post, deleting all stored
  * values for each named key. It operates only on meta keys registered with
@@ -32,7 +32,7 @@ final class DeletePostMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/delete-post-meta';
+		return 'og-content/delete-post-meta';
 	}
 
 	/**

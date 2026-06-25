@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `comments/list-comments`.
+ * Read ability: `og-comments/list-comments`.
  *
  * Wraps `GET /wp/v2/comments` via `rest_do_request()` and returns the collection
  * plus its total counts. Read-only; REST enforces per-row visibility underneath.
@@ -30,7 +30,7 @@ final class ListComments implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/list-comments';
+		return 'og-comments/list-comments';
 	}
 
 	/**
@@ -114,7 +114,7 @@ final class ListComments implements Ability {
 					'items'       => array(
 						'type'        => 'array',
 						'items'       => CommentListShaper::commentItemSchema(),
-						'description' => __( 'The list of comments as flat summary rows. Use comments/get-comment for a single comment.', 'abilities-catalog' ),
+						'description' => __( 'The list of comments as flat summary rows. Use og-comments/get-comment for a single comment.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',
@@ -143,7 +143,7 @@ final class ListComments implements Ability {
 	/**
 	 * Permission check: baseline `edit_posts` to list comments.
 	 *
-	 * Encodes the catalog baseline capability for `comments/list-comments`.
+	 * Encodes the catalog baseline capability for `og-comments/list-comments`.
 	 * Moderation contexts (non-default status, edit context) need
 	 * `moderate_comments`, which REST enforces per row; `edit_posts` is the
 	 * minimum required to run the query and is not weaker than that baseline.

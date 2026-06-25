@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `plugins/get-plugin`.
+ * T1 read ability: `og-plugins/get-plugin`.
  *
  * Wraps `GET /wp/v2/plugins/<plugin>` via `rest_do_request()` and shapes the
  * response into a flat field set. The `plugin` input is the plugin file path
@@ -30,7 +30,7 @@ final class GetPlugin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/get-plugin';
+		return 'og-plugins/get-plugin';
 	}
 
 	/**
@@ -121,7 +121,7 @@ final class GetPlugin implements Ability {
 	/**
 	 * Permission check: the current user may manage plugin activation.
 	 *
-	 * Encodes the catalog capability for `plugins/get-plugin` (`activate_plugins`).
+	 * Encodes the catalog capability for `og-plugins/get-plugin` (`activate_plugins`).
 	 * Returns false when the required `plugin` input is missing.
 	 *
 	 * @param mixed $input The validated input data.

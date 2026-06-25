@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `widgets/get-widget`.
+ * Read ability: `og-widgets/get-widget`.
  *
  * Wraps `GET /wp/v2/widgets/<id>` via `rest_do_request()` and projects the
  * response into the shared flat widget row (`id`, `id_base`, `sidebar`,
@@ -30,7 +30,7 @@ final class GetWidget implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/get-widget';
+		return 'og-widgets/get-widget';
 	}
 
 	/**
@@ -39,14 +39,14 @@ final class GetWidget implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Widget', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single widget instance by id, including its widget type (id_base), the sidebar it sits in, and its rendered front-end HTML. Discover ids with widgets/list-widgets.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single widget instance by id, including its widget type (id_base), the sidebar it sits in, and its rendered front-end HTML. Discover ids with og-widgets/list-widgets.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'string',
-						'description' => __( 'The widget instance id, e.g. "block-3" or "text-2". Discover ids with widgets/list-widgets.', 'abilities-catalog' ),
+						'description' => __( 'The widget instance id, e.g. "block-3" or "text-2". Discover ids with og-widgets/list-widgets.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

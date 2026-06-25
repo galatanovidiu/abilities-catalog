@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `content/get-post-meta`.
+ * T1 read ability: `og-content/get-post-meta`.
  *
  * Reads a post's custom fields (meta), limited to the meta keys the site has
  * registered with `show_in_rest` for that post type — the same set the REST API
  * exposes. It never returns arbitrary or internal meta. Wraps core
  * `get_post_meta()`; the registered-key gate runs through
- * {@see PostMetaKeys::forPostType()}. Use `content/list-post-meta-keys` first to
+ * {@see PostMetaKeys::forPostType()}. Use `og-content/list-post-meta-keys` first to
  * discover which keys a post type supports.
  *
  * @since 0.5.0
@@ -30,7 +30,7 @@ final class GetPostMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/get-post-meta';
+		return 'og-content/get-post-meta';
 	}
 
 	/**
@@ -39,7 +39,7 @@ final class GetPostMeta implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Post Meta', 'abilities-catalog' ),
-			'description'         => __( 'Returns a post\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the post type. Requires edit access to the post (editor-only). Use content/list-post-meta-keys to discover supported keys.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a post\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the post type. Requires edit access to the post (editor-only). Use og-content/list-post-meta-keys to discover supported keys.', 'abilities-catalog' ),
 			'category'            => 'content',
 			'input_schema'        => array(
 				'type'                 => 'object',

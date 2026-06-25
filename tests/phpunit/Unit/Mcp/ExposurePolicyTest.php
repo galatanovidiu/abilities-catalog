@@ -25,14 +25,14 @@ final class ExposurePolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function test_sanitize_drops_unknown_names(): void {
-		$known = array( 'content/get-post', 'content/create-post', 'media/list-media' );
+		$known = array( 'og-content/get-post', 'og-content/create-post', 'og-media/list-media' );
 
 		$result = ExposurePolicy::sanitize(
-			array( 'content/get-post', 'plugins/forged-name', 'media/list-media' ),
+			array( 'og-content/get-post', 'plugins/forged-name', 'og-media/list-media' ),
 			$known
 		);
 
-		$this->assertSame( array( 'content/get-post', 'media/list-media' ), $result );
+		$this->assertSame( array( 'og-content/get-post', 'og-media/list-media' ), $result );
 	}
 
 	/**
@@ -41,14 +41,14 @@ final class ExposurePolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function test_sanitize_deduplicates(): void {
-		$known = array( 'content/get-post', 'content/create-post' );
+		$known = array( 'og-content/get-post', 'og-content/create-post' );
 
 		$result = ExposurePolicy::sanitize(
-			array( 'content/get-post', 'content/get-post', 'content/create-post' ),
+			array( 'og-content/get-post', 'og-content/get-post', 'og-content/create-post' ),
 			$known
 		);
 
-		$this->assertSame( array( 'content/get-post', 'content/create-post' ), $result );
+		$this->assertSame( array( 'og-content/get-post', 'og-content/create-post' ), $result );
 	}
 
 	/**
@@ -57,14 +57,14 @@ final class ExposurePolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function test_sanitize_ignores_non_string_members(): void {
-		$known = array( 'content/get-post' );
+		$known = array( 'og-content/get-post' );
 
 		$result = ExposurePolicy::sanitize(
-			array( 'content/get-post', 42, array( 'nope' ), null ),
+			array( 'og-content/get-post', 42, array( 'nope' ), null ),
 			$known
 		);
 
-		$this->assertSame( array( 'content/get-post' ), $result );
+		$this->assertSame( array( 'og-content/get-post' ), $result );
 	}
 
 	/**
@@ -74,11 +74,11 @@ final class ExposurePolicyTest extends TestCase {
 	 */
 	public function test_apply_changes_adds_enabled(): void {
 		$result = ExposurePolicy::applyChanges(
-			array( 'content/get-post' ),
-			array( 'media/list-media' => true )
+			array( 'og-content/get-post' ),
+			array( 'og-media/list-media' => true )
 		);
 
-		$this->assertSame( array( 'content/get-post', 'media/list-media' ), $result );
+		$this->assertSame( array( 'og-content/get-post', 'og-media/list-media' ), $result );
 	}
 
 	/**
@@ -88,11 +88,11 @@ final class ExposurePolicyTest extends TestCase {
 	 */
 	public function test_apply_changes_removes_disabled_and_keeps_untouched(): void {
 		$result = ExposurePolicy::applyChanges(
-			array( 'content/get-post', 'content/create-post', 'media/list-media' ),
-			array( 'content/create-post' => false )
+			array( 'og-content/get-post', 'og-content/create-post', 'og-media/list-media' ),
+			array( 'og-content/create-post' => false )
 		);
 
-		$this->assertSame( array( 'content/get-post', 'media/list-media' ), $result );
+		$this->assertSame( array( 'og-content/get-post', 'og-media/list-media' ), $result );
 	}
 
 	/**
@@ -102,11 +102,11 @@ final class ExposurePolicyTest extends TestCase {
 	 */
 	public function test_apply_changes_is_idempotent_for_enabled(): void {
 		$result = ExposurePolicy::applyChanges(
-			array( 'content/get-post' ),
-			array( 'content/get-post' => true )
+			array( 'og-content/get-post' ),
+			array( 'og-content/get-post' => true )
 		);
 
-		$this->assertSame( array( 'content/get-post' ), $result );
+		$this->assertSame( array( 'og-content/get-post' ), $result );
 	}
 
 	/**
@@ -116,11 +116,11 @@ final class ExposurePolicyTest extends TestCase {
 	 */
 	public function test_apply_changes_disabling_absent_is_noop(): void {
 		$result = ExposurePolicy::applyChanges(
-			array( 'content/get-post' ),
-			array( 'media/list-media' => false )
+			array( 'og-content/get-post' ),
+			array( 'og-media/list-media' => false )
 		);
 
-		$this->assertSame( array( 'content/get-post' ), $result );
+		$this->assertSame( array( 'og-content/get-post' ), $result );
 	}
 
 	/**
@@ -129,18 +129,18 @@ final class ExposurePolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function test_apply_validated_changes_drops_unknown_enable(): void {
-		$known = array( 'content/get-post', 'media/list-media' );
+		$known = array( 'og-content/get-post', 'og-media/list-media' );
 
 		$result = ExposurePolicy::applyValidatedChanges(
 			array(),
 			array(
-				'content/get-post'    => true,
+				'og-content/get-post'    => true,
 				'plugins/forged-name' => true,
 			),
 			$known
 		);
 
-		$this->assertSame( array( 'content/get-post' ), $result );
+		$this->assertSame( array( 'og-content/get-post' ), $result );
 	}
 
 	/**
@@ -150,15 +150,15 @@ final class ExposurePolicyTest extends TestCase {
 	 * @return void
 	 */
 	public function test_apply_validated_changes_keeps_untouched_unregistered_ability(): void {
-		$known = array( 'content/get-post' );
+		$known = array( 'og-content/get-post' );
 
 		$result = ExposurePolicy::applyValidatedChanges(
 			array( 'third-party/feature' ),
-			array( 'content/get-post' => true ),
+			array( 'og-content/get-post' => true ),
 			$known
 		);
 
-		$this->assertSame( array( 'third-party/feature', 'content/get-post' ), $result );
+		$this->assertSame( array( 'third-party/feature', 'og-content/get-post' ), $result );
 	}
 
 	/**
@@ -168,11 +168,11 @@ final class ExposurePolicyTest extends TestCase {
 	 */
 	public function test_apply_validated_changes_allows_disabling_unregistered(): void {
 		$result = ExposurePolicy::applyValidatedChanges(
-			array( 'third-party/feature', 'content/get-post' ),
+			array( 'third-party/feature', 'og-content/get-post' ),
 			array( 'third-party/feature' => false ),
-			array( 'content/get-post' )
+			array( 'og-content/get-post' )
 		);
 
-		$this->assertSame( array( 'content/get-post' ), $result );
+		$this->assertSame( array( 'og-content/get-post' ), $result );
 	}
 }

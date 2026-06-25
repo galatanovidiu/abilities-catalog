@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/get-template output and contract.
+ * Integration tests for og-templates/get-template output and contract.
  *
  * Covers the flat happy-path output shape for a custom template (id/slug/theme/
  * type/source/content plus the additive original_source), the template-part
@@ -20,7 +20,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/get-template.
+ * Exercises og-templates/get-template.
  */
 final class GetTemplateTest extends TestCase {
 
@@ -31,7 +31,7 @@ final class GetTemplateTest extends TestCase {
 	 * @return string The created template id.
 	 */
 	private function createCustomTemplate( string $slug ): string {
-		$created = wp_get_ability( 'templates/create-template' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'    => $slug,
 				'title'   => 'About ' . $slug,
@@ -49,7 +49,7 @@ final class GetTemplateTest extends TestCase {
 
 		$id = $this->createCustomTemplate( 'page-about' );
 
-		$result = wp_get_ability( 'templates/get-template' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template' )->execute(
 			array( 'id' => $id )
 		);
 
@@ -69,7 +69,7 @@ final class GetTemplateTest extends TestCase {
 	public function test_get_template_part_exposes_area(): void {
 		$this->actingAs( 'administrator' );
 
-		$created = wp_get_ability( 'templates/create-template' )->execute(
+		$created = wp_get_ability( 'og-templates/create-template' )->execute(
 			array(
 				'slug'      => 'my-header',
 				'post_type' => 'wp_template_part',
@@ -78,7 +78,7 @@ final class GetTemplateTest extends TestCase {
 		);
 		$this->assertIsArray( $created );
 
-		$result = wp_get_ability( 'templates/get-template' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template' )->execute(
 			array(
 				'id'        => (string) $created['id'],
 				'post_type' => 'wp_template_part',
@@ -97,7 +97,7 @@ final class GetTemplateTest extends TestCase {
 
 		// minLength:1 rejects an empty id before dispatch, so it cannot trim to
 		// the collection route and return the whole template list.
-		$result = wp_get_ability( 'templates/get-template' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template' )->execute(
 			array( 'id' => '' )
 		);
 
@@ -108,7 +108,7 @@ final class GetTemplateTest extends TestCase {
 	public function test_missing_id_preserves_not_found_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-template' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template' )->execute(
 			array( 'id' => get_stylesheet() . '//does-not-exist' )
 		);
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/create-navigation ability.
+ * Integration tests for the og-menus/create-navigation ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use WP_Error;
 final class CreateNavigationTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/create-navigation' );
+		$ability = wp_get_ability( 'og-menus/create-navigation' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/create-navigation', $ability->get_name() );
+		$this->assertSame( 'og-menus/create-navigation', $ability->get_name() );
 	}
 
 	/**
@@ -31,7 +31,7 @@ final class CreateNavigationTest extends TestCase {
 	 * status degrades to publish. It is dropped from the enum (B7).
 	 */
 	public function test_status_enum_excludes_future(): void {
-		$enum = wp_get_ability( 'menus/create-navigation' )->get_input_schema()['properties']['status']['enum'];
+		$enum = wp_get_ability( 'og-menus/create-navigation' )->get_input_schema()['properties']['status']['enum'];
 
 		$this->assertNotContains( 'future', $enum );
 		$this->assertSame( array( 'draft', 'pending', 'private', 'publish' ), $enum );
@@ -40,7 +40,7 @@ final class CreateNavigationTest extends TestCase {
 	public function test_admin_creates_navigation(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/create-navigation' )->execute(
 			array( 'title' => 'Primary Navigation' )
 		);
 
@@ -56,7 +56,7 @@ final class CreateNavigationTest extends TestCase {
 	public function test_output_contains_title_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/create-navigation' )->execute(
 			array( 'title' => 'Footer Navigation' )
 		);
 
@@ -74,7 +74,7 @@ final class CreateNavigationTest extends TestCase {
 	public function test_omitted_status_creates_draft(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/create-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/create-navigation' )->execute(
 			array( 'title' => 'Draft Navigation' )
 		);
 
@@ -85,7 +85,7 @@ final class CreateNavigationTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'menus/create-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/create-navigation' )->execute(
 			array( 'title' => 'Denied Navigation' )
 		);
 
@@ -98,7 +98,7 @@ final class CreateNavigationTest extends TestCase {
 
 		// An invalid status that is not in the post type's registered statuses is
 		// rejected by the REST route; the route-level error code is surfaced.
-		$result = wp_get_ability( 'menus/create-navigation' )->execute(
+		$result = wp_get_ability( 'og-menus/create-navigation' )->execute(
 			array(
 				'title'  => 'Bad Status Navigation',
 				'status' => 'bogus',

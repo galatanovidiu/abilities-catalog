@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `terms/get-category`.
+ * Read ability: `og-terms/get-category`.
  *
  * Wraps `GET /wp/v2/categories/<id>` via `rest_do_request()` and shapes the
  * response into a flat field set.
@@ -26,7 +26,7 @@ final class GetCategory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/get-category';
+		return 'og-terms/get-category';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class GetCategory implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The category term ID. Discover IDs with terms/list-categories.', 'abilities-catalog' ),
+						'description' => __( 'The category term ID. Discover IDs with og-terms/list-categories.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',

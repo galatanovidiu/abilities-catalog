@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the content/get-taxonomy ability.
+ * Integration tests for the og-content/get-taxonomy ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,23 +14,23 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises content/get-taxonomy end-to-end: a registered taxonomy slug in,
+ * Exercises og-content/get-taxonomy end-to-end: a registered taxonomy slug in,
  * a flat shaped field set out. The wrapped GET /wp/v2/taxonomies/{taxonomy}
  * route allows public view reads, so the ability defers permission to it.
  */
 final class GetTaxonomyTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'content/get-taxonomy' );
+		$ability = wp_get_ability( 'og-content/get-taxonomy' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'content/get-taxonomy', $ability->get_name() );
+		$this->assertSame( 'og-content/get-taxonomy', $ability->get_name() );
 	}
 
 	public function test_returns_shaped_fields_for_taxonomy(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
+		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'category', $result['slug'] );
@@ -49,7 +49,7 @@ final class GetTaxonomyTest extends TestCase {
 	public function test_flat_taxonomy_is_flagged_non_hierarchical(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-taxonomy' )->execute( array( 'taxonomy' => 'post_tag' ) );
+		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'post_tag' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'post_tag', $result['slug'] );
@@ -59,7 +59,7 @@ final class GetTaxonomyTest extends TestCase {
 	public function test_output_key_set_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
+		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame(
@@ -71,7 +71,7 @@ final class GetTaxonomyTest extends TestCase {
 	public function test_unknown_taxonomy_returns_specific_not_found_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-taxonomy' )->execute( array( 'taxonomy' => 'nope_xyz' ) );
+		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'nope_xyz' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		// Core's specific 404, never the generic permission collapse.
@@ -84,7 +84,7 @@ final class GetTaxonomyTest extends TestCase {
 	public function test_missing_taxonomy_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/get-taxonomy' )->execute( array() );
+		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
@@ -96,7 +96,7 @@ final class GetTaxonomyTest extends TestCase {
 		// The wrapped taxonomies/{taxonomy} view route is public, so the ability
 		// defers to it and does not collapse a logged-out reader into a
 		// permission error.
-		$result = wp_get_ability( 'content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
+		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'category', $result['slug'] );

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/delete-application-password ability.
+ * Integration tests for the og-users/delete-application-password ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,10 +38,10 @@ final class DeleteApplicationPasswordTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('users/delete-application-password');
+		$ability = wp_get_ability('og-users/delete-application-password');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('users/delete-application-password', $ability->get_name());
+		$this->assertSame('og-users/delete-application-password', $ability->get_name());
 	}
 
 	public function test_admin_revokes_password_and_returns_credential_snapshot(): void {
@@ -55,7 +55,7 @@ final class DeleteApplicationPasswordTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('users/delete-application-password')->execute(
+		$result = wp_get_ability('og-users/delete-application-password')->execute(
 			array(
 				'user_id' => $user_id,
 				'uuid'    => $item['uuid'],
@@ -82,7 +82,7 @@ final class DeleteApplicationPasswordTest extends TestCase {
 			array('name' => 'No App ID')
 		);
 
-		$result = wp_get_ability('users/delete-application-password')->execute(
+		$result = wp_get_ability('og-users/delete-application-password')->execute(
 			array(
 				'user_id' => $user_id,
 				'uuid'    => $item['uuid'],
@@ -103,7 +103,7 @@ final class DeleteApplicationPasswordTest extends TestCase {
 	public function test_unknown_uuid_returns_core_not_found_error(): void {
 		$user_id = $this->actingAs('administrator');
 
-		$result = wp_get_ability('users/delete-application-password')->execute(
+		$result = wp_get_ability('og-users/delete-application-password')->execute(
 			array(
 				'user_id' => $user_id,
 				'uuid'    => 'ffffffff-0000-4000-8000-000000000000',
@@ -132,7 +132,7 @@ final class DeleteApplicationPasswordTest extends TestCase {
 
 		$this->actingAs('author');
 
-		$result = wp_get_ability('users/delete-application-password')->execute(
+		$result = wp_get_ability('og-users/delete-application-password')->execute(
 			array(
 				'user_id' => $owner_id,
 				'uuid'    => $item['uuid'],

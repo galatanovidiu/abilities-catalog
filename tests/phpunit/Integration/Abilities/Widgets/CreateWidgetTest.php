@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/create-widget ability.
+ * Integration tests for the og-widgets/create-widget ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -42,16 +42,16 @@ final class CreateWidgetTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/create-widget' );
+		$ability = wp_get_ability( 'og-widgets/create-widget' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/create-widget', $ability->get_name() );
+		$this->assertSame( 'og-widgets/create-widget', $ability->get_name() );
 	}
 
 	public function test_admin_can_create_block_widget(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/create-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/create-widget' )->execute(
 			array(
 				'id_base'  => 'block',
 				'sidebar'  => 'wp_inactive_widgets',
@@ -80,7 +80,7 @@ final class CreateWidgetTest extends TestCase {
 	public function test_output_key_set_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/create-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/create-widget' )->execute(
 			array(
 				'id_base'  => 'block',
 				'instance' => array( 'raw' => array( 'content' => '<!-- wp:paragraph --><p>Shape check</p><!-- /wp:paragraph -->' ) ),
@@ -101,7 +101,7 @@ final class CreateWidgetTest extends TestCase {
 	public function test_invalid_id_base_surfaces_route_error_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/create-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/create-widget' )->execute(
 			array(
 				'id_base' => 'no_such_widget',
 			)
@@ -118,7 +118,7 @@ final class CreateWidgetTest extends TestCase {
 
 		$before = wp_get_sidebars_widgets()['wp_inactive_widgets'] ?? array();
 
-		$result = wp_get_ability( 'widgets/create-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/create-widget' )->execute(
 			array(
 				'id_base'  => 'block',
 				'instance' => array( 'raw' => array( 'content' => '<!-- wp:paragraph --><p>Denied</p><!-- /wp:paragraph -->' ) ),
@@ -137,7 +137,7 @@ final class CreateWidgetTest extends TestCase {
 
 		$before = wp_get_sidebars_widgets()['wp_inactive_widgets'] ?? array();
 
-		$result = wp_get_ability( 'widgets/create-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/create-widget' )->execute(
 			array(
 				'id_base'  => 'block',
 				'instance' => array( 'raw' => array( 'content' => '<!-- wp:paragraph --><p>Denied</p><!-- /wp:paragraph -->' ) ),

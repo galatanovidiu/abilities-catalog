@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `comments/delete-meta`.
+ * T2 destructive write ability: `og-comments/delete-meta`.
  *
  * Removes one or more custom fields (meta) from a comment, deleting all stored
  * values for each named key. It operates only on meta keys registered with
@@ -33,7 +33,7 @@ final class DeleteCommentMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/delete-meta';
+		return 'og-comments/delete-meta';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class DeleteCommentMeta implements Ability {
 					'id'   => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The comment ID to delete meta from. Discover IDs with comments/list-comments.', 'abilities-catalog' ),
+						'description' => __( 'The comment ID to delete meta from. Discover IDs with og-comments/list-comments.', 'abilities-catalog' ),
 					),
 					'keys' => array(
 						'type'        => 'array',

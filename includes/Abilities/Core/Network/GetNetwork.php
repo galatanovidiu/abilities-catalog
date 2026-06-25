@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Core-function T1 read ability: `network/get-network`.
+ * Core-function T1 read ability: `og-network/get-network`.
  *
  * Returns one multisite network's identity — its id, domain, path, display
  * name, cookie domain, and the blog_id of its main site — defaulting to the
- * current network. The network-level companion to `network/get-site`. Built on
+ * current network. The network-level companion to `og-network/get-site`. Built on
  * the core accessor `get_network()` (wp-includes/ms-network.php:23 →
  * `WP_Network|null`; an empty argument resolves to the current network), since
  * core exposes no REST route for networks. No wp-admin includes are loaded.
@@ -40,7 +40,7 @@ final class GetNetwork implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/get-network';
+		return 'og-network/get-network';
 	}
 
 	/**
@@ -49,7 +49,7 @@ final class GetNetwork implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Network', 'abilities-catalog' ),
-			'description'         => __( 'Returns a multisite network\'s identity: id, domain, path, display name (site_name), cookie domain, and the blog_id of its main site (main_site_id). Omit network_id for the current network. An unknown network_id returns a 404 rest_network_invalid_id error. Use network/list-networks to enumerate networks. Requires a multisite install and the manage_network (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a multisite network\'s identity: id, domain, path, display name (site_name), cookie domain, and the blog_id of its main site (main_site_id). Omit network_id for the current network. An unknown network_id returns a 404 rest_network_invalid_id error. Use og-network/list-networks to enumerate networks. Requires a multisite install and the manage_network (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -57,7 +57,7 @@ final class GetNetwork implements Ability {
 					'network_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The network ID to fetch (multi-network installs). Discover IDs with network/list-networks. Omit for the current network.', 'abilities-catalog' ),
+						'description' => __( 'The network ID to fetch (multi-network installs). Discover IDs with og-network/list-networks. Omit for the current network.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

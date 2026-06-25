@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/list-terms ability (generic, taxonomy-keyed).
+ * Integration tests for the og-terms/list-terms ability (generic, taxonomy-keyed).
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -52,10 +52,10 @@ final class ListTermsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/list-terms');
+		$ability = wp_get_ability('og-terms/list-terms');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/list-terms', $ability->get_name());
+		$this->assertSame('og-terms/list-terms', $ability->get_name());
 	}
 
 	/**
@@ -64,7 +64,7 @@ final class ListTermsTest extends TestCase {
 	public function test_returns_items_with_totals(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/list-terms')->execute(
+		$result = wp_get_ability('og-terms/list-terms')->execute(
 			array(
 				'taxonomy' => 'category',
 			)
@@ -85,7 +85,7 @@ final class ListTermsTest extends TestCase {
 	public function test_parent_filter_limits_to_children(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/list-terms')->execute(
+		$result = wp_get_ability('og-terms/list-terms')->execute(
 			array(
 				'taxonomy' => 'category',
 				'parent'   => $this->parent_id,
@@ -104,7 +104,7 @@ final class ListTermsTest extends TestCase {
 	public function test_unknown_taxonomy_returns_invalid_code(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/list-terms')->execute(
+		$result = wp_get_ability('og-terms/list-terms')->execute(
 			array(
 				'taxonomy' => 'no_such_taxonomy',
 			)
@@ -129,7 +129,7 @@ final class ListTermsTest extends TestCase {
 
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/list-terms')->execute(
+		$result = wp_get_ability('og-terms/list-terms')->execute(
 			array(
 				'taxonomy' => 'lt_private_tax',
 			)

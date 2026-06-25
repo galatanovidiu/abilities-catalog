@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `network/list-sites`.
+ * T1 read ability: `og-network/list-sites`.
  *
  * Lists the sites (blogs) in a multisite network, one flat row per site, with
  * optional status filters and paging, so an agent can enumerate the network's
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * no one can run it), and `execute()` opens with an explicit `is_multisite()`
  * guard before touching any `ms-*` function — mirroring the
  * "explicit guard at the top of execute() when the wrapped core fn has no route
- * to surface an error" idiom (`tools/delete-transient`).
+ * to surface an error" idiom (`og-tools/delete-transient`).
  *
  * Projection notes (kept in sync with the inline row schema):
  * - `WP_Site` public props are numeric STRINGS (wp-includes/class-wp-site.php).
@@ -46,7 +46,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   `$site->home`/`$site->siteurl`, because `__get` lazy-loads those via
  *   `get_details()` (wp-includes/class-wp-site.php:319) which calls
  *   `switch_to_blog()` once per row — expensive for a list. So `url` carries no
- *   scheme; `network/get-site` returns the full `siteurl` for a single site.
+ *   scheme; `og-network/get-site` returns the full `siteurl` for a single site.
  *
  * @since 0.1.0
  */
@@ -66,7 +66,7 @@ final class ListSites implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/list-sites';
+		return 'og-network/list-sites';
 	}
 
 	/**
@@ -75,7 +75,7 @@ final class ListSites implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Sites', 'abilities-catalog' ),
-			'description'         => __( 'Lists the sites (blogs) in a WordPress multisite network, one row per site with its blog_id, domain, path, url, timestamps, and status flags (public/archived/mature/spam/deleted). Use network/get-site for one site\'s full detail including its name. An empty result means no sites match the filters. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Lists the sites (blogs) in a WordPress multisite network, one row per site with its blog_id, domain, path, url, timestamps, and status flags (public/archived/mature/spam/deleted). Use og-network/get-site for one site\'s full detail including its name. An empty result means no sites match the filters. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -100,7 +100,7 @@ final class ListSites implements Ability {
 					'network_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( "Restrict to one network's sites (multi-network installs). Discover network IDs with network/list-networks. Omit for the current network.", 'abilities-catalog' ),
+						'description' => __( "Restrict to one network's sites (multi-network installs). Discover network IDs with og-network/list-networks. Omit for the current network.", 'abilities-catalog' ),
 					),
 					'public'     => array(
 						'type'        => 'boolean',
@@ -131,14 +131,14 @@ final class ListSites implements Ability {
 				'properties'           => array(
 					'sites' => array(
 						'type'        => 'array',
-						'description' => __( 'The list of sites as flat rows. Use network/get-site for one site\'s full detail.', 'abilities-catalog' ),
+						'description' => __( 'The list of sites as flat rows. Use og-network/get-site for one site\'s full detail.', 'abilities-catalog' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'required'             => array( 'blog_id', 'network_id', 'domain', 'path', 'url', 'registered', 'last_updated', 'public', 'archived', 'mature', 'spam', 'deleted' ),
 							'properties'           => array(
 								'blog_id'      => array(
 									'type'        => 'integer',
-									'description' => __( 'The site (blog) ID; pass to network/get-site.', 'abilities-catalog' ),
+									'description' => __( 'The site (blog) ID; pass to og-network/get-site.', 'abilities-catalog' ),
 								),
 								'network_id'   => array(
 									'type'        => 'integer',
@@ -154,7 +154,7 @@ final class ListSites implements Ability {
 								),
 								'url'          => array(
 									'type'        => 'string',
-									'description' => __( "A cheap URL built from the site's domain and path (no scheme). It is NOT fetched via the site's home option, so it has no http(s):// prefix; use network/get-site for the canonical siteurl.", 'abilities-catalog' ),
+									'description' => __( "A cheap URL built from the site's domain and path (no scheme). It is NOT fetched via the site's home option, so it has no http(s):// prefix; use og-network/get-site for the canonical siteurl.", 'abilities-catalog' ),
 								),
 								'registered'   => array(
 									'type'        => 'string',

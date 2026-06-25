@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `terms/attach-post-terms`.
+ * T2 write ability: `og-terms/attach-post-terms`.
  *
  * Assigns existing taxonomy terms to a post without rewriting the rest of the
  * post. Terms may be given as IDs, slugs, or names; they must already exist
- * (use `terms/create-term` first) — this ability never creates terms. By default
+ * (use `og-terms/create-term` first) — this ability never creates terms. By default
  * it appends to the post's current terms; set `append` to false to replace them.
  * Wraps core `wp_set_object_terms()`. Returns the post `id`, `taxonomy`, the full
  * resulting `term_ids`, and `edit_link` (the wp-admin editor URL); surface
@@ -31,7 +31,7 @@ final class AttachPostTerms implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/attach-post-terms';
+		return 'og-terms/attach-post-terms';
 	}
 
 	/**
@@ -40,7 +40,7 @@ final class AttachPostTerms implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Attach Post Terms', 'abilities-catalog' ),
-			'description'         => __( 'Assigns existing terms in a taxonomy to a post. Terms can be IDs, slugs, or names but must already exist; create them with terms/create-term first. Appends by default; set append to false to replace the post\'s terms in that taxonomy. Returns the post id, taxonomy, resulting term_ids, and edit_link — surface edit_link so a human can review the post.', 'abilities-catalog' ),
+			'description'         => __( 'Assigns existing terms in a taxonomy to a post. Terms can be IDs, slugs, or names but must already exist; create them with og-terms/create-term first. Appends by default; set append to false to replace the post\'s terms in that taxonomy. Returns the post id, taxonomy, resulting term_ids, and edit_link — surface edit_link so a human can review the post.', 'abilities-catalog' ),
 			'category'            => 'terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -176,7 +176,7 @@ final class AttachPostTerms implements Ability {
 			return new WP_Error(
 				'rest_term_not_found',
 				/* translators: %s: comma-separated list of term references. */
-				sprintf( __( 'These terms do not exist in the taxonomy: %s. Create them with terms/create-term first.', 'abilities-catalog' ), implode( ', ', $resolved['missing'] ) ),
+				sprintf( __( 'These terms do not exist in the taxonomy: %s. Create them with og-terms/create-term first.', 'abilities-catalog' ), implode( ', ', $resolved['missing'] ) ),
 				array( 'status' => 400 )
 			);
 		}

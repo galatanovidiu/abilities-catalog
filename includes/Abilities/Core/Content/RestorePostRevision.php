@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `content/restore-post-revision`.
+ * T2 non-destructive write ability: `og-content/restore-post-revision`.
  *
  * Restores a post to a saved revision by wrapping the core function
  * `wp_restore_post_revision()`. This is a net-new write: it does NOT dispatch a
@@ -48,7 +48,7 @@ final class RestorePostRevision implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/restore-post-revision';
+		return 'og-content/restore-post-revision';
 	}
 
 	/**

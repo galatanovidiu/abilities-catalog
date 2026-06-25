@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the themes/list-themes ability.
+ * Integration tests for the og-themes/list-themes ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * themes/list-themes wraps `GET /wp/v2/themes` and projects each item into a
+ * og-themes/list-themes wraps `GET /wp/v2/themes` and projects each item into a
  * flat, closed summary row via ThemeListShaper. switch_themes or
  * edit_theme_options is the coarse capability guard.
  */
@@ -38,16 +38,16 @@ final class ListThemesTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'themes/list-themes' );
+		$ability = wp_get_ability( 'og-themes/list-themes' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'themes/list-themes', $ability->get_name() );
+		$this->assertSame( 'og-themes/list-themes', $ability->get_name() );
 	}
 
 	public function test_admin_lists_themes_with_totals(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/list-themes' )->execute( array() );
+		$result = wp_get_ability( 'og-themes/list-themes' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -63,7 +63,7 @@ final class ListThemesTest extends TestCase {
 	public function test_rows_are_flat_and_closed(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/list-themes' )->execute( array() );
+		$result = wp_get_ability( 'og-themes/list-themes' )->execute( array() );
 
 		$this->assertIsArray( $result );
 
@@ -80,7 +80,7 @@ final class ListThemesTest extends TestCase {
 	public function test_status_filter_returns_only_active_theme(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/list-themes' )->execute(
+		$result = wp_get_ability( 'og-themes/list-themes' )->execute(
 			array( 'status' => 'active' )
 		);
 
@@ -99,7 +99,7 @@ final class ListThemesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'themes/list-themes' )->execute( array() );
+		$result = wp_get_ability( 'og-themes/list-themes' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

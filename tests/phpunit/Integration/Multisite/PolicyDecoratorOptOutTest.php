@@ -21,7 +21,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
  *
  * Opt-out (Decision 9 — site is the silent default): an ability that declares a non-site
  * `scope` (network/user/global) gets NO injected `blog_id` and NO hint even on multisite.
- * Conversely `network/add-user-to-site` (scope=network, owns its own required `blog_id`)
+ * Conversely `og-network/add-user-to-site` (scope=network, owns its own required `blog_id`)
  * keeps EXACTLY that one `blog_id` — the decorator does not add a second field, does not
  * clobber it, does not double-switch — and a happy-path add still works on a real network.
  *
@@ -127,60 +127,60 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 	 */
 
 	public function test_network_scoped_ability_gets_no_injected_blog_id(): void {
-		// network/get-network declares scope=network: it is network-wide and takes a
+		// og-network/get-network declares scope=network: it is network-wide and takes a
 		// network_id, not a blog_id, so the decorator must inject nothing.
-		$props = $this->registeredProperties( 'network/get-network' );
+		$props = $this->registeredProperties( 'og-network/get-network' );
 
 		$this->assertArrayNotHasKey(
 			'blog_id',
 			$props,
-			'network/get-network (scope=network) must not gain an injected blog_id on multisite.'
+			'og-network/get-network (scope=network) must not gain an injected blog_id on multisite.'
 		);
 		$this->assertStringNotContainsString(
 			self::HINT,
-			(string) wp_get_ability( 'network/get-network' )->get_description(),
-			'network/get-network (scope=network) must not gain the multisite hint.'
+			(string) wp_get_ability( 'og-network/get-network' )->get_description(),
+			'og-network/get-network (scope=network) must not gain the multisite hint.'
 		);
 	}
 
 	public function test_user_scoped_ability_gets_no_injected_blog_id(): void {
-		// users/list-my-sites declares scope=user: a user's site membership is
+		// og-users/list-my-sites declares scope=user: a user's site membership is
 		// network-global identity, not per-site state, so no blog_id and no hint.
-		$props = $this->registeredProperties( 'users/list-my-sites' );
+		$props = $this->registeredProperties( 'og-users/list-my-sites' );
 
 		$this->assertArrayNotHasKey(
 			'blog_id',
 			$props,
-			'users/list-my-sites (scope=user) must not gain an injected blog_id on multisite.'
+			'og-users/list-my-sites (scope=user) must not gain an injected blog_id on multisite.'
 		);
 		$this->assertStringNotContainsString(
 			self::HINT,
-			(string) wp_get_ability( 'users/list-my-sites' )->get_description(),
-			'users/list-my-sites (scope=user) must not gain the multisite hint.'
+			(string) wp_get_ability( 'og-users/list-my-sites' )->get_description(),
+			'og-users/list-my-sites (scope=user) must not gain the multisite hint.'
 		);
 	}
 
 	public function test_global_scoped_ability_gets_no_injected_blog_id(): void {
-		// updates/list-available-updates declares scope=global: it reads install-wide
+		// og-updates/list-available-updates declares scope=global: it reads install-wide
 		// update data, so the decorator must inject nothing.
-		$props = $this->registeredProperties( 'updates/list-available-updates' );
+		$props = $this->registeredProperties( 'og-updates/list-available-updates' );
 
 		$this->assertArrayNotHasKey(
 			'blog_id',
 			$props,
-			'updates/list-available-updates (scope=global) must not gain an injected blog_id on multisite.'
+			'og-updates/list-available-updates (scope=global) must not gain an injected blog_id on multisite.'
 		);
 		$this->assertStringNotContainsString(
 			self::HINT,
-			(string) wp_get_ability( 'updates/list-available-updates' )->get_description(),
-			'updates/list-available-updates (scope=global) must not gain the multisite hint.'
+			(string) wp_get_ability( 'og-updates/list-available-updates' )->get_description(),
+			'og-updates/list-available-updates (scope=global) must not gain the multisite hint.'
 		);
 	}
 
 	public function test_add_user_to_site_keeps_exactly_its_own_single_blog_id(): void {
-		// network/add-user-to-site (scope=network) owns a REQUIRED blog_id param. The
+		// og-network/add-user-to-site (scope=network) owns a REQUIRED blog_id param. The
 		// decorator must leave that schema untouched: no second blog_id, no clobber.
-		$ability = wp_get_ability( 'network/add-user-to-site' );
+		$ability = wp_get_ability( 'og-network/add-user-to-site' );
 		$this->assertNotNull( $ability );
 
 		$schema = $ability->get_input_schema();
@@ -190,7 +190,7 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 
 		// Exactly one blog_id field exists, and it is the ability's own required param
 		// (minimum 1), not the decorator's optional injected one.
-		$this->assertArrayHasKey( 'blog_id', $props, 'network/add-user-to-site must keep its own blog_id.' );
+		$this->assertArrayHasKey( 'blog_id', $props, 'og-network/add-user-to-site must keep its own blog_id.' );
 		$this->assertSame( 'integer', $props['blog_id']['type'] ?? null );
 		$this->assertSame( 1, $props['blog_id']['minimum'] ?? null );
 
@@ -203,7 +203,7 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 		$this->assertStringNotContainsString(
 			self::HINT,
 			(string) $ability->get_description(),
-			'network/add-user-to-site (scope=network) must not gain the multisite hint.'
+			'og-network/add-user-to-site (scope=network) must not gain the multisite hint.'
 		);
 	}
 
@@ -215,7 +215,7 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 
 		$start_blog = get_current_blog_id();
 
-		$result = wp_get_ability( 'network/add-user-to-site' )->execute(
+		$result = wp_get_ability( 'og-network/add-user-to-site' )->execute(
 			array(
 				'blog_id' => $blog_id,
 				'user_id' => $user_id,
@@ -248,8 +248,8 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 	 */
 
 	public function test_site_scoped_description_ends_with_the_hint_exactly_once(): void {
-		// content/create-post has no scope line -> default site -> decorated.
-		$description = (string) wp_get_ability( 'content/create-post' )->get_description();
+		// og-content/create-post has no scope line -> default site -> decorated.
+		$description = (string) wp_get_ability( 'og-content/create-post' )->get_description();
 
 		$this->assertSame(
 			1,
@@ -271,7 +271,7 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 		// The discover-path schema change is intentional: a site-scoped ability gains the
 		// OPTIONAL injected blog_id (minimum 1, never required). Pins it so a regression
 		// that drops the injection is caught here, not only in the gates test.
-		$ability = wp_get_ability( 'content/create-post' );
+		$ability = wp_get_ability( 'og-content/create-post' );
 		$this->assertNotNull( $ability );
 
 		$schema = $ability->get_input_schema();
@@ -294,7 +294,7 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 		// the WRAPPED_FLAG meta) must short-circuit, so the hint stays at one occurrence —
 		// proving the WRAPPED_FLAG guards against a second append in practice, not just in
 		// a unit test.
-		$ability = wp_get_ability( 'content/create-post' );
+		$ability = wp_get_ability( 'og-content/create-post' );
 		$this->assertNotNull( $ability );
 
 		// Reconstruct the registered args as the filter would see them on a re-pass.
@@ -313,7 +313,7 @@ final class PolicyDecoratorOptOutTest extends TestCase {
 
 		// Re-run the real decorator on those args. The WRAPPED_FLAG in meta must make it
 		// a no-op, so the hint is NOT appended a second time.
-		$redecorated = ( new PolicyDecorator() )->decorate( $registered_args, 'content/create-post' );
+		$redecorated = ( new PolicyDecorator() )->decorate( $registered_args, 'og-content/create-post' );
 
 		$this->assertSame(
 			1,

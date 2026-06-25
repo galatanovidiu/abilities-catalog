@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for content/get-post-revision.
+ * Integration tests for og-content/get-post-revision.
  *
  * Covers the happy-path flat field set, the specific invalid-id 404 (so a
  * missing revision is not collapsed to a generic permission failure), and the
@@ -17,7 +17,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises content/get-post-revision output and error contract.
+ * Exercises og-content/get-post-revision output and error contract.
  */
 final class GetPostRevisionTest extends TestCase {
 
@@ -55,7 +55,7 @@ final class GetPostRevisionTest extends TestCase {
 
 		[ $post_id, $revision_id ] = $this->createRevision( $admin );
 
-		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/get-post-revision' )->execute(
 			array(
 				'parent' => $post_id,
 				'id'     => $revision_id,
@@ -95,7 +95,7 @@ final class GetPostRevisionTest extends TestCase {
 		$revisions   = wp_get_post_revisions( $post_id );
 		$revision_id = (int) array_key_first( $revisions );
 
-		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/get-post-revision' )->execute(
 			array(
 				'parent'  => $post_id,
 				'id'      => $revision_id,
@@ -118,7 +118,7 @@ final class GetPostRevisionTest extends TestCase {
 		[ $post_id, $revision_id ] = $this->createRevision( $admin );
 
 		// Default (view) context: core does not return *.raw for revisions.
-		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/get-post-revision' )->execute(
 			array(
 				'parent' => $post_id,
 				'id'     => $revision_id,
@@ -136,7 +136,7 @@ final class GetPostRevisionTest extends TestCase {
 
 		[ $post_id ] = $this->createRevision( $admin );
 
-		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/get-post-revision' )->execute(
 			array(
 				'parent' => $post_id,
 				'id'     => self::MISSING_ID,
@@ -156,7 +156,7 @@ final class GetPostRevisionTest extends TestCase {
 		// A different author cannot read the revision: the wrapped route enforces
 		// edit_post on the parent, surfacing a specific 403 rather than collapsing.
 		$this->actingAs( 'author' );
-		$result = wp_get_ability( 'content/get-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/get-post-revision' )->execute(
 			array(
 				'parent' => $post_id,
 				'id'     => $revision_id,

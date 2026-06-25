@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the privacy/generate-export ability.
+ * Integration tests for the og-privacy/generate-export ability.
  *
  * Covers the invalid-request 404 guard, the request_id discovery hint in the
  * input schema, exporter WP_Error pass-through (core parity), the response-shape
@@ -20,7 +20,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises privacy/generate-export guards, schema, and exporter parity.
+ * Exercises og-privacy/generate-export guards, schema, and exporter parity.
  */
 final class GenerateExportTest extends TestCase {
 
@@ -51,7 +51,7 @@ final class GenerateExportTest extends TestCase {
 		$args        = ( new GenerateExport() )->args();
 		$description = $args['input_schema']['properties']['request_id']['description'];
 
-		$this->assertStringContainsString( 'privacy/list-export-requests', $description );
+		$this->assertStringContainsString( 'og-privacy/list-export-requests', $description );
 	}
 
 	public function test_exporter_wp_error_is_returned_verbatim(): void {
@@ -160,7 +160,7 @@ final class GenerateExportTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$allowed = wp_get_ability( 'privacy/generate-export' )
+		$allowed = wp_get_ability( 'og-privacy/generate-export' )
 			->check_permissions( array( 'request_id' => 1 ) );
 
 		$this->assertNotTrue( $allowed );

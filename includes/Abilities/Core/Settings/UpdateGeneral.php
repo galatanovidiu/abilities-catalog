@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `settings/update-general`.
+ * T2 non-destructive write ability: `og-settings/update-general`.
  *
  * Updates a field-gated subset of the General Settings screen via
  * `POST /wp/v2/settings`. The accepted fields are exactly those the matching
@@ -46,7 +46,7 @@ final class UpdateGeneral implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-general';
+		return 'og-settings/update-general';
 	}
 
 	/**

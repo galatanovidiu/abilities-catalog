@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `users/delete-meta`.
+ * T2 destructive write ability: `og-users/delete-meta`.
  *
  * Removes one or more custom fields (meta) from a user, deleting all stored
  * values for each named key. It operates only on meta keys registered with
@@ -33,7 +33,7 @@ final class DeleteUserMeta implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/delete-meta';
+		return 'og-users/delete-meta';
 	}
 
 	/**
@@ -49,7 +49,7 @@ final class DeleteUserMeta implements Ability {
 				'properties'           => array(
 					'id'   => array(
 						'type'        => 'integer',
-						'description' => __( 'The user ID to delete meta from. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The user ID to delete meta from. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 					'keys' => array(
 						'type'        => 'array',

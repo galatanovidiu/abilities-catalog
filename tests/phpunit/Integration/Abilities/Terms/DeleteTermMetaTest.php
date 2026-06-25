@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/delete-meta ability.
+ * Integration tests for the og-terms/delete-meta ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises terms/delete-meta end-to-end against a registered show_in_rest term
+ * Exercises og-terms/delete-meta end-to-end against a registered show_in_rest term
  * meta key: the happy-path removal, the registered-key security gate (an
  * unregistered/internal key is rejected and nothing is deleted), the specific
  * missing-term 404, the per-key delete capability guard, the logged-out denial,
@@ -68,13 +68,13 @@ final class DeleteTermMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'terms/delete-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-terms/delete-meta' ) );
 	}
 
 	public function test_deletes_registered_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -94,7 +94,7 @@ final class DeleteTermMetaTest extends TestCase {
 
 		// wp_capabilities is internal user meta that must never be reachable; for a
 		// term, an unregistered/internal key like a _-prefixed one is rejected too.
-		$result = wp_get_ability( 'terms/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'keys' => array( 'abilities_catalog_test_key', '_internal_secret' ),
@@ -111,7 +111,7 @@ final class DeleteTermMetaTest extends TestCase {
 	public function test_missing_term_returns_invalid_id_not_permission(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-meta' )->execute(
 			array(
 				'id'   => 99999999,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -130,7 +130,7 @@ final class DeleteTermMetaTest extends TestCase {
 
 		// An administrator can edit the term, but the auth_callback denies the
 		// per-key delete_term_meta cap.
-		$result = wp_get_ability( 'terms/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'keys' => array( 'guarded_meta' ),
@@ -148,7 +148,7 @@ final class DeleteTermMetaTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_value_survives(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'terms/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'keys' => array( 'abilities_catalog_test_key' ),
@@ -167,7 +167,7 @@ final class DeleteTermMetaTest extends TestCase {
 	public function test_output_has_exact_key_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'terms/delete-meta' )->execute(
+		$result = wp_get_ability( 'og-terms/delete-meta' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'keys' => array( 'abilities_catalog_test_key' ),

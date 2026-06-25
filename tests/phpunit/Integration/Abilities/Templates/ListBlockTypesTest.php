@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-block-types output and contract.
+ * Integration tests for og-templates/list-block-types output and contract.
  *
  * Covers the happy path (returns an `items` array whose rows carry the four
  * guaranteed keys and includes `core/paragraph`), the output-shape guarantee
@@ -18,14 +18,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-block-types.
+ * Exercises og-templates/list-block-types.
  */
 final class ListBlockTypesTest extends TestCase {
 
 	public function test_returns_items_with_guaranteed_keys_including_core_paragraph(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-block-types' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-types' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -51,7 +51,7 @@ final class ListBlockTypesTest extends TestCase {
 	public function test_rows_expose_only_declared_flat_keys(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-block-types' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-types' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -68,7 +68,7 @@ final class ListBlockTypesTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		// edit_posts is the catalog guard; a subscriber lacks it.
-		$result = wp_get_ability( 'templates/list-block-types' )->execute();
+		$result = wp_get_ability( 'og-templates/list-block-types' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

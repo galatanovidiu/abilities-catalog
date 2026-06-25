@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the media/list-media ability.
+ * Integration tests for the og-media/list-media ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises media/list-media: registration, collection output shape, and the
+ * Exercises og-media/list-media: registration, collection output shape, and the
  * orderby enum that mirrors the sibling list abilities.
  */
 final class ListMediaTest extends TestCase {
@@ -40,10 +40,10 @@ final class ListMediaTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'media/list-media' );
+		$ability = wp_get_ability( 'og-media/list-media' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'media/list-media', $ability->get_name() );
+		$this->assertSame( 'og-media/list-media', $ability->get_name() );
 	}
 
 	public function test_admin_lists_media_with_collection_shape(): void {
@@ -52,7 +52,7 @@ final class ListMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/list-media' )->execute( array() );
+		$result = wp_get_ability( 'og-media/list-media' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -68,7 +68,7 @@ final class ListMediaTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 
-		$result = wp_get_ability( 'media/list-media' )->execute( array() );
+		$result = wp_get_ability( 'og-media/list-media' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -93,7 +93,7 @@ final class ListMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/list-media' )->execute(
+		$result = wp_get_ability( 'og-media/list-media' )->execute(
 			array( 'media_type' => array( 'image' ) )
 		);
 
@@ -106,7 +106,7 @@ final class ListMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
 		$this->assertIsInt( $attachment_id );
 
-		$result = wp_get_ability( 'media/list-media' )->execute(
+		$result = wp_get_ability( 'og-media/list-media' )->execute(
 			array( 'mime_type' => array( 'image/jpeg' ) )
 		);
 
@@ -117,7 +117,7 @@ final class ListMediaTest extends TestCase {
 	public function test_valid_orderby_is_accepted(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'media/list-media' )->execute( array( 'orderby' => 'title' ) );
+		$result = wp_get_ability( 'og-media/list-media' )->execute( array( 'orderby' => 'title' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -128,7 +128,7 @@ final class ListMediaTest extends TestCase {
 
 		// The orderby enum rejects values outside the core media collection set
 		// at the schema boundary, before execute() builds a REST request.
-		$result = wp_get_ability( 'media/list-media' )->execute( array( 'orderby' => 'menu_order' ) );
+		$result = wp_get_ability( 'og-media/list-media' )->execute( array( 'orderby' => 'menu_order' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );

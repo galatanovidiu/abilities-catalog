@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/get-widget ability.
+ * Integration tests for the og-widgets/get-widget ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use WP_Error;
 use WP_REST_Request;
 
 /**
- * Exercises widgets/get-widget end-to-end: a real core "block" widget in, the
+ * Exercises og-widgets/get-widget end-to-end: a real core "block" widget in, the
  * shared flat widget row out, with the capability guard and the route's
  * specific 404 enforced on execute().
  */
@@ -78,16 +78,16 @@ final class GetWidgetTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/get-widget' );
+		$ability = wp_get_ability( 'og-widgets/get-widget' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/get-widget', $ability->get_name() );
+		$this->assertSame( 'og-widgets/get-widget', $ability->get_name() );
 	}
 
 	public function test_admin_gets_widget_by_id(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
+		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $this->widget_id, $result['id'] );
@@ -98,7 +98,7 @@ final class GetWidgetTest extends TestCase {
 	public function test_output_key_set_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
+		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'id', 'id_base', 'sidebar', 'rendered' ), array_keys( $result ) );
@@ -111,7 +111,7 @@ final class GetWidgetTest extends TestCase {
 	public function test_missing_widget_returns_route_404_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/get-widget' )->execute( array( 'id' => 'block-99999' ) );
+		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => 'block-99999' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'rest_widget_not_found', $result->get_error_code() );
@@ -122,7 +122,7 @@ final class GetWidgetTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
+		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -131,7 +131,7 @@ final class GetWidgetTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
+		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/get-discussion`.
+ * T1 read ability: `og-settings/get-discussion`.
  *
  * Returns the Discussion Settings screen values, read directly from options.
  * Net-new read: no REST route is dispatched.
@@ -24,7 +24,7 @@ final class GetDiscussion implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/get-discussion';
+		return 'og-settings/get-discussion';
 	}
 
 	/**

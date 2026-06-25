@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the content/restore-post-revision data-loss guard (B6).
+ * Integration tests for the og-content/restore-post-revision data-loss guard (B6).
  *
  * Restoring is advertised as non-destructive because the pre-restore state is saved
  * as a fresh revision. That guarantee fails when revisions are disabled: no recovery
@@ -57,7 +57,7 @@ final class RestorePostRevisionTest extends TestCase {
 		// Disable revisions only after the recovery revision already exists.
 		add_filter( 'wp_revisions_to_keep', '__return_zero' );
 
-		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/restore-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $revision_id,
@@ -99,7 +99,7 @@ final class RestorePostRevisionTest extends TestCase {
 
 		add_filter( 'wp_revisions_to_keep', '__return_zero' );
 
-		$result = wp_get_ability( 'content/restore-post-revision' )->execute(
+		$result = wp_get_ability( 'og-content/restore-post-revision' )->execute(
 			array(
 				'parent'      => $post_id,
 				'revision_id' => $autosave_id,

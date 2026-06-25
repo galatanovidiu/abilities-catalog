@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the connectors/list-connectors ability.
+ * Integration tests for the og-connectors/list-connectors ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use WP_Connector_Registry;
 use WP_Error;
 
 /**
- * Exercises connectors/list-connectors end-to-end: the flat item field set,
+ * Exercises og-connectors/list-connectors end-to-end: the flat item field set,
  * the distinct authentication/key-source/connected states, the permission
  * guard, and the no-secret-leak invariant.
  */
@@ -108,7 +108,7 @@ final class ListConnectorsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'connectors/list-connectors' ) );
+		$this->assertNotNull( wp_get_ability( 'og-connectors/list-connectors' ) );
 	}
 
 	/**
@@ -131,7 +131,7 @@ final class ListConnectorsTest extends TestCase {
 	public function test_none_method_item_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/list-connectors' )->execute();
+		$result = wp_get_ability( 'og-connectors/list-connectors' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -156,7 +156,7 @@ final class ListConnectorsTest extends TestCase {
 	public function test_apikey_item_without_key_is_not_configured(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/list-connectors' )->execute();
+		$result = wp_get_ability( 'og-connectors/list-connectors' )->execute();
 		$found  = $this->findItem( $result['items'], self::APIKEY_EMPTY_ID );
 
 		$this->assertNotNull( $found );
@@ -169,7 +169,7 @@ final class ListConnectorsTest extends TestCase {
 	public function test_apikey_item_with_database_key_is_configured_and_connected(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'connectors/list-connectors' )->execute();
+		$result = wp_get_ability( 'og-connectors/list-connectors' )->execute();
 		$found  = $this->findItem( $result['items'], self::APIKEY_SET_ID );
 
 		$this->assertNotNull( $found );
@@ -183,7 +183,7 @@ final class ListConnectorsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'connectors/list-connectors' )->execute();
+		$result = wp_get_ability( 'og-connectors/list-connectors' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

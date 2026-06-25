@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Write ability: `tools/delete-transient`.
+ * Write ability: `og-tools/delete-transient`.
  *
  * Deletes a single transient (a cached value with an expiry) by name so the next
  * read recomputes it. Wraps core `delete_transient()` for a normal transient, or
@@ -47,7 +47,7 @@ final class DeleteTransient implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/delete-transient';
+		return 'og-tools/delete-transient';
 	}
 
 	/**

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Deny-by-default READ allow-list for the generic `settings/get-option` ability.
+ * Deny-by-default READ allow-list for the generic `og-settings/get-option` ability.
  *
  * Only the options named in {@see self::ALLOWED} may be read through the generic
  * option-read ability. The list contains ONLY scalar, non-secret option names.

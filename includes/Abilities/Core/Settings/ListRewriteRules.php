@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `settings/list-rewrite-rules`.
+ * T1 read ability: `og-settings/list-rewrite-rules`.
  *
  * Returns the site's stored URL rewrite (permalink) rules — the regex-to-query
  * map WordPress uses to route pretty permalinks.
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * NOT call `WP_Rewrite::wp_rewrite_rules()`, which regenerates and WRITES the
  * option when it is empty (class-wp-rewrite.php:1493); that side effect would
  * break the `readonly:true` classification. An empty map while permalinks are in
- * use means the rules need regenerating via `settings/flush-rewrite-rules`.
+ * use means the rules need regenerating via `og-settings/flush-rewrite-rules`.
  *
  * @since 0.1.0
  */
@@ -30,7 +30,7 @@ final class ListRewriteRules implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/list-rewrite-rules';
+		return 'og-settings/list-rewrite-rules';
 	}
 
 	/**
@@ -39,7 +39,7 @@ final class ListRewriteRules implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Rewrite Rules', 'abilities-catalog' ),
-			'description'         => __( 'Returns the site\'s stored URL rewrite (permalink) rules: the regex-to-query map WordPress uses to route pretty permalinks, plus the permalink structure and a flag for whether pretty permalinks are in use. An empty rules map while using_permalinks is true means the rules need regenerating with settings/flush-rewrite-rules.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the site\'s stored URL rewrite (permalink) rules: the regex-to-query map WordPress uses to route pretty permalinks, plus the permalink structure and a flag for whether pretty permalinks are in use. An empty rules map while using_permalinks is true means the rules need regenerating with og-settings/flush-rewrite-rules.', 'abilities-catalog' ),
 			'category'            => 'settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
@@ -85,7 +85,7 @@ final class ListRewriteRules implements Ability {
 	 * Permission check: the current user may manage options.
 	 *
 	 * Permalink/rewrite configuration is an admin concern, so this mirrors
-	 * `settings/get-permalinks`. Rewrite rules are stored per-site (the
+	 * `og-settings/get-permalinks`. Rewrite rules are stored per-site (the
 	 * `rewrite_rules` option), so `manage_options` is correct even on multisite.
 	 *
 	 * @param mixed $input The validated input data.

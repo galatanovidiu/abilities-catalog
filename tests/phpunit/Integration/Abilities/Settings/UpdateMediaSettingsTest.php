@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-media ability.
+ * Integration tests for the og-settings/update-media ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-media writes the Media Settings screen via update_option().
+ * og-settings/update-media writes the Media Settings screen via update_option().
  * None of the keys are REST-registered. manage_options is the hard capability
  * guard; integer dimensions declare minimum 0 and bools are stored as 1/0.
  */
@@ -23,7 +23,7 @@ final class UpdateMediaSettingsTest extends TestCase {
 	public function test_admin_writes_media_settings(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-media' )->execute(
+		$result = wp_get_ability( 'og-settings/update-media' )->execute(
 			array(
 				'thumbnail_size_w' => 120,
 				'thumbnail_size_h' => 120,
@@ -49,7 +49,7 @@ final class UpdateMediaSettingsTest extends TestCase {
 	public function test_output_shape_contains_all_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-media' )->execute( array() );
+		$result = wp_get_ability( 'og-settings/update-media' )->execute( array() );
 
 		$this->assertIsArray( $result );
 
@@ -89,7 +89,7 @@ final class UpdateMediaSettingsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/update-media' )->execute(
+		$result = wp_get_ability( 'og-settings/update-media' )->execute(
 			array( 'thumbnail_size_w' => 120 )
 		);
 

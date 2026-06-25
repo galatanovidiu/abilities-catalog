@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the post-like-deletable allow-test for content/delete-cpt-item.
+ * Exercises the post-like-deletable allow-test for og-content/delete-cpt-item.
  */
 final class DeleteCptItemAllowTest extends TestCase {
 
@@ -62,7 +62,7 @@ final class DeleteCptItemAllowTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => self::POST_TYPE,
 				'id'        => $post_id,
@@ -86,7 +86,7 @@ final class DeleteCptItemAllowTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => 'wp_navigation',
 				'id'        => $nav_id,
@@ -104,7 +104,7 @@ final class DeleteCptItemAllowTest extends TestCase {
 
 		$attachment_id = self::factory()->attachment->create();
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => 'attachment',
 				'id'        => $attachment_id,
@@ -120,7 +120,7 @@ final class DeleteCptItemAllowTest extends TestCase {
 	public function test_template_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => 'wp_template',
 				'id'        => 1,
@@ -135,7 +135,7 @@ final class DeleteCptItemAllowTest extends TestCase {
 	public function test_global_styles_rejected_up_front(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => 'wp_global_styles',
 				'id'        => 1,
@@ -150,7 +150,7 @@ final class DeleteCptItemAllowTest extends TestCase {
 	public function test_unknown_type_returns_invalid_post_type(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'content/delete-cpt-item' )->execute(
+		$result = wp_get_ability( 'og-content/delete-cpt-item' )->execute(
 			array(
 				'post_type' => 'does_not_exist',
 				'id'        => 1,

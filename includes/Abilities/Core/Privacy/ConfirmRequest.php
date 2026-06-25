@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `privacy/confirm-request`.
+ * T2 non-destructive write ability: `og-privacy/confirm-request`.
  *
  * Administratively confirms a pending personal-data request by wrapping the
  * core function `_wp_privacy_account_request_confirmed($request_id)`, which
@@ -65,7 +65,7 @@ final class ConfirmRequest implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'privacy/confirm-request';
+		return 'og-privacy/confirm-request';
 	}
 
 	/**
@@ -82,7 +82,7 @@ final class ConfirmRequest implements Ability {
 					'request_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the user_request post to confirm. Obtain it from privacy/list-export-requests or privacy/list-erase-requests.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the user_request post to confirm. Obtain it from og-privacy/list-export-requests or og-privacy/list-erase-requests.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'request_id' ),

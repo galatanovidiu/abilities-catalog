@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Composed T1 read ability: `dashboard/get-drafts`.
+ * Composed T1 read ability: `og-dashboard/get-drafts`.
  *
  * Mirrors the wp-admin "Quick Draft" recent-drafts list. Returns the current
  * user's most recently modified draft posts. Built directly on `get_posts()`
@@ -26,7 +26,7 @@ final class GetDrafts implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'dashboard/get-drafts';
+		return 'og-dashboard/get-drafts';
 	}
 
 	/**
@@ -103,7 +103,7 @@ final class GetDrafts implements Ability {
 	/**
 	 * Permission check: the current user may edit posts.
 	 *
-	 * Encodes the catalog capability for `dashboard/get-drafts` (`edit_posts`).
+	 * Encodes the catalog capability for `og-dashboard/get-drafts` (`edit_posts`).
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may edit posts.

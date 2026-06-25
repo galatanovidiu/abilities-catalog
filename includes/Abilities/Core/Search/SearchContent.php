@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `search/search-content`.
+ * Read ability: `og-search/search-content`.
  *
  * Wraps `GET /wp/v2/search` via `rest_do_request()` and shapes the result. This
  * is WordPress's unified search across object types: posts and pages, terms, and
@@ -34,7 +34,7 @@ final class SearchContent implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'search/search-content';
+		return 'og-search/search-content';
 	}
 
 	/**

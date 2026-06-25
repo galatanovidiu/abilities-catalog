@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/get-reading ability.
+ * Integration tests for the og-settings/get-reading ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/get-reading is a net-new read of the Reading Settings option values.
+ * og-settings/get-reading is a net-new read of the Reading Settings option values.
  * It always returns all 6 fields; manage_options is the hard capability guard.
  */
 final class GetReadingTest extends TestCase {
@@ -34,13 +34,13 @@ final class GetReadingTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/get-reading' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/get-reading' ) );
 	}
 
 	public function test_execute_returns_all_fields_typed(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/get-reading' )->execute();
+		$result = wp_get_ability( 'og-settings/get-reading' )->execute();
 
 		$this->assertIsArray( $result );
 		// All 6 fields are always present.
@@ -65,7 +65,7 @@ final class GetReadingTest extends TestCase {
 
 		update_option( 'posts_per_rss', -1 );
 
-		$result = wp_get_ability( 'settings/get-reading' )->execute();
+		$result = wp_get_ability( 'og-settings/get-reading' )->execute();
 
 		// absint() would report 1 here; (int) keeps the stored -1 ("show all").
 		$this->assertSame( -1, $result['posts_per_rss'] );
@@ -74,7 +74,7 @@ final class GetReadingTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/get-reading' )->execute();
+		$result = wp_get_ability( 'og-settings/get-reading' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/update-term ability (generic, taxonomy-keyed).
+ * Integration tests for the og-terms/update-term ability (generic, taxonomy-keyed).
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -39,10 +39,10 @@ final class UpdateTermTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/update-term');
+		$ability = wp_get_ability('og-terms/update-term');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/update-term', $ability->get_name());
+		$this->assertSame('og-terms/update-term', $ability->get_name());
 	}
 
 	/**
@@ -53,7 +53,7 @@ final class UpdateTermTest extends TestCase {
 	public function test_explicit_empty_name_surfaces_core_validation_error(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-term')->execute(
+		$result = wp_get_ability('og-terms/update-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => $this->term_id,
@@ -81,7 +81,7 @@ final class UpdateTermTest extends TestCase {
 	public function test_explicit_empty_slug_is_forwarded_to_core(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-term')->execute(
+		$result = wp_get_ability('og-terms/update-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => $this->term_id,
@@ -104,7 +104,7 @@ final class UpdateTermTest extends TestCase {
 	public function test_omitted_name_leaves_name_unchanged(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-term')->execute(
+		$result = wp_get_ability('og-terms/update-term')->execute(
 			array(
 				'taxonomy'    => 'category',
 				'id'          => $this->term_id,
@@ -128,7 +128,7 @@ final class UpdateTermTest extends TestCase {
 	public function test_output_returns_updated_description(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/update-term')->execute(
+		$result = wp_get_ability('og-terms/update-term')->execute(
 			array(
 				'taxonomy'    => 'category',
 				'id'          => $this->term_id,
@@ -152,7 +152,7 @@ final class UpdateTermTest extends TestCase {
 			array( 'name' => 'Parent Term' )
 		);
 
-		$result = wp_get_ability('terms/update-term')->execute(
+		$result = wp_get_ability('og-terms/update-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => $this->term_id,
@@ -171,7 +171,7 @@ final class UpdateTermTest extends TestCase {
 		// An admin holds the taxonomy's edit_terms cap (the coarse guard), so a
 		// non-existent id reaches the route and surfaces its specific 404 instead of
 		// the opaque ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability('terms/update-term')->execute(
+		$result = wp_get_ability('og-terms/update-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'id'       => 999999,

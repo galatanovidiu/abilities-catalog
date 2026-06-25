@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/create-pattern output and contract.
+ * Integration tests for og-templates/create-pattern output and contract.
  *
  * Covers the publish-by-default contract (status injected when omitted), the
  * non-empty title read from the blocks controller's raw field, the additive
@@ -18,14 +18,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/create-pattern.
+ * Exercises og-templates/create-pattern.
  */
 final class CreatePatternTest extends TestCase {
 
 	public function test_create_returns_title_publish_status_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/create-pattern' )->execute(
+		$result = wp_get_ability( 'og-templates/create-pattern' )->execute(
 			array(
 				'title'   => 'My Pattern',
 				'content' => '<!-- wp:paragraph --><p>Hi</p><!-- /wp:paragraph -->',
@@ -48,7 +48,7 @@ final class CreatePatternTest extends TestCase {
 	public function test_explicit_draft_status_is_honored(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/create-pattern' )->execute(
+		$result = wp_get_ability( 'og-templates/create-pattern' )->execute(
 			array(
 				'title'   => 'Draft Pattern',
 				'content' => '<!-- wp:paragraph --><p>Draft</p><!-- /wp:paragraph -->',
@@ -64,7 +64,7 @@ final class CreatePatternTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/create-pattern' );
+		$ability = wp_get_ability( 'og-templates/create-pattern' );
 
 		// The capability gate must reject a subscriber.
 		$this->assertFalse(
@@ -91,7 +91,7 @@ final class CreatePatternTest extends TestCase {
 		$before = wp_count_posts( 'wp_block' )->publish;
 
 		// Content is required by the input schema; omitting it must fail validation.
-		$result = wp_get_ability( 'templates/create-pattern' )->execute(
+		$result = wp_get_ability( 'og-templates/create-pattern' )->execute(
 			array( 'title' => 'No content' )
 		);
 

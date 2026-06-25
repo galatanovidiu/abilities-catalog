@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/create-term ability (generic, taxonomy-keyed).
+ * Integration tests for the og-terms/create-term ability (generic, taxonomy-keyed).
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 final class CreateTermTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/create-term');
+		$ability = wp_get_ability('og-terms/create-term');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/create-term', $ability->get_name());
+		$this->assertSame('og-terms/create-term', $ability->get_name());
 	}
 
 	/**
@@ -32,7 +32,7 @@ final class CreateTermTest extends TestCase {
 	public function test_returns_zero_parent_for_top_level_term(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/create-term')->execute(
+		$result = wp_get_ability('og-terms/create-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'name'     => 'News',
@@ -54,7 +54,7 @@ final class CreateTermTest extends TestCase {
 
 		$parent_id = self::factory()->category->create(array('name' => 'Parent'));
 
-		$result = wp_get_ability('terms/create-term')->execute(
+		$result = wp_get_ability('og-terms/create-term')->execute(
 			array(
 				'taxonomy' => 'category',
 				'name'     => 'Child',

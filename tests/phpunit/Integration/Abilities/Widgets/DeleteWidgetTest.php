@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the widgets/delete-widget ability.
+ * Integration tests for the og-widgets/delete-widget ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -65,17 +65,17 @@ final class DeleteWidgetTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'widgets/delete-widget' );
+		$ability = wp_get_ability( 'og-widgets/delete-widget' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'widgets/delete-widget', $ability->get_name() );
+		$this->assertSame( 'og-widgets/delete-widget', $ability->get_name() );
 	}
 
 	public function test_force_false_deactivates_widget_into_inactive_area(): void {
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget();
 
-		$result = wp_get_ability( 'widgets/delete-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/delete-widget' )->execute(
 			array(
 				'id'    => $widget_id,
 				'force' => false,
@@ -101,7 +101,7 @@ final class DeleteWidgetTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget();
 
-		$result = wp_get_ability( 'widgets/delete-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/delete-widget' )->execute(
 			array(
 				'id'    => $widget_id,
 				'force' => true,
@@ -129,7 +129,7 @@ final class DeleteWidgetTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget();
 
-		$result = wp_get_ability( 'widgets/delete-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/delete-widget' )->execute(
 			array(
 				'id'    => $widget_id,
 				'force' => false,
@@ -147,7 +147,7 @@ final class DeleteWidgetTest extends TestCase {
 	public function test_missing_widget_returns_404_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'widgets/delete-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/delete-widget' )->execute(
 			array(
 				'id'    => 'block-99999',
 				'force' => true,
@@ -166,7 +166,7 @@ final class DeleteWidgetTest extends TestCase {
 		$widget_id = $this->createBlockWidget();
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'widgets/delete-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/delete-widget' )->execute(
 			array(
 				'id'    => $widget_id,
 				'force' => true,
@@ -188,7 +188,7 @@ final class DeleteWidgetTest extends TestCase {
 		$widget_id = $this->createBlockWidget();
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'widgets/delete-widget' )->execute(
+		$result = wp_get_ability( 'og-widgets/delete-widget' )->execute(
 			array(
 				'id'    => $widget_id,
 				'force' => true,

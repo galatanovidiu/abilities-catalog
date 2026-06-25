@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `settings/update-permalinks`.
+ * T2 destructive write ability: `og-settings/update-permalinks`.
  *
  * Updates the Permalink Settings screen options — `permalink_structure`,
  * `category_base`, and `tag_base` (exactly the option keys the matching read
@@ -54,7 +54,7 @@ final class UpdatePermalinks implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-permalinks';
+		return 'og-settings/update-permalinks';
 	}
 
 	/**

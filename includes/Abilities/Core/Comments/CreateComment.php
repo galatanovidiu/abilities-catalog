@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/create-comment`.
+ * T1 write ability: `og-comments/create-comment`.
  *
  * Wraps `POST /wp/v2/comments` via `rest_do_request()` and returns the new
  * comment's id, status, and link. A reply is the same call with a `parent`.
@@ -46,7 +46,7 @@ final class CreateComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/create-comment';
+		return 'og-comments/create-comment';
 	}
 
 	/**

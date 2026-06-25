@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/destroy-other-sessions ability.
+ * Integration tests for the og-users/destroy-other-sessions ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use WP_Error;
 use WP_Session_Tokens;
 
 /**
- * Exercises users/destroy-other-sessions end-to-end: it ends the current user's
+ * Exercises og-users/destroy-other-sessions end-to-end: it ends the current user's
  * other sessions while keeping the caller's own, rejects a non-cookie context,
  * and denies a logged-out caller.
  */
@@ -50,7 +50,7 @@ final class DestroyOtherSessionsTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'users/destroy-other-sessions' ) );
+		$this->assertNotNull( wp_get_ability( 'og-users/destroy-other-sessions' ) );
 	}
 
 	public function test_ends_other_sessions_and_keeps_the_current_one(): void {
@@ -64,7 +64,7 @@ final class DestroyOtherSessionsTest extends TestCase {
 
 		$this->assertCount( 3, $manager->get_all() );
 
-		$result = wp_get_ability( 'users/destroy-other-sessions' )->execute();
+		$result = wp_get_ability( 'og-users/destroy-other-sessions' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'destroyed', 'remaining' ), array_keys( $result ) );
@@ -83,7 +83,7 @@ final class DestroyOtherSessionsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		unset( $_COOKIE[ LOGGED_IN_COOKIE ] );
 
-		$result = wp_get_ability( 'users/destroy-other-sessions' )->execute();
+		$result = wp_get_ability( 'og-users/destroy-other-sessions' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_no_session', $result->get_error_code() );
@@ -94,7 +94,7 @@ final class DestroyOtherSessionsTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'users/destroy-other-sessions' )->execute();
+		$result = wp_get_ability( 'og-users/destroy-other-sessions' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

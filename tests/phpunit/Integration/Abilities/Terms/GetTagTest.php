@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/get-tag ability.
+ * Integration tests for the og-terms/get-tag ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -38,10 +38,10 @@ final class GetTagTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/get-tag');
+		$ability = wp_get_ability('og-terms/get-tag');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/get-tag', $ability->get_name());
+		$this->assertSame('og-terms/get-tag', $ability->get_name());
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class GetTagTest extends TestCase {
 	public function test_returns_flat_tag_shape(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-tag')->execute(
+		$result = wp_get_ability('og-terms/get-tag')->execute(
 			array(
 				'id' => $this->term_id,
 			)
@@ -71,7 +71,7 @@ final class GetTagTest extends TestCase {
 	public function test_output_shape_is_limited_to_declared_fields(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-tag')->execute(
+		$result = wp_get_ability('og-terms/get-tag')->execute(
 			array(
 				'id' => $this->term_id,
 			)
@@ -92,7 +92,7 @@ final class GetTagTest extends TestCase {
 	public function test_missing_term_surfaces_rest_term_invalid_404(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/get-tag')->execute(
+		$result = wp_get_ability('og-terms/get-tag')->execute(
 			array(
 				'id' => 999999,
 			)

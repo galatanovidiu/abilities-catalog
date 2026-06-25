@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the terms/create-tag ability.
+ * Integration tests for the og-terms/create-tag ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,10 +20,10 @@ use WP_Error;
 final class CreateTagTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('terms/create-tag');
+		$ability = wp_get_ability('og-terms/create-tag');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('terms/create-tag', $ability->get_name());
+		$this->assertSame('og-terms/create-tag', $ability->get_name());
 	}
 
 	/**
@@ -33,7 +33,7 @@ final class CreateTagTest extends TestCase {
 	public function test_creates_tag_and_returns_core_shape(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('terms/create-tag')->execute(
+		$result = wp_get_ability('og-terms/create-tag')->execute(
 			array(
 				'name' => 'Featured',
 				'slug' => 'featured',
@@ -59,7 +59,7 @@ final class CreateTagTest extends TestCase {
 	public function test_subscriber_cannot_create_tag(): void {
 		$this->actingAs('subscriber');
 
-		$ability = wp_get_ability('terms/create-tag');
+		$ability = wp_get_ability('og-terms/create-tag');
 
 		$this->assertFalse($ability->check_permissions(array('name' => 'Denied')));
 	}
@@ -79,7 +79,7 @@ final class CreateTagTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('terms/create-tag')->execute(
+		$result = wp_get_ability('og-terms/create-tag')->execute(
 			array(
 				'name' => 'Duplicate',
 				'slug' => 'duplicate',

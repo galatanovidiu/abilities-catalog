@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the users/list-roles ability.
+ * Integration tests for the og-users/list-roles ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,16 +21,16 @@ use WP_Error;
 final class ListRolesTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'users/list-roles' );
+		$ability = wp_get_ability( 'og-users/list-roles' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'users/list-roles', $ability->get_name() );
+		$this->assertSame( 'og-users/list-roles', $ability->get_name() );
 	}
 
 	public function test_result_uses_closed_top_level_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/list-roles' )->execute();
+		$result = wp_get_ability( 'og-users/list-roles' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'roles', 'total' ), array_keys( $result ) );
@@ -42,7 +42,7 @@ final class ListRolesTest extends TestCase {
 	public function test_each_role_row_has_exactly_the_closed_field_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/list-roles' )->execute();
+		$result = wp_get_ability( 'og-users/list-roles' )->execute();
 
 		$this->assertNotEmpty( $result['roles'] );
 
@@ -64,7 +64,7 @@ final class ListRolesTest extends TestCase {
 	public function test_default_roles_are_listed_with_resolved_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/list-roles' )->execute();
+		$result = wp_get_ability( 'og-users/list-roles' )->execute();
 
 		$by_slug = array();
 		foreach ( $result['roles'] as $row ) {
@@ -94,7 +94,7 @@ final class ListRolesTest extends TestCase {
 	public function test_capabilities_are_sorted_and_granted_only(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/list-roles' )->execute();
+		$result = wp_get_ability( 'og-users/list-roles' )->execute();
 
 		foreach ( $result['roles'] as $row ) {
 			$sorted = $row['capabilities'];
@@ -118,7 +118,7 @@ final class ListRolesTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'users/list-roles' );
+		$ability = wp_get_ability( 'og-users/list-roles' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -130,7 +130,7 @@ final class ListRolesTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'users/list-roles' );
+		$ability = wp_get_ability( 'og-users/list-roles' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -146,7 +146,7 @@ final class ListRolesTest extends TestCase {
 	 * @return int The user_count reported for that role, or 0 if absent.
 	 */
 	private function roleCount( string $slug ): int {
-		$result = wp_get_ability( 'users/list-roles' )->execute();
+		$result = wp_get_ability( 'og-users/list-roles' )->execute();
 
 		foreach ( $result['roles'] as $row ) {
 			if ( $row['slug'] === $slug ) {

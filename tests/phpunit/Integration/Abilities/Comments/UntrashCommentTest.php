@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/untrash-comment ability.
+ * Integration tests for the og-comments/untrash-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -55,10 +55,10 @@ final class UntrashCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/untrash-comment');
+		$ability = wp_get_ability('og-comments/untrash-comment');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/untrash-comment', $ability->get_name());
+		$this->assertSame('og-comments/untrash-comment', $ability->get_name());
 	}
 
 	/**
@@ -71,7 +71,7 @@ final class UntrashCommentTest extends TestCase {
 
 		$this->assertSame('trash', wp_get_comment_status($comment_id));
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($comment_id, $result['id']);
@@ -88,7 +88,7 @@ final class UntrashCommentTest extends TestCase {
 		$this->actingAs('administrator');
 		$comment_id = $this->makeTrashedComment('0');
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame('hold', $result['status']);
@@ -102,7 +102,7 @@ final class UntrashCommentTest extends TestCase {
 		$this->actingAs('administrator');
 		$comment_id = $this->makeTrashedComment('1');
 
-		wp_get_ability('comments/untrash-comment')->execute(array('id' => $comment_id));
+		wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $comment_id));
 
 		$this->assertSame('', get_comment_meta($comment_id, '_wp_trash_meta_status', true));
 		$this->assertSame('', get_comment_meta($comment_id, '_wp_trash_meta_time', true));
@@ -112,7 +112,7 @@ final class UntrashCommentTest extends TestCase {
 		$this->actingAs('administrator');
 		$comment_id = $this->makeTrashedComment('1');
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame(array('id', 'status', 'previous_status'), array_keys($result));
@@ -135,7 +135,7 @@ final class UntrashCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $approved_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $approved_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
@@ -151,7 +151,7 @@ final class UntrashCommentTest extends TestCase {
 		wp_set_current_user(0);
 		$comment_id = $this->makeTrashedComment('1');
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -165,7 +165,7 @@ final class UntrashCommentTest extends TestCase {
 		$comment_id = $this->makeTrashedComment('1');
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_cannot_edit', $result->get_error_code());
@@ -188,7 +188,7 @@ final class UntrashCommentTest extends TestCase {
 		);
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => $approved_id));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => $approved_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_cannot_edit', $result->get_error_code());
@@ -202,7 +202,7 @@ final class UntrashCommentTest extends TestCase {
 	public function test_missing_comment_id_returns_404(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/untrash-comment')->execute(array('id' => 99999999));
+		$result = wp_get_ability('og-comments/untrash-comment')->execute(array('id' => 99999999));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_invalid_id', $result->get_error_code());

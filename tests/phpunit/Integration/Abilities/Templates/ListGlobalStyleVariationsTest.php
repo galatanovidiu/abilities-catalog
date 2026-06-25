@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-global-style-variations output and contract.
+ * Integration tests for og-templates/list-global-style-variations output and contract.
  *
  * Covers the happy path for the active theme (canonical stylesheet plus an
  * array of items), the output-shape guarantee that each item's settings/styles
@@ -18,14 +18,14 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-global-style-variations.
+ * Exercises og-templates/list-global-style-variations.
  */
 final class ListGlobalStyleVariationsTest extends TestCase {
 
 	public function test_active_theme_returns_canonical_stylesheet_and_items_array(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-global-style-variations' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-global-style-variations' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		// Core serves the active theme only; the output reports its stylesheet.
@@ -36,7 +36,7 @@ final class ListGlobalStyleVariationsTest extends TestCase {
 	public function test_each_item_settings_and_styles_serialize_as_objects(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/list-global-style-variations' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-global-style-variations' )->execute( array() );
 
 		$this->assertIsArray( $result );
 
@@ -58,7 +58,7 @@ final class ListGlobalStyleVariationsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/list-global-style-variations' );
+		$ability = wp_get_ability( 'og-templates/list-global-style-variations' );
 
 		// edit_theme_options is the catalog guard; a subscriber lacks it.
 		$this->assertFalse( $ability->check_permissions( array() ) );

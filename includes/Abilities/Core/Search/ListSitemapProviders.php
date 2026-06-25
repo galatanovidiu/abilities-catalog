@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `search/list-sitemap-providers`.
+ * Read ability: `og-search/list-sitemap-providers`.
  *
  * Wraps `wp_get_sitemap_providers()` and reports the registered XML sitemap
  * providers — the content groups WordPress includes in its sitemap (posts,
@@ -31,7 +31,7 @@ final class ListSitemapProviders implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'search/list-sitemap-providers';
+		return 'og-search/list-sitemap-providers';
 	}
 
 	/**
@@ -40,7 +40,7 @@ final class ListSitemapProviders implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'List Sitemap Providers', 'abilities-catalog' ),
-			'description'         => __( 'Returns the registered XML sitemap providers (by default posts, taxonomies, and users) and, for each, its object subtypes — for the posts provider the public post types it covers, for taxonomies the public taxonomy slugs, and an empty list for users. Use this to see what WordPress includes in its sitemap before reading the sitemap URL with search/get-sitemap-url.', 'abilities-catalog' ),
+			'description'         => __( 'Returns the registered XML sitemap providers (by default posts, taxonomies, and users) and, for each, its object subtypes — for the posts provider the public post types it covers, for taxonomies the public taxonomy slugs, and an empty list for users. Use this to see what WordPress includes in its sitemap before reading the sitemap URL with og-search/get-sitemap-url.', 'abilities-catalog' ),
 			'category'            => 'search',
 			'input_schema'        => array(),
 			'output_schema'       => array(

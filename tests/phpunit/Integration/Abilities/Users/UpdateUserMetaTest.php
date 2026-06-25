@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the `users/update-meta` ability.
+ * Integration tests for the `og-users/update-meta` ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises `users/update-meta` end-to-end against a registered show_in_rest user
+ * Exercises `og-users/update-meta` end-to-end against a registered show_in_rest user
  * meta key, plus the registered-key security gate and the object/permission guards.
  */
 final class UpdateUserMetaTest extends TestCase {
@@ -49,13 +49,13 @@ final class UpdateUserMetaTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'users/update-meta' ) );
+		$this->assertNotNull( wp_get_ability( 'og-users/update-meta' ) );
 	}
 
 	public function test_update_writes_registered_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'Hello world' ),
@@ -78,7 +78,7 @@ final class UpdateUserMetaTest extends TestCase {
 
 		$before = get_metadata( 'user', $this->user_id, 'wp_capabilities', true );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'meta' => array( 'wp_capabilities' => array( 'administrator' => true ) ),
@@ -99,7 +99,7 @@ final class UpdateUserMetaTest extends TestCase {
 	public function test_update_rejects_underscore_prefixed_key(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'meta' => array( '_internal_key' => 'x' ),
@@ -117,7 +117,7 @@ final class UpdateUserMetaTest extends TestCase {
 	public function test_update_missing_user_returns_invalid_id(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => 99999999,
 				'meta' => array( 'abilities_catalog_test_key' => 'x' ),
@@ -134,7 +134,7 @@ final class UpdateUserMetaTest extends TestCase {
 		wp_set_current_user( 0 );
 		update_metadata( 'user', $this->user_id, 'abilities_catalog_test_key', 'original' );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'changed' ),
@@ -155,7 +155,7 @@ final class UpdateUserMetaTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		update_metadata( 'user', $this->user_id, 'abilities_catalog_test_key', 'original' );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'changed' ),
@@ -171,7 +171,7 @@ final class UpdateUserMetaTest extends TestCase {
 	public function test_output_has_exact_key_set(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'users/update-meta' )->execute(
+		$result = wp_get_ability( 'og-users/update-meta' )->execute(
 			array(
 				'id'   => $this->user_id,
 				'meta' => array( 'abilities_catalog_test_key' => 'value' ),

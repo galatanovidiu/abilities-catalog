@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the cron/get-event ability.
+ * Integration tests for the og-cron/get-event ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -29,10 +29,10 @@ final class GetEventTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'cron/get-event' );
+		$ability = wp_get_ability( 'og-cron/get-event' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'cron/get-event', $ability->get_name() );
+		$this->assertSame( 'og-cron/get-event', $ability->get_name() );
 	}
 
 	public function test_happy_path_reads_back_a_recurring_event(): void {
@@ -41,7 +41,7 @@ final class GetEventTest extends TestCase {
 		$timestamp = time() + HOUR_IN_SECONDS;
 		wp_schedule_event( $timestamp, 'hourly', self::TEST_HOOK );
 
-		$result = wp_get_ability( 'cron/get-event' )->execute( array( 'hook' => self::TEST_HOOK ) );
+		$result = wp_get_ability( 'og-cron/get-event' )->execute( array( 'hook' => self::TEST_HOOK ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( self::TEST_HOOK, $result['hook'] );
@@ -58,7 +58,7 @@ final class GetEventTest extends TestCase {
 		$timestamp = time() + HOUR_IN_SECONDS;
 		wp_schedule_single_event( $timestamp, self::TEST_HOOK );
 
-		$result = wp_get_ability( 'cron/get-event' )->execute(
+		$result = wp_get_ability( 'og-cron/get-event' )->execute(
 			array(
 				'hook'      => self::TEST_HOOK,
 				'timestamp' => $timestamp,
@@ -78,7 +78,7 @@ final class GetEventTest extends TestCase {
 
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', self::TEST_HOOK );
 
-		$result = wp_get_ability( 'cron/get-event' )->execute( array( 'hook' => self::TEST_HOOK ) );
+		$result = wp_get_ability( 'og-cron/get-event' )->execute( array( 'hook' => self::TEST_HOOK ) );
 
 		$this->assertSame(
 			array( 'hook', 'timestamp', 'gmt_date', 'schedule', 'interval', 'args' ),
@@ -95,7 +95,7 @@ final class GetEventTest extends TestCase {
 	public function test_missing_event_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/get-event' )->execute( array( 'hook' => 'no_such_cron_hook' ) );
+		$result = wp_get_ability( 'og-cron/get-event' )->execute( array( 'hook' => 'no_such_cron_hook' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_cron_event_not_found', $result->get_error_code() );
@@ -109,7 +109,7 @@ final class GetEventTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'cron/get-event' );
+		$ability = wp_get_ability( 'og-cron/get-event' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'hook' => self::TEST_HOOK ) ) );
 
@@ -121,7 +121,7 @@ final class GetEventTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'cron/get-event' );
+		$ability = wp_get_ability( 'og-cron/get-event' );
 
 		$this->assertFalse( $ability->check_permissions( array( 'hook' => self::TEST_HOOK ) ) );
 

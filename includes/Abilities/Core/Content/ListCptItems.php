@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `content/list-cpt-items`.
+ * Read ability: `og-content/list-cpt-items`.
  *
  * Generic collection reader keyed by `post_type`. Restricts `post_type` to
  * **post-like listable** types via a controller-aware allow-test (see
@@ -54,7 +54,7 @@ final class ListCptItems implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/list-cpt-items';
+		return 'og-content/list-cpt-items';
 	}
 
 	/**
@@ -70,7 +70,7 @@ final class ListCptItems implements Ability {
 				'properties'           => array(
 					'post_type' => array(
 						'type'        => 'string',
-						'description' => __( 'The post type slug to list. Must be a post-like REST type (title/content/excerpt/status fields); font, global-styles, template, navigation, and attachment types are not supported. Use content/list-post-types to discover valid slugs.', 'abilities-catalog' ),
+						'description' => __( 'The post type slug to list. Must be a post-like REST type (title/content/excerpt/status fields); font, global-styles, template, navigation, and attachment types are not supported. Use og-content/list-post-types to discover valid slugs.', 'abilities-catalog' ),
 					),
 					'search'    => array(
 						'type'        => 'string',
@@ -119,7 +119,7 @@ final class ListCptItems implements Ability {
 					'items'       => array(
 						'type'        => 'array',
 						'items'       => ContentListShaper::postItemSchema(),
-						'description' => __( 'The list of items as flat summary rows. Use content/get-cpt-item for a single item body.', 'abilities-catalog' ),
+						'description' => __( 'The list of items as flat summary rows. Use og-content/get-cpt-item for a single item body.', 'abilities-catalog' ),
 					),
 					'total'       => array(
 						'type'        => 'integer',

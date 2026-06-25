@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Projects raw REST comment items into flat summary rows for the list ability.
  *
- * `comments/list-comments` wraps the core `GET /wp/v2/comments` route. Returning
+ * `og-comments/list-comments` wraps the core `GET /wp/v2/comments` route. Returning
  * `rest_get_server()->response_to_data()` verbatim leaked REST internals
  * (`_links`, `author_avatar_urls`, `meta`, GMT-duplicate dates, `content.raw`)
  * and cost thousands of tokens per call. This helper maps each item to a small,
@@ -138,7 +138,7 @@ final class CommentListShaper {
 				),
 				'content'      => array(
 					'type'        => 'string',
-					'description' => __( 'The rendered comment content. Use comments/get-comment for the full single comment.', 'abilities-catalog' ),
+					'description' => __( 'The rendered comment content. Use og-comments/get-comment for the full single comment.', 'abilities-catalog' ),
 				),
 			),
 			'additionalProperties' => false,

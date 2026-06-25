@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `settings/update-writing`.
+ * T2 non-destructive write ability: `og-settings/update-writing`.
  *
  * Updates the Writing Settings screen via `POST /wp/v2/settings`. The accepted
  * fields mirror the matching read ability {@see GetWriting}: default category,
@@ -32,7 +32,7 @@ final class UpdateWriting implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-writing';
+		return 'og-settings/update-writing';
 	}
 
 	/**
@@ -49,7 +49,7 @@ final class UpdateWriting implements Ability {
 					'default_category'    => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The default post category term ID. Discover IDs with terms/list-terms for the "category" taxonomy.', 'abilities-catalog' ),
+						'description' => __( 'The default post category term ID. Discover IDs with og-terms/list-terms for the "category" taxonomy.', 'abilities-catalog' ),
 					),
 					'default_post_format' => array(
 						'type'        => 'string',

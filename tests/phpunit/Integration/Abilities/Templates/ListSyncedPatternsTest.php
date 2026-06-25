@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/list-synced-patterns output and contract.
+ * Integration tests for og-templates/list-synced-patterns output and contract.
  *
  * Covers the flattened happy-path row shape (including the additive sync_status
  * field and the pagination totals), the fact that unsynced patterns are listed
@@ -17,7 +17,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/list-synced-patterns.
+ * Exercises og-templates/list-synced-patterns.
  */
 final class ListSyncedPatternsTest extends TestCase {
 
@@ -46,7 +46,7 @@ final class ListSyncedPatternsTest extends TestCase {
 
 		$id = $this->createPattern();
 
-		$result = wp_get_ability( 'templates/list-synced-patterns' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-synced-patterns' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -81,7 +81,7 @@ final class ListSyncedPatternsTest extends TestCase {
 		$id = $this->createPattern();
 		update_post_meta( $id, 'wp_pattern_sync_status', 'unsynced' );
 
-		$result = wp_get_ability( 'templates/list-synced-patterns' )->execute( array() );
+		$result = wp_get_ability( 'og-templates/list-synced-patterns' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$row = $this->findRow( $result['items'], $id );
@@ -94,7 +94,7 @@ final class ListSyncedPatternsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/list-synced-patterns' );
+		$ability = wp_get_ability( 'og-templates/list-synced-patterns' );
 
 		// wp_block maps its edit_posts cap to edit_posts, which a subscriber lacks.
 		$this->assertFalse( $ability->check_permissions( array() ) );

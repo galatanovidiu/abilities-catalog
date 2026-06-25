@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Net-new T1 read ability: `updates/list-available-updates`.
+ * Net-new T1 read ability: `og-updates/list-available-updates`.
  *
  * Reports the available core, plugin, theme, and translation updates by reading
  * the cached update transients through core's admin-side helper functions. It does
@@ -32,7 +32,7 @@ final class ListAvailableUpdates implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'updates/list-available-updates';
+		return 'og-updates/list-available-updates';
 	}
 
 	/**
@@ -189,7 +189,7 @@ final class ListAvailableUpdates implements Ability {
 	/**
 	 * Permission check: any of the core, plugin, or theme update capabilities.
 	 *
-	 * Encodes the catalog capability for `updates/list-available-updates` — the
+	 * Encodes the catalog capability for `og-updates/list-available-updates` — the
 	 * union of `update_core`, `update_plugins`, and `update_themes`.
 	 *
 	 * @param mixed $input The validated input data.

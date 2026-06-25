@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/get-template`.
+ * Read ability: `og-templates/get-template`.
  *
  * Wraps `GET /wp/v2/templates/<id>` or `GET /wp/v2/template-parts/<id>` via
  * `rest_do_request()`. The template id has the form `theme//slug`; the `//`
@@ -27,7 +27,7 @@ final class GetTemplate implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/get-template';
+		return 'og-templates/get-template';
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/get-general ability.
+ * Integration tests for the og-settings/get-general ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/get-general is a net-new read of the General Settings screen values.
+ * og-settings/get-general is a net-new read of the General Settings screen values.
  * It always returns all 11 fields; manage_options is the hard capability guard.
  */
 final class GetGeneralTest extends TestCase {
@@ -39,13 +39,13 @@ final class GetGeneralTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/get-general' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/get-general' ) );
 	}
 
 	public function test_execute_returns_all_fields_typed(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/get-general' )->execute();
+		$result = wp_get_ability( 'og-settings/get-general' )->execute();
 
 		$this->assertIsArray( $result );
 		// All 11 fields are always present.
@@ -86,7 +86,7 @@ final class GetGeneralTest extends TestCase {
 		update_option( 'timezone_string', 'Europe/Berlin' );
 		update_option( 'gmt_offset', '' );
 
-		$result = wp_get_ability( 'settings/get-general' )->execute();
+		$result = wp_get_ability( 'og-settings/get-general' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'Europe/Berlin', $result['timezone'] );
@@ -98,7 +98,7 @@ final class GetGeneralTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/get-general' )->execute();
+		$result = wp_get_ability( 'og-settings/get-general' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

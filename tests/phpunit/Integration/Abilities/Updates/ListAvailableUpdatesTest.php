@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the updates/list-available-updates ability.
+ * Integration tests for the og-updates/list-available-updates ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -15,7 +15,7 @@ use WP_Error;
 /**
  * Exercises registration, the four output sets, the per-row output shapes, the
  * empty/no-transient case, and the capability gate for the
- * updates/list-available-updates ability.
+ * og-updates/list-available-updates ability.
  */
 final class ListAvailableUpdatesTest extends TestCase {
 
@@ -32,13 +32,13 @@ final class ListAvailableUpdatesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'updates/list-available-updates' ) );
+		$this->assertNotNull( wp_get_ability( 'og-updates/list-available-updates' ) );
 	}
 
 	public function test_returns_all_four_sets_for_admin(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'updates/list-available-updates' )->execute( array() );
+		$result = wp_get_ability( 'og-updates/list-available-updates' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		foreach ( array( 'core', 'plugins', 'themes', 'translations' ) as $set ) {
@@ -52,7 +52,7 @@ final class ListAvailableUpdatesTest extends TestCase {
 		delete_site_transient( 'update_core' );
 		delete_site_transient( 'update_themes' );
 
-		$result = wp_get_ability( 'updates/list-available-updates' )->execute( array() );
+		$result = wp_get_ability( 'og-updates/list-available-updates' )->execute( array() );
 
 		$this->assertSame( array(), $result['core'] );
 		$this->assertSame( array(), $result['themes'] );
@@ -62,7 +62,7 @@ final class ListAvailableUpdatesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->seedCoreUpdate();
 
-		$result = wp_get_ability( 'updates/list-available-updates' )->execute( array( 'type' => 'core' ) );
+		$result = wp_get_ability( 'og-updates/list-available-updates' )->execute( array( 'type' => 'core' ) );
 
 		$this->assertNotEmpty( $result['core'] );
 		$row = $result['core'][0];
@@ -79,7 +79,7 @@ final class ListAvailableUpdatesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->seedThemeUpdate();
 
-		$result = wp_get_ability( 'updates/list-available-updates' )->execute( array( 'type' => 'themes' ) );
+		$result = wp_get_ability( 'og-updates/list-available-updates' )->execute( array( 'type' => 'themes' ) );
 
 		$this->assertNotEmpty( $result['themes'] );
 		$row = null;
@@ -104,7 +104,7 @@ final class ListAvailableUpdatesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'updates/list-available-updates' )->execute( array() );
+		$result = wp_get_ability( 'og-updates/list-available-updates' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

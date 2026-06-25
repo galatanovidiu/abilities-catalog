@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/assign-menu-location ability.
+ * Integration tests for the og-menus/assign-menu-location ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -33,17 +33,17 @@ final class AssignMenuLocationTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/assign-menu-location' );
+		$ability = wp_get_ability( 'og-menus/assign-menu-location' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/assign-menu-location', $ability->get_name() );
+		$this->assertSame( 'og-menus/assign-menu-location', $ability->get_name() );
 	}
 
 	public function test_admin_assigns_menu_to_location(): void {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => $menu_id,
 				'location' => 'ac_primary',
@@ -63,7 +63,7 @@ final class AssignMenuLocationTest extends TestCase {
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 		set_theme_mod( 'nav_menu_locations', array( 'ac_secondary' => $menu_id ) );
 
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => $menu_id,
 				'location' => 'ac_primary',
@@ -79,7 +79,7 @@ final class AssignMenuLocationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => $menu_id,
 				'location' => 'ac_primary',
@@ -94,7 +94,7 @@ final class AssignMenuLocationTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => $menu_id,
 				'location' => 'ac_primary',
@@ -109,7 +109,7 @@ final class AssignMenuLocationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => $menu_id,
 				'location' => 'ac_not_registered',
@@ -122,7 +122,7 @@ final class AssignMenuLocationTest extends TestCase {
 	public function test_negative_menu_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => -37,
 				'location' => 'ac_primary',
@@ -138,7 +138,7 @@ final class AssignMenuLocationTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent menu
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/assign-menu-location' )->execute(
+		$result = wp_get_ability( 'og-menus/assign-menu-location' )->execute(
 			array(
 				'menu_id'  => 999999,
 				'location' => 'ac_primary',

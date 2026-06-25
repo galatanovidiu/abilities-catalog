@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/list-classic-menus ability.
+ * Integration tests for the og-menus/list-classic-menus ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * menus/list-classic-menus wraps `GET /wp/v2/menus` and projects each
+ * og-menus/list-classic-menus wraps `GET /wp/v2/menus` and projects each
  * `nav_menu` term into a flat, closed summary row via MenuListShaper.
  * edit_theme_options is the coarse capability guard.
  */
@@ -32,10 +32,10 @@ final class ListClassicMenusTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/list-classic-menus' );
+		$ability = wp_get_ability( 'og-menus/list-classic-menus' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/list-classic-menus', $ability->get_name() );
+		$this->assertSame( 'og-menus/list-classic-menus', $ability->get_name() );
 	}
 
 	public function test_admin_lists_classic_menus_with_totals(): void {
@@ -43,7 +43,7 @@ final class ListClassicMenusTest extends TestCase {
 		wp_create_nav_menu( 'Header Menu' );
 		wp_create_nav_menu( 'Footer Menu' );
 
-		$result = wp_get_ability( 'menus/list-classic-menus' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-classic-menus' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -57,7 +57,7 @@ final class ListClassicMenusTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/list-classic-menus' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-classic-menus' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -79,7 +79,7 @@ final class ListClassicMenusTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'menus/list-classic-menus' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-classic-menus' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

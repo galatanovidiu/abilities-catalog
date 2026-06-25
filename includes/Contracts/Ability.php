@@ -25,7 +25,7 @@ interface Ability {
 	/**
 	 * The ability name (id) passed as the first argument to `wp_register_ability()`.
 	 *
-	 * Format: `namespace/verb-resource`, kebab-case (e.g. `content/get-post`).
+	 * Format: `namespace/verb-resource`, kebab-case (e.g. `og-content/get-post`).
 	 *
 	 * @return string
 	 */

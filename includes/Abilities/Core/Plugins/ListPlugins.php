@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `plugins/list-plugins`.
+ * T1 read ability: `og-plugins/list-plugins`.
  *
  * Wraps `GET /wp/v2/plugins` via `rest_do_request()` and returns the installed
  * plugins readable by the current user. Core skips plugins the user cannot read
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * list with no pagination headers (`X-WP-Total`), so no total is exposed. Each row
  * is projected by {@see PluginListShaper} into a flat, closed summary; the raw
  * REST fields (rendered `description`, `author`, `requires_*`, `_links`) are never
- * returned (full detail lives behind `plugins/get-plugin`). The `status` filter
+ * returned (full detail lives behind `og-plugins/get-plugin`). The `status` filter
  * accepts one or more statuses, mirroring the core collection param.
  *
  * @since 0.1.0
@@ -34,7 +34,7 @@ final class ListPlugins implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/list-plugins';
+		return 'og-plugins/list-plugins';
 	}
 
 	/**
@@ -99,7 +99,7 @@ final class ListPlugins implements Ability {
 	/**
 	 * Permission check: the current user may manage plugin activation.
 	 *
-	 * Encodes the catalog capability for `plugins/list-plugins` (`activate_plugins`).
+	 * Encodes the catalog capability for `og-plugins/list-plugins` (`activate_plugins`).
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return bool True if the current user may read installed plugins.

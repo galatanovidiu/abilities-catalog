@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `media/set-featured-image`.
+ * T2 non-destructive write ability: `og-media/set-featured-image`.
  *
  * Sets a post's featured image (thumbnail) to an existing attachment by wrapping
  * the core function `set_post_thumbnail()`. This is a net-new write: it does NOT
- * dispatch a REST request. The general `content/update-post` path can also set a
+ * dispatch a REST request. The general `og-content/update-post` path can also set a
  * featured image via its `featured_media` field, but verified in core neither
  * `WP_REST_Posts_Controller::handle_featured_media()` nor `set_post_thumbnail()`
  * checks ANY capability on the attachment — only the post's edit cap is enforced.
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * check on BOTH the post AND the attachment. That dual guard is the whole reason
  * the ability exists, so it lives in `execute()` (core's function checks nothing).
  *
- * Setting an association is reversible (via `media/detach-featured-image`) and
+ * Setting an association is reversible (via `og-media/detach-featured-image`) and
  * re-setting the same image lands the same end state, so write annotations are
  * `readonly:false, destructive:false, idempotent:true`.
  *
@@ -38,7 +38,7 @@ final class SetFeaturedImage implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'media/set-featured-image';
+		return 'og-media/set-featured-image';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class SetFeaturedImage implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Set Featured Image', 'abilities-catalog' ),
-			'description'         => __( 'Sets a post\'s featured image (thumbnail) to an existing media library attachment. Requires edit access to BOTH the post and the attachment. Reversible via media/detach-featured-image.', 'abilities-catalog' ),
+			'description'         => __( 'Sets a post\'s featured image (thumbnail) to an existing media library attachment. Requires edit access to BOTH the post and the attachment. Reversible via og-media/detach-featured-image.', 'abilities-catalog' ),
 			'category'            => 'media',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -55,12 +55,12 @@ final class SetFeaturedImage implements Ability {
 					'post_id'       => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the post to set the featured image on. Discover IDs with content/list-posts or content/get-post.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the post to set the featured image on. Discover IDs with og-content/list-posts or og-content/get-post.', 'abilities-catalog' ),
 					),
 					'attachment_id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The media library attachment ID to use as the featured image. Discover IDs with media/list-media.', 'abilities-catalog' ),
+						'description' => __( 'The media library attachment ID to use as the featured image. Discover IDs with og-media/list-media.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'post_id', 'attachment_id' ),
@@ -102,7 +102,7 @@ final class SetFeaturedImage implements Ability {
 	/**
 	 * Permission check: coarse `edit_posts` guard.
 	 *
-	 * Mirrors `media/update-media`: a coarse, object-independent capability guard
+	 * Mirrors `og-media/update-media`: a coarse, object-independent capability guard
 	 * here, with the object-level checks kept in `execute()`. Core's
 	 * `set_post_thumbnail()` performs NO capability check, so `execute()` is the
 	 * authoritative object-level guard — it requires `edit_post` on BOTH the post
@@ -169,7 +169,7 @@ final class SetFeaturedImage implements Ability {
 		}
 
 		// Object-level guard on the attachment. The general featured_media path
-		// (content/update-post) checks no capability on the attachment, so this is
+		// (og-content/update-post) checks no capability on the attachment, so this is
 		// the check that ability lacks.
 		if ( ! current_user_can( 'edit_post', $attachment_id ) ) {
 			return new WP_Error(

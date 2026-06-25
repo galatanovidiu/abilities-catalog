@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `widgets/get-sidebar`.
+ * Read ability: `og-widgets/get-sidebar`.
  *
  * Wraps `GET /wp/v2/sidebars/<id>` via `rest_do_request()` and shapes the
  * response into a flat sidebar projection (id, name, description, status, and
  * the ordered widget instance ids in the sidebar). Single-object companion to
- * `widgets/list-sidebars`.
+ * `og-widgets/list-sidebars`.
  *
  * The id is a sidebar slug (e.g. "sidebar-1", "wp_inactive_widgets") and is
  * concatenated into the route path. An unknown id surfaces the route's
@@ -33,7 +33,7 @@ final class GetSidebar implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/get-sidebar';
+		return 'og-widgets/get-sidebar';
 	}
 
 	/**
@@ -42,14 +42,14 @@ final class GetSidebar implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Sidebar', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single sidebar (widget area) by id, including its name, status (active or inactive), and the ordered list of widget instance ids it contains. Single-object companion to widgets/list-sidebars; discover sidebar ids there.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single sidebar (widget area) by id, including its name, status (active or inactive), and the ordered list of widget instance ids it contains. Single-object companion to og-widgets/list-sidebars; discover sidebar ids there.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'string',
-						'description' => __( 'The sidebar slug, e.g. "sidebar-1" or "wp_inactive_widgets". Discover sidebar ids with widgets/list-sidebars.', 'abilities-catalog' ),
+						'description' => __( 'The sidebar slug, e.g. "sidebar-1" or "wp_inactive_widgets". Discover sidebar ids with og-widgets/list-sidebars.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
@@ -77,7 +77,7 @@ final class GetSidebar implements Ability {
 					),
 					'widgets'     => array(
 						'type'        => 'array',
-						'description' => __( 'The ordered widget instance ids in this sidebar (e.g. "block-3", "text-2"). Read a single widget with widgets/get-widget.', 'abilities-catalog' ),
+						'description' => __( 'The ordered widget instance ids in this sidebar (e.g. "block-3", "text-2"). Read a single widget with og-widgets/get-widget.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

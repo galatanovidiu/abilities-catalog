@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/get-template-part output and contract.
+ * Integration tests for og-templates/get-template-part output and contract.
  *
  * Covers registration, the flat happy-path shape for a real template part
  * (area always surfaced), the missing-id 404 (rest_template_not_found preserved,
@@ -17,7 +17,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/get-template-part.
+ * Exercises og-templates/get-template-part.
  */
 final class GetTemplatePartTest extends TestCase {
 
@@ -81,13 +81,13 @@ final class GetTemplatePartTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertTrue( wp_has_ability( 'templates/get-template-part' ) );
+		$this->assertTrue( wp_has_ability( 'og-templates/get-template-part' ) );
 	}
 
 	public function test_get_template_part_returns_flat_shape_with_area(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template-part' )->execute(
 			array( 'id' => $this->part_id )
 		);
 
@@ -103,7 +103,7 @@ final class GetTemplatePartTest extends TestCase {
 	public function test_missing_id_preserves_not_found_error(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/get-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template-part' )->execute(
 			array( 'id' => get_stylesheet() . '//nope_xyz' )
 		);
 
@@ -117,7 +117,7 @@ final class GetTemplatePartTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'templates/get-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template-part' )->execute(
 			array( 'id' => $this->part_id )
 		);
 
@@ -128,7 +128,7 @@ final class GetTemplatePartTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'templates/get-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/get-template-part' )->execute(
 			array( 'id' => $this->part_id )
 		);
 

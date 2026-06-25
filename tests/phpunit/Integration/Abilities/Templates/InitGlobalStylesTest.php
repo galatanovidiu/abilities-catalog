@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the templates/init-global-styles ability.
+ * Integration tests for the og-templates/init-global-styles ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,11 +14,11 @@ use WP_Error;
 use WP_Theme_JSON_Resolver;
 
 /**
- * templates/init-global-styles bootstraps the active theme's user global-styles
+ * og-templates/init-global-styles bootstraps the active theme's user global-styles
  * record. It creates the record when none exists (so a fresh block theme can have
  * its colors/fonts changed) and is idempotent — repeat calls return the same id and
  * never duplicate the row. It is the create-side counterpart to the read-only
- * templates/get-global-styles, which 404s when no record exists yet.
+ * og-templates/get-global-styles, which 404s when no record exists yet.
  */
 final class InitGlobalStylesTest extends TestCase {
 
@@ -30,12 +30,12 @@ final class InitGlobalStylesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'templates/init-global-styles' ) );
+		$this->assertNotNull( wp_get_ability( 'og-templates/init-global-styles' ) );
 	}
 
 	/**
 	 * On a fresh theme with no overrides record, init creates one and returns its id —
-	 * unblocking templates/update-global-styles, which requires that id.
+	 * unblocking og-templates/update-global-styles, which requires that id.
 	 *
 	 * @return void
 	 */
@@ -44,7 +44,7 @@ final class InitGlobalStylesTest extends TestCase {
 		$this->deleteGlobalStylesRows();
 
 		$before = $this->globalStylesRowCount();
-		$result = wp_get_ability( 'templates/init-global-styles' )->execute();
+		$result = wp_get_ability( 'og-templates/init-global-styles' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'id', $result );
@@ -53,7 +53,7 @@ final class InitGlobalStylesTest extends TestCase {
 
 		// The record init created is now readable through the read ability (which 404s
 		// before the record exists).
-		$read = wp_get_ability( 'templates/get-global-styles' )->execute();
+		$read = wp_get_ability( 'og-templates/get-global-styles' )->execute();
 		$this->assertIsArray( $read );
 		$this->assertSame( $result['id'], $read['id'] );
 	}
@@ -68,11 +68,11 @@ final class InitGlobalStylesTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->deleteGlobalStylesRows();
 
-		$first = wp_get_ability( 'templates/init-global-styles' )->execute();
+		$first = wp_get_ability( 'og-templates/init-global-styles' )->execute();
 		WP_Theme_JSON_Resolver::clean_cached_data();
 		$count_after_first = $this->globalStylesRowCount();
 
-		$second = wp_get_ability( 'templates/init-global-styles' )->execute();
+		$second = wp_get_ability( 'og-templates/init-global-styles' )->execute();
 
 		$this->assertIsArray( $first );
 		$this->assertIsArray( $second );
@@ -83,7 +83,7 @@ final class InitGlobalStylesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'templates/init-global-styles' )->execute();
+		$result = wp_get_ability( 'og-templates/init-global-styles' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

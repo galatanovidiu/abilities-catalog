@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 write ability: `users/create-user`.
+ * T2 write ability: `og-users/create-user`.
  *
  * Wraps `POST /wp/v2/users` via `rest_do_request()` and returns the new user's
  * id, username, email, and roles. Encodes the catalog capability `create_users`,
@@ -34,7 +34,7 @@ final class CreateUser implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'users/create-user';
+		return 'og-users/create-user';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class CreateUser implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create User', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new user account with the given username, email, and password. This REST-backed create does NOT send the wp-admin "Send User Notification" email; delivering credentials to the new user is the caller\'s responsibility. Creating a user is not auto-reversible; pair with users/delete-user to undo.', 'abilities-catalog' ),
+			'description'         => __( 'Creates a new user account with the given username, email, and password. This REST-backed create does NOT send the wp-admin "Send User Notification" email; delivering credentials to the new user is the caller\'s responsibility. Creating a user is not auto-reversible; pair with og-users/delete-user to undo.', 'abilities-catalog' ),
 			'category'            => 'users',
 			'input_schema'        => array(
 				'type'                 => 'object',

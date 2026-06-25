@@ -14,13 +14,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `fonts/list-font-families`.
+ * Read ability: `og-fonts/list-font-families`.
  *
  * Wraps `GET /wp/v2/font-families` via `rest_do_request()` and returns the
  * collection plus its total counts. Each row is projected by {@see FontListShaper}
  * into a flat, closed summary: the descriptive fields are flattened out of
  * `font_family_settings` and the faces are reduced to a count (the full settings
- * and face IDs live behind `fonts/get-font-family`). Read-only; requires
+ * and face IDs live behind `og-fonts/get-font-family`). Read-only; requires
  * `edit_theme_options`.
  *
  * @since 0.1.0
@@ -31,7 +31,7 @@ final class ListFontFamilies implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'fonts/list-font-families';
+		return 'og-fonts/list-font-families';
 	}
 
 	/**

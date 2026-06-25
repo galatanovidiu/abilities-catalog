@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the cron/schedule-event ability.
+ * Integration tests for the og-cron/schedule-event ability.
  *
  * Covers registration, the happy-path single and recurring schedules with a
  * wp_next_scheduled read-back, the exact output-key-set contract, the duplicate
@@ -19,7 +19,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises cron/schedule-event registration, schedule semantics, and the gate.
+ * Exercises og-cron/schedule-event registration, schedule semantics, and the gate.
  */
 final class ScheduleEventTest extends TestCase {
 
@@ -31,7 +31,7 @@ final class ScheduleEventTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'cron/schedule-event' ) );
+		$this->assertNotNull( wp_get_ability( 'og-cron/schedule-event' ) );
 	}
 
 	public function test_schedules_single_event_and_reads_back(): void {
@@ -39,7 +39,7 @@ final class ScheduleEventTest extends TestCase {
 
 		$timestamp = time() + HOUR_IN_SECONDS;
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'      => self::HOOK,
 				'timestamp' => $timestamp,
@@ -62,7 +62,7 @@ final class ScheduleEventTest extends TestCase {
 
 		$timestamp = time() + HOUR_IN_SECONDS;
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'       => self::HOOK,
 				'timestamp'  => $timestamp,
@@ -80,7 +80,7 @@ final class ScheduleEventTest extends TestCase {
 	public function test_output_key_set_is_exact(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'      => self::HOOK,
 				'timestamp' => time() + HOUR_IN_SECONDS,
@@ -101,7 +101,7 @@ final class ScheduleEventTest extends TestCase {
 
 		$timestamp = time() + HOUR_IN_SECONDS;
 
-		$first = wp_get_ability( 'cron/schedule-event' )->execute(
+		$first = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'      => self::HOOK,
 				'timestamp' => $timestamp,
@@ -109,7 +109,7 @@ final class ScheduleEventTest extends TestCase {
 		);
 		$this->assertIsArray( $first );
 
-		$second = wp_get_ability( 'cron/schedule-event' )->execute(
+		$second = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'      => self::HOOK,
 				'timestamp' => $timestamp + 7200,
@@ -127,7 +127,7 @@ final class ScheduleEventTest extends TestCase {
 	public function test_bad_recurrence_returns_400_carrying_core_invalid_schedule(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'       => self::HOOK,
 				'timestamp'  => time() + HOUR_IN_SECONDS,
@@ -144,7 +144,7 @@ final class ScheduleEventTest extends TestCase {
 	public function test_logged_out_user_is_denied_and_no_event_scheduled(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'      => self::HOOK,
 				'timestamp' => time() + HOUR_IN_SECONDS,
@@ -159,7 +159,7 @@ final class ScheduleEventTest extends TestCase {
 	public function test_subscriber_is_denied_and_no_event_scheduled(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'cron/schedule-event' )->execute(
+		$result = wp_get_ability( 'og-cron/schedule-event' )->execute(
 			array(
 				'hook'      => self::HOOK,
 				'timestamp' => time() + HOUR_IN_SECONDS,

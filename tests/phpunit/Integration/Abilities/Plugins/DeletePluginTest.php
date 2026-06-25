@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the plugins/delete-plugin capability gate (B15).
+ * Integration tests for the og-plugins/delete-plugin capability gate (B15).
  *
  * delete-plugin mirrors core's delete_item_permissions_check(), which requires BOTH
  * activate_plugins and delete_plugins (class-wp-rest-plugins-controller.php). The
@@ -24,7 +24,7 @@ use WP_Error;
 final class DeletePluginTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'plugins/delete-plugin' ) );
+		$this->assertNotNull( wp_get_ability( 'og-plugins/delete-plugin' ) );
 	}
 
 	/**
@@ -42,7 +42,7 @@ final class DeletePluginTest extends TestCase {
 		$this->assertFalse( current_user_can( 'activate_plugins' ) );
 		$this->assertTrue( current_user_can( 'delete_plugins' ) );
 
-		$allowed = wp_get_ability( 'plugins/delete-plugin' )->check_permissions( array( 'plugin' => 'hello' ) );
+		$allowed = wp_get_ability( 'og-plugins/delete-plugin' )->check_permissions( array( 'plugin' => 'hello' ) );
 
 		$this->assertNotTrue( $allowed );
 	}
@@ -50,7 +50,7 @@ final class DeletePluginTest extends TestCase {
 	public function test_administrator_is_permitted(): void {
 		$this->actingAs( 'administrator' );
 
-		$allowed = wp_get_ability( 'plugins/delete-plugin' )->check_permissions( array( 'plugin' => 'hello' ) );
+		$allowed = wp_get_ability( 'og-plugins/delete-plugin' )->check_permissions( array( 'plugin' => 'hello' ) );
 
 		$this->assertTrue( $allowed );
 	}
@@ -58,7 +58,7 @@ final class DeletePluginTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$allowed = wp_get_ability( 'plugins/delete-plugin' )->check_permissions( array( 'plugin' => 'hello' ) );
+		$allowed = wp_get_ability( 'og-plugins/delete-plugin' )->check_permissions( array( 'plugin' => 'hello' ) );
 
 		$this->assertNotTrue( $allowed );
 	}
@@ -66,7 +66,7 @@ final class DeletePluginTest extends TestCase {
 	public function test_empty_plugin_is_rejected(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'plugins/delete-plugin' )->execute( array( 'plugin' => '' ) );
+		$result = wp_get_ability( 'og-plugins/delete-plugin' )->execute( array( 'plugin' => '' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertContains(

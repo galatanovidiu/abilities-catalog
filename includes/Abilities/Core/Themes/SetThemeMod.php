@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Write ability: `themes/set-theme-mod`.
+ * Write ability: `og-themes/set-theme-mod`.
  *
  * Sets or overwrites a single theme mod (a customizer setting) on the active
  * theme by name. Wraps core `set_theme_mod()`, which stores the value in the
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Classification rationale:
  * - `readonly` is false: this is a write (it stores a setting).
  * - `destructive` is false: it edits front-end appearance, not source-of-truth
- *   data, and is reversible — `themes/remove-theme-mod` reverts the name to the
+ *   data, and is reversible — `og-themes/remove-theme-mod` reverts the name to the
  *   theme's default, or re-setting restores a prior value. (It is a write, so the
  *   boolean must still be declared, which is why it is present and set to false.)
  * - `idempotent` is true: setting the same name and value twice leaves the same
@@ -56,7 +56,7 @@ final class SetThemeMod implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/set-theme-mod';
+		return 'og-themes/set-theme-mod';
 	}
 
 	/**
@@ -65,7 +65,7 @@ final class SetThemeMod implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Set Theme Mod', 'abilities-catalog' ),
-			'description'         => __( 'Sets a theme mod (a customizer setting) on the active theme by name, overwriting any existing value. Theme mods drive the active theme\'s customizer-configured appearance, so this changes the site\'s front-end appearance. The value is stored as-is and may be any JSON type. Arbitrary mod names are allowed (there is no registered allow-list); discover existing names with themes/list-theme-mods. Reversible: use themes/remove-theme-mod to revert the name to the theme default. Returns set, confirmed by reading the value back.', 'abilities-catalog' ),
+			'description'         => __( 'Sets a theme mod (a customizer setting) on the active theme by name, overwriting any existing value. Theme mods drive the active theme\'s customizer-configured appearance, so this changes the site\'s front-end appearance. The value is stored as-is and may be any JSON type. Arbitrary mod names are allowed (there is no registered allow-list); discover existing names with og-themes/list-theme-mods. Reversible: use og-themes/remove-theme-mod to revert the name to the theme default. Returns set, confirmed by reading the value back.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -74,7 +74,7 @@ final class SetThemeMod implements Ability {
 					'name'  => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The theme mod name to set, e.g. "header_textcolor". Discover existing names with themes/list-theme-mods. Arbitrary names are accepted.', 'abilities-catalog' ),
+						'description' => __( 'The theme mod name to set, e.g. "header_textcolor". Discover existing names with og-themes/list-theme-mods. Arbitrary names are accepted.', 'abilities-catalog' ),
 					),
 					'value' => array(
 						'type'        => array( 'string', 'integer', 'number', 'boolean', 'object', 'array', 'null' ),

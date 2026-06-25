@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the privacy/list-export-requests ability.
+ * Integration tests for the og-privacy/list-export-requests ability.
  *
  * Covers the happy-path listing (returns items + total with the exact declared
  * row keys and the export_personal_data action discriminator), the status input
@@ -17,7 +17,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Privacy;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
- * Exercises privacy/list-export-requests output shape, filtering, and the guard.
+ * Exercises og-privacy/list-export-requests output shape, filtering, and the guard.
  */
 final class ListExportRequestsTest extends TestCase {
 
@@ -38,7 +38,7 @@ final class ListExportRequestsTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$request_id = $this->createExportRequest( 'list-subject@example.com' );
 
-		$result = wp_get_ability( 'privacy/list-export-requests' )->execute( array() );
+		$result = wp_get_ability( 'og-privacy/list-export-requests' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -74,7 +74,7 @@ final class ListExportRequestsTest extends TestCase {
 		$this->createExportRequest( 'pending-subject@example.com' );
 
 		// No confirmed requests exist; the filter must return an empty set.
-		$result = wp_get_ability( 'privacy/list-export-requests' )
+		$result = wp_get_ability( 'og-privacy/list-export-requests' )
 			->execute( array( 'status' => 'request-confirmed' ) );
 
 		$this->assertIsArray( $result );
@@ -85,7 +85,7 @@ final class ListExportRequestsTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$allowed = wp_get_ability( 'privacy/list-export-requests' )
+		$allowed = wp_get_ability( 'og-privacy/list-export-requests' )
 			->check_permissions( array() );
 
 		$this->assertNotTrue( $allowed );
@@ -107,7 +107,7 @@ final class ListExportRequestsTest extends TestCase {
 			'Guard precondition: the test user must lack delete_users.'
 		);
 
-		$allowed = wp_get_ability( 'privacy/list-export-requests' )
+		$allowed = wp_get_ability( 'og-privacy/list-export-requests' )
 			->check_permissions( array() );
 
 		$this->assertTrue( $allowed );

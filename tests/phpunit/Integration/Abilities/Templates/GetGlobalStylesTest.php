@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the templates/get-global-styles ability.
+ * Integration tests for the og-templates/get-global-styles ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use WP_Error;
 use WP_Theme_JSON_Resolver;
 
 /**
- * templates/get-global-styles is a read of the active theme's user global-style
+ * og-templates/get-global-styles is a read of the active theme's user global-style
  * overrides. It must NOT create a wp_global_styles row (the readonly annotation),
  * and it 404s honestly when no overrides record exists.
  */
@@ -28,7 +28,7 @@ final class GetGlobalStylesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'templates/get-global-styles' ) );
+		$this->assertNotNull( wp_get_ability( 'og-templates/get-global-styles' ) );
 	}
 
 	/**
@@ -54,7 +54,7 @@ final class GetGlobalStylesTest extends TestCase {
 
 		$before = $this->globalStylesRowCount();
 
-		$result = wp_get_ability( 'templates/get-global-styles' )->execute();
+		$result = wp_get_ability( 'og-templates/get-global-styles' )->execute();
 
 		$this->assertSame( $before, $this->globalStylesRowCount(), 'A read must not create a wp_global_styles row.' );
 		$this->assertInstanceOf( WP_Error::class, $result );
@@ -73,7 +73,7 @@ final class GetGlobalStylesTest extends TestCase {
 		$id = (int) WP_Theme_JSON_Resolver::get_user_global_styles_post_id();
 		$this->assertGreaterThan( 0, $id );
 
-		$result = wp_get_ability( 'templates/get-global-styles' )->execute();
+		$result = wp_get_ability( 'og-templates/get-global-styles' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $id, $result['id'] );
@@ -85,7 +85,7 @@ final class GetGlobalStylesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'templates/get-global-styles' )->execute();
+		$result = wp_get_ability( 'og-templates/get-global-styles' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

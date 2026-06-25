@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 
 /**
  * The read allow-list is deny-by-default and excludes any secret-bearing option,
- * so settings/get-option can never leak a password, key, secret, or token.
+ * so og-settings/get-option can never leak a password, key, secret, or token.
  */
 final class ReadableOptionAllowListTest extends TestCase {
 

@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T3 dangerous write ability: `plugins/install-plugin`.
+ * T3 dangerous write ability: `og-plugins/install-plugin`.
  *
  * Wraps `POST /wp/v2/plugins` with a `slug` via `rest_do_request()`, installing
  * (inactive) a wordpress.org-directory plugin. Installing brings new code onto the
@@ -34,7 +34,7 @@ final class InstallPlugin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/install-plugin';
+		return 'og-plugins/install-plugin';
 	}
 
 	/**

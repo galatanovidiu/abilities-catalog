@@ -25,8 +25,8 @@ final class PageScreenTest extends TestCase {
 	 */
 	public function pageListAbilityProvider(): array {
 		return array(
-			'delete-page' => array( 'content/delete-page' ),
-			'trash-page'  => array( 'content/trash-page' ),
+			'delete-page' => array( 'og-content/delete-page' ),
+			'trash-page'  => array( 'og-content/trash-page' ),
 		);
 	}
 
@@ -45,7 +45,7 @@ final class PageScreenTest extends TestCase {
 	}
 
 	public function test_update_page_points_at_page_editor_screen(): void {
-		$ability = wp_get_ability( 'content/update-page' );
+		$ability = wp_get_ability( 'og-content/update-page' );
 
 		$this->assertNotNull( $ability );
 

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/assign-menu-location`.
+ * T2 non-destructive write ability: `og-menus/assign-menu-location`.
  *
  * Assigns a classic menu (`nav_menu` term) to a registered theme location by
  * wrapping `POST /wp/v2/menus/<id>` via `rest_do_request()` with the controller's
@@ -32,7 +32,7 @@ final class AssignMenuLocation implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/assign-menu-location';
+		return 'og-menus/assign-menu-location';
 	}
 
 	/**
@@ -49,11 +49,11 @@ final class AssignMenuLocation implements Ability {
 					'menu_id'  => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The classic menu term ID to assign. Use menus/list-classic-menus to discover valid menu IDs.', 'abilities-catalog' ),
+						'description' => __( 'The classic menu term ID to assign. Use og-menus/list-classic-menus to discover valid menu IDs.', 'abilities-catalog' ),
 					),
 					'location' => array(
 						'type'        => 'string',
-						'description' => __( 'The registered theme location slug to assign the menu to. Use menus/list-menu-locations to discover valid location slugs.', 'abilities-catalog' ),
+						'description' => __( 'The registered theme location slug to assign the menu to. Use og-menus/list-menu-locations to discover valid location slugs.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'menu_id', 'location' ),

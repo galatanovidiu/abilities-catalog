@@ -12,13 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/spam-comment`.
+ * T1 write ability: `og-comments/spam-comment`.
  *
  * Net-new framing over a comment status change to `spam`. Calls core
  * `wp_spam_comment()` directly rather than the REST update path. Two reasons:
  * the REST path always rewrites `comment_author_IP` from `REMOTE_ADDR`,
  * corrupting the stored commenter IP (see backlog B3); and `wp_spam_comment()`
- * saves the prior status in `_wp_trash_meta_status` so `comments/unspam-comment`
+ * saves the prior status in `_wp_trash_meta_status` so `og-comments/unspam-comment`
  * can restore it (a plain `wp_set_comment_status( $id, 'spam' )` would not). The
  * `permission_callback` is a coarse `is_user_logged_in()` gate; the object-level
  * `edit_comment` capability is enforced inside `execute()` so the caller receives
@@ -34,7 +34,7 @@ final class SpamComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/spam-comment';
+		return 'og-comments/spam-comment';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class SpamComment implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Spam Comment', 'abilities-catalog' ),
-			'description'         => __( 'Marks a comment as spam, setting its status to "spam". May trigger plugin spam hooks (for example Akismet). Re-spamming an already-spam comment is a no-op that reports the existing "spam" status. Returns the prior moderation status in "previous_status". Reversible via comments/unspam-comment. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
+			'description'         => __( 'Marks a comment as spam, setting its status to "spam". May trigger plugin spam hooks (for example Akismet). Re-spamming an already-spam comment is a no-op that reports the existing "spam" status. Returns the prior moderation status in "previous_status". Reversible via og-comments/unspam-comment. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
 			'category'            => 'comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -71,7 +71,7 @@ final class SpamComment implements Ability {
 					),
 					'previous_status' => array(
 						'type'        => 'string',
-						'description' => __( 'The comment status before it was marked as spam. This is the status comments/unspam-comment restores to.', 'abilities-catalog' ),
+						'description' => __( 'The comment status before it was marked as spam. This is the status og-comments/unspam-comment restores to.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -106,7 +106,7 @@ final class SpamComment implements Ability {
 	/**
 	 * Executes the ability by marking the comment as spam via core
 	 * `wp_spam_comment()`, which leaves `comment_author_IP` untouched and saves
-	 * the prior status for `comments/unspam-comment` to restore.
+	 * the prior status for `og-comments/unspam-comment` to restore.
 	 *
 	 * @param mixed $input The validated input data.
 	 * @return array<string,mixed>|\WP_Error The comment's id, status, and prior status, or a WP_Error.

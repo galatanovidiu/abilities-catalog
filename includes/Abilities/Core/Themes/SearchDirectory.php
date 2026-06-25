@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `themes/search-directory`.
+ * Read ability: `og-themes/search-directory`.
  *
  * Searches the public WordPress.org theme directory via core `themes_api()`
  * (`query_themes`). NOTE: this makes an OUTBOUND HTTP request to the
  * WordPress.org API; it reads remote data and changes nothing on the site.
  * Returns a shaped list (slug, name, version, rating, preview URL, author) so an
  * agent can find a theme slug to then install with the dangerous
- * `themes/install-theme` ability. Read-only.
+ * `og-themes/install-theme` ability. Read-only.
  *
  * Gated on `install_themes` — the capability needed to act on a result — so the
  * search pairs with the install ability and is not exposed to users who could not
@@ -34,7 +34,7 @@ final class SearchDirectory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/search-directory';
+		return 'og-themes/search-directory';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class SearchDirectory implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Search Theme Directory', 'abilities-catalog' ),
-			'description'         => __( 'Searches the WordPress.org theme directory by keyword and returns matches (slug, name, version, rating, preview URL, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with themes/install-theme to install one.', 'abilities-catalog' ),
+			'description'         => __( 'Searches the WordPress.org theme directory by keyword and returns matches (slug, name, version, rating, preview URL, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with og-themes/install-theme to install one.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -141,7 +141,7 @@ final class SearchDirectory implements Ability {
 	 * Permission check: `install_themes` (the capability to act on a result).
 	 *
 	 * The directory search is read-only, but it is gated on the install capability
-	 * so it pairs with `themes/install-theme` and is not exposed to users who could
+	 * so it pairs with `og-themes/install-theme` and is not exposed to users who could
 	 * not install anyway. The hard server-side guard.
 	 *
 	 * @param mixed $input The validated input data.

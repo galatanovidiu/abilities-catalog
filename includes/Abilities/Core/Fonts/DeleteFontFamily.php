@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `fonts/delete-font-family`.
+ * T2 destructive write ability: `og-fonts/delete-font-family`.
  *
  * Wraps `DELETE /wp/v2/font-families/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting an installed `wp_font_family` post and its font-face assets.
@@ -33,7 +33,7 @@ final class DeleteFontFamily implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'fonts/delete-font-family';
+		return 'og-fonts/delete-font-family';
 	}
 
 	/**
@@ -50,7 +50,7 @@ final class DeleteFontFamily implements Ability {
 					'id' => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The font family post ID to permanently delete. Discover the ID with fonts/list-font-families.', 'abilities-catalog' ),
+						'description' => __( 'The font family post ID to permanently delete. Discover the ID with og-fonts/list-font-families.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),

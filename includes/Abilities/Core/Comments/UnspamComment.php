@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `comments/unspam-comment`.
+ * T1 write ability: `og-comments/unspam-comment`.
  *
  * Net-new framing over removing the spam mark. Calls core `wp_unspam_comment()`
  * directly rather than the REST update path, which always rewrites
@@ -36,7 +36,7 @@ final class UnspamComment implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'comments/unspam-comment';
+		return 'og-comments/unspam-comment';
 	}
 
 	/**

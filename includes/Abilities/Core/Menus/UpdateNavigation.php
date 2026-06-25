@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `menus/update-navigation`.
+ * T2 non-destructive write ability: `og-menus/update-navigation`.
  *
  * Wraps `POST /wp/v2/navigation/<id>` via `rest_do_request()` to update a
  * block-based navigation menu (`wp_navigation` post). The permission check
@@ -30,7 +30,7 @@ final class UpdateNavigation implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/update-navigation';
+		return 'og-menus/update-navigation';
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class UpdateNavigation implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The navigation menu ID to update. Discover IDs with `menus/list-navigation`.', 'abilities-catalog' ),
+						'description' => __( 'The navigation menu ID to update. Discover IDs with `og-menus/list-navigation`.', 'abilities-catalog' ),
 					),
 					'title'   => array(
 						'type'        => 'string',

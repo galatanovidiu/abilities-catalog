@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-writing ability.
+ * Integration tests for the og-settings/update-writing ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-writing writes the Writing Settings screen via
+ * og-settings/update-writing writes the Writing Settings screen via
  * POST /wp/v2/settings. manage_options is the hard capability guard. The output
  * always carries all three fields and normalizes the falsy default_post_format
  * sentinel to 'standard'.
@@ -33,13 +33,13 @@ final class UpdateWritingTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/update-writing' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/update-writing' ) );
 	}
 
 	public function test_admin_writes_writing_settings(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-writing' )->execute(
+		$result = wp_get_ability( 'og-settings/update-writing' )->execute(
 			array(
 				'default_post_format' => 'aside',
 				'use_smilies'         => false,
@@ -56,7 +56,7 @@ final class UpdateWritingTest extends TestCase {
 	public function test_output_shape_contains_all_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-writing' )->execute(
+		$result = wp_get_ability( 'og-settings/update-writing' )->execute(
 			array( 'use_smilies' => true )
 		);
 
@@ -74,7 +74,7 @@ final class UpdateWritingTest extends TestCase {
 		update_option( 'default_post_format', 0 );
 
 		// An update that does not touch the format still reports the normalized value.
-		$result = wp_get_ability( 'settings/update-writing' )->execute(
+		$result = wp_get_ability( 'og-settings/update-writing' )->execute(
 			array( 'use_smilies' => true )
 		);
 
@@ -110,7 +110,7 @@ final class UpdateWritingTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'settings/update-writing' )->execute(
+		$result = wp_get_ability( 'og-settings/update-writing' )->execute(
 			array( 'use_smilies' => true )
 		);
 

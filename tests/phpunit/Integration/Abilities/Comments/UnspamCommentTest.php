@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/unspam-comment ability.
+ * Integration tests for the og-comments/unspam-comment ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -35,10 +35,10 @@ final class UnspamCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/unspam-comment');
+		$ability = wp_get_ability('og-comments/unspam-comment');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/unspam-comment', $ability->get_name());
+		$this->assertSame('og-comments/unspam-comment', $ability->get_name());
 	}
 
 	public function test_admin_can_unspam_comment_restoring_saved_status(): void {
@@ -54,7 +54,7 @@ final class UnspamCommentTest extends TestCase {
 		// Mirror what wp_spam_comment stores so unspam can restore it.
 		add_comment_meta($comment_id, '_wp_trash_meta_status', '1');
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame(array('id', 'status', 'previous_status'), array_keys($result));
@@ -74,7 +74,7 @@ final class UnspamCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame('hold', $result['status']);
@@ -91,7 +91,7 @@ final class UnspamCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -107,7 +107,7 @@ final class UnspamCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_cannot_edit', $result->get_error_code());
@@ -121,7 +121,7 @@ final class UnspamCommentTest extends TestCase {
 	public function test_non_moderator_missing_id_returns_404_not_generic(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => 99999999));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => 99999999));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_invalid_id', $result->get_error_code());
@@ -145,7 +145,7 @@ final class UnspamCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
@@ -172,7 +172,7 @@ final class UnspamCommentTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		$result = wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_comment_wrong_state', $result->get_error_code());
@@ -198,7 +198,7 @@ final class UnspamCommentTest extends TestCase {
 			)
 		);
 
-		wp_get_ability('comments/unspam-comment')->execute(array('id' => $comment_id));
+		wp_get_ability('og-comments/unspam-comment')->execute(array('id' => $comment_id));
 
 		$this->assertSame('203.0.113.45', get_comment($comment_id)->comment_author_IP);
 	}

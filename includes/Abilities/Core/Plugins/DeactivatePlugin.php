@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `plugins/deactivate-plugin`.
+ * T2 destructive write ability: `og-plugins/deactivate-plugin`.
  *
  * Wraps `POST /wp/v2/plugins/<plugin>` with `status=inactive` via `rest_do_request()`,
  * deactivating an active plugin. Deactivating changes which code runs on the site, so
@@ -36,7 +36,7 @@ final class DeactivatePlugin implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'plugins/deactivate-plugin';
+		return 'og-plugins/deactivate-plugin';
 	}
 
 	/**
@@ -52,7 +52,7 @@ final class DeactivatePlugin implements Ability {
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin file path without the .php extension — the "plugin" value returned by plugins/list-plugins, e.g. "akismet/akismet" or "hello" (for hello.php). Not the human-readable plugin name ("Hello Dolly") and not a value ending in ".php".', 'abilities-catalog' ),
+						'description' => __( 'The plugin file path without the .php extension — the "plugin" value returned by og-plugins/list-plugins, e.g. "akismet/akismet" or "hello" (for hello.php). Not the human-readable plugin name ("Hello Dolly") and not a value ending in ".php".', 'abilities-catalog' ),
 						'minLength'   => 1,
 						'pattern'     => '^[^./]+(?:/[^./]+)?$',
 					),

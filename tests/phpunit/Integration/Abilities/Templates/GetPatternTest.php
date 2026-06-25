@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/get-pattern output and contract.
+ * Integration tests for og-templates/get-pattern output and contract.
  *
  * Covers the non-empty title in the default "view" context (read from the
  * blocks controller's title.raw field), the additive sync_status output
@@ -17,7 +17,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/get-pattern.
+ * Exercises og-templates/get-pattern.
  */
 final class GetPatternTest extends TestCase {
 
@@ -48,7 +48,7 @@ final class GetPatternTest extends TestCase {
 
 		// Default context is "view"; the title must still come back non-empty
 		// because the blocks controller exposes title.raw in both contexts.
-		$result = wp_get_ability( 'templates/get-pattern' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-templates/get-pattern' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( $id, $result['id'] );
@@ -61,7 +61,7 @@ final class GetPatternTest extends TestCase {
 
 		$id = $this->createPattern();
 
-		$result = wp_get_ability( 'templates/get-pattern' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-templates/get-pattern' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		// The field is always present; empty string means a fully synced pattern.
@@ -85,7 +85,7 @@ final class GetPatternTest extends TestCase {
 		$id = $this->createPattern();
 		update_post_meta( $id, 'wp_pattern_sync_status', 'unsynced' );
 
-		$result = wp_get_ability( 'templates/get-pattern' )->execute( array( 'id' => $id ) );
+		$result = wp_get_ability( 'og-templates/get-pattern' )->execute( array( 'id' => $id ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'unsynced', $result['sync_status'] );
@@ -96,7 +96,7 @@ final class GetPatternTest extends TestCase {
 
 		$id = $this->createPattern();
 
-		$ability = wp_get_ability( 'templates/get-pattern' );
+		$ability = wp_get_ability( 'og-templates/get-pattern' );
 
 		// The coarse edit_posts guard rejects a subscriber: wp_block maps its read cap
 		// to edit_posts, which a subscriber lacks, so they cannot read reusable blocks.
@@ -112,7 +112,7 @@ final class GetPatternTest extends TestCase {
 		// An admin holds edit_posts (the coarse guard), so a non-existent id reaches the
 		// route and surfaces its specific 404 instead of the opaque generic denial the
 		// object-level read_post pre-check produced.
-		$result = wp_get_ability( 'templates/get-pattern' )->execute( array( 'id' => 999999 ) );
+		$result = wp_get_ability( 'og-templates/get-pattern' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );

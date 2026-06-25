@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `tools/list-importers`.
+ * T1 read ability: `og-tools/list-importers`.
  *
  * Reports the importers registered with the site via the core
  * `register_importer()` mechanism. Wraps `get_importers()`, which returns the
@@ -31,7 +31,7 @@ final class ListImporters implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'tools/list-importers';
+		return 'og-tools/list-importers';
 	}
 
 	/**

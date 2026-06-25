@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the site-health/get-info ability.
+ * Integration tests for the og-site-health/get-info ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,16 +20,16 @@ use WP_Error;
 final class GetInfoTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'site-health/get-info' );
+		$ability = wp_get_ability( 'og-site-health/get-info' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'site-health/get-info', $ability->get_name() );
+		$this->assertSame( 'og-site-health/get-info', $ability->get_name() );
 	}
 
 	public function test_happy_path_returns_info_as_object(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'site-health/get-info' )->execute();
+		$result = wp_get_ability( 'og-site-health/get-info' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'info', $result );
@@ -46,7 +46,7 @@ final class GetInfoTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'site-health/get-info' );
+		$ability = wp_get_ability( 'og-site-health/get-info' );
 
 		$this->assertFalse( $ability->check_permissions() );
 
@@ -101,7 +101,7 @@ final class GetInfoTest extends TestCase {
 			}
 		);
 
-		$result = wp_get_ability( 'site-health/get-info' )->execute();
+		$result = wp_get_ability( 'og-site-health/get-info' )->execute();
 		$info   = (array) $result['info'];
 
 		// Private section dropped entirely.

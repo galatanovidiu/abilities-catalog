@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for templates/update-template-part output and contract.
+ * Integration tests for og-templates/update-template-part output and contract.
  *
  * Covers a successful part update (title + area change reported as the resulting
  * area and confirmed via read-back), a missing-id 404 that stays a specific core
@@ -18,7 +18,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises templates/update-template-part.
+ * Exercises og-templates/update-template-part.
  */
 final class UpdateTemplatePartTest extends TestCase {
 
@@ -74,7 +74,7 @@ final class UpdateTemplatePartTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'templates/update-template-part' ) );
+		$this->assertNotNull( wp_get_ability( 'og-templates/update-template-part' ) );
 	}
 
 	public function test_update_changes_title_and_area_and_reports_resulting_area(): void {
@@ -82,7 +82,7 @@ final class UpdateTemplatePartTest extends TestCase {
 
 		$id = $this->seedPart( 'header-update-me', 'header' );
 
-		$result = wp_get_ability( 'templates/update-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/update-template-part' )->execute(
 			array(
 				'id'    => $id,
 				'title' => 'Updated Footer Region',
@@ -117,7 +117,7 @@ final class UpdateTemplatePartTest extends TestCase {
 	public function test_missing_part_returns_specific_404_not_permission_collapse(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'templates/update-template-part' )->execute(
+		$result = wp_get_ability( 'og-templates/update-template-part' )->execute(
 			array(
 				'id'    => get_stylesheet() . '//does-not-exist',
 				'title' => 'Nope',
@@ -139,7 +139,7 @@ final class UpdateTemplatePartTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'templates/update-template-part' );
+		$ability = wp_get_ability( 'og-templates/update-template-part' );
 
 		$this->assertFalse(
 			$ability->check_permissions( array( 'id' => $id ) )
@@ -165,7 +165,7 @@ final class UpdateTemplatePartTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'templates/update-template-part' );
+		$ability = wp_get_ability( 'og-templates/update-template-part' );
 
 		$this->assertFalse(
 			$ability->check_permissions(

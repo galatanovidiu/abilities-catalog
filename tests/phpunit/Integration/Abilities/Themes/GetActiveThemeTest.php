@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the themes/get-active-theme ability.
+ * Integration tests for the og-themes/get-active-theme ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * themes/get-active-theme wraps `GET /wp/v2/themes?status=active` and shapes the
+ * og-themes/get-active-theme wraps `GET /wp/v2/themes?status=active` and shapes the
  * single active item into a flat, closed field set. switch_themes or
  * edit_theme_options is the coarse capability guard.
  */
@@ -38,16 +38,16 @@ final class GetActiveThemeTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'themes/get-active-theme' );
+		$ability = wp_get_ability( 'og-themes/get-active-theme' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'themes/get-active-theme', $ability->get_name() );
+		$this->assertSame( 'og-themes/get-active-theme', $ability->get_name() );
 	}
 
 	public function test_admin_gets_active_theme_flat_shape(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'themes/get-active-theme' )->execute();
+		$result = wp_get_ability( 'og-themes/get-active-theme' )->execute();
 
 		$this->assertIsArray( $result );
 		// Closed output: no key beyond the declared set.
@@ -65,7 +65,7 @@ final class GetActiveThemeTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'themes/get-active-theme' )->execute();
+		$result = wp_get_ability( 'og-themes/get-active-theme' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

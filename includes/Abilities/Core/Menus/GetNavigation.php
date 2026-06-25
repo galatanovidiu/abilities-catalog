@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `menus/get-navigation`.
+ * Read ability: `og-menus/get-navigation`.
  *
  * Wraps `GET /wp/v2/navigation/<id>` via `rest_do_request()` and shapes the
  * response into a flat field set. The block-based navigation menu stores its
  * items as serialized blocks inside `content`; this ability returns that raw
  * serialized markup (not rendered HTML) so it matches the field's documented
- * contract and round-trips into `menus/update-navigation`, the same shape
- * `templates/get-template` and `templates/get-pattern` return. The raw form is an
+ * contract and round-trips into `og-menus/update-navigation`, the same shape
+ * `og-templates/get-template` and `og-templates/get-pattern` return. The raw form is an
  * edit-context REST field, which this ability's `edit_theme_options` gate
  * authorizes — so the request defaults to the `edit` context. Read-only.
  *
@@ -32,7 +32,7 @@ final class GetNavigation implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/get-navigation';
+		return 'og-menus/get-navigation';
 	}
 
 	/**
@@ -49,7 +49,7 @@ final class GetNavigation implements Ability {
 					'id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The navigation menu ID. Discover IDs with `menus/list-navigation`.', 'abilities-catalog' ),
+						'description' => __( 'The navigation menu ID. Discover IDs with `og-menus/list-navigation`.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',
@@ -167,7 +167,7 @@ final class GetNavigation implements Ability {
 	 * `raw`/`rendered` object into a single string.
 	 *
 	 * Prefers the `raw` (stored) form over `rendered`, matching
-	 * `templates/get-template` and `templates/get-pattern`: for `content` the `raw`
+	 * `og-templates/get-template` and `og-templates/get-pattern`: for `content` the `raw`
 	 * form is the serialized block markup, for `title` the stored title. `raw` is an
 	 * edit-context field (this ability's default context); `rendered` is the
 	 * fallback used under the `view` context.

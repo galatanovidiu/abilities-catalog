@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the dashboard/get-at-a-glance ability.
+ * Integration tests for the og-dashboard/get-at-a-glance ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -20,16 +20,16 @@ use WP_Error;
 final class GetAtAGlanceTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'dashboard/get-at-a-glance' );
+		$ability = wp_get_ability( 'og-dashboard/get-at-a-glance' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'dashboard/get-at-a-glance', $ability->get_name() );
+		$this->assertSame( 'og-dashboard/get-at-a-glance', $ability->get_name() );
 	}
 
 	public function test_result_uses_closed_shape_with_all_six_fields(): void {
 		$this->actingAs( 'editor' );
 
-		$result = wp_get_ability( 'dashboard/get-at-a-glance' )->execute();
+		$result = wp_get_ability( 'og-dashboard/get-at-a-glance' )->execute();
 
 		$this->assertIsArray( $result );
 		$this->assertSame(
@@ -68,7 +68,7 @@ final class GetAtAGlanceTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability( 'dashboard/get-at-a-glance' )->execute();
+		$result = wp_get_ability( 'og-dashboard/get-at-a-glance' )->execute();
 
 		$this->assertGreaterThanOrEqual( 1, $result['posts'] );
 		$this->assertGreaterThanOrEqual( 1, $result['pages'] );
@@ -79,7 +79,7 @@ final class GetAtAGlanceTest extends TestCase {
 	public function test_subscriber_has_no_permission(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'dashboard/get-at-a-glance' );
+		$ability = wp_get_ability( 'og-dashboard/get-at-a-glance' );
 
 		$this->assertFalse( $ability->check_permissions() );
 

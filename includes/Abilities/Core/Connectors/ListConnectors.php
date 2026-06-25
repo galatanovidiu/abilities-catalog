@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `connectors/list-connectors`.
+ * T1 read ability: `og-connectors/list-connectors`.
  *
  * Lists every connector registered through the WordPress 7.0 connectors API
  * (`wp_get_connectors()`). Core registers AI-provider connectors (`type` of
@@ -43,7 +43,7 @@ final class ListConnectors implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'connectors/list-connectors';
+		return 'og-connectors/list-connectors';
 	}
 
 	/**

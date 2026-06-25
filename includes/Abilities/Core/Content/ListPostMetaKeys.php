@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 read ability: `content/list-post-meta-keys`.
+ * T1 read ability: `og-content/list-post-meta-keys`.
  *
  * Lists the custom-field (meta) keys a post type supports — those registered with
- * `show_in_rest` — so an agent knows what `content/get-post-meta`,
- * `content/update-post-meta`, and `content/delete-post-meta` can act on. Each key
+ * `show_in_rest` — so an agent knows what `og-content/get-post-meta`,
+ * `og-content/update-post-meta`, and `og-content/delete-post-meta` can act on. Each key
  * includes its declared type, whether it stores a single value or a list, and its
  * description. Wraps core `get_registered_meta_keys()` via
  * {@see PostMetaKeys::forPostType()}.
@@ -30,7 +30,7 @@ final class ListPostMetaKeys implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'content/list-post-meta-keys';
+		return 'og-content/list-post-meta-keys';
 	}
 
 	/**

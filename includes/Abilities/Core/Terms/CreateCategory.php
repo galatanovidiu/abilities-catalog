@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 safe-write ability: `terms/create-category`.
+ * T1 safe-write ability: `og-terms/create-category`.
  *
  * Wraps `POST /wp/v2/categories` via `rest_do_request()` and returns the new
  * term's id, name, slug, parent, and public archive link. The `category`
@@ -31,7 +31,7 @@ final class CreateCategory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'terms/create-category';
+		return 'og-terms/create-category';
 	}
 
 	/**

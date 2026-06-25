@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the dangerous settings/update-option ability.
+ * Integration tests for the dangerous og-settings/update-option ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-option is the deny-by-default generic option writer. The
+ * og-settings/update-option is the deny-by-default generic option writer. The
  * allow-list is the authoritative guard, repeated in execute() as defense in
  * depth, and manage_options is the hard capability guard.
  */
@@ -23,7 +23,7 @@ final class UpdateOptionTest extends TestCase {
 	public function test_admin_writes_an_allowed_option(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('settings/update-option')->execute(
+		$result = wp_get_ability('og-settings/update-option')->execute(
 			array(
 				'name'  => 'blogname',
 				'value' => 'Catalog Test Site',
@@ -63,7 +63,7 @@ final class UpdateOptionTest extends TestCase {
 		// An invalid timezone is reverted by sanitize_option, which registers a
 		// settings error and writes nothing. The ability must surface that as an
 		// error, not report updated => true with the unchanged read-back.
-		$result = wp_get_ability('settings/update-option')->execute(
+		$result = wp_get_ability('og-settings/update-option')->execute(
 			array(
 				'name'  => 'timezone_string',
 				'value' => 'Not/A_Real_Zone',
@@ -82,7 +82,7 @@ final class UpdateOptionTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('settings/update-option')->execute(
+		$result = wp_get_ability('og-settings/update-option')->execute(
 			array(
 				'name'  => 'blogname',
 				'value' => 'Should Not Apply',

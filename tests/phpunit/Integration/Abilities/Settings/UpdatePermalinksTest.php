@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the settings/update-permalinks ability.
+ * Integration tests for the og-settings/update-permalinks ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * settings/update-permalinks writes the three Permalink Settings option keys and
+ * og-settings/update-permalinks writes the three Permalink Settings option keys and
  * rebuilds the rewrite rules. manage_options is the hard capability guard; at
  * least one field is required; the output always returns all three fields.
  */
@@ -32,13 +32,13 @@ final class UpdatePermalinksTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'settings/update-permalinks' ) );
+		$this->assertNotNull( wp_get_ability( 'og-settings/update-permalinks' ) );
 	}
 
 	public function test_admin_writes_permalink_options_and_returns_all_fields(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-permalinks' )->execute(
+		$result = wp_get_ability( 'og-settings/update-permalinks' )->execute(
 			array(
 				'permalink_structure' => '/%postname%/',
 				'category_base'       => 'sections',
@@ -63,7 +63,7 @@ final class UpdatePermalinksTest extends TestCase {
 
 		update_option( 'category_base', 'existing-cat' );
 
-		$result = wp_get_ability( 'settings/update-permalinks' )->execute(
+		$result = wp_get_ability( 'og-settings/update-permalinks' )->execute(
 			array( 'permalink_structure' => '/%postname%/' )
 		);
 
@@ -83,7 +83,7 @@ final class UpdatePermalinksTest extends TestCase {
 	public function test_execute_rejects_empty_input(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'settings/update-permalinks' )->execute( array() );
+		$result = wp_get_ability( 'og-settings/update-permalinks' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'no_fields', $result->get_error_code() );
@@ -105,7 +105,7 @@ final class UpdatePermalinksTest extends TestCase {
 
 		$before = get_option( 'permalink_structure' );
 
-		$result = wp_get_ability( 'settings/update-permalinks' )->execute(
+		$result = wp_get_ability( 'og-settings/update-permalinks' )->execute(
 			array( 'permalink_structure' => '/%postname%/' )
 		);
 

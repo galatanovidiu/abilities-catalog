@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/get-pattern`.
+ * Read ability: `og-templates/get-pattern`.
  *
  * Wraps `GET /wp/v2/blocks/<id>` via `rest_do_request()`. A user pattern is a
  * `wp_block` post (a reusable block / synced pattern). The permission is the
@@ -27,7 +27,7 @@ final class GetPattern implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/get-pattern';
+		return 'og-templates/get-pattern';
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class GetPattern implements Ability {
 				'properties'           => array(
 					'id'      => array(
 						'type'        => 'integer',
-						'description' => __( 'The pattern (wp_block) post ID. Discover IDs via templates/list-synced-patterns.', 'abilities-catalog' ),
+						'description' => __( 'The pattern (wp_block) post ID. Discover IDs via og-templates/list-synced-patterns.', 'abilities-catalog' ),
 					),
 					'context' => array(
 						'type'        => 'string',

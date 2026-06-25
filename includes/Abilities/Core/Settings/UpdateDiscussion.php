@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 non-destructive write ability: `settings/update-discussion`.
+ * T2 non-destructive write ability: `og-settings/update-discussion`.
  *
  * Updates the Discussion Settings screen. The accepted fields mirror the matching
  * read ability {@see GetDiscussion}. The write path is split by where each option
@@ -62,7 +62,7 @@ final class UpdateDiscussion implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'settings/update-discussion';
+		return 'og-settings/update-discussion';
 	}
 
 	/**

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Ordinary core-function write ability: `network/remove-user-from-site`.
+ * Ordinary core-function write ability: `og-network/remove-user-from-site`.
  *
  * Removes a user's membership from one site (blog) in a multisite network,
  * mirroring the Network Admin -> Sites -> Users action. Wraps core
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `readonly` is false: this is a write (it strips membership/roles on a site).
  * - `destructive` is false: only the per-site membership is removed; the user
  *   account survives, removing absent membership is a no-op, and the user can be
- *   added back with `network/add-user-to-site`. There is no irreversible data
+ *   added back with `og-network/add-user-to-site`. There is no irreversible data
  *   loss (declared because every write must set the boolean).
  * - `idempotent` is true: removing a user who already has no membership on the
  *   site leaves the same end state, so a repeat call is a no-op success.
@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Multisite only: the `wp_blogs` / `wp_usermeta` tables and the network caps do
  * not exist on a single site, so `execute()` returns a 400 before touching any
- * `ms-*` function (the `network/get-site` / `tools/delete-transient` idiom).
+ * `ms-*` function (the `og-network/get-site` / `og-tools/delete-transient` idiom).
  *
  * Security note: `remove_user_from_blog()` performs NO capability check of its
  * own. The `permission_callback` (`is_multisite() && manage_sites`) is the hard
@@ -55,7 +55,7 @@ final class RemoveUserFromSite implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'network/remove-user-from-site';
+		return 'og-network/remove-user-from-site';
 	}
 
 	/**
@@ -64,7 +64,7 @@ final class RemoveUserFromSite implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Remove User From Site', 'abilities-catalog' ),
-			'description'         => __( 'Removes a user\'s membership from a site (blog) in a multisite network. This only removes the user\'s roles/capabilities on that site — the user ACCOUNT is not deleted and their membership on other sites is unaffected. Optionally pass reassign (a user ID) to reassign the removed user\'s posts on that site; omit it (default 0) to leave authorship unchanged. An unknown user or site returns a 404. Add a user with network/add-user-to-site. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
+			'description'         => __( 'Removes a user\'s membership from a site (blog) in a multisite network. This only removes the user\'s roles/capabilities on that site — the user ACCOUNT is not deleted and their membership on other sites is unaffected. Optionally pass reassign (a user ID) to reassign the removed user\'s posts on that site; omit it (default 0) to leave authorship unchanged. An unknown user or site returns a 404. Add a user with og-network/add-user-to-site. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
 			'category'            => 'network',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -73,12 +73,12 @@ final class RemoveUserFromSite implements Ability {
 					'user_id'  => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The ID of the user to remove from the site. Discover IDs with users/list-users.', 'abilities-catalog' ),
+						'description' => __( 'The ID of the user to remove from the site. Discover IDs with og-users/list-users.', 'abilities-catalog' ),
 					),
 					'blog_id'  => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
-						'description' => __( 'The site (blog) ID to remove the user from. Discover IDs with network/list-sites.', 'abilities-catalog' ),
+						'description' => __( 'The site (blog) ID to remove the user from. Discover IDs with og-network/list-sites.', 'abilities-catalog' ),
 					),
 					'reassign' => array(
 						'type'        => 'integer',

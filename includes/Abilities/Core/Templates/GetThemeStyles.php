@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/get-theme-styles`.
+ * Read ability: `og-templates/get-theme-styles`.
  *
  * Wraps `GET /wp/v2/global-styles/themes/<stylesheet>` via `rest_do_request()`.
  * Returns the **active theme's** effective theme-level global settings and styles:
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * route serves the active theme only — a non-active `stylesheet` always 404s — so
  * `stylesheet` is an optional explicit active-theme identifier; leave it empty to
  * resolve the active theme automatically. This is the theme-level baseline,
- * distinct from `templates/get-global-styles`, which returns the user's raw
+ * distinct from `og-templates/get-global-styles`, which returns the user's raw
  * override record layered on top. Read-only.
  *
  * @since 0.5.0
@@ -33,7 +33,7 @@ final class GetThemeStyles implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/get-theme-styles';
+		return 'og-templates/get-theme-styles';
 	}
 
 	/**

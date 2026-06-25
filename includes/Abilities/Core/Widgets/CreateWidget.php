@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T1 write ability: `widgets/create-widget`.
+ * T1 write ability: `og-widgets/create-widget`.
  *
  * Wraps `POST /wp/v2/widgets` via `rest_do_request()` to add a widget instance
  * to a sidebar (widget area), or — when `sidebar` is omitted — to the
@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * pre-check.
  *
  * Adding a widget edits only the site's front-end appearance and is reversible
- * via `widgets/delete-widget`, so it is `destructive:false` and NOT `dangerous`.
+ * via `og-widgets/delete-widget`, so it is `destructive:false` and NOT `dangerous`.
  *
  * @since 0.5.0
  */
@@ -47,7 +47,7 @@ final class CreateWidget implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'widgets/create-widget';
+		return 'og-widgets/create-widget';
 	}
 
 	/**
@@ -56,19 +56,19 @@ final class CreateWidget implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Create Widget', 'abilities-catalog' ),
-			'description'         => __( 'Adds a widget of a given type to a sidebar (widget area), returning the new widget id, its id_base, the sidebar it landed in, and its rendered HTML. Set id_base to a widget type slug from widgets/list-widget-types (e.g. "block", "text"), and sidebar to a sidebar id from widgets/list-sidebars; omit sidebar to stage the widget inactive (it defaults to the wp_inactive_widgets holding area). Supply widget settings through either instance (an object — for the core "block" widget use { raw: { content: "<block markup>" } }) or form_data (a URL-encoded string for classic widgets), but not both. Reversible via widgets/delete-widget.', 'abilities-catalog' ),
+			'description'         => __( 'Adds a widget of a given type to a sidebar (widget area), returning the new widget id, its id_base, the sidebar it landed in, and its rendered HTML. Set id_base to a widget type slug from og-widgets/list-widget-types (e.g. "block", "text"), and sidebar to a sidebar id from og-widgets/list-sidebars; omit sidebar to stage the widget inactive (it defaults to the wp_inactive_widgets holding area). Supply widget settings through either instance (an object — for the core "block" widget use { raw: { content: "<block markup>" } }) or form_data (a URL-encoded string for classic widgets), but not both. Reversible via og-widgets/delete-widget.', 'abilities-catalog' ),
 			'category'            => 'widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'id_base'   => array(
 						'type'        => 'string',
-						'description' => __( 'The widget type slug, used as the id_base — discover valid values with widgets/list-widget-types (e.g. "block", "text"). Not a widget instance id like "block-3".', 'abilities-catalog' ),
+						'description' => __( 'The widget type slug, used as the id_base — discover valid values with og-widgets/list-widget-types (e.g. "block", "text"). Not a widget instance id like "block-3".', 'abilities-catalog' ),
 					),
 					'sidebar'   => array(
 						'type'        => 'string',
 						'default'     => 'wp_inactive_widgets',
-						'description' => __( 'The target sidebar id from widgets/list-sidebars (e.g. "sidebar-1"). Omit to stage the widget in the wp_inactive_widgets holding area (inactive, not shown on the front end).', 'abilities-catalog' ),
+						'description' => __( 'The target sidebar id from og-widgets/list-sidebars (e.g. "sidebar-1"). Omit to stage the widget in the wp_inactive_widgets holding area (inactive, not shown on the front end).', 'abilities-catalog' ),
 					),
 					'instance'  => array(
 						'type'                 => 'object',
@@ -93,7 +93,7 @@ final class CreateWidget implements Ability {
 					),
 					'id'       => array(
 						'type'        => 'string',
-						'description' => __( 'The new widget instance id (e.g. "block-3"). Use it with widgets/get-widget, widgets/update-widget, or widgets/delete-widget.', 'abilities-catalog' ),
+						'description' => __( 'The new widget instance id (e.g. "block-3"). Use it with og-widgets/get-widget, og-widgets/update-widget, or og-widgets/delete-widget.', 'abilities-catalog' ),
 					),
 					'id_base'  => array(
 						'type'        => 'string',

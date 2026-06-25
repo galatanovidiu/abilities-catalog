@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the network/count-sites ability.
+ * Integration tests for the og-network/count-sites ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * network/count-sites is a multisite read returning site counts grouped by
+ * og-network/count-sites is a multisite read returning site counts grouped by
  * status. It wraps wp_count_sites(), which returns exactly six keys (no
  * `empty`). manage_sites (super-admin) is the hard guard.
  *
@@ -44,7 +44,7 @@ final class CountSitesTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$this->assertNotNull( wp_get_ability( 'network/count-sites' ) );
+		$this->assertNotNull( wp_get_ability( 'og-network/count-sites' ) );
 	}
 
 	public function test_super_admin_gets_counts_with_exact_six_keys(): void {
@@ -52,7 +52,7 @@ final class CountSitesTest extends TestCase {
 
 		self::factory()->blog->create();
 
-		$result = wp_get_ability( 'network/count-sites' )->execute( array() );
+		$result = wp_get_ability( 'og-network/count-sites' )->execute( array() );
 
 		$this->assertIsArray( $result );
 
@@ -72,7 +72,7 @@ final class CountSitesTest extends TestCase {
 	public function test_plain_administrator_is_denied(): void {
 		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability( 'network/count-sites' )->execute( array() );
+		$result = wp_get_ability( 'og-network/count-sites' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -81,7 +81,7 @@ final class CountSitesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'network/count-sites' )->execute( array() );
+		$result = wp_get_ability( 'og-network/count-sites' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
@@ -90,7 +90,7 @@ final class CountSitesTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$result = wp_get_ability( 'network/count-sites' )->execute( array() );
+		$result = wp_get_ability( 'og-network/count-sites' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

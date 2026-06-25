@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `templates/list-block-types`.
+ * Read ability: `og-templates/list-block-types`.
  *
  * Wraps `GET /wp/v2/block-types` via `rest_do_request()` and shapes the result.
  * Returns a lightweight overview of the block types registered on the site
@@ -31,7 +31,7 @@ final class ListBlockTypes implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'templates/list-block-types';
+		return 'og-templates/list-block-types';
 	}
 
 	/**

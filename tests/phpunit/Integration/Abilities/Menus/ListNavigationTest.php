@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/list-navigation ability.
+ * Integration tests for the og-menus/list-navigation ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,7 +13,7 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * menus/list-navigation wraps `GET /wp/v2/navigation` and projects each
+ * og-menus/list-navigation wraps `GET /wp/v2/navigation` and projects each
  * `wp_navigation` post into a flat, closed summary row via MenuListShaper.
  * The serialized block body (`content`) is dropped from the list row.
  * edit_theme_options is the coarse capability guard.
@@ -37,17 +37,17 @@ final class ListNavigationTest extends TestCase {
 	);
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/list-navigation' );
+		$ability = wp_get_ability( 'og-menus/list-navigation' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/list-navigation', $ability->get_name() );
+		$this->assertSame( 'og-menus/list-navigation', $ability->get_name() );
 	}
 
 	public function test_admin_lists_navigation_with_totals(): void {
 		$this->actingAs( 'administrator' );
 		$this->seedNavigation( 'Primary Navigation' );
 
-		$result = wp_get_ability( 'menus/list-navigation' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-navigation' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'items', $result );
@@ -61,7 +61,7 @@ final class ListNavigationTest extends TestCase {
 		$this->actingAs( 'administrator' );
 		$this->seedNavigation( 'Primary Navigation' );
 
-		$result = wp_get_ability( 'menus/list-navigation' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-navigation' )->execute( array() );
 
 		$this->assertIsArray( $result );
 		$this->assertNotEmpty( $result['items'] );
@@ -82,7 +82,7 @@ final class ListNavigationTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability( 'menus/list-navigation' )->execute( array() );
+		$result = wp_get_ability( 'og-menus/list-navigation' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the menus/delete-classic-menu ability.
+ * Integration tests for the og-menus/delete-classic-menu ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -31,17 +31,17 @@ final class DeleteClassicMenuTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability( 'menus/delete-classic-menu' );
+		$ability = wp_get_ability( 'og-menus/delete-classic-menu' );
 
 		$this->assertNotNull( $ability );
-		$this->assertSame( 'menus/delete-classic-menu', $ability->get_name() );
+		$this->assertSame( 'og-menus/delete-classic-menu', $ability->get_name() );
 	}
 
 	public function test_admin_permanently_deletes_menu(): void {
 		$this->actingAs( 'administrator' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/delete-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-classic-menu' )->execute(
 			array( 'id' => $menu_id )
 		);
 
@@ -58,7 +58,7 @@ final class DeleteClassicMenuTest extends TestCase {
 		$menu_id = wp_create_nav_menu( 'Located Menu' );
 		set_theme_mod( 'nav_menu_locations', array( 'ac_primary' => (int) $menu_id ) );
 
-		$result = wp_get_ability( 'menus/delete-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-classic-menu' )->execute(
 			array( 'id' => $menu_id )
 		);
 
@@ -74,7 +74,7 @@ final class DeleteClassicMenuTest extends TestCase {
 		// An admin holds edit_theme_options (the coarse guard), so a non-existent id
 		// reaches the route and surfaces its specific 404 instead of the opaque
 		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability( 'menus/delete-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-classic-menu' )->execute(
 			array( 'id' => 999999 )
 		);
 
@@ -87,7 +87,7 @@ final class DeleteClassicMenuTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
-		$result = wp_get_ability( 'menus/delete-classic-menu' )->execute(
+		$result = wp_get_ability( 'og-menus/delete-classic-menu' )->execute(
 			array( 'id' => $menu_id )
 		);
 

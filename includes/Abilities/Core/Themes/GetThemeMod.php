@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read ability: `themes/get-theme-mod`.
+ * Read ability: `og-themes/get-theme-mod`.
  *
  * Reads a single theme mod (a customizer setting) on the active theme by name,
  * reporting whether the mod is actually set and, when it is, its stored value.
  * Wraps core `get_theme_mods()` for the presence check and `get_theme_mod()` for
- * the value. Discover mod names with `themes/list-theme-mods`.
+ * the value. Discover mod names with `og-themes/list-theme-mods`.
  *
  * Presence vs default — why two core calls: `get_theme_mod( $name )` returns the
  * theme's DEFAULT (filtered) value when the mod is unset, so it cannot tell "set
@@ -42,7 +42,7 @@ final class GetThemeMod implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'themes/get-theme-mod';
+		return 'og-themes/get-theme-mod';
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class GetThemeMod implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Get Theme Mod', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single theme mod (a customizer setting) on the active theme by name, reporting is_set (whether the mod is actually stored) and its value. When the mod is not set, is_set is false and value is null — it does NOT return the theme default, so use is_set, not value, to tell "absent" from "set to null". Discover mod names with themes/list-theme-mods.', 'abilities-catalog' ),
+			'description'         => __( 'Returns a single theme mod (a customizer setting) on the active theme by name, reporting is_set (whether the mod is actually stored) and its value. When the mod is not set, is_set is false and value is null — it does NOT return the theme default, so use is_set, not value, to tell "absent" from "set to null". Discover mod names with og-themes/list-theme-mods.', 'abilities-catalog' ),
 			'category'            => 'themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -60,7 +60,7 @@ final class GetThemeMod implements Ability {
 					'name' => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'description' => __( 'The theme mod name to read (e.g. "header_textcolor", "custom_logo"). Discover the names of the theme mods that are set with themes/list-theme-mods.', 'abilities-catalog' ),
+						'description' => __( 'The theme mod name to read (e.g. "header_textcolor", "custom_logo"). Discover the names of the theme mods that are set with og-themes/list-theme-mods.', 'abilities-catalog' ),
 					),
 				),
 				'additionalProperties' => false,

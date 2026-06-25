@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests for the comments/get-comment-count ability.
+ * Integration tests for the og-comments/get-comment-count ability.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -58,16 +58,16 @@ final class GetCommentCountTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('comments/get-comment-count');
+		$ability = wp_get_ability('og-comments/get-comment-count');
 
 		$this->assertNotNull($ability);
-		$this->assertSame('comments/get-comment-count', $ability->get_name());
+		$this->assertSame('og-comments/get-comment-count', $ability->get_name());
 	}
 
 	public function test_admin_reads_single_post_counts(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array('post_id' => $this->post_id));
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array('post_id' => $this->post_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($this->post_id, $result['post_id']);
@@ -77,7 +77,7 @@ final class GetCommentCountTest extends TestCase {
 	public function test_admin_reads_whole_site_counts(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array());
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array());
 
 		$this->assertIsArray($result);
 		$this->assertSame(0, $result['post_id']);
@@ -107,7 +107,7 @@ final class GetCommentCountTest extends TestCase {
 		$this->assertFalse(current_user_can('moderate_comments'));
 		$this->assertTrue(current_user_can('edit_post', $post_id));
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array('post_id' => $post_id));
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array('post_id' => $post_id));
 
 		$this->assertIsArray($result);
 		$this->assertSame($post_id, $result['post_id']);
@@ -123,7 +123,7 @@ final class GetCommentCountTest extends TestCase {
 		// it nor moderate comments — the per-post branch must deny.
 		wp_set_current_user($author_id);
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array('post_id' => $this->post_id));
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array('post_id' => $this->post_id));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -132,7 +132,7 @@ final class GetCommentCountTest extends TestCase {
 	public function test_result_has_exactly_the_closed_field_set(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array());
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array());
 
 		$expected = array(
 			'post_id',
@@ -157,7 +157,7 @@ final class GetCommentCountTest extends TestCase {
 	public function test_unknown_post_id_returns_specific_404(): void {
 		$this->actingAs('administrator');
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array('post_id' => 99999999));
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array('post_id' => 99999999));
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('rest_post_invalid_id', $result->get_error_code());
@@ -168,7 +168,7 @@ final class GetCommentCountTest extends TestCase {
 	public function test_subscriber_is_denied_whole_site_count(): void {
 		$this->actingAs('subscriber');
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array());
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array());
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
@@ -177,7 +177,7 @@ final class GetCommentCountTest extends TestCase {
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('comments/get-comment-count')->execute(array());
+		$result = wp_get_ability('og-comments/get-comment-count')->execute(array());
 
 		$this->assertInstanceOf(WP_Error::class, $result);
 		$this->assertSame('ability_invalid_permissions', $result->get_error_code());

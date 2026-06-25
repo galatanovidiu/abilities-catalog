@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Projects raw `/wp/v2/themes` REST items into flat summary rows for the
- * `themes/list-themes` ability.
+ * `og-themes/list-themes` ability.
  *
  * The themes route returns heterogeneous, nested rows: `_links`, rendered
  * objects (`['raw' => , 'rendered' => ]`) for `name`, `author`, `theme_uri`,

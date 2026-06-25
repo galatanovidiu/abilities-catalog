@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * T2 destructive write ability: `menus/delete-classic-menu`.
+ * T2 destructive write ability: `og-menus/delete-classic-menu`.
  *
  * Wraps `DELETE /wp/v2/menus/<id>` with `force=true` via `rest_do_request()`,
  * permanently deleting a whole classic menu (a `nav_menu` term) and all of its
  * menu items. Classic menus have no Trash: the menus controller returns HTTP 501
  * when `force` is false, so a permanent delete is the only option. This deletes
- * the entire menu, not a single item — use `menus/delete-menu-item` for one item.
+ * the entire menu, not a single item — use `og-menus/delete-menu-item` for one item.
  *
  * The `permission_callback` mirrors the terms controller
  * `delete_item_permissions_check`: object-level `delete_term` on the menu term id,
@@ -36,7 +36,7 @@ final class DeleteClassicMenu implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function name(): string {
-		return 'menus/delete-classic-menu';
+		return 'og-menus/delete-classic-menu';
 	}
 
 	/**
@@ -52,7 +52,7 @@ final class DeleteClassicMenu implements Ability {
 				'properties'           => array(
 					'id' => array(
 						'type'        => 'integer',
-						'description' => __( 'The classic menu (nav_menu term) ID to permanently delete. Discover it with menus/list-classic-menus or menus/get-classic-menu.', 'abilities-catalog' ),
+						'description' => __( 'The classic menu (nav_menu term) ID to permanently delete. Discover it with og-menus/list-classic-menus or og-menus/get-classic-menu.', 'abilities-catalog' ),
 					),
 				),
 				'required'             => array( 'id' ),
