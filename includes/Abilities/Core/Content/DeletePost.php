@@ -42,7 +42,7 @@ final class DeletePost implements Ability {
 		return array(
 			'label'               => __( 'Delete Post', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a post by ID, bypassing the Trash. This cannot be undone. To remove a post recoverably, use `og-content/trash-post` instead.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

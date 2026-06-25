@@ -52,7 +52,7 @@ final class InstallFontFamily implements Ability {
 		return array(
 			'label'               => __( 'Install Font Family', 'abilities-catalog' ),
 			'description'         => __( 'Installs a new font family (metadata only: name, CSS font-family value, and slug). Does not upload font face files.', 'abilities-catalog' ),
-			'category'            => 'fonts',
+			'category'            => 'og-core-fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

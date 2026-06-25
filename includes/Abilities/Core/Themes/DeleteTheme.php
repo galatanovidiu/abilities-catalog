@@ -42,7 +42,7 @@ final class DeleteTheme implements Ability {
 		return array(
 			'label'               => __( 'Delete Theme', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes an installed theme by its stylesheet (directory name). The active theme and the parent of the active theme cannot be deleted. On multisite the removal affects every site in the network.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -43,7 +43,7 @@ final class DeleteTermMeta implements Ability {
 		return array(
 			'label'               => __( 'Delete Term Meta', 'abilities-catalog' ),
 			'description'         => __( 'Permanently removes custom fields (meta) from a term by key, deleting all values for each key. Only meta keys registered with show_in_rest for the term\'s taxonomy can be deleted; unknown keys are rejected. This cannot be undone. Returns the term id, the deleted keys, and edit_link — surface edit_link so a human can review the term.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

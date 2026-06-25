@@ -42,7 +42,7 @@ final class CreateTerm implements Ability {
 		return array(
 			'label'               => __( 'Create Term', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new term in any REST-enabled taxonomy. Parent is only meaningful for hierarchical taxonomies.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

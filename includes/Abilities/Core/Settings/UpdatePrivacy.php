@@ -39,7 +39,7 @@ final class UpdatePrivacy implements Ability {
 		return array(
 			'label'               => __( 'Update Privacy Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates Privacy Settings: the page ID assigned as the privacy policy page. Set to 0 to clear it.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'page_for_privacy_policy' ),

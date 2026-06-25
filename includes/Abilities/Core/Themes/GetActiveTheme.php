@@ -37,7 +37,7 @@ final class GetActiveTheme implements Ability {
 		return array(
 			'label'               => __( 'Get Active Theme', 'abilities-catalog' ),
 			'description'         => __( 'Returns the currently active theme, including its stylesheet, name, version, and author.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

@@ -43,7 +43,7 @@ final class GetMediaFile implements Ability {
 		return array(
 			'label'               => __( 'Get Media File', 'abilities-catalog' ),
 			'description'         => __( 'Returns the bytes of a media file, base64-encoded. When the file exceeds the inline size limit, returns a "file_too_large" error whose data carries the source URL to fetch directly.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

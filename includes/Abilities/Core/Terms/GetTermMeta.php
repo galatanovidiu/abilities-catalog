@@ -39,7 +39,7 @@ final class GetTermMeta implements Ability {
 		return array(
 			'label'               => __( 'Get Term Meta', 'abilities-catalog' ),
 			'description'         => __( 'Returns a term\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the term\'s taxonomy. Requires edit access to the term (meta may carry non-public data). Discover IDs with og-terms/list-terms.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -41,7 +41,7 @@ final class LookupTemplate implements Ability {
 		return array(
 			'label'               => __( 'Lookup Template', 'abilities-catalog' ),
 			'description'         => __( 'Resolves which template renders a given slug. Returns the template hierarchy WordPress would try (most specific first) and the first one that exists for the active theme, with its "theme//slug" id and title. Use it to find a template id before reading or updating it.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

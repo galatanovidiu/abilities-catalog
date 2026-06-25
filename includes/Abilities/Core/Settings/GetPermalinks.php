@@ -34,7 +34,7 @@ final class GetPermalinks implements Ability {
 		return array(
 			'label'               => __( 'Get Permalink Settings', 'abilities-catalog' ),
 			'description'         => __( 'Returns the stored permalink option values: the permalink structure and the category and tag base prefixes. On a multisite subdirectory main site these may include a "/blog" prefix that the Permalink Settings screen displays separately.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

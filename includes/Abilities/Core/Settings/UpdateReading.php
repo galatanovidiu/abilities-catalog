@@ -44,7 +44,7 @@ final class UpdateReading implements Ability {
 		return array(
 			'label'               => __( 'Update Reading Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates Reading Settings: front page display, front and posts page IDs, posts per page and per RSS feed, and the search-engine visibility flag.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

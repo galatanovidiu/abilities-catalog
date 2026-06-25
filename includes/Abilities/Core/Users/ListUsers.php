@@ -39,7 +39,7 @@ final class ListUsers implements Ability {
 		return array(
 			'label'               => __( 'List Users', 'abilities-catalog' ),
 			'description'         => __( 'Returns a paginated list of users, with optional search, role, and capability filters.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

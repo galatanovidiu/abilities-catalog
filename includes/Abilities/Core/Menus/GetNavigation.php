@@ -42,7 +42,7 @@ final class GetNavigation implements Ability {
 		return array(
 			'label'               => __( 'Get Navigation Menu', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single block-based navigation menu by ID, including its serialized block content.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

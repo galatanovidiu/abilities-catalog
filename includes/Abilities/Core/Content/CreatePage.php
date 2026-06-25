@@ -47,7 +47,7 @@ final class CreatePage implements Ability {
 		return array(
 			'label'               => __( 'Create Page', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new page. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

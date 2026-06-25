@@ -37,7 +37,7 @@ final class GetCurrentUser implements Ability {
 		return array(
 			'label'               => __( 'Get Current User', 'abilities-catalog' ),
 			'description'         => __( 'Returns the profile of the currently logged-in user, including name and slug; email, roles, and capabilities appear only in "edit" context.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

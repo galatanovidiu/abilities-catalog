@@ -40,7 +40,7 @@ final class UpdateMenuItem implements Ability {
 		return array(
 			'label'               => __( 'Update Menu Item', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing classic menu item by ID. Only the supplied fields change; an empty-string value for a text field clears it.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

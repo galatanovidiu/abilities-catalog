@@ -62,7 +62,7 @@ final class SendTestEmail implements Ability {
 		return array(
 			'label'               => __( 'Send Test Email', 'abilities-catalog' ),
 			'description'         => __( 'Sends a real email — a single fixed-content test message — to verify the site can deliver mail. Use this to diagnose mail configuration after changing SMTP settings or installing a mail plugin. The subject and body are fixed (a configuration-test notice); only the recipient is configurable and defaults to the site admin email when omitted. Returns whether wp_mail accepted the message and the resolved recipient address. A sent value of true means WordPress handed the message to the mailer, not that it was delivered. This is not a general-purpose mailer. Requires the manage_options capability.', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

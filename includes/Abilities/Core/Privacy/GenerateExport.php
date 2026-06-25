@@ -77,7 +77,7 @@ final class GenerateExport implements Ability {
 		return array(
 			'label'               => __( 'Generate Export', 'abilities-catalog' ),
 			'description'         => __( 'Runs an existing personal-data export request to completion and produces the export file. Does not return the download URL.', 'abilities-catalog' ),
-			'category'            => 'privacy',
+			'category'            => 'og-core-privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

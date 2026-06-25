@@ -39,7 +39,7 @@ final class GetTemplatePart implements Ability {
 		return array(
 			'label'               => __( 'Get Template Part', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single site-editor template part by its "theme//slug" id, including its block markup and area (header, footer, etc.). For full templates use og-templates/get-template.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'id' ),

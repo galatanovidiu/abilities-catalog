@@ -67,7 +67,7 @@ final class DestroyAllSessions implements Ability {
 		return array(
 			'label'               => __( 'Destroy All Sessions', 'abilities-catalog' ),
 			'description'         => __( 'Ends ALL of a user\'s login sessions on every device, forcing a fresh login everywhere. With no user_id (or 0) this targets the CURRENT user and logs you out too. For another user it is an admin force-logout (e.g. a compromised account). Requires the edit_users capability. Reversible only by logging back in.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -80,7 +80,7 @@ final class UpdateCptItem implements Ability {
 		return array(
 			'label'               => __( 'Update Custom Post Type Item', 'abilities-catalog' ),
 			'description'         => __( 'Updates a post-like item (with title/content/excerpt/status fields) of a registered post type by ID. Only the supplied fields change. Does not support font, global-styles, template, navigation, or attachment types. Set status to "private", "publish", or "future" to publish it (requires publish capability).', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -40,7 +40,7 @@ final class GetPostMeta implements Ability {
 		return array(
 			'label'               => __( 'Get Post Meta', 'abilities-catalog' ),
 			'description'         => __( 'Returns a post\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the post type. Requires edit access to the post (editor-only). Use og-content/list-post-meta-keys to discover supported keys.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

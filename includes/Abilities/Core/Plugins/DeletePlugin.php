@@ -47,7 +47,7 @@ final class DeletePlugin implements Ability {
 		return array(
 			'label'               => __( 'Delete Plugin', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes an installed, inactive plugin by its file path. Deleting removes the plugin code from disk.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -75,7 +75,7 @@ final class ConfirmRequest implements Ability {
 		return array(
 			'label'               => __( 'Confirm Request', 'abilities-catalog' ),
 			'description'         => __( 'Administratively confirms a personal-data request in request-pending or request-failed state, setting its status to request-confirmed.', 'abilities-catalog' ),
-			'category'            => 'privacy',
+			'category'            => 'og-core-privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

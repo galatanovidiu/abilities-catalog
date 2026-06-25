@@ -53,7 +53,7 @@ final class ListConnectors implements Ability {
 		return array(
 			'label'               => __( 'List Connectors', 'abilities-catalog' ),
 			'description'         => __( 'Lists registered connectors with non-secret metadata. The "type" field distinguishes AI providers ("ai_provider") from other kinds (e.g. "spam_filtering"). API keys are never returned. The "configured" flag reports exact credential presence; "authentication_method" (none|api_key), "key_source" (env|constant|database|none), and "connected" expose the distinct connector states.', 'abilities-catalog' ),
-			'category'            => 'connectors',
+			'category'            => 'og-core-connectors',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

@@ -42,7 +42,7 @@ final class UpdateComment implements Ability {
 		return array(
 			'label'               => __( 'Update Comment', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing comment\'s content, author name, author email, or date. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

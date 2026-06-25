@@ -48,7 +48,7 @@ final class CreatePattern implements Ability {
 		return array(
 			'label'               => __( 'Create Pattern', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new user pattern (reusable block, post type "wp_block"). Publishes by default; set status to "draft" to keep it unpublished. Returns edit_link (the Site Editor URL) — surface it so a human can open and finish the pattern. Requires the publish capability.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

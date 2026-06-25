@@ -55,7 +55,7 @@ final class UpdatePlugin implements Ability {
 		return array(
 			'label'               => __( 'Update Plugin', 'abilities-catalog' ),
 			'description'         => __( 'Updates an installed plugin to the version offered by its configured update source (usually wordpress.org; may be a third-party Update URI provider). Requires direct filesystem write access. Updating replaces the plugin code on disk.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

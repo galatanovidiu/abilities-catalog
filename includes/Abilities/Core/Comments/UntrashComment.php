@@ -53,7 +53,7 @@ final class UntrashComment implements Ability {
 		return array(
 			'label'               => __( 'Untrash Comment', 'abilities-catalog' ),
 			'description'         => __( 'Restores a comment from the trash to the status it held before it was trashed (for example "approved" or "hold"), the reverse of og-comments/trash-comment. Only a comment currently in the trash can be untrashed; a comment in any other state is rejected with a 409 "rest_comment_wrong_state" error. Discover trashed comment IDs with og-comments/list-comments (status "trash") first. Requires the moderate_comments capability or edit permission on the comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -43,7 +43,7 @@ final class GetThemeStyles implements Ability {
 		return array(
 			'label'               => __( 'Get Theme Styles', 'abilities-catalog' ),
 			'description'         => __( 'Returns the active theme\'s effective theme-level global settings and styles (color palette, typography, spacing, element styles). The value merges core defaults, per-block defaults, and the theme\'s theme.json plus classic-theme supports; user overrides are excluded. The core route serves the active theme only. This is the theme-level baseline, not the user\'s raw override record returned by get-global-styles.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -41,7 +41,7 @@ final class AttachPostTerms implements Ability {
 		return array(
 			'label'               => __( 'Attach Post Terms', 'abilities-catalog' ),
 			'description'         => __( 'Assigns existing terms in a taxonomy to a post. Terms can be IDs, slugs, or names but must already exist; create them with og-terms/create-term first. Appends by default; set append to false to replace the post\'s terms in that taxonomy. Returns the post id, taxonomy, resulting term_ids, and edit_link — surface edit_link so a human can review the post.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

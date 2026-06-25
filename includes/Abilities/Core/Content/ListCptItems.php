@@ -64,7 +64,7 @@ final class ListCptItems implements Ability {
 		return array(
 			'label'               => __( 'List Custom Post Type Items', 'abilities-catalog' ),
 			'description'         => __( 'Lists items of a post-like REST post type with search, status, ordering, and pagination filters. Does not support font, global-styles, template, navigation, or attachment types.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

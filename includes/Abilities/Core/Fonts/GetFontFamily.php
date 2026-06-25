@@ -36,7 +36,7 @@ final class GetFontFamily implements Ability {
 		return array(
 			'label'               => __( 'Get Font Family', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single installed font family by ID, including its settings and font faces.', 'abilities-catalog' ),
-			'category'            => 'fonts',
+			'category'            => 'og-core-fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

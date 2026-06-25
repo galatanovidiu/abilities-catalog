@@ -43,7 +43,7 @@ final class DeleteFontFamily implements Ability {
 		return array(
 			'label'               => __( 'Delete Font Family', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes an installed font family and its font-face assets by ID. This cannot be undone and may break typography that references it.', 'abilities-catalog' ),
-			'category'            => 'fonts',
+			'category'            => 'og-core-fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

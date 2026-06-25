@@ -63,7 +63,7 @@ final class DestroyOtherSessions implements Ability {
 		return array(
 			'label'               => __( 'Destroy Other Sessions', 'abilities-catalog' ),
 			'description'         => __( 'Ends the current user\'s login sessions on all other devices, keeping this session logged in ("log out everywhere else"). Operates on the current user only; it does not accept a user ID and cannot log out another user (use og-users/destroy-all-sessions for an admin force-logout). Sessions are not a source of truth, so a logged-out device can simply sign back in. Requires an interactive cookie login: in an application-password or other non-cookie context there is no current session to keep and the call returns abilities_catalog_no_session (400).', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

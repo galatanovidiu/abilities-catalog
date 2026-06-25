@@ -37,7 +37,7 @@ final class GetAtAGlance implements Ability {
 		return array(
 			'label'               => __( 'Get At a Glance', 'abilities-catalog' ),
 			'description'         => __( 'Returns the dashboard "At a Glance" summary: post and page counts, comment counts, active theme, and WordPress version.', 'abilities-catalog' ),
-			'category'            => 'dashboard',
+			'category'            => 'og-core-dashboard',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

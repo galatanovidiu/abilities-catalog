@@ -39,7 +39,7 @@ final class UpdateTag implements Ability {
 		return array(
 			'label'               => __( 'Update Tag', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing tag term by ID.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

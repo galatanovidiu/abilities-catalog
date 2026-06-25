@@ -53,7 +53,7 @@ final class CreateEraseRequest implements Ability {
 		return array(
 			'label'               => __( 'Create Erase Request', 'abilities-catalog' ),
 			'description'         => __( 'Creates a personal-data erasure request for an email address. When send_confirmation_email is true, creates a pending request and emails the data subject a confirmation link; when false (the default), creates an already-confirmed request with no email. Does not erase data by itself.', 'abilities-catalog' ),
-			'category'            => 'privacy',
+			'category'            => 'og-core-privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

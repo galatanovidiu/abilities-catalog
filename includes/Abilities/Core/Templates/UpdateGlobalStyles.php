@@ -56,7 +56,7 @@ final class UpdateGlobalStyles implements Ability {
 		return array(
 			'label'               => __( 'Update Global Styles', 'abilities-catalog' ),
 			'description'         => __( 'Updates the active theme global styles (settings and styles) by the global-styles post id. Changes site-wide appearance. Each provided top-level settings or styles object REPLACES that stored section wholesale (not a deep merge); read the current record first with og-templates/get-global-styles and send a complete replacement for whichever section you change.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

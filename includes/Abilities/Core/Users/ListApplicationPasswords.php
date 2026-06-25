@@ -38,7 +38,7 @@ final class ListApplicationPasswords implements Ability {
 		return array(
 			'label'               => __( 'List Application Passwords', 'abilities-catalog' ),
 			'description'         => __( 'Returns the application passwords for a user (metadata only, never the plaintext password).', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

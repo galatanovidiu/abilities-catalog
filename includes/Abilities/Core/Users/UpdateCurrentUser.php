@@ -52,7 +52,7 @@ final class UpdateCurrentUser implements Ability {
 		return array(
 			'label'               => __( 'Update Current User', 'abilities-catalog' ),
 			'description'         => __( 'Updates the currently logged-in user\'s own profile. An email change applies immediately (no confirmation step) and changing your own password can log out the current session. Changing roles requires the promote capability.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

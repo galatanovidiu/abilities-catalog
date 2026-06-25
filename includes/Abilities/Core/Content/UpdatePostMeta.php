@@ -43,7 +43,7 @@ final class UpdatePostMeta implements Ability {
 		return array(
 			'label'               => __( 'Update Post Meta', 'abilities-catalog' ),
 			'description'         => __( 'Sets custom fields (meta) on a post. Only meta keys registered with show_in_rest for the post type can be written; unknown keys are rejected. Returns the post id, the applied meta, and edit_link — surface edit_link so a human can review the change. Use og-content/list-post-meta-keys to discover writable keys.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

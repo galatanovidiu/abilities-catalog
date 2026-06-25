@@ -51,7 +51,7 @@ final class ExportContent implements Ability {
 		return array(
 			'label'               => __( 'Export Content', 'abilities-catalog' ),
 			'description'         => __( 'Exports site content as a WXR (WordPress eXtended RSS) XML document, filtered by type, date range, author, category, or status.', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

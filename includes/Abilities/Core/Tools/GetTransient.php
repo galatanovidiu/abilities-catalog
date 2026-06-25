@@ -55,7 +55,7 @@ final class GetTransient implements Ability {
 		return array(
 			'label'               => __( 'Get Transient', 'abilities-catalog' ),
 			'description'         => __( 'Reads a single transient (a cached value) by name and returns whether it was found plus its current value. Pass the transient name without the internal "_transient_"/"_site_transient_" prefix. Set network to true to read a site/network transient instead. A found of false means the transient is unset, expired, or (rarely) literally stored as false, and value is null in all three cases. A transient may cache plugin-stored data, so treat returned values as potentially sensitive.', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'key' ),

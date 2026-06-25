@@ -79,7 +79,7 @@ final class GetNetworkOption implements Ability {
 		return array(
 			'label'               => __( 'Get Network Option', 'abilities-catalog' ),
 			'description'         => __( 'Reads a single network (site) option by name and returns whether it exists plus its current value. Pass the option name as stored in wp_sitemeta (e.g. "registration"). exists is false (and value null) when the option is not set; a stored false or empty string reports exists true. Omit network_id for the current network. Requires a multisite install and the manage_network_options (super-admin) capability; a network option may hold sensitive data.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'option' ),

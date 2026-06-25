@@ -52,7 +52,7 @@ final class ListMySites implements Ability {
 		return array(
 			'label'               => __( 'List My Sites', 'abilities-catalog' ),
 			'description'         => __( 'Lists the sites (blogs) in a multisite network that the current user is a member of, returning each site\'s blog_id, name, url, and path. Use this to discover the blog_id values that a site-scoped ability accepts to target a specific site. Unlike og-network/list-sites (super-admin only), this works for any logged-in user and returns only the sites they belong to. Requires a multisite install: on a single-site install it returns an abilities_catalog_requires_multisite 400 error.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

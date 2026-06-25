@@ -49,7 +49,7 @@ final class DeleteComment implements Ability {
 		return array(
 			'label'               => __( 'Delete Comment', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a comment by ID, bypassing the trash. Requires the moderate_comments capability or edit permission on the comment. Discover comment IDs with og-comments/list-comments or og-comments/get-comment first. This cannot be undone.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

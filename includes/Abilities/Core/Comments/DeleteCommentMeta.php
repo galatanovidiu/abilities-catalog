@@ -43,7 +43,7 @@ final class DeleteCommentMeta implements Ability {
 		return array(
 			'label'               => __( 'Delete Comment Meta', 'abilities-catalog' ),
 			'description'         => __( 'Permanently removes custom fields (meta) from a comment by key, deleting all values for each key. Only meta keys registered with show_in_rest for comments can be deleted; unknown keys are rejected. This cannot be undone. Returns the comment id, the deleted keys, and edit_link — surface edit_link so a human can review the comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

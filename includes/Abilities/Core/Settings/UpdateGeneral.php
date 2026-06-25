@@ -56,7 +56,7 @@ final class UpdateGeneral implements Ability {
 		return array(
 			'label'               => __( 'Update General Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates General Settings: site title, tagline, timezone, date and time formats, week start, and language. The language can only be switched to an already-installed locale. Changing the site URL or admin email is not permitted through this tool.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

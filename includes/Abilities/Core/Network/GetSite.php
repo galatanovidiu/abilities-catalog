@@ -56,7 +56,7 @@ final class GetSite implements Ability {
 		return array(
 			'label'               => __( 'Get Site', 'abilities-catalog' ),
 			'description'         => __( 'Returns one site (blog) in a multisite network by its blog_id, including its domain, path, url, status flags, display name (blogname), and WordPress address (siteurl). Single-site read; enumerate sites with og-network/list-sites. An unknown blog_id returns a 404 rest_site_invalid_id error. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'blog_id' ),

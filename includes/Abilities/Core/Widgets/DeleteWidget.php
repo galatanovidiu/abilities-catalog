@@ -56,7 +56,7 @@ final class DeleteWidget implements Ability {
 		return array(
 			'label'               => __( 'Delete Widget', 'abilities-catalog' ),
 			'description'         => __( 'Removes a widget. By default (force=false) it is deactivated — moved to the Inactive Widgets area and recoverable. Pass force=true to permanently delete it; that cannot be undone. Discover the widget id with og-widgets/list-widgets.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

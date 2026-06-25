@@ -56,7 +56,7 @@ final class CreateComment implements Ability {
 		return array(
 			'label'               => __( 'Create Comment', 'abilities-catalog' ),
 			'description'         => __( 'Creates a comment on a post. Set parent to reply to another comment. Setting a moderation field (status, author, author_email, author_name) requires the moderate_comments capability.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

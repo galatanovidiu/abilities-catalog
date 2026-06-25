@@ -42,7 +42,7 @@ final class AssignMenuLocation implements Ability {
 		return array(
 			'label'               => __( 'Assign Menu Location', 'abilities-catalog' ),
 			'description'         => __( 'Assigns a classic menu to a registered theme location. This replaces any menu previously assigned to that location, and clears the menu from any other locations it was assigned to.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

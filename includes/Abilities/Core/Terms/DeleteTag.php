@@ -43,7 +43,7 @@ final class DeleteTag implements Ability {
 		return array(
 			'label'               => __( 'Delete Tag', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a tag term by ID. Taxonomy terms have no Trash, so this cannot be undone. Deleting the tag also removes it from every object it was assigned to.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -39,7 +39,7 @@ final class ListBlockPatternCategories implements Ability {
 		return array(
 			'label'               => __( 'List Block Pattern Categories', 'abilities-catalog' ),
 			'description'         => __( 'Lists the registered block-pattern categories (the groupings used to organize block patterns). Pairs with the list-patterns ability to group patterns by category.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

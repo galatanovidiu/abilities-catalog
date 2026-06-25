@@ -59,7 +59,7 @@ final class UploadMedia implements Ability {
 		return array(
 			'label'               => __( 'Upload Media', 'abilities-catalog' ),
 			'description'         => __( 'Uploads a new media item from a base64-encoded file and optionally sets its title, alt text, caption, description, and parent post.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

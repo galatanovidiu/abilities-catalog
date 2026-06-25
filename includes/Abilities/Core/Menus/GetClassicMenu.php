@@ -38,7 +38,7 @@ final class GetClassicMenu implements Ability {
 		return array(
 			'label'               => __( 'Get Classic Menu', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single classic (nav_menu term) menu by ID.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -76,7 +76,7 @@ final class ListSites implements Ability {
 		return array(
 			'label'               => __( 'List Sites', 'abilities-catalog' ),
 			'description'         => __( 'Lists the sites (blogs) in a WordPress multisite network, one row per site with its blog_id, domain, path, url, timestamps, and status flags (public/archived/mature/spam/deleted). Use og-network/get-site for one site\'s full detail including its name. An empty result means no sites match the filters. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

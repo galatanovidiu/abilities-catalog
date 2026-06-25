@@ -37,7 +37,7 @@ final class ListTerms implements Ability {
 		return array(
 			'label'               => __( 'List Terms', 'abilities-catalog' ),
 			'description'         => __( 'Returns terms for a given taxonomy, optionally filtered and paginated.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

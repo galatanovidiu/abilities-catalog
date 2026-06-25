@@ -37,7 +37,7 @@ final class ListPostTypes implements Ability {
 		return array(
 			'label'               => __( 'List Post Types', 'abilities-catalog' ),
 			'description'         => __( 'Lists the REST-enabled post types registered on the site.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

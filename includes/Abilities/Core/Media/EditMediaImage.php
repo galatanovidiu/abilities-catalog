@@ -44,7 +44,7 @@ final class EditMediaImage implements Ability {
 		return array(
 			'label'               => __( 'Edit Media Image', 'abilities-catalog' ),
 			'description'         => __( 'Applies flip, rotation, and/or crop transforms to an existing image attachment, creating a new edited attachment. The original image is preserved.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

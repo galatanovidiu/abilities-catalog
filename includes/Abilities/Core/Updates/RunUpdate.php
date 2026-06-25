@@ -54,7 +54,7 @@ final class RunUpdate implements Ability {
 		return array(
 			'label'               => __( 'Run Update', 'abilities-catalog' ),
 			'description'         => __( 'Runs plugin, theme, or translation updates synchronously. Core updates are not supported. Running an update executes the updated code.', 'abilities-catalog' ),
-			'category'            => 'updates',
+			'category'            => 'og-core-updates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

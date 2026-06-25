@@ -42,7 +42,7 @@ final class RegenerateThumbnails implements Ability {
 		return array(
 			'label'               => __( 'Regenerate Thumbnails', 'abilities-catalog' ),
 			'description'         => __( 'Rebuilds the resized image files (thumbnails and other sub-sizes) for an image attachment from its current attached image file and refreshes its metadata. Only the generated derivatives are rewritten; the original upload is preserved. Returns the attachment id, the regenerated sizes, and edit_link — surface edit_link so a human can review the media item.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

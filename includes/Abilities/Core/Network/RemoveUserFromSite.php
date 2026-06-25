@@ -65,7 +65,7 @@ final class RemoveUserFromSite implements Ability {
 		return array(
 			'label'               => __( 'Remove User From Site', 'abilities-catalog' ),
 			'description'         => __( 'Removes a user\'s membership from a site (blog) in a multisite network. This only removes the user\'s roles/capabilities on that site — the user ACCOUNT is not deleted and their membership on other sites is unaffected. Optionally pass reassign (a user ID) to reassign the removed user\'s posts on that site; omit it (default 0) to leave authorship unchanged. An unknown user or site returns a 404. Add a user with og-network/add-user-to-site. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'user_id', 'blog_id' ),

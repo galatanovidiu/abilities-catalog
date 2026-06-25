@@ -42,7 +42,7 @@ final class ListMedia implements Ability {
 		return array(
 			'label'               => __( 'List Media', 'abilities-catalog' ),
 			'description'         => __( 'Lists media library items with optional search, media_type, mime_type, parent, author, status, and pagination filters.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -74,7 +74,7 @@ final class SetTransient implements Ability {
 		return array(
 			'label'               => __( 'Set Transient', 'abilities-catalog' ),
 			'description'         => __( 'Stores or overwrites a single transient (a cached value) by name, with an optional expiry. Pass the transient name without the internal "_transient_"/"_site_transient_" prefix. expiration is in seconds; 0 (the default) means no expiry (the transient persists until it is deleted or the cache evicts it). Set network to true to store a site/network transient instead. The value is stored as-is and may be any JSON type. Clear it later with og-tools/delete-transient. Returns stored, confirmed by reading the value back.', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'key', 'value' ),

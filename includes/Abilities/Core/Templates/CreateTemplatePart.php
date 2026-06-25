@@ -57,7 +57,7 @@ final class CreateTemplatePart implements Ability {
 		return array(
 			'label'               => __( 'Create Template Part', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new template part (a reusable block region such as a header or footer) and places it in an area. Returns the new "theme//slug" id, status, the resulting area, and edit_link (the Site Editor URL) — surface edit_link so a human can open and finish the part. Unlike create-template, which always creates parts in the uncategorized area, this ability sets the area you choose. Does not change theme files and does not overwrite an existing part — use update-template-part for that. Send the content field as Gutenberg block markup (e.g. <!-- wp:site-title /-->), not bare HTML.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

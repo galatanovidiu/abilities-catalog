@@ -45,7 +45,7 @@ final class ActivatePlugin implements Ability {
 		return array(
 			'label'               => __( 'Activate Plugin', 'abilities-catalog' ),
 			'description'         => __( 'Activates an installed plugin by its file path (site-level activation only; network activation is not supported). Activating a plugin runs its code.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

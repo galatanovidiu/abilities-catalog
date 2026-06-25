@@ -42,7 +42,7 @@ final class DeletePostMeta implements Ability {
 		return array(
 			'label'               => __( 'Delete Post Meta', 'abilities-catalog' ),
 			'description'         => __( 'Permanently removes custom fields (meta) from a post by key, deleting all values for each key. Only meta keys registered with show_in_rest for the post type can be deleted; unknown keys are rejected. This cannot be undone. Returns the post id, the deleted keys, and edit_link — surface edit_link so a human can review the post.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

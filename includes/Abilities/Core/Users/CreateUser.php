@@ -44,7 +44,7 @@ final class CreateUser implements Ability {
 		return array(
 			'label'               => __( 'Create User', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new user account with the given username, email, and password. This REST-backed create does NOT send the wp-admin "Send User Notification" email; delivering credentials to the new user is the caller\'s responsibility. Creating a user is not auto-reversible; pair with og-users/delete-user to undo.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

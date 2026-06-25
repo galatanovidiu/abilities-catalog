@@ -37,7 +37,7 @@ final class GetPattern implements Ability {
 		return array(
 			'label'               => __( 'Get Pattern', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single user pattern (reusable block, post type "wp_block") by ID.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -48,7 +48,7 @@ final class UpdateUserMeta implements Ability {
 		return array(
 			'label'               => __( 'Update User Meta', 'abilities-catalog' ),
 			'description'         => __( 'Sets custom fields (meta) on a user. Only meta keys registered with show_in_rest for users can be written; unknown keys are rejected, so internal meta such as wp_capabilities or session_tokens cannot be reached. Returns the user id, the applied meta, and edit_link — surface edit_link so a human can review the change. Use og-users/update-user to change profile fields instead.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

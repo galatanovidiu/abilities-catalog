@@ -36,7 +36,7 @@ final class GetDrafts implements Ability {
 		return array(
 			'label'               => __( 'Get Drafts', 'abilities-catalog' ),
 			'description'         => __( 'Returns the current user\'s most recently modified draft posts.', 'abilities-catalog' ),
-			'category'            => 'dashboard',
+			'category'            => 'og-core-dashboard',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -40,7 +40,7 @@ final class ListClassicMenus implements Ability {
 		return array(
 			'label'               => __( 'List Classic Menus', 'abilities-catalog' ),
 			'description'         => __( 'Lists classic (nav_menu term) menus with pagination.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

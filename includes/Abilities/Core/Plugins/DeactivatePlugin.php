@@ -46,7 +46,7 @@ final class DeactivatePlugin implements Ability {
 		return array(
 			'label'               => __( 'Deactivate Plugin', 'abilities-catalog' ),
 			'description'         => __( 'Deactivates an active plugin by its file path (site-level deactivation only; network deactivation is not supported).', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

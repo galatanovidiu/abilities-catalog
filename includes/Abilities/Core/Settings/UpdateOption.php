@@ -52,7 +52,7 @@ final class UpdateOption implements Ability {
 		return array(
 			'label'               => __( 'Update Option (allow-listed)', 'abilities-catalog' ),
 			'description'         => __( 'Writes a single WordPress option by name, but only when the name is on the allow-list. Any other name is refused. Site-defining, security, and serialized options are never writable through this tool.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'name', 'value' ),

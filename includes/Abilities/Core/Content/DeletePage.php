@@ -42,7 +42,7 @@ final class DeletePage implements Ability {
 		return array(
 			'label'               => __( 'Delete Page', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a page by ID, bypassing the Trash. This cannot be undone. Side effects: deleting a page set as the front page or posts page resets the site reading settings (show_on_front, page_on_front, page_for_posts); deleting a page with child pages reparents those children to the deleted page\'s parent.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -40,7 +40,7 @@ final class ListPostMetaKeys implements Ability {
 		return array(
 			'label'               => __( 'List Post Meta Keys', 'abilities-catalog' ),
 			'description'         => __( 'Returns the registered show_in_rest meta keys for a post type, with each key\'s type, single/list shape, and description. Use this to discover which custom fields the post-meta abilities operate on; read and write permission is still enforced per key by those abilities.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -44,7 +44,7 @@ final class GetTaxonomy implements Ability {
 		return array(
 			'label'               => __( 'Get Taxonomy', 'abilities-catalog' ),
 			'description'         => __( 'Returns one registered taxonomy by its slug, including its name, description, hierarchical flag, the post types it applies to, REST base/namespace, and whether terms are public. Discover slugs with og-content/list-post-types (a type\'s taxonomies) or the terms abilities.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'taxonomy' ),

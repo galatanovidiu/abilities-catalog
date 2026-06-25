@@ -43,7 +43,7 @@ final class TrashPost implements Ability {
 		return array(
 			'label'               => __( 'Trash Post', 'abilities-catalog' ),
 			'description'         => __( 'Moves a post to the Trash by ID. The post is recoverable. Fails if Trash is disabled or unsupported on the site, or if the post is already in the Trash.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

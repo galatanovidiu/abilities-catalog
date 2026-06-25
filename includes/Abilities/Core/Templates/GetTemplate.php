@@ -37,7 +37,7 @@ final class GetTemplate implements Ability {
 		return array(
 			'label'               => __( 'Get Template', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single site-editor template or template part by its "theme//slug" id.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

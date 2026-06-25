@@ -41,7 +41,7 @@ final class ListFontFamilies implements Ability {
 		return array(
 			'label'               => __( 'List Font Families', 'abilities-catalog' ),
 			'description'         => __( 'Lists installed font families with optional pagination.', 'abilities-catalog' ),
-			'category'            => 'fonts',
+			'category'            => 'og-core-fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

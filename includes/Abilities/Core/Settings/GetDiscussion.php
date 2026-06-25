@@ -34,7 +34,7 @@ final class GetDiscussion implements Ability {
 		return array(
 			'label'               => __( 'Get Discussion Settings', 'abilities-catalog' ),
 			'description'         => __( 'Returns the main Discussion Settings: comment and ping defaults, moderation rules, notification flags, and avatar settings.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

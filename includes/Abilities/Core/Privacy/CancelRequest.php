@@ -63,7 +63,7 @@ final class CancelRequest implements Ability {
 		return array(
 			'label'               => __( 'Cancel Request', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a personal-data request record (the export or erasure request row). Does not delete exported or erased personal data.', 'abilities-catalog' ),
-			'category'            => 'privacy',
+			'category'            => 'og-core-privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

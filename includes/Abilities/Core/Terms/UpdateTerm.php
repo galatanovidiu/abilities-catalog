@@ -43,7 +43,7 @@ final class UpdateTerm implements Ability {
 		return array(
 			'label'               => __( 'Update Term', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing term in any REST-enabled taxonomy by ID.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

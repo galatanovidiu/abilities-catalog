@@ -42,7 +42,7 @@ final class ListMenuItems implements Ability {
 		return array(
 			'label'               => __( 'List Menu Items', 'abilities-catalog' ),
 			'description'         => __( 'Lists classic menu items, optionally filtered by menu, with pagination.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

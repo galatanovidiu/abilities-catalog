@@ -34,7 +34,7 @@ final class GetGeneral implements Ability {
 		return array(
 			'label'               => __( 'Get General Settings', 'abilities-catalog' ),
 			'description'         => __( 'Returns the General Settings screen values: site title, tagline, URLs, admin email, timezone, date and time formats, week start, and language.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

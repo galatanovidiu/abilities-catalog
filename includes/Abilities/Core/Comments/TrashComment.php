@@ -46,7 +46,7 @@ final class TrashComment implements Ability {
 		return array(
 			'label'               => __( 'Trash Comment', 'abilities-catalog' ),
 			'description'         => __( 'Moves a comment to the trash (recoverable). Requires the moderate_comments capability or edit permission on the comment. Discover comment IDs with og-comments/list-comments or og-comments/get-comment first. Returns a 501 error if trashing is disabled or unsupported on the site, and a 410 already-trashed error if the comment is already in the trash. Trashing a top-level note also trashes its child notes; standard comments do not cascade. Reversible: restore the comment to its prior status with og-comments/untrash-comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

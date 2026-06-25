@@ -67,7 +67,7 @@ final class AddUserToSite implements Ability {
 		return array(
 			'label'               => __( 'Add User to Site', 'abilities-catalog' ),
 			'description'         => __( 'Adds an existing user to a site (blog) in a multisite network with a given role (membership only — the user account already exists). Re-adding a user updates their role on that site, so this is idempotent. blog_id, user_id, and role must all be valid: discover sites with og-network/list-sites, users with og-users/list-users, and role slugs with og-users/list-roles. An unknown site or user returns a 404; an unknown role returns a 400. Remove a user with og-network/remove-user-from-site. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'blog_id', 'user_id', 'role' ),

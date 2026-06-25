@@ -36,7 +36,7 @@ final class GetReading implements Ability {
 		return array(
 			'label'               => __( 'Get Reading Settings', 'abilities-catalog' ),
 			'description'         => __( 'Returns the stored Reading Settings option values (which normally match the Reading Settings screen): front page display, front and posts page IDs, posts per page and per RSS feed, and the search-engine visibility flag.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

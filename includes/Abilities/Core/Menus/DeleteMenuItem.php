@@ -45,7 +45,7 @@ final class DeleteMenuItem implements Ability {
 		return array(
 			'label'               => __( 'Delete Menu Item', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a classic menu item by ID. Menu items have no Trash, so this cannot be undone.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

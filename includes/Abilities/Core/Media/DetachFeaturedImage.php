@@ -48,7 +48,7 @@ final class DetachFeaturedImage implements Ability {
 		return array(
 			'label'               => __( 'Detach Featured Image', 'abilities-catalog' ),
 			'description'         => __( 'Removes a post\'s featured image, clearing the post-to-attachment association only. The attachment itself is not deleted and remains in the media library, so this is reversible with og-media/set-featured-image. Detaching a post that has no featured image is a benign no-op (detached is false). Requires edit access to the post.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

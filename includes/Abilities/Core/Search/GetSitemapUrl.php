@@ -41,7 +41,7 @@ final class GetSitemapUrl implements Ability {
 		return array(
 			'label'               => __( 'Get Sitemap URL', 'abilities-catalog' ),
 			'description'         => __( 'Returns the site\'s XML sitemap index URL and whether sitemaps are enabled. When enabled is false the site discourages search engines (the Reading setting blog_public is off), so this URL returns a 404 to crawlers even though the address still resolves. Use enabled, not the URL, to tell whether the sitemap is live before handing it to a search engine.', 'abilities-catalog' ),
-			'category'            => 'search',
+			'category'            => 'og-core-search',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

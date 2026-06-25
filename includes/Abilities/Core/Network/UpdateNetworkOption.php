@@ -89,7 +89,7 @@ final class UpdateNetworkOption implements Ability {
 		return array(
 			'label'               => __( 'Update Network Option', 'abilities-catalog' ),
 			'description'         => __( 'Writes a single network (site) option by name to a value, for the whole multisite network. Pass the option name as stored in wp_sitemeta (e.g. "registration") and any JSON value; it is stored as-is and confirmed by a read-back (updated is true even when re-writing an unchanged value). Omit network_id for the current network. This is a raw, allow-list-free network-wide config write — the manage_network_options super-admin capability is the only guard, and a bad value for a core option can break the network, so this is a dangerous operation. Read an option first with og-network/get-network-option. Requires a multisite install and the manage_network_options (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'option', 'value' ),

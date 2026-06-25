@@ -45,7 +45,7 @@ final class InstallTheme implements Ability {
 		return array(
 			'label'               => __( 'Install Theme', 'abilities-catalog' ),
 			'description'         => __( 'Installs a theme from the wordpress.org directory by its slug (no ZIP, URL, or file path). Requires direct filesystem write access. Installing code from the directory changes the site, so this is a dangerous operation. On multisite the install affects every site in the network.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

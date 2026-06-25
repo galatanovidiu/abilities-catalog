@@ -41,7 +41,7 @@ final class UpdateClassicMenu implements Ability {
 		return array(
 			'label'               => __( 'Update Classic Menu', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing classic (nav_menu term) menu by ID. Only the supplied fields change.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

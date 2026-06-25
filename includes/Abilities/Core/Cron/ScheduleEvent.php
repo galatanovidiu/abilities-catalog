@@ -61,7 +61,7 @@ final class ScheduleEvent implements Ability {
 		return array(
 			'label'               => __( 'Schedule Cron Event', 'abilities-catalog' ),
 			'description'         => __( 'Schedules a new WP-Cron event (recurring or one-off), returning the stored event and a scheduled flag. Pass recurrence (a schedule name from og-cron/list-schedules, e.g. "hourly") for a recurring event; omit recurrence for a one-off single event that runs once at timestamp. This mutates the site-wide cron schedule and is reversible: remove it with og-cron/unschedule-event. Fails with a 409 if an event with the same hook and args already exists; unschedule that one first.', 'abilities-catalog' ),
-			'category'            => 'cron',
+			'category'            => 'og-core-cron',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'hook', 'timestamp' ),

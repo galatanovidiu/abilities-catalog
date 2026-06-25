@@ -49,7 +49,7 @@ final class CreateExportRequest implements Ability {
 		return array(
 			'label'               => __( 'Create Export Request', 'abilities-catalog' ),
 			'description'         => __( 'Creates a personal-data export request for an email address. When send_confirmation_email is true, creates a pending request and emails the data subject a confirmation link; when false (the default), creates an already-confirmed request with no email.', 'abilities-catalog' ),
-			'category'            => 'privacy',
+			'category'            => 'og-core-privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

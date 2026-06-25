@@ -172,7 +172,7 @@ final class PolicyDecoratorWrapPathTest extends TestCase {
 			array(
 				'label'               => 'Throwaway',
 				'description'         => 'A throwaway site-scoped ability for wrap-path coverage.',
-				'category'            => 'tools', // Reuse a registered category; avoids registering a new one.
+				'category'            => 'og-core-tools', // Reuse a registered category; avoids registering a new one.
 				'input_schema'        => array(
 					'type'                 => 'object',
 					'properties'           => array(

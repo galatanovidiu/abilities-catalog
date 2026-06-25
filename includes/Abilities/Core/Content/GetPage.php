@@ -36,7 +36,7 @@ final class GetPage implements Ability {
 		return array(
 			'label'               => __( 'Get Page', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single page by ID, including its rendered title, content, and excerpt.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

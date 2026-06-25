@@ -44,7 +44,7 @@ final class DeleteMedia implements Ability {
 		return array(
 			'label'               => __( 'Delete Media', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a media library item by ID. The deletion bypasses Trash (force), so it cannot be undone, and clears any featured-image references to the item.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

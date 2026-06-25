@@ -48,7 +48,7 @@ final class UpdatePage implements Ability {
 		return array(
 			'label'               => __( 'Update Page', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing page by ID. Only the provided fields change. Set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

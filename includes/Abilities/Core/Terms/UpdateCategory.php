@@ -39,7 +39,7 @@ final class UpdateCategory implements Ability {
 		return array(
 			'label'               => __( 'Update Category', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing category term by ID.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

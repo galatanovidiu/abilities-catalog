@@ -52,7 +52,7 @@ final class ListSessions implements Ability {
 		return array(
 			'label'               => __( 'List Sessions', 'abilities-catalog' ),
 			'description'         => __( 'Returns a user\'s active login sessions (one row per device/login), each with its expiration, login time, IP address, and user-agent. With no user_id (or 0) it lists the current user\'s own sessions; listing another user\'s sessions requires edit access to that user, since the rows expose IP and user-agent. Only still-valid (unexpired) sessions are returned.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

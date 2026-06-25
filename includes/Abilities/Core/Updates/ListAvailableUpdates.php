@@ -146,7 +146,7 @@ final class ListAvailableUpdates implements Ability {
 		return array(
 			'label'               => __( 'List Available Updates', 'abilities-catalog' ),
 			'description'         => __( 'Returns the available core, plugin, theme, and translation updates from the cached update data. This is a read of cached results; it does not trigger a fresh remote check, so an empty result means no cached check has run, not necessarily that no updates exist.', 'abilities-catalog' ),
-			'category'            => 'updates',
+			'category'            => 'og-core-updates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

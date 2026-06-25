@@ -44,7 +44,7 @@ final class SearchDirectory implements Ability {
 		return array(
 			'label'               => __( 'Search Theme Directory', 'abilities-catalog' ),
 			'description'         => __( 'Searches the WordPress.org theme directory by keyword and returns matches (slug, name, version, rating, preview URL, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with og-themes/install-theme to install one.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

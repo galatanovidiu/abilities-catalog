@@ -70,7 +70,7 @@ final class RevokeSuperAdmin implements Ability {
 		return array(
 			'label'               => __( 'Revoke Super Admin', 'abilities-catalog' ),
 			'description'         => __( 'Revokes a user\'s NETWORK-WIDE super-admin privileges. This is a dangerous operation: reverse it with og-network/grant-super-admin. is_super_admin in the result is the authoritative end state — revoked may be false when the user was not a super admin (a no-op) or when the site pins its super-admin list in wp-config (which this tool cannot change). Caution: WordPress does not stop you from revoking the last remaining super admin or your own privileges, which can lock the network\'s super-admin functions; verify another super admin remains (og-network/list-super-admins) first. An unknown user_id returns a 404. Requires a multisite install and the manage_network_users (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'user_id' ),

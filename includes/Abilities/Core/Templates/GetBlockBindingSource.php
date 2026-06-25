@@ -44,7 +44,7 @@ final class GetBlockBindingSource implements Ability {
 		return array(
 			'label'               => __( 'Get Block Binding Source', 'abilities-catalog' ),
 			'description'         => __( 'Returns one registered block-bindings source by name, including its label and the block context keys it uses (uses_context). A block-bindings source (e.g. "core/post-meta", "core/pattern-overrides") is a target an editor can bind a block attribute to. Discover names with og-templates/list-block-binding-sources. An unknown name returns a 404, not a permission error.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'name' ),

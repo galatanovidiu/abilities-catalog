@@ -37,7 +37,7 @@ final class GetPostRevision implements Ability {
 		return array(
 			'label'               => __( 'Get Post Revision', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single post revision by parent post ID and revision ID.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

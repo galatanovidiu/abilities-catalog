@@ -41,7 +41,7 @@ final class ListFontCollections implements Ability {
 		return array(
 			'label'               => __( 'List Font Collections', 'abilities-catalog' ),
 			'description'         => __( 'Lists available font collections (remote installable-font catalogs) with optional pagination.', 'abilities-catalog' ),
-			'category'            => 'fonts',
+			'category'            => 'og-core-fonts',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

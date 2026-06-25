@@ -37,7 +37,7 @@ final class ListPages implements Ability {
 		return array(
 			'label'               => __( 'List Pages', 'abilities-catalog' ),
 			'description'         => __( 'Lists pages with optional search, status, author, parent, ordering, and pagination filters.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -41,7 +41,7 @@ final class ListBlockBindingSources implements Ability {
 		return array(
 			'label'               => __( 'List Block Binding Sources', 'abilities-catalog' ),
 			'description'         => __( 'Lists the block-binding sources registered on the site (e.g. "core/post-meta", "core/pattern-overrides") that an editor can bind block attributes to, each as a flat row: name, label, and the block context it needs. Use this to discover available source names, then read one with og-templates/get-block-binding-source. It does not return how a source resolves its value.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

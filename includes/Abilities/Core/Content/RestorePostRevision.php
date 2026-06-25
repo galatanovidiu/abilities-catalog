@@ -58,7 +58,7 @@ final class RestorePostRevision implements Ability {
 		return array(
 			'label'               => __( 'Restore Post Revision', 'abilities-catalog' ),
 			'description'         => __( 'Restores a post to a saved revision. The current state is first saved as a new revision, so nothing is lost. Requires the revision to belong to the given parent post.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
