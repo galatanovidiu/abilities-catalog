@@ -44,7 +44,7 @@ final class GetGlobalStyles implements Ability {
 		return array(
 			'label'               => __( 'Get Global Styles', 'abilities-catalog' ),
 			'description'         => __( 'Returns the active theme\'s user global-style overrides (the settings and styles changed in the Site Editor), not the theme.json baseline. Use og-templates/get-theme-styles for the theme baseline.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

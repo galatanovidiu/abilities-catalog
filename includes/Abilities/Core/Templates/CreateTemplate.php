@@ -46,7 +46,7 @@ final class CreateTemplate implements Ability {
 		return array(
 			'label'               => __( 'Create Template', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new site-editor template or template part (post type wp_template / wp_template_part). Template parts are always created in the general (uncategorized) area. Returns the new "theme//slug" id, status, and edit_link (the Site Editor URL) — surface edit_link so a human can open and finish the template. Does not change theme files and does not overwrite an existing template — use update-template for that. Send the content field as Gutenberg block markup (e.g. <!-- wp:template-part {"slug":"header"} /-->), not bare HTML.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

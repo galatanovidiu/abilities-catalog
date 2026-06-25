@@ -43,7 +43,7 @@ final class UpdateCommentMeta implements Ability {
 		return array(
 			'label'               => __( 'Update Comment Meta', 'abilities-catalog' ),
 			'description'         => __( 'Sets custom fields (meta) on a comment. Only meta keys registered with show_in_rest for comments can be written; unknown keys are rejected. Returns the comment id, the applied meta, and edit_link — surface edit_link so a human can review the change. Discover comment IDs with og-comments/list-comments.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

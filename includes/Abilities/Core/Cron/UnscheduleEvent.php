@@ -66,7 +66,7 @@ final class UnscheduleEvent implements Ability {
 		return array(
 			'label'               => __( 'Unschedule Event', 'abilities-catalog' ),
 			'description'         => __( 'Removes one scheduled WP-Cron event by its exact hook, timestamp, and args. Unscheduling a core maintenance event (such as wp_version_check, wp_update_plugins, or wp_scheduled_delete) disables that automation until it is re-scheduled. Reversible: re-create it with og-cron/schedule-event using the returned previous_schedule. Removes only the single matching occurrence, not every event for the hook. Identify the event first with og-cron/list-events or og-cron/get-event; if no event matches the hook+timestamp+args this returns a 404 (abilities_catalog_cron_event_not_found).', 'abilities-catalog' ),
-			'category'            => 'cron',
+			'category'            => 'og-core-cron',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'hook', 'timestamp' ),

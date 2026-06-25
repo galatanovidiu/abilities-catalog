@@ -57,7 +57,7 @@ final class RemoveThemeMod implements Ability {
 		return array(
 			'label'               => __( 'Remove Theme Mod', 'abilities-catalog' ),
 			'description'         => __( 'Removes one theme modification (a customizer setting) by name from the active theme, reverting it to the theme\'s default. This changes front-end appearance and is reversible: re-apply the value with og-themes/set-theme-mod. A false "removed" result is not an error: it means no mod was set under that name, so nothing changed. Discover mod names with og-themes/list-theme-mods.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'name' ),

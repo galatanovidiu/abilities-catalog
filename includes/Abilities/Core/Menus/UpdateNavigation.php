@@ -40,7 +40,7 @@ final class UpdateNavigation implements Ability {
 		return array(
 			'label'               => __( 'Update Navigation Menu', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing block-based navigation menu by ID. Only the supplied fields change.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

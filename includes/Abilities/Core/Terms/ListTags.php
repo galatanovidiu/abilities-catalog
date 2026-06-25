@@ -36,7 +36,7 @@ final class ListTags implements Ability {
 		return array(
 			'label'               => __( 'List Tags', 'abilities-catalog' ),
 			'description'         => __( 'Returns a paginated list of post-tag terms, optionally filtered by search string. Each item is a raw tag term object; the result includes "total" and "total_pages" counts. Use this for the "post_tag" taxonomy; for the "category" taxonomy use og-terms/list-categories, and for an arbitrary taxonomy use og-terms/list-terms.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -42,7 +42,7 @@ final class CreateMenuItem implements Ability {
 		return array(
 			'label'               => __( 'Create Menu Item', 'abilities-catalog' ),
 			'description'         => __( 'Creates a classic menu item. For the default "custom" type, both title and url are required. Set "menus" to the parent menu term ID; omitting it creates an orphaned item not attached to any menu.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

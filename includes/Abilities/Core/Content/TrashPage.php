@@ -41,7 +41,7 @@ final class TrashPage implements Ability {
 		return array(
 			'label'               => __( 'Trash Page', 'abilities-catalog' ),
 			'description'         => __( 'Moves a page to the Trash by ID. The page is recoverable. Fails if Trash is disabled on the site or by a filter. If the page is the site\'s front page or posts page, trashing it resets the homepage / posts-page reading settings, and restoring the page does not restore those settings.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

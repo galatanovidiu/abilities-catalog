@@ -44,7 +44,7 @@ final class InstallPlugin implements Ability {
 		return array(
 			'label'               => __( 'Install Plugin', 'abilities-catalog' ),
 			'description'         => __( 'Installs an inactive plugin from the wordpress.org directory by its slug (no ZIP, URL, or file path). Requires direct filesystem write access. Installing brings new code onto the site.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

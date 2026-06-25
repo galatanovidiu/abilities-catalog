@@ -36,7 +36,7 @@ final class ListCategories implements Ability {
 		return array(
 			'label'               => __( 'List Categories', 'abilities-catalog' ),
 			'description'         => __( 'Returns category terms, optionally filtered and paginated.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

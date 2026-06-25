@@ -69,7 +69,7 @@ final class FlushObjectCache implements Ability {
 		return array(
 			'label'               => __( 'Flush Object Cache', 'abilities-catalog' ),
 			'description'         => __( 'Flushes the ENTIRE WordPress object cache — every group, site-wide. On a persistent backend (Redis/Memcached) this empties the whole shared store; cached data repopulates lazily on the next reads, so a busy site may see a brief performance dip. On multisite the cache is shared across the network, so this requires network-admin (manage_network_options) capability there. Use to clear stale cache after out-of-band changes. Not undoable (but self-healing). Takes no input.', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

@@ -71,7 +71,7 @@ final class DeleteSite implements Ability {
 		return array(
 			'label'               => __( 'Delete Site', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a site (blog) from a multisite network by blog_id, dropping the site and ALL of its database tables and content. This cannot be undone. The network\'s main site cannot be deleted (returns a 409). To take a site offline reversibly instead, use og-network/update-site with archived/spam/deleted. An unknown blog_id returns a 404. This is a dangerous, irreversible network operation. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'blog_id' ),

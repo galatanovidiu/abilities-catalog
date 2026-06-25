@@ -50,7 +50,7 @@ final class GetNetwork implements Ability {
 		return array(
 			'label'               => __( 'Get Network', 'abilities-catalog' ),
 			'description'         => __( 'Returns a multisite network\'s identity: id, domain, path, display name (site_name), cookie domain, and the blog_id of its main site (main_site_id). Omit network_id for the current network. An unknown network_id returns a 404 rest_network_invalid_id error. Use og-network/list-networks to enumerate networks. Requires a multisite install and the manage_network (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

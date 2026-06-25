@@ -46,7 +46,7 @@ final class DeleteClassicMenu implements Ability {
 		return array(
 			'label'               => __( 'Delete Classic Menu', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes an entire classic menu (a nav_menu term) and all of its items by menu ID. Classic menus have no Trash, so this cannot be undone. Also clears the menu from any theme locations it was assigned to. Deletes the whole menu, not a single item.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

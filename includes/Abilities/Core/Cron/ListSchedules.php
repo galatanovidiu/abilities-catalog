@@ -43,7 +43,7 @@ final class ListSchedules implements Ability {
 		return array(
 			'label'               => __( 'List Schedules', 'abilities-catalog' ),
 			'description'         => __( 'Lists the registered WP-Cron recurrence schedules — the valid recurrence values for og-cron/schedule-event — each with its display name and interval in seconds. Always returns at least the four core schedules (hourly, twicedaily, daily, weekly); plugins can add more.', 'abilities-catalog' ),
-			'category'            => 'cron',
+			'category'            => 'og-core-cron',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

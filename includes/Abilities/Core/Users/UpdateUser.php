@@ -46,7 +46,7 @@ final class UpdateUser implements Ability {
 		return array(
 			'label'               => __( 'Update User', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing user by ID. Changing roles requires the promote capability. Changing the email or password triggers core notification emails to the affected user.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

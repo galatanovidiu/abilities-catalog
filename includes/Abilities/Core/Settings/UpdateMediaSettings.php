@@ -61,7 +61,7 @@ final class UpdateMediaSettings implements Ability {
 		return array(
 			'label'               => __( 'Update Media Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates Media Settings: thumbnail, medium, and large image dimensions, thumbnail cropping, and the year/month upload folder flag (the folder flag is a single-site setting; it is not shown on the Media Settings screen under multisite).', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

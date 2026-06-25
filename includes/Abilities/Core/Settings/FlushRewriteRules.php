@@ -78,7 +78,7 @@ final class FlushRewriteRules implements Ability {
 		return array(
 			'label'               => __( 'Flush Rewrite Rules', 'abilities-catalog' ),
 			'description'         => __( 'Regenerates ALL of the site\'s URL rewrite (permalink) rules from scratch and, by default, rewrites the server config file (.htaccess on Apache, web.config on IIS). Affects how every front-end URL is routed site-wide. Use after registering a new post type, taxonomy, or custom rewrite rule so its URLs resolve. Pass hard=false to update only the stored rules and skip the config-file write. Requires the manage_options capability. The rules are regenerated, not deleted, so it is reversible by flushing again — but a broken rewrite registration or an unwritable config file can disrupt front-end URLs until corrected.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

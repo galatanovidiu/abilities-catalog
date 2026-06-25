@@ -39,7 +39,7 @@ final class ListPatterns implements Ability {
 		return array(
 			'label'               => __( 'List Patterns', 'abilities-catalog' ),
 			'description'         => __( 'Lists the registered block patterns available on the site (the read-only registered pattern registry). For user-created synced patterns use the list-synced-patterns ability.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

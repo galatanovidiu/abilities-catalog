@@ -38,7 +38,7 @@ final class GetUser implements Ability {
 		return array(
 			'label'               => __( 'Get User', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single user by ID. View context returns public fields (name, slug, url, description); edit context also returns email, roles, capabilities, and registered_date.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

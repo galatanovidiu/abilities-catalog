@@ -50,7 +50,7 @@ final class UpdateWidget implements Ability {
 		return array(
 			'label'               => __( 'Update Widget', 'abilities-catalog' ),
 			'description'         => __( 'Updates a widget\'s settings and/or moves it to another sidebar (widget area), returning the widget\'s id, id_base, sidebar, and rendered HTML. Identify the widget by its instance id from og-widgets/list-widgets; discover sidebar ids with og-widgets/list-sidebars. Omitted fields are left unchanged. Pass settings as either instance (an object; for the core "block" widget use {raw:{content}} with Gutenberg block markup) or form_data (a URL-encoded string, for classic widgets). Pass sidebar to move the widget to that sidebar. Reversible by updating it again.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

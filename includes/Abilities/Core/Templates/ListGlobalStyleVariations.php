@@ -43,7 +43,7 @@ final class ListGlobalStyleVariations implements Ability {
 		return array(
 			'label'               => __( 'List Global Style Variations', 'abilities-catalog' ),
 			'description'         => __( 'Lists the style variations a theme provides (alternate palettes and typography sets selectable in the Site Editor Styles panel). Each variation includes its title and the theme.json settings and styles it applies. The core route serves the active theme only; any non-active stylesheet returns a 404. For a child theme, the list may include variations inherited from the parent theme.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -36,7 +36,7 @@ final class GetCategory implements Ability {
 		return array(
 			'label'               => __( 'Get Category', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single category term by ID.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

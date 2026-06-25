@@ -42,7 +42,7 @@ final class GetInfo implements Ability {
 		return array(
 			'label'               => __( 'Get Site Health Info', 'abilities-catalog' ),
 			'description'         => __( 'Returns the Site Health debug information, with private fields and sections redacted.', 'abilities-catalog' ),
-			'category'            => 'site-health',
+			'category'            => 'og-core-site-health',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

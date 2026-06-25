@@ -41,7 +41,7 @@ final class CreateCategory implements Ability {
 		return array(
 			'label'               => __( 'Create Category', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new category term.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

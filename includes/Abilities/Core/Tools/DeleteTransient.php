@@ -57,7 +57,7 @@ final class DeleteTransient implements Ability {
 		return array(
 			'label'               => __( 'Delete Transient', 'abilities-catalog' ),
 			'description'         => __( 'Deletes a single transient (a cached value) by name so it is recomputed on the next read. Pass the transient name without the internal "_transient_"/"_site_transient_" prefix. Set network to true to delete a site/network transient instead. A false "deleted" result is not an error: it means no transient was removed under this key (typically because it was unset or had already expired).', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'key' ),

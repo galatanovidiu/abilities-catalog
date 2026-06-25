@@ -40,7 +40,7 @@ final class GetPlugin implements Ability {
 		return array(
 			'label'               => __( 'Get Plugin', 'abilities-catalog' ),
 			'description'         => __( 'Returns details about a single installed plugin by its file path.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

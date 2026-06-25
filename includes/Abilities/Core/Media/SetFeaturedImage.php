@@ -48,7 +48,7 @@ final class SetFeaturedImage implements Ability {
 		return array(
 			'label'               => __( 'Set Featured Image', 'abilities-catalog' ),
 			'description'         => __( 'Sets a post\'s featured image (thumbnail) to an existing media library attachment. Requires edit access to BOTH the post and the attachment. Reversible via og-media/detach-featured-image.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

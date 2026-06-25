@@ -35,7 +35,7 @@ final class GetPrivacy implements Ability {
 		return array(
 			'label'               => __( 'Get Privacy Settings', 'abilities-catalog' ),
 			'description'         => __( 'Returns the Privacy Settings screen value: the configured privacy policy page ID (0 if unset). A nonzero ID may point to a missing or trashed page.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

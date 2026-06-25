@@ -41,7 +41,7 @@ final class ListThemes implements Ability {
 		return array(
 			'label'               => __( 'List Themes', 'abilities-catalog' ),
 			'description'         => __( 'Lists installed themes, optionally filtered by status.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

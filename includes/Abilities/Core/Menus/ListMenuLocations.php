@@ -37,7 +37,7 @@ final class ListMenuLocations implements Ability {
 		return array(
 			'label'               => __( 'List Menu Locations', 'abilities-catalog' ),
 			'description'         => __( 'Returns the navigation menu locations registered by the active theme, each with its description and the classic menu assigned to it (if any). Use this to find a location slug before calling og-menus/assign-menu-location.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

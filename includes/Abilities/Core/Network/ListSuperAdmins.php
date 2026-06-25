@@ -52,7 +52,7 @@ final class ListSuperAdmins implements Ability {
 		return array(
 			'label'               => __( 'List Super Admins', 'abilities-catalog' ),
 			'description'         => __( 'Lists the multisite network\'s super admins (users with global network control), each with user_login, user_id, user_email, and display_name. A row with user_id 0 is a stale login in the super-admin list whose user no longer exists. Requires a multisite install and the manage_network_users (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

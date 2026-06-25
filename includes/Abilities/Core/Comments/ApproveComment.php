@@ -49,7 +49,7 @@ final class ApproveComment implements Ability {
 		return array(
 			'label'               => __( 'Approve Comment', 'abilities-catalog' ),
 			'description'         => __( 'Approves a "hold"/"unapproved" comment, setting its status to "approved". May trigger the post-author notification email. A "spam" or "trash" comment is rejected with a 409 "rest_comment_wrong_state" error (unspam or restore it first), because approving such a comment would skip the proper restore path and leave stale trash meta. Re-approving an already-approved comment is a benign no-op that reports the existing "approved" status. (By contrast, og-comments/unapprove-comment accepts any state, so the asymmetry is deliberate.) Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

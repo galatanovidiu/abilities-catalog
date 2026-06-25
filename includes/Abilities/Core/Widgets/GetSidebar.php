@@ -43,7 +43,7 @@ final class GetSidebar implements Ability {
 		return array(
 			'label'               => __( 'Get Sidebar', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single sidebar (widget area) by id, including its name, status (active or inactive), and the ordered list of widget instance ids it contains. Single-object companion to og-widgets/list-sidebars; discover sidebar ids there.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

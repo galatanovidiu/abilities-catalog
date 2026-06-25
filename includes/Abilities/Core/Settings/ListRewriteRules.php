@@ -40,7 +40,7 @@ final class ListRewriteRules implements Ability {
 		return array(
 			'label'               => __( 'List Rewrite Rules', 'abilities-catalog' ),
 			'description'         => __( 'Returns the site\'s stored URL rewrite (permalink) rules: the regex-to-query map WordPress uses to route pretty permalinks, plus the permalink structure and a flag for whether pretty permalinks are in use. An empty rules map while using_permalinks is true means the rules need regenerating with og-settings/flush-rewrite-rules.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

@@ -37,7 +37,7 @@ final class ListPostRevisions implements Ability {
 		return array(
 			'label'               => __( 'List Post Revisions', 'abilities-catalog' ),
 			'description'         => __( 'Lists the saved revisions of a post by its parent post ID. Requires edit access to the parent post.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

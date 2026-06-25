@@ -55,7 +55,7 @@ final class RunTests implements Ability {
 		return array(
 			'label'               => __( 'Run Site Health Test', 'abilities-catalog' ),
 			'description'         => __( 'Runs a single asynchronous Site Health test through the REST API and reports its result. Some tests perform live HTTP or loopback checks. The result carries a `status` of good, recommended, or critical.', 'abilities-catalog' ),
-			'category'            => 'site-health',
+			'category'            => 'og-core-site-health',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -52,7 +52,7 @@ final class GetThemeMod implements Ability {
 		return array(
 			'label'               => __( 'Get Theme Mod', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single theme mod (a customizer setting) on the active theme by name, reporting is_set (whether the mod is actually stored) and its value. When the mod is not set, is_set is false and value is null — it does NOT return the theme default, so use is_set, not value, to tell "absent" from "set to null". Discover mod names with og-themes/list-theme-mods.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'name' ),

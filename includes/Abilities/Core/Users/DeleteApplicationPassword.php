@@ -45,7 +45,7 @@ final class DeleteApplicationPassword implements Ability {
 		return array(
 			'label'               => __( 'Delete Application Password', 'abilities-catalog' ),
 			'description'         => __( 'Permanently revokes a single application password by its UUID for a user. Irreversible: the credential stops working immediately.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

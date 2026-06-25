@@ -37,7 +37,7 @@ final class ListTaxonomies implements Ability {
 		return array(
 			'label'               => __( 'List Taxonomies', 'abilities-catalog' ),
 			'description'         => __( 'Returns the registered taxonomies that are exposed in the REST API. Use a returned "slug" as the "taxonomy" input to og-terms/list-terms. The default "view" context returns public taxonomies.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

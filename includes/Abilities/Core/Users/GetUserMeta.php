@@ -43,7 +43,7 @@ final class GetUserMeta implements Ability {
 		return array(
 			'label'               => __( 'Get User Meta', 'abilities-catalog' ),
 			'description'         => __( 'Returns a user\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for the user. Requires edit access to the user. Unknown requested keys are silently skipped.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -46,7 +46,7 @@ final class DeleteNavigation implements Ability {
 		return array(
 			'label'               => __( 'Delete Navigation', 'abilities-catalog' ),
 			'description'         => __( 'Deletes a block navigation menu (a wp_navigation post) by ID. By default it is moved to Trash and can be restored; set force to true to delete it permanently. A navigation menu may be used by Navigation blocks across the site, so deleting it affects every place it appears. The default (force false) path can be rejected: if Trash is disabled site-wide it fails with rest_trash_not_supported (501), and if the menu is already in Trash it fails with rest_already_trashed (410). In those cases set force to true to delete permanently.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

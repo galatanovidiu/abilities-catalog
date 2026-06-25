@@ -46,7 +46,7 @@ final class DeleteTerm implements Ability {
 		return array(
 			'label'               => __( 'Delete Term', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a term in any REST-enabled taxonomy by ID. Taxonomy terms have no Trash, so this cannot be undone.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

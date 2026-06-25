@@ -35,7 +35,7 @@ final class GetWriting implements Ability {
 		return array(
 			'label'               => __( 'Get Writing Settings', 'abilities-catalog' ),
 			'description'         => __( 'Returns the stored Writing Settings option values (which normally match the Writing Settings screen): default category, default post format, and the smilies conversion flag.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

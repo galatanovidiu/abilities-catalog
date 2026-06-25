@@ -39,7 +39,7 @@ final class GetPost implements Ability {
 		return array(
 			'label'               => __( 'Get Post', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single post by ID, including its rendered title, content, and excerpt.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

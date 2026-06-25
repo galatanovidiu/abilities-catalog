@@ -59,7 +59,7 @@ final class UpdateTemplatePart implements Ability {
 		return array(
 			'label'               => __( 'Update Template Part', 'abilities-catalog' ),
 			'description'         => __( 'Updates a template part (a reusable block region such as a header or footer) by its "theme//slug" id. Change its content, title, description, or area. Creates or replaces a database override that changes site-wide layout: a part like the header or footer renders on most pages, so the blast radius is high. Recoverable by deleting the override with og-templates/delete-template-part. Only the provided fields change; sending content, title, or description as an empty string clears it (area cannot be cleared this way). Returns the resulting area and edit_link (the Site Editor URL) — surface edit_link so a human can review the result.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

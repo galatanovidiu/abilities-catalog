@@ -51,7 +51,7 @@ final class DeletePostRevision implements Ability {
 		return array(
 			'label'               => __( 'Delete Post Revision', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes one saved revision of a post. The post\'s current content is unaffected; only that historical snapshot is removed. This cannot be undone. The revision must belong to the given parent post. To roll the post back to an older revision instead of deleting one, use og-content/restore-post-revision.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

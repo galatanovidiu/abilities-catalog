@@ -42,7 +42,7 @@ final class ListRoles implements Ability {
 		return array(
 			'label'               => __( 'List Roles', 'abilities-catalog' ),
 			'description'         => __( 'Lists every registered user role with its slug, display name, the capabilities granted to it, and the number of users currently assigned to it. Read-only view of the site permission model; use og-users/list-users to enumerate the users themselves.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

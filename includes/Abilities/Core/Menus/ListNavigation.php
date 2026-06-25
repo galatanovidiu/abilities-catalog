@@ -41,7 +41,7 @@ final class ListNavigation implements Ability {
 		return array(
 			'label'               => __( 'List Navigation Menus', 'abilities-catalog' ),
 			'description'         => __( 'Lists block-based navigation menus with pagination.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

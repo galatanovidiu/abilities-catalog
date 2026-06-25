@@ -40,7 +40,7 @@ final class ListComments implements Ability {
 		return array(
 			'label'               => __( 'List Comments', 'abilities-catalog' ),
 			'description'         => __( 'Lists comments with optional post, status, type, author, search, and pagination filters.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

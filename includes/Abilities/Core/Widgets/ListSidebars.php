@@ -43,7 +43,7 @@ final class ListSidebars implements Ability {
 		return array(
 			'label'               => __( 'List Sidebars', 'abilities-catalog' ),
 			'description'         => __( 'Lists the site\'s sidebars (widget areas), each with its id, name, description, status (active or inactive), and the ordered ids of the widgets it holds. Includes the special "wp_inactive_widgets" holding area. Use a returned sidebar id as the target for og-widgets/create-widget, and og-widgets/get-sidebar for one sidebar.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

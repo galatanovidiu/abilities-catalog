@@ -76,7 +76,7 @@ final class CreateCptItem implements Ability {
 		return array(
 			'label'               => __( 'Create Custom Post Type Item', 'abilities-catalog' ),
 			'description'         => __( 'Creates a post-like item (with title/content/excerpt/status fields) of a registered post type. Does not support font, global-styles, template, navigation, or attachment types. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

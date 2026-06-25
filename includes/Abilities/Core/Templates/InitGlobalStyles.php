@@ -48,7 +48,7 @@ final class InitGlobalStyles implements Ability {
 		return array(
 			'label'               => __( 'Initialize Global Styles', 'abilities-catalog' ),
 			'description'         => __( 'Ensures the active theme has a user global-styles record and returns its post ID, creating an empty record if none exists yet. Idempotent: returns the same ID on repeat calls. Call this before og-templates/update-global-styles when og-templates/get-global-styles reports no record (404) — for example to change colors or fonts on a freshly set up block theme.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

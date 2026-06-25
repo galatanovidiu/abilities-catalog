@@ -39,7 +39,7 @@ final class GetCptItem implements Ability {
 		return array(
 			'label'               => __( 'Get Custom Post Type Item', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single item of any REST-enabled post type by ID.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

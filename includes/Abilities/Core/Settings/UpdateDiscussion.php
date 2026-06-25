@@ -72,7 +72,7 @@ final class UpdateDiscussion implements Ability {
 		return array(
 			'label'               => __( 'Update Discussion Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates Discussion Settings: comment and ping defaults, moderation rules, notification flags, and avatar settings.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

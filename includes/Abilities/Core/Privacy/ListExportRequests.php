@@ -42,7 +42,7 @@ final class ListExportRequests implements Ability {
 		return array(
 			'label'               => __( 'List Export Requests', 'abilities-catalog' ),
 			'description'         => __( 'Discovery/read step for personal-data export requests: lists each request with its status and metadata so you can find the id (also returned as request_id) that the follow-on privacy abilities (confirm-request, cancel-request, generate-export) accept. Returns metadata only; does not expose exported data. Statuses reflect stored values; this read does not run wp-admin\'s expired-request cleanup, so a long-pending request may still show request-pending here.', 'abilities-catalog' ),
-			'category'            => 'privacy',
+			'category'            => 'og-core-privacy',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

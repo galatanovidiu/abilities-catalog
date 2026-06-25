@@ -42,7 +42,7 @@ final class SwitchTheme implements Ability {
 		return array(
 			'label'               => __( 'Switch Theme', 'abilities-catalog' ),
 			'description'         => __( 'Activates an installed theme by its stylesheet (directory name). Switching the theme changes the whole front end.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

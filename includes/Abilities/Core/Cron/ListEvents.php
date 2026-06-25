@@ -51,7 +51,7 @@ final class ListEvents implements Ability {
 		return array(
 			'label'               => __( 'List Scheduled Events', 'abilities-catalog' ),
 			'description'         => __( 'Lists every scheduled WP-Cron event, one row per occurrence, each with its hook name, timestamp (Unix UTC seconds), gmt_date, schedule, interval, and args. Use this to audit scheduled automation and to recover the exact hook/timestamp/args needed by og-cron/get-event, og-cron/schedule-event, and og-cron/unschedule-event. A one-off single event reports schedule and interval as null. An empty result means nothing is scheduled.', 'abilities-catalog' ),
-			'category'            => 'cron',
+			'category'            => 'og-core-cron',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

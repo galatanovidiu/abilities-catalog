@@ -53,7 +53,7 @@ final class UpdateTemplate implements Ability {
 		return array(
 			'label'               => __( 'Update Template', 'abilities-catalog' ),
 			'description'         => __( 'Updates a site-editor template or template part by its "theme//slug" id. Creates or replaces a database override that changes site-wide layout. Only the provided fields change; sending a field as an empty string clears it. Returns the type and edit_link (the Site Editor URL) — surface edit_link so a human can open the result.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

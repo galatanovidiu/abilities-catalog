@@ -42,7 +42,7 @@ final class UpdateWriting implements Ability {
 		return array(
 			'label'               => __( 'Update Writing Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates Writing Settings: default category, default post format, and the legacy smilies conversion flag (the latter is not shown on the modern wp-admin screen).', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

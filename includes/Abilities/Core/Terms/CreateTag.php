@@ -40,7 +40,7 @@ final class CreateTag implements Ability {
 		return array(
 			'label'               => __( 'Create Tag', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new tag term.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

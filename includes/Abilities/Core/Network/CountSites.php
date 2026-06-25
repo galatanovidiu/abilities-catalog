@@ -53,7 +53,7 @@ final class CountSites implements Ability {
 		return array(
 			'label'               => __( 'Count Sites', 'abilities-catalog' ),
 			'description'         => __( 'Returns the multisite network\'s site counts grouped by status: all, public, archived, mature, spam, and deleted. Use og-network/list-sites to enumerate the sites themselves. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

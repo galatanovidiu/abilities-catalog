@@ -37,7 +37,7 @@ final class ListTemplates implements Ability {
 		return array(
 			'label'               => __( 'List Templates', 'abilities-catalog' ),
 			'description'         => __( 'Lists site-editor block templates or template parts for the active theme.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

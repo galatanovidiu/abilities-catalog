@@ -44,7 +44,7 @@ final class GetRole implements Ability {
 		return array(
 			'label'               => __( 'Get Role', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single registered user role by its slug, including its display name, the capabilities granted to it, and the number of users currently assigned to it. Single-role read; use og-users/list-roles to enumerate every role and discover slugs, or og-users/list-users to enumerate the users themselves.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'slug' ),

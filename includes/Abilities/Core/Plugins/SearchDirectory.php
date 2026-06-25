@@ -44,7 +44,7 @@ final class SearchDirectory implements Ability {
 		return array(
 			'label'               => __( 'Search Plugin Directory', 'abilities-catalog' ),
 			'description'         => __( 'Searches the WordPress.org plugin directory by keyword and returns matches (slug, name, version, rating, active installs, short description, author). This makes an outbound request to the WordPress.org API and changes nothing on the site. Use the returned slug with og-plugins/install-plugin to install one.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

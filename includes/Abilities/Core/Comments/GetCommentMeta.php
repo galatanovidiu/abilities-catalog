@@ -39,7 +39,7 @@ final class GetCommentMeta implements Ability {
 		return array(
 			'label'               => __( 'Get Comment Meta', 'abilities-catalog' ),
 			'description'         => __( 'Returns a comment\'s custom fields (meta) as a key/value map, restricted to the meta keys registered with show_in_rest for comments. Requires edit access to the comment, because meta can carry non-public data. Unknown requested keys are silently skipped.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -40,7 +40,7 @@ final class GetWidget implements Ability {
 		return array(
 			'label'               => __( 'Get Widget', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single widget instance by id, including its widget type (id_base), the sidebar it sits in, and its rendered front-end HTML. Discover ids with og-widgets/list-widgets.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

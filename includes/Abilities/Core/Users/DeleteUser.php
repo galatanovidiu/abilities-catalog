@@ -46,7 +46,7 @@ final class DeleteUser implements Ability {
 		return array(
 			'label'               => __( 'Delete User', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a user by ID and reassigns their content to another existing user. Irreversible: users do not support trashing. The reassign target is required and must be a different, existing user. Single-site only: the wrapped route hard-fails on multisite with a 501 error.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

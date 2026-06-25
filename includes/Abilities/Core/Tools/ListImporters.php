@@ -41,7 +41,7 @@ final class ListImporters implements Ability {
 		return array(
 			'label'               => __( 'List Importers', 'abilities-catalog' ),
 			'description'         => __( 'Returns the importers registered with the site, each with its id, name, description, installed flag, and the wp-admin URL that runs it.', 'abilities-catalog' ),
-			'category'            => 'tools',
+			'category'            => 'og-core-tools',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

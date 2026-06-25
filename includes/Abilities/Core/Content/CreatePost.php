@@ -49,7 +49,7 @@ final class CreatePost implements Ability {
 		return array(
 			'label'               => __( 'Create Post', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new post. Provide at least one of title, content, or excerpt; core rejects an otherwise empty post. Defaults to a draft; set status to "publish" to publish it (requires publish capability).', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

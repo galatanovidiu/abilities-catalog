@@ -81,7 +81,7 @@ final class UpdateSite implements Ability {
 		return array(
 			'label'               => __( 'Update Site', 'abilities-catalog' ),
 			'description'         => __( 'Updates one site (blog) in a multisite network by blog_id: its status flags (public/archived/mature/spam/deleted) and/or its domain/path. Only the fields you provide are changed; supply at least one or the call returns a 400. Setting archived, spam, or deleted takes the site OFFLINE for its visitors (a notice replaces the front end), so this is a dangerous network operation; it is reversible by unsetting the flag. This is a status/soft-delete toggle — it does NOT drop the site\'s tables; use og-network/delete-site to permanently remove a site. An unknown blog_id returns a 404. Requires a multisite install and the manage_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'blog_id' ),

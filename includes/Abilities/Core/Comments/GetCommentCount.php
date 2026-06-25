@@ -40,7 +40,7 @@ final class GetCommentCount implements Ability {
 		return array(
 			'label'               => __( 'Get Comment Count', 'abilities-catalog' ),
 			'description'         => __( 'Returns comment counts grouped by status for one post or the whole site: approved, moderated (awaiting moderation), spam, trash, post_trashed (comments on trashed posts), total_comments (non-trashed, including spam), and all (pending plus approved). Pass post_id to scope the counts to a single post; omit it (or pass 0) for site-wide totals. Whole-site counts require the moderate_comments capability; a single post\'s counts are visible to that post\'s editor.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

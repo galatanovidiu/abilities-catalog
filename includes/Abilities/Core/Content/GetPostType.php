@@ -45,7 +45,7 @@ final class GetPostType implements Ability {
 		return array(
 			'label'               => __( 'Get Post Type', 'abilities-catalog' ),
 			'description'         => __( 'Returns one registered post type by its slug, including its name, description, hierarchical flag, viewable flag, REST base, taxonomies, and supported features. Discover slugs with og-content/list-post-types.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'type' ),

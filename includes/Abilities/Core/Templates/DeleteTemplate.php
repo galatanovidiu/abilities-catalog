@@ -54,7 +54,7 @@ final class DeleteTemplate implements Ability {
 		return array(
 			'label'               => __( 'Delete Template', 'abilities-catalog' ),
 			'description'         => __( 'Deletes a site-editor template or template part by its "theme//slug" id. A customized source-backed template (provided by the theme, a plugin, or the site) is reverted to its original source; a user-created custom template is removed. Templates that exist only as theme files cannot be deleted. This permanently removes the database record and cannot be undone. Returns the deleted template\'s title, slug, type, and original_source so the caller can confirm which template changed.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

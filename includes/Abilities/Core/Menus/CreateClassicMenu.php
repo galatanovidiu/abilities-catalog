@@ -42,7 +42,7 @@ final class CreateClassicMenu implements Ability {
 		return array(
 			'label'               => __( 'Create Classic Menu', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new classic (nav_menu term) menu. Optionally assigns it to theme locations.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

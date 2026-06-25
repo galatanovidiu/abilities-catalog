@@ -43,7 +43,7 @@ final class DeleteUserMeta implements Ability {
 		return array(
 			'label'               => __( 'Delete User Meta', 'abilities-catalog' ),
 			'description'         => __( 'Permanently removes custom fields (meta) from a user by key, deleting all values for each key. Only meta keys registered with show_in_rest for users can be deleted; unknown keys are rejected, so internal user meta such as session_tokens or wp_capabilities is never reachable. This cannot be undone. Returns the user id, the deleted keys, and edit_link — surface edit_link so a human can review the user.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

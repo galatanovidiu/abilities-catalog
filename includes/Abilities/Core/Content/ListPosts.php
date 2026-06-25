@@ -37,7 +37,7 @@ final class ListPosts implements Ability {
 		return array(
 			'label'               => __( 'List Posts', 'abilities-catalog' ),
 			'description'         => __( 'Lists posts with optional search, status, author, term, and pagination filters.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

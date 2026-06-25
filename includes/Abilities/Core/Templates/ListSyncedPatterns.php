@@ -43,7 +43,7 @@ final class ListSyncedPatterns implements Ability {
 		return array(
 			'label'               => __( 'List Synced Patterns', 'abilities-catalog' ),
 			'description'         => __( 'Lists the user pattern library (reusable blocks, post type "wp_block"): synced, partial, and unsynced patterns. Returns id, title, slug, status, and sync_status (empty for fully synced, otherwise "partial" or "unsynced") so the pattern can then be read with the get-pattern ability. This is the editable user pattern library, not the read-only registered pattern registry.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

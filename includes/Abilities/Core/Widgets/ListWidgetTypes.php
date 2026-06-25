@@ -41,7 +41,7 @@ final class ListWidgetTypes implements Ability {
 		return array(
 			'label'               => __( 'List Widget Types', 'abilities-catalog' ),
 			'description'         => __( 'Lists the available widget types (the valid id_base values for og-widgets/create-widget), each with its slug, display name, description, and whether it supports multiple instances. Call this before og-widgets/create-widget to discover what kinds of widgets can be added.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

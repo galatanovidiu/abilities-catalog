@@ -68,7 +68,7 @@ final class DeleteCptItem implements Ability {
 		return array(
 			'label'               => __( 'Delete Custom Post Type Item', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a post-like item of a registered post type by ID, bypassing the Trash. This cannot be undone. Does not support font, global-styles, template, navigation, or attachment types.', 'abilities-catalog' ),
-			'category'            => 'content',
+			'category'            => 'og-core-content',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

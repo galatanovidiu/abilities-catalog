@@ -36,7 +36,7 @@ final class GetActivity implements Ability {
 		return array(
 			'label'               => __( 'Get Activity', 'abilities-catalog' ),
 			'description'         => __( 'Returns recent dashboard activity: recently published posts and recent approved comments.', 'abilities-catalog' ),
-			'category'            => 'dashboard',
+			'category'            => 'og-core-dashboard',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

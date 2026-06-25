@@ -44,7 +44,7 @@ final class SpamComment implements Ability {
 		return array(
 			'label'               => __( 'Spam Comment', 'abilities-catalog' ),
 			'description'         => __( 'Marks a comment as spam, setting its status to "spam". May trigger plugin spam hooks (for example Akismet). Re-spamming an already-spam comment is a no-op that reports the existing "spam" status. Returns the prior moderation status in "previous_status". Reversible via og-comments/unspam-comment. Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

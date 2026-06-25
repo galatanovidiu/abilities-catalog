@@ -37,7 +37,7 @@ final class GetComment implements Ability {
 		return array(
 			'label'               => __( 'Get Comment', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single comment by ID, including its content, author, status, and link.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

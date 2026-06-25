@@ -53,7 +53,7 @@ final class GetConnector implements Ability {
 		return array(
 			'label'               => __( 'Get Connector', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single connector by ID with non-secret metadata. The API key is never returned. The "configured" flag reports exact credential presence; "authentication_method" (none|api_key), "key_source" (env|constant|database|none), and "connected" expose the distinct connector states.', 'abilities-catalog' ),
-			'category'            => 'connectors',
+			'category'            => 'og-core-connectors',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

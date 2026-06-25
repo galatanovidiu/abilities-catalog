@@ -40,7 +40,7 @@ final class UpdateMedia implements Ability {
 		return array(
 			'label'               => __( 'Update Media', 'abilities-catalog' ),
 			'description'         => __( 'Updates an existing media item\'s title, alt text, caption, description, or parent post by ID. Does not change the file.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

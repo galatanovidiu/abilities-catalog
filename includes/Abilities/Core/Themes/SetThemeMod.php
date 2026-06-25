@@ -66,7 +66,7 @@ final class SetThemeMod implements Ability {
 		return array(
 			'label'               => __( 'Set Theme Mod', 'abilities-catalog' ),
 			'description'         => __( 'Sets a theme mod (a customizer setting) on the active theme by name, overwriting any existing value. Theme mods drive the active theme\'s customizer-configured appearance, so this changes the site\'s front-end appearance. The value is stored as-is and may be any JSON type. Arbitrary mod names are allowed (there is no registered allow-list); discover existing names with og-themes/list-theme-mods. Reversible: use og-themes/remove-theme-mod to revert the name to the theme default. Returns set, confirmed by reading the value back.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'name', 'value' ),

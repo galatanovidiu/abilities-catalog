@@ -42,7 +42,7 @@ final class CreateNavigation implements Ability {
 		return array(
 			'label'               => __( 'Create Navigation Menu', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new block-based navigation menu. The content is serialized block markup. Created as a draft unless a status is supplied.', 'abilities-catalog' ),
-			'category'            => 'menus',
+			'category'            => 'og-core-menus',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

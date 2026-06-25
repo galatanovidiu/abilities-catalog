@@ -37,7 +37,7 @@ final class GetTerm implements Ability {
 		return array(
 			'label'               => __( 'Get Term', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single term by ID from a given taxonomy.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -41,7 +41,7 @@ final class DetachPostTerms implements Ability {
 		return array(
 			'label'               => __( 'Detach Post Terms', 'abilities-catalog' ),
 			'description'         => __( 'Removes terms in a taxonomy from a post\'s assignments. Terms can be IDs, slugs, or names. This only unlinks the terms from the post; it does not delete the terms. Returns the post id, taxonomy, remaining term_ids, and edit_link — surface edit_link so a human can review the post.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

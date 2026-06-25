@@ -67,7 +67,7 @@ final class CreateSite implements Ability {
 		return array(
 			'label'               => __( 'Create Site', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new site (blog) in a WordPress multisite network under a slug, with a title and an existing user as its administrator — the Network Admin Add New Site action. Derives the domain/path from whether the network is subdomain- or subdirectory-based. admin_id must be an existing user (discover with og-users/list-users); the site is created with public visibility. Creating a site provisions a new set of database tables, so this is a dangerous network operation; remove a site with og-network/delete-site. Fails with a 409 if the slug is already taken. Requires a multisite install and the create_sites (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'slug', 'title', 'admin_id' ),

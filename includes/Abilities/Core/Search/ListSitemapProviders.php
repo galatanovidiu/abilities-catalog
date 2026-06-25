@@ -41,7 +41,7 @@ final class ListSitemapProviders implements Ability {
 		return array(
 			'label'               => __( 'List Sitemap Providers', 'abilities-catalog' ),
 			'description'         => __( 'Returns the registered XML sitemap providers (by default posts, taxonomies, and users) and, for each, its object subtypes — for the posts provider the public post types it covers, for taxonomies the public taxonomy slugs, and an empty list for users. Use this to see what WordPress includes in its sitemap before reading the sitemap URL with og-search/get-sitemap-url.', 'abilities-catalog' ),
-			'category'            => 'search',
+			'category'            => 'og-core-search',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

@@ -46,7 +46,7 @@ final class GetOption implements Ability {
 		return array(
 			'label'               => __( 'Get Option (allow-listed)', 'abilities-catalog' ),
 			'description'         => __( 'Reads a single WordPress option by name, but only when the name is on the read allow-list. Any other name is refused. Secret-bearing options are never readable through this tool.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'name' ),

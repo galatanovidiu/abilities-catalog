@@ -36,7 +36,7 @@ final class GetTag implements Ability {
 		return array(
 			'label'               => __( 'Get Tag', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single post-tag term by ID. Tag-specific read; discover IDs with og-terms/list-tags. Use og-terms/get-category for categories or og-terms/get-term for an arbitrary taxonomy.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -57,7 +57,7 @@ final class ListNetworks implements Ability {
 		return array(
 			'label'               => __( 'List Networks', 'abilities-catalog' ),
 			'description'         => __( 'Lists the networks in a WordPress multisite installation (usually one; more on a multi-network install), one row per network with its id, domain, path, and display name (site_name). Use og-network/get-network for one network\'s full detail including its main site id. Requires a multisite install and the manage_network (super-admin) capability.', 'abilities-catalog' ),
-			'category'            => 'network',
+			'category'            => 'og-core-network',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

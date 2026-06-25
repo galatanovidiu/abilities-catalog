@@ -48,7 +48,7 @@ final class DeleteCategory implements Ability {
 		return array(
 			'label'               => __( 'Delete Category', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a category term by ID. Taxonomy terms have no Trash, so this cannot be undone. The default category cannot be deleted; child categories are reparented to the deleted term\'s parent, and posts left with no category are reassigned to the default category.', 'abilities-catalog' ),
-			'category'            => 'terms',
+			'category'            => 'og-core-terms',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

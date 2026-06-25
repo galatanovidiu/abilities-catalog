@@ -46,7 +46,7 @@ final class UnspamComment implements Ability {
 		return array(
 			'label'               => __( 'Unspam Comment', 'abilities-catalog' ),
 			'description'         => __( 'Removes the spam mark from a comment, restoring the status saved when it was marked spam (falling back to "unapproved"/"hold" if that saved status is missing). Accepts only a comment currently in "spam" status; on any other status it returns a "rest_comment_wrong_state" 409 error without changing the comment. Returns the comment status before this call in "previous_status". Requires moderate_comments or edit permission on the comment.', 'abilities-catalog' ),
-			'category'            => 'comments',
+			'category'            => 'og-core-comments',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

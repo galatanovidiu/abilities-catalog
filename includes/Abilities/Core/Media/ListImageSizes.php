@@ -39,7 +39,7 @@ final class ListImageSizes implements Ability {
 		return array(
 			'label'               => __( 'List Image Sizes', 'abilities-catalog' ),
 			'description'         => __( 'Returns the image sub-sizes WordPress generates for uploads (core sizes plus any registered by the theme or plugins), each with its width, height, and crop setting. Reports the configured sizes, not the files present for a specific attachment.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

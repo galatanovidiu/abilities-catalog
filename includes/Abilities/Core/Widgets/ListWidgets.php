@@ -40,7 +40,7 @@ final class ListWidgets implements Ability {
 		return array(
 			'label'               => __( 'List Widgets', 'abilities-catalog' ),
 			'description'         => __( 'Lists widget instances, optionally filtered to one sidebar, returning each widget\'s id, id_base (type), sidebar, and rendered HTML. Use this to find the widget id needed by og-widgets/get-widget, og-widgets/update-widget, or og-widgets/delete-widget. Discover sidebar ids with og-widgets/list-sidebars; an empty or unknown sidebar returns no items.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

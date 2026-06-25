@@ -54,7 +54,7 @@ final class DeleteTemplatePart implements Ability {
 		return array(
 			'label'               => __( 'Delete Template Part', 'abilities-catalog' ),
 			'description'         => __( 'Permanently deletes a template part (a reusable block region such as a header or footer) by its "theme//slug" id. A customized source-backed part (provided by the theme, a plugin, or the site) is reverted to its original source; a user-created part is removed entirely. Parts that exist only as theme files cannot be deleted. This cannot be undone and changes site-wide layout. Returns the deleted part\'s title, slug, area, and original_source so the caller can confirm which part changed and whether it was reverted or removed.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

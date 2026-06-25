@@ -36,7 +36,7 @@ final class GetMedia implements Ability {
 		return array(
 			'label'               => __( 'Get Media', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single media library item by ID, including its source URL, alt text, and media details.', 'abilities-catalog' ),
-			'category'            => 'media',
+			'category'            => 'og-core-media',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

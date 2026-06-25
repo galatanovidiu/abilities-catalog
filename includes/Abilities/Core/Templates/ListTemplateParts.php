@@ -43,7 +43,7 @@ final class ListTemplateParts implements Ability {
 		return array(
 			'label'               => __( 'List Template Parts', 'abilities-catalog' ),
 			'description'         => __( 'Lists the active theme\'s template parts (reusable block regions like the header and footer), including each part\'s id, slug, area, source, title, and status. Optionally filter by area (e.g. "header"). Use og-templates/get-template-part to read one part\'s block markup. For full block templates (not parts) use og-templates/list-templates.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

@@ -41,7 +41,7 @@ final class ListBlockTypes implements Ability {
 		return array(
 			'label'               => __( 'List Block Types', 'abilities-catalog' ),
 			'description'         => __( 'Lists the block types registered on the site (core, plugin, and theme blocks) as a lightweight registry overview: name, title, category, and dynamic flag. Use this to discover which blocks exist. It does not return block attributes, supports, or nesting rules, so it is not sufficient on its own to compose attribute-correct block markup.', 'abilities-catalog' ),
-			'category'            => 'templates',
+			'category'            => 'og-core-templates',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

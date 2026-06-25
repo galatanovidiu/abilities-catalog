@@ -26,7 +26,7 @@ final class UnsafeWriteAbility implements Ability {
 		return array(
 			'label'               => 'Unsafe Write',
 			'description'         => 'A write that omits the destructive annotation.',
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array('type' => 'object'),
 			'output_schema'       => array('type' => 'object'),
 			'execute_callback'    => static fn() => array(),

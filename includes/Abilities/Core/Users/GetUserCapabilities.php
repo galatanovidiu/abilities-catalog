@@ -54,7 +54,7 @@ final class GetUserCapabilities implements Ability {
 		return array(
 			'label'               => __( 'Get User Capabilities', 'abilities-catalog' ),
 			'description'         => __( 'Returns one user\'s effective capabilities and roles by ID. The capability list is the fully resolved set — role-derived capabilities and per-user grants merged together — as a sorted list of granted capability names; role slugs that core mixes into the map are filtered out. Use this when you need the actual permissions a user holds; use og-users/get-user for the user profile and its role list, which does not resolve the effective capability set.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'id' ),

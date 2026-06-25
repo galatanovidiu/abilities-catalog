@@ -47,7 +47,7 @@ final class CreateApplicationPassword implements Ability {
 		return array(
 			'label'               => __( 'Create Application Password', 'abilities-catalog' ),
 			'description'         => __( 'Creates a new application password for a user. The plaintext password is returned once and cannot be retrieved again.', 'abilities-catalog' ),
-			'category'            => 'users',
+			'category'            => 'og-core-users',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

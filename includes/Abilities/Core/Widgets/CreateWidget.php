@@ -57,7 +57,7 @@ final class CreateWidget implements Ability {
 		return array(
 			'label'               => __( 'Create Widget', 'abilities-catalog' ),
 			'description'         => __( 'Adds a widget of a given type to a sidebar (widget area), returning the new widget id, its id_base, the sidebar it landed in, and its rendered HTML. Set id_base to a widget type slug from og-widgets/list-widget-types (e.g. "block", "text"), and sidebar to a sidebar id from og-widgets/list-sidebars; omit sidebar to stage the widget inactive (it defaults to the wp_inactive_widgets holding area). Supply widget settings through either instance (an object — for the core "block" widget use { raw: { content: "<block markup>" } }) or form_data (a URL-encoded string for classic widgets), but not both. Reversible via og-widgets/delete-widget.', 'abilities-catalog' ),
-			'category'            => 'widgets',
+			'category'            => 'og-core-widgets',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

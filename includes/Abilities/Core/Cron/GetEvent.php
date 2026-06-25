@@ -46,7 +46,7 @@ final class GetEvent implements Ability {
 		return array(
 			'label'               => __( 'Get Event', 'abilities-catalog' ),
 			'description'         => __( 'Returns a single scheduled WP-Cron event by its hook, including its next timestamp, recurrence schedule, interval, and the args it was scheduled with. Single-event read; use og-cron/list-events to enumerate every event and discover the hook, timestamp, and args. Pass args back exactly as listed (they identify the event), and a specific timestamp to target one occurrence; omit timestamp to get the next occurrence.', 'abilities-catalog' ),
-			'category'            => 'cron',
+			'category'            => 'og-core-cron',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'hook' ),

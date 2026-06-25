@@ -54,7 +54,7 @@ final class ListThemeMods implements Ability {
 		return array(
 			'label'               => __( 'List Theme Mods', 'abilities-catalog' ),
 			'description'         => __( 'Returns the active theme\'s customizer modifications ("theme mods") as a name-to-value map, plus the active theme slug and a total count. Theme mods are the per-theme Customizer settings (e.g. custom_logo, header_textcolor, background_color, and any theme- or plugin-registered setting). The map is empty ({}) when the theme has no saved mods. Discover a single value with og-themes/get-theme-mod; change one with og-themes/set-theme-mod or og-themes/remove-theme-mod.', 'abilities-catalog' ),
-			'category'            => 'themes',
+			'category'            => 'og-core-themes',
 			'input_schema'        => array(),
 			'output_schema'       => array(
 				'type'                 => 'object',

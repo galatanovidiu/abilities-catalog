@@ -64,7 +64,7 @@ final class UpdatePermalinks implements Ability {
 		return array(
 			'label'               => __( 'Update Permalink Settings', 'abilities-catalog' ),
 			'description'         => __( 'Updates the permalink structure and the category and tag base prefixes, then rebuilds the rewrite rules. Provide at least one field. A non-empty permalink structure must contain at least one structure tag, e.g. %postname%; an empty structure selects plain permalinks.', 'abilities-catalog' ),
-			'category'            => 'settings',
+			'category'            => 'og-core-settings',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

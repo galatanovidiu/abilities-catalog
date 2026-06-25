@@ -44,7 +44,7 @@ final class ListPlugins implements Ability {
 		return array(
 			'label'               => __( 'List Plugins', 'abilities-catalog' ),
 			'description'         => __( 'Returns the installed plugins readable by the current user, optionally filtered by search term or activation status.', 'abilities-catalog' ),
-			'category'            => 'plugins',
+			'category'            => 'og-core-plugins',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
