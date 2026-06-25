@@ -139,6 +139,40 @@ final class AbilityIndexTest extends TestCase {
 	}
 
 	/**
+	 * Stemming: an inflected query matches differently-inflected ability metadata.
+	 *
+	 * "updating plugins" must still surface the plugin/update reads — "updating"->"updat"
+	 * matches "updates"/"update" and "plugins"->"plugin" matches "plugin". Before stemming,
+	 * the plural "plugins" did not substring-match the singular "plugin" in descriptions.
+	 *
+	 * @return void
+	 */
+	public function test_search_matches_across_inflections(): void {
+		$names = array_column( $this->index()->search( 'updating plugins', null, 10 )['abilities'], 'name' );
+
+		$this->assertContains( 'og-plugins/list-plugins', $names, 'An inflected query must reach the plugin reads.' );
+	}
+
+	/**
+	 * IDF + stemming: a verbose natural-language query ranks the on-target ability first.
+	 *
+	 * The long query that motivated this change must put the updates read at the top, not a
+	 * WooCommerce "list-*" ability that merely shares the common word "list".
+	 *
+	 * @return void
+	 */
+	public function test_search_ranks_on_target_ability_first_for_verbose_query(): void {
+		$result = $this->index()->search( 'list available updates for core plugins and themes', null, 5 );
+
+		$this->assertNotEmpty( $result['abilities'] );
+		$this->assertSame(
+			'og-updates/list-available-updates',
+			$result['abilities'][0]['name'],
+			'The updates read must outrank abilities that only share the common word "list".'
+		);
+	}
+
+	/**
 	 * A query that matches nothing returns the category map so the agent can re-orient.
 	 *
 	 * @return void
