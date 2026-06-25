@@ -137,16 +137,16 @@ final class ServerTest extends TestCase {
 		);
 
 		// The server exposes one curated tool per domain, not flat ability tools, plus
-		// the one cross-cutting skills tool.
+		// the one cross-cutting knowledge tool.
 		$tools = $server->get_tools();
 		foreach ( self::CURATED_DOMAINS as $slug ) {
 			$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered.', $slug ) );
 		}
-		$this->assertArrayHasKey( 'skills', $tools, 'The cross-cutting skills tool should be registered.' );
+		$this->assertArrayHasKey( 'knowledge', $tools, 'The cross-cutting knowledge tool should be registered.' );
 		$this->assertCount(
 			count( self::CURATED_DOMAINS ) + 1,
 			$tools,
-			'The server should expose exactly the curated domain tools plus the skills tool.'
+			'The server should expose exactly the curated domain tools plus the knowledge tool.'
 		);
 
 		// Each curated domain carries its own hand-written blurb, never the generic
@@ -183,24 +183,20 @@ final class ServerTest extends TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( $post_id, $result['id'] );
 
-		// End-to-end skills round-trip: the skills tool lists its recipes and serves
-		// one body. list/get need no ability capability, only the shared floor.
-		$skills = $server->get_mcp_tool( 'skills' );
-		$this->assertInstanceOf( McpTool::class, $skills );
+		// End-to-end knowledge round-trip: no uri returns the index, a uri returns one
+		// concept's body. Both need no ability capability, only the shared floor.
+		$knowledge = $server->get_mcp_tool( 'knowledge' );
+		$this->assertInstanceOf( McpTool::class, $knowledge );
 
-		$listed = $skills->execute( array( 'action' => 'list' ) );
-		$this->assertIsArray( $listed );
-		$this->assertArrayHasKey( 'skills', $listed );
-		$this->assertContains( 'create-content', array_column( $listed['skills'], 'id' ) );
+		$index = $knowledge->execute( array() );
+		$this->assertIsArray( $index );
+		$this->assertArrayHasKey( 'index', $index );
+		$this->assertStringContainsString( 'core/create-content', $index['index'] );
 
-		$recipe = $skills->execute(
-			array(
-				'action' => 'get',
-				'id'     => 'create-content',
-			)
-		);
-		$this->assertIsArray( $recipe );
-		$this->assertSame( 'create-content', $recipe['id'] );
-		$this->assertNotEmpty( $recipe['body'] );
+		$concept = $knowledge->execute( array( 'uri' => 'core/create-content' ) );
+		$this->assertIsArray( $concept );
+		$this->assertArrayHasKey( 'concept', $concept );
+		$this->assertSame( 'core/create-content', $concept['concept']['uri'] );
+		$this->assertNotEmpty( $concept['concept']['body'] );
 	}
 }

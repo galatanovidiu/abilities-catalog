@@ -4,7 +4,7 @@ Tags: abilities-api, ai, mcp, agents, wp-admin
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.3.1
+Stable tag: 0.4.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -39,7 +39,7 @@ Abilities are tiered by risk. The tier is declared in each ability's annotations
 
 The plugin can expose the catalog over the Model Context Protocol through a built-in server, built on the official `wordpress/mcp-adapter`. It is **off by default** and the catalog is unaffected when it is off.
 
-* It does not expose flat per-ability tools. It exposes one tool per curated domain (each with `list`, `describe`, and `execute` actions) plus a cross-cutting `skills` tool.
+* It does not expose flat per-ability tools. It exposes one tool per curated domain (each with `list`, `describe`, and `execute` actions) plus a cross-cutting `knowledge` tool that serves file-based OKF concepts (task recipes and authoring guidelines): call it with no `uri` for an index, or with a `uri` for one concept.
 * On top of every ability's capability check sits an owner-controlled, deny-by-default **exposure gate**: each ability is disabled until an administrator enables it on the settings page. A disabled ability can still be listed and described, so an agent can learn it, but `execute` is refused. Capability stays the hard guard on every `execute`.
 * Enable the server with the `ABILITIES_CATALOG_MCP_ENABLED` constant, the `abilities_catalog_mcp_enabled` option, or the toggle on the settings page at **Settings → MCP Server**.
 
@@ -109,12 +109,17 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 
 == Changelog ==
 
+= 0.4.0 =
+* Changed: the optional MCP server's cross-cutting `knowledge` tool now reads file-based OKF bundles (markdown with YAML frontmatter) under `includes/knowledge/` instead of bundled PHP recipe classes. Call it with no `uri` for a generated index (live site facts plus every bundle's concepts grouped by type), or with a `uri` (e.g. `core/create-content`) for one concept.
+* Changed: the add-on extensibility filter is now `abilities_catalog_mcp_knowledge` and carries scanned `KnowledgeBundle` objects; an add-on scans its own bundle directory with `KnowledgeBundle::fromDirectory()`. Off-by-default and pre-1.0, so no backward-compatibility shim.
+* Note: shipped knowledge concepts are English-only (the files are not translated).
+
 = 0.3.1 =
 * New: the optional MCP server now exposes the Network, Cron, and Widgets abilities through its curated domain tools — Network as its own (multisite-only) domain tool, with Cron folded into Tools and Widgets into Appearance. These 28 abilities shipped in 0.3.0 but were reachable through no domain tool until now.
 
 = 0.3.0 =
 * New: a scalable, search-based MCP server (`overview` / `search` / `describe` / `execute`) for navigating large catalogs, and the bundled adapter default server now publishes the curated ability subset instead of being suppressed.
-* New: six task-recipe skills spanning the domain tools, plus discovery guidance that points agents at `list` / `describe` (and at the exact schema on invalid input) instead of guessing ability names or inputs.
+* New: six cross-cutting task recipes spanning the domain tools, plus discovery guidance that points agents at `list` / `describe` (and at the exact schema on invalid input) instead of guessing ability names or inputs.
 * New: register an add-on domain tool through the `abilities_catalog_mcp_domains` filter, so add-ons extend the MCP server without editing this plugin.
 * Catalog: expanded to 230 abilities across 21 wp-admin domains (adds the Cron, Network, and Widgets domains; adds meta read/write, transient and object-cache, cron scheduling, multisite network read/write, roles & capabilities lookups, template parts, rewrite rules, sitemaps, taxonomy, theme mods, and user sessions).
 * Changed: license switched from GPL-2.0-or-later to MIT.
@@ -122,9 +127,9 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 * Docs: guide for building catalog add-ons, and how to connect an MCP client.
 
 = 0.2.0 =
-* New: an optional, off-by-default built-in MCP server that exposes the catalog as curated domain tools (`list` / `describe` / `execute`) plus a cross-cutting `skills` tool, built on `wordpress/mcp-adapter`.
+* New: an optional, off-by-default built-in MCP server that exposes the catalog as curated domain tools (`list` / `describe` / `execute`) plus a cross-cutting `knowledge` tool, built on `wordpress/mcp-adapter`.
 * New: an owner-controlled, deny-by-default per-ability exposure gate and a **Settings → MCP Server** page (with its exposure REST API) to manage it. A disabled ability can be listed and described but not executed; capability stays the hard guard on every call.
-* New: extensibility filters for the domain map, skills, tools, and tool permissions, so consumers can extend the server without editing the plugin.
+* New: extensibility filters for the domain map, knowledge, tools, and tool permissions, so consumers can extend the server without editing the plugin.
 * Catalog: expanded to 160 abilities across 18 wp-admin domains (adds the Search domain and broader coverage across Content, Terms, Menus, Templates, Settings, Users, and Fonts).
 * Fixes: a correctness sweep across abilities — multi-value post meta stored as separate rows, reads no longer mutate state, REST responses no longer leak core download headers, hardened input schemas, and raw serialized block markup returned from navigation reads.
 * Internal: renamed the hook and identifier prefix to `abilities_catalog_` and removed consumer-specific wording, so the catalog is fully consumer-agnostic.
@@ -135,6 +140,9 @@ WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
 * Server-side safety pipeline for the dangerous tier: filesystem guard, source validation, option allow-list, and upgrader lock.
 
 == Upgrade Notice ==
+
+= 0.4.0 =
+The optional MCP server's `knowledge` tool now reads file-based OKF bundles (markdown) instead of PHP recipe classes, and its add-on filter is renamed to `abilities_catalog_mcp_knowledge` carrying scanned bundle objects. No change to the catalog, and no change when the MCP server is off. Off-by-default and pre-1.0, so there is no backward-compatibility shim — an add-on that contributed to the old filter must move to the new one.
 
 = 0.3.1 =
 Exposes 28 already-registered abilities (Network, Cron, Widgets) through the curated MCP domain tools: a new multisite-only Network domain tool, plus Cron folded into Tools and Widgets into Appearance. No change to the catalog, and no change when the MCP server is off.
