@@ -1,0 +1,12 @@
+{
+	"core": null,
+	"plugins": [
+		".",
+		"https://downloads.wordpress.org/plugin/contact-form-7.6.1.6.zip",
+		"galatanovidiu/abilities-catalog-cf7",
+		"https://downloads.wordpress.org/plugin/woocommerce.zip",
+		"galatanovidiu/abilities-catalog-woo",
+		"https://downloads.wordpress.org/plugin/wordpress-seo.27.9.zip",
+		"galatanovidiu/abilities-catalog-yoast-seo"
+	]
+}
