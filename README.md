@@ -66,7 +66,10 @@ is **off by default** and built on
 [`wordpress/mcp-adapter`](https://github.com/WordPress/mcp-adapter).
 
 The server does not expose one MCP tool per ability. It exposes one tool per
-curated domain, plus a cross-cutting `skills` tool for task recipes.
+curated domain, plus a cross-cutting `knowledge` tool. The `knowledge` tool
+serves file-based OKF concepts (task recipes and authoring guidelines): call it
+with no `uri` for an index of live site facts and every concept, or with a `uri`
+(e.g. `core/create-content`) for one concept.
 
 Each domain tool supports three actions: `list`, `describe`, and `execute`.
 Execution happens server-side through `wp_get_ability()`, so the target ability's
