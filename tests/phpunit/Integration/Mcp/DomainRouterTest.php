@@ -290,6 +290,26 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
+	 * The unknown-ability error names the prefixes the domain owns, so the dominant guess
+	 * (tool name != ability prefix) recovers to a real prefix without a round-trip.
+	 *
+	 * `content/search-posts` is the trace-proven miss: the agent reaches the content tool and
+	 * invents that name, when the real ability is `search/search-content`. The error must name
+	 * the owned prefixes (so the agent learns `terms/`, `comments/` belong here too) and the
+	 * exact `search/search-content` placement — without ever offering an edit-distance guess.
+	 *
+	 * @return void
+	 */
+	public function test_unknown_ability_names_the_domain_owned_prefixes(): void {
+		$message = $this->router->describe( 'content', 'content/search-posts' )->get_error_message();
+
+		$this->assertStringContainsString( 'terms/*', $message, 'The owned prefixes orient the next guess.' );
+		$this->assertStringContainsString( 'search/search-content', $message, 'The exact placement names the real search ability.' );
+		$this->assertStringContainsString( 'action "list"', $message, 'The authoritative path still follows.' );
+		$this->assertStringNotContainsString( 'Did you mean', $message, 'Naming the taxonomy is not a fuzzy suggestion.' );
+	}
+
+	/**
 	 * execute runs an ability for a user with the capability.
 	 *
 	 * @return void

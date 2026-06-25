@@ -178,6 +178,38 @@ final class DomainMap {
 	}
 
 	/**
+	 * The ability-name patterns one domain owns: its prefixes (as `prefix/*`) plus any
+	 * exact-name placements.
+	 *
+	 * The {@see DomainRouter} appends these to an unknown-ability recovery error. The domain
+	 * tool name is not the ability prefix — the `content` tool owns `content/`, `terms/`,
+	 * `comments/` and the exact `search/search-content` — so an agent that guessed a name
+	 * (e.g. `content/search-posts`) sees the real prefixes to retry with, without a round-trip
+	 * to `list`. These are taxonomy facts about the domain, independent of the guessed name, so
+	 * naming them is not a fuzzy "did you mean" suggestion.
+	 *
+	 * Returns an empty list for an add-on domain that owns only whole-tool exact names (those
+	 * live in {@see addonDomains()}, not the prefix map), or for an unknown slug; the caller
+	 * falls back to the plain "call list" hint.
+	 *
+	 * @param string $domain The domain slug.
+	 * @return list<string> The owned name patterns, e.g. `['content/*', 'terms/*', 'comments/*', 'search/search-content']`.
+	 */
+	public function namePatternsOf( string $domain ): array {
+		$patterns = array();
+
+		foreach ( self::DOMAIN_PREFIXES[ $domain ] ?? array() as $prefix ) {
+			$patterns[] = $prefix . '/*';
+		}
+
+		foreach ( $this->includes()[ $domain ] ?? array() as $name ) {
+			$patterns[] = (string) $name;
+		}
+
+		return $patterns;
+	}
+
+	/**
 	 * Resolves the exact-name placements, applying the extensibility filter once.
 	 *
 	 * A misbehaving filter that returns a non-array is ignored in favor of the
