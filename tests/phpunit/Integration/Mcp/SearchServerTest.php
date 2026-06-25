@@ -25,6 +25,8 @@ use WP\MCP\Domain\Tools\McpTool;
  */
 final class SearchServerTest extends TestCase {
 
+	use ResetsMcpAdapter;
+
 	/**
 	 * Every tool the search server must expose: the four discovery tools plus knowledge.
 	 *
@@ -50,6 +52,10 @@ final class SearchServerTest extends TestCase {
 		if ( ! class_exists( McpAdapter::class ) ) {
 			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
 		}
+
+		// The adapter is a one-boot-per-process singleton; reset it so this test boots it
+		// fresh even when another booting test (e.g. ServerTest) ran first. See the trait.
+		$this->resetMcpAdapter();
 	}
 
 	/**
