@@ -9,8 +9,6 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
-use GalatanOvidiu\AbilitiesCatalog\Mcp\Knowledge\KnowledgeRegistry;
-use GalatanOvidiu\AbilitiesCatalog\Mcp\Knowledge\KnowledgeTool;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
 use WP\MCP\Transport\HttpTransport;
@@ -203,7 +201,7 @@ final class Server {
 	 *
 	 * Iterates the {@see DomainMap} so the curated domains and any a third party
 	 * opens through the `abilities_catalog_mcp_domain_map` filter are all exposed, then
-	 * appends the one {@see KnowledgeTool} that serves OKF concepts (recipes and
+	 * appends the one {@see KnowledgeToolFactory} tool that serves OKF concepts (recipes and
 	 * guidelines) across domains. A tool the adapter rejects is logged and skipped
 	 * rather than aborting the whole server, so one bad tool never costs the others. The
 	 * server exposes a curated subset of the registered abilities, so an ability no
@@ -231,7 +229,7 @@ final class Server {
 			$tools[] = $tool;
 		}
 
-		$knowledge = $this->knowledgeTool( $permission );
+		$knowledge = KnowledgeToolFactory::create( $permission );
 		if ( is_wp_error( $knowledge ) ) {
 			self::log( 'Failed to build the "knowledge" tool: ' . $knowledge->get_error_message() );
 
@@ -330,43 +328,6 @@ final class Server {
 	 */
 	private static function toolName( McpTool $tool ): string {
 		return $tool->get_protocol_dto()->getName();
-	}
-
-	/**
-	 * Builds the cross-cutting knowledge tool.
-	 *
-	 * The knowledge tool is not a domain — it serves OKF concepts (task recipes and
-	 * authoring guidelines) that span several domains. It shares the domain tools'
-	 * coarse permission floor; like every `execute`, a concept's value still depends on
-	 * the abilities it points at, each of which keeps its own capability gate.
-	 *
-	 * @param callable $permission The shared coarse permission floor.
-	 * @return \WP\MCP\Domain\Tools\McpTool|\WP_Error The knowledge tool, or a `WP_Error` when the adapter rejects the config.
-	 */
-	private function knowledgeTool( callable $permission ) {
-		return McpTool::fromArray(
-			array(
-				'name'        => 'knowledge',
-				'description' => $this->knowledgeDescription(),
-				'inputSchema' => KnowledgeTool::inputSchema(),
-				'handler'     => array( new KnowledgeTool( new KnowledgeRegistry() ), 'handle' ),
-				'permission'  => $permission,
-			)
-		);
-	}
-
-	/**
-	 * The hand-written description for the knowledge tool.
-	 *
-	 * When to use it / what it returns / what it contains / why. It carries no live
-	 * concept index — that would force a full bundle scan on every request for a number
-	 * the agent does not act on; the no-uri call returns the index when the agent wants
-	 * it.
-	 *
-	 * @return string The tool description.
-	 */
-	private function knowledgeDescription(): string {
-		return __( 'Reference and procedure for working this site through the domain tools — task recipes (authoring coherent Gutenberg content, organizing terms, moderating comments, editing an image, configuring the homepage, exporting content) and authoring guidelines. Call it with no uri to get the index: live site facts plus every available concept grouped by type. Call it with a uri (e.g. core/create-content) for one concept. A concept points you at the read abilities for live data; it does not embed that data, which differs per site.', 'abilities-catalog' );
 	}
 
 	/**

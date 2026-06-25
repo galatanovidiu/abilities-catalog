@@ -26,6 +26,8 @@ use WP\MCP\Domain\Tools\McpTool;
  */
 final class ServerTest extends TestCase {
 
+	use ResetsMcpAdapter;
+
 	/**
 	 * The curated domain slugs the server must expose as tools, in spec order.
 	 *
@@ -55,6 +57,10 @@ final class ServerTest extends TestCase {
 		if ( ! class_exists( McpAdapter::class ) ) {
 			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
 		}
+
+		// The adapter is a one-boot-per-process singleton; reset it so this test boots it
+		// fresh even when another booting test (e.g. SearchServerTest) ran first. See the trait.
+		$this->resetMcpAdapter();
 	}
 
 	/**
