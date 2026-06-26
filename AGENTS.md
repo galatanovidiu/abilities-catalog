@@ -1,10 +1,18 @@
 # AGENTS.md — abilities-catalog
 
-WordPress plugin (WP 7.0+) that registers wp-admin features as **abilities** on the
-core Abilities API, each tagged with a risk classification. It is
-**consumer-agnostic**: it defines abilities, it does not surface them to any agent or
-UI — that is a consumer's job. It also ships one optional, **off-by-default** consumer
-of its own: a built-in MCP server (`includes/Mcp/`).
+WordPress plugin (WP 6.9+) that registers wp-admin features as **abilities** on the
+core Abilities API, each tagged with a risk classification. Two facts shape how you
+work here:
+
+- **The abilities are consumer-agnostic.** The catalog defines them (schemas,
+  categories, capability checks, risk annotations); it does not couple to any one
+  consumer. Build abilities so any Abilities API client can read them — never document
+  the plugin as requiring a specific consumer.
+- **The shipped consumer is a search-based MCP server** (`includes/Mcp/`,
+  **off by default**) — the part the project is built around and the piece it aims to
+  upstream into `wordpress/mcp-adapter`. The abilities themselves are a **stopgap**: as
+  WordPress core and other plugins ship official abilities, the duplicates defined here
+  get removed to make room for them.
 
 ## Commands
 
@@ -19,7 +27,7 @@ composer phpstan     # phpstan (phpstan.neon.dist)
 Tests need Docker running:
 
 ```bash
-npm run wp-env:test start    # boot the WP 7.0 test env (.wp-env.test.json, port 8890)
+npm run wp-env:test start    # boot the WP 6.9+ test env (.wp-env.test.json, port 8890)
 npm run test:php:setup       # composer install inside the container (first run only)
 npm run test:php             # full suite (unit + integration)
 ```
@@ -103,15 +111,26 @@ Jetpack Autoloader from `vendor/` (git-ignored; a release build ships it). If en
 without `vendor/`, the plugin shows an admin notice and keeps working — it does not
 fatal.
 
-- Exposes curated **domain tools** (`list` / `describe` / `execute`, mapped by
-  `Mcp\DomainMap`) plus a cross-cutting `knowledge` tool — not flat per-ability tools.
-  The `knowledge` tool reads file-based **OKF** bundles (markdown + YAML frontmatter)
-  under `includes/knowledge/`: a no-arg call returns a generated index (live site facts
-  + every bundle's concepts grouped by type), a `{uri}` call returns one concept.
+- Two servers boot on the adapter, each a separate consumer of the one ability
+  registry, neither exposing flat per-ability tools:
+  - **Search server** (`Mcp\SearchServer`, route `mcp-search`) — the **primary** one,
+    built for scale and the piece headed upstream. Five bounded tools backed by
+    `Mcp\AbilityIndex`: `overview` (capability map), `search-abilities` (ranked keyword
+    retrieval), `describe-ability`, `execute-ability` — plus the shared `knowledge`
+    tool. Discovery cost tracks the result set, not the catalog size.
+  - **Curated domain server** (`Mcp\Server`, route `mcp`) — legacy alternative. One
+    tool per hand-curated domain (`list` / `describe` / `execute`, mapped by
+    `Mcp\DomainMap`) plus `knowledge`. Boots first; `SearchServer` boots after it.
+- The `knowledge` tool (built once via `Mcp\KnowledgeToolFactory`, shared by both
+  servers) reads file-based **OKF** bundles (markdown + YAML frontmatter) under
+  `includes/knowledge/`: a no-arg call returns a generated index (live site facts +
+  every bundle's concepts grouped by type), a `{uri}` call returns one concept.
 - On top of the capability guard sits an owner-controlled **exposure gate**
   (`Mcp\ExposurePolicy`, deny-by-default): every ability is disabled until enabled on
-  the settings page. `execute` refuses a disabled ability; `list` / `describe` still
-  show it so an agent can learn it. Capability stays the hard guard on every `execute`.
+  the settings page. `execute` refuses a disabled ability; discovery
+  (`search-abilities` / `describe-ability`, or `list` / `describe` on the curated
+  server) still shows it so an agent can learn it. Capability stays the hard guard on
+  every `execute`.
 - The settings page and its exposure REST route (`abilities-catalog/v1/exposure`,
   `manage_options`) register whenever the Abilities API is present, independent of the
   server enable flag. The page is a no-build React app on core

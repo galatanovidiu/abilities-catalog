@@ -60,7 +60,7 @@ final class Registry {
 	 * @return void
 	 */
 	public function register(): void {
-		// The Abilities API must be present (WordPress 7.0+).
+		// The Abilities API must be present (WordPress 6.9+).
 		if ( ! function_exists( 'wp_register_ability' ) ) {
 			return;
 		}
