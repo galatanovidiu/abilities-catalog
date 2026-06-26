@@ -153,9 +153,7 @@ It exposes five tools:
 
 The `knowledge` tool is experimental. It is this plugin's file-based bridge
 until WordPress has an official `wp-knowledge` standard in core. It lets an
-agent read task recipes and authoring guidance instead of guessing. Call it with
-no `uri` for an index of live site facts and every bundled concept, or pass a
-specific `uri` such as `core/create-content` to read one concept.
+agent read task recipes and authoring guidance instead of guessing.
 
 The usual agent loop is:
 
