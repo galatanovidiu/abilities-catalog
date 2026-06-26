@@ -1,27 +1,72 @@
 # Abilities Catalog
 
-Abilities Catalog registers wp-admin functionality on the WordPress core
-Abilities API.
+**Abilities Catalog gives WordPress agents two things that need each other at
+scale: a large catalog of wp-admin abilities, and a search-based MCP server that
+lets agents use that catalog without loading it all into context.**
 
-It is a catalog first: 230 core abilities, each with schemas, category metadata,
-server-side capability checks, and risk annotations. It does not choose which
-agent, UI, or integration may surface them.
+The catalog registers 230+ WordPress core admin operations on the WordPress
+Abilities API. Each ability has schemas, category metadata, server-side
+capability checks, and risk annotations.
 
-Any consumer that reads the Abilities API can use the catalog. The plugin also
-ships one optional consumer of its own: a built-in MCP server, built on
-[`wordpress/mcp-adapter`](https://github.com/WordPress/mcp-adapter), off by
-default, that exposes enabled abilities as curated domain tools.
+The search MCP server exposes those abilities to agents through one efficient
+endpoint. An agent describes the task, gets a small ranked result set, reads the
+exact schema for the selected ability, and executes it server-side. The agent
+does not need to list hundreds or thousands of tools up front.
+
+Those two parts are equally important in this plugin:
+
+- The **catalog** defines what WordPress can do.
+- The **search MCP server** makes that capability practical for agents when the
+  catalog grows across core and plugins.
+
+The MCP server is optional and off by default. The catalog still registers on
+the Abilities API for any consumer that reads that API. For MCP clients,
+however, the search server is the intended scalable surface.
+
+## Quick start
+
+Connect an MCP client to your site in four steps:
+
+1. Install and activate Abilities Catalog.
+
+   Use a release ZIP from the
+   [Releases page](https://github.com/galatanovidiu/abilities-catalog/releases)
+   and install it like any other WordPress plugin.
+
+   If you are running from a git checkout, run `composer install` in the plugin
+   directory before enabling the MCP server. Release ZIPs already include the
+   required `vendor/` files.
+
+2. Enable the MCP server. Add this to `wp-config.php`:
+
+   ```php
+   define( 'ABILITIES_CATALOG_MCP_ENABLED', true );
+   ```
+
+   You can also use the toggle at **Settings -> MCP Server**.
+
+3. Create an Application Password at **Users -> Profile -> Application
+   Passwords**. WordPress requires HTTPS to create one.
+
+4. Point your MCP client at:
+
+   ```text
+   https://your-site/wp-json/abilities-catalog/v1/mcp-search
+   ```
+
+   Authenticate with your WordPress username and the Application Password.
+
+Every ability starts disabled for MCP execution. Enable only the abilities an
+agent needs at **Settings -> MCP Server**.
 
 ## Requirements
 
-- WordPress 7.0 or later, with the Abilities API in core.
+- WordPress 6.9 or later, with the Abilities API in core.
 - PHP 8.1 or later.
-- Optional MCP server only: Composer dependencies for `wordpress/mcp-adapter`.
-  The catalog itself has no Composer or build step.
 
-## What It Registers
+## What the catalog registers
 
-The core catalog currently includes 230 abilities across 21 wp-admin areas:
+The core catalog includes 230+ abilities across 21 wp-admin areas:
 
 `Comments`, `Connectors`, `Content`, `Cron`, `Dashboard`, `Fonts`, `Media`,
 `Menus`, `Network`, `Plugins`, `Privacy`, `Search`, `Settings`, `SiteHealth`,
@@ -31,114 +76,138 @@ Each ability is one PHP class under `includes/Abilities/Core/<Domain>/`.
 `Registry` discovers those classes recursively and registers them with
 `wp_register_ability()`.
 
-Ability names use a `domain/verb-noun` shape, for example
-`og-plugins/list-plugins` or `og-comments/approve-comment`.
+Ability names use a `domain/verb-noun` shape, for example:
 
-## Safety Model
+- `og-plugins/list-plugins`
+- `og-comments/approve-comment`
+- `og-content/create-post`
 
-Capability checks are the hard guard. Every ability has a server-side
-`permission_callback` that calls `current_user_can()`, independent of any
-consumer settings or UI.
+Each ability declares:
 
-Risk annotations are classification metadata for consumers. The catalog uses
-them to reject ambiguous writes, publish dangerous-tool metadata through filters,
-and help consumers show safer controls.
+- an input schema and output schema;
+- a category;
+- a server-side `permission_callback`;
+- risk annotations such as `readonly`, `destructive`, `idempotent`, and
+  `dangerous`.
 
-- **Read**: no side effects. Declares `readonly: true`.
-- **Write**: changes data without deleting it. Declares `readonly: false` and
-  `destructive: false`.
-- **Destructive**: deletes, trashes, or permanently removes data. Declares
-  `destructive: true`.
-- **Dangerous**: can install, update, or delete plugins and themes, run updates,
-  write broad options, or trigger privacy exports. Declares `dangerous: true`
-  and uses dedicated guards such as source validation, filesystem checks, option
-  allow-lists, and upgrader locks.
+## Add-ons
 
-The Registry refuses any write ability that does not explicitly set
-`annotations.destructive` to a boolean. Destructive and dangerous abilities can
-register; how they are exposed is a consumer decision.
+Add-ons register their own abilities on the same Abilities API. When the search
+MCP server is enabled, those abilities can appear through the same endpoint as
+core abilities. The agent does not need a separate server per plugin.
 
-## MCP Server (Optional)
+Current add-ons:
 
-The plugin can expose the catalog over the [Model Context
-Protocol](https://modelcontextprotocol.io/) through a built-in server. The server
-is **off by default** and built on
-[`wordpress/mcp-adapter`](https://github.com/WordPress/mcp-adapter).
+- [abilities-catalog-woo](https://github.com/galatanovidiu/abilities-catalog-woo): WooCommerce store operations.
+- [abilities-catalog-yoast-seo](https://github.com/galatanovidiu/abilities-catalog-yoast-seo): Yoast SEO.
+- [abilities-catalog-cf7](https://github.com/galatanovidiu/abilities-catalog-cf7): Contact Form 7 forms.
 
-The server does not expose one MCP tool per ability. It exposes one tool per
-curated domain, plus a cross-cutting `knowledge` tool. The `knowledge` tool
-serves file-based OKF concepts (task recipes and authoring guidelines): call it
-with no `uri` for an index of live site facts and every concept, or with a `uri`
-(e.g. `core/create-content`) for one concept.
+These are separate plugins, not part of the core catalog.
 
-Each domain tool supports three actions: `list`, `describe`, and `execute`.
-Execution happens server-side through `wp_get_ability()`, so the target ability's
-own capability check still runs.
+See [Building an add-on](docs/building-add-ons.md) for the extension pattern.
 
-The curated domains are `content`, `media`, `appearance`, `design`, `plugins`,
-`users`, `settings`, `tools`, `site-health`, `updates`, `dashboard`, and
-`network` (multisite only).
+## Why search-based MCP exists
 
-### Enable It
+The Abilities API gives WordPress a standard way to describe executable
+capabilities. That creates a scale problem for MCP: a real site can have
+hundreds of abilities from core, WooCommerce, SEO, forms, memberships, backups,
+and custom business plugins.
 
-Define a constant in `wp-config.php`:
+Listing every ability as an MCP tool does not scale. It spends context before
+the agent has done any work, and the cost grows with the total catalog size.
 
-```php
-define( 'ABILITIES_CATALOG_MCP_ENABLED', true );
+The search MCP server keeps the MCP surface small and fixed. Discovery becomes:
+
+1. Get a compact overview of what the site can do.
+2. Search for the task in plain words.
+3. Describe one matching ability.
+4. Execute that ability.
+
+The result set is bounded. The catalog can grow without turning MCP discovery
+into a tool dump.
+
+## The search MCP server
+
+The search server is built on
+[`wordpress/mcp-adapter`](https://github.com/WordPress/mcp-adapter) and registers
+this endpoint when enabled:
+
+```text
+/wp-json/abilities-catalog/v1/mcp-search
 ```
 
-You can also set the `abilities_catalog_mcp_enabled` option, or use the toggle at
-**Settings -> MCP Server**. The constant wins over the option, and the settings
-toggle is locked when the constant is defined.
+It exposes five tools:
 
-### Install the Adapter
+- **`overview`** - returns a compact capability map: categories, labels,
+  descriptions, ability counts, enabled counts, and a few examples per category.
+- **`search-abilities`** - searches the live ability registry by plain-language
+  task description. Results include ability name, label, description, category,
+  compact input signature, safety annotations, and whether the ability is
+  enabled for MCP execution.
+- **`describe-ability`** - returns the full input/output schema and metadata for
+  one exact ability name.
+- **`execute-ability`** - runs one exact ability name with arguments under
+  `input`.
+- **`knowledge`** - serves file-based OKF concept bundles: task recipes,
+  authoring guidance, and live site facts for agents.
 
-The MCP server needs Composer dependencies: the adapter and the Jetpack
-Autoloader. They are not committed to the repository because `vendor/` is
-ignored. Release builds include them.
+The usual agent loop is:
 
-From the plugin directory:
-
-```bash
-composer install          # development
-composer install --no-dev # release build
+```text
+overview -> search-abilities -> describe-ability -> execute-ability
 ```
 
-If the server is enabled but `vendor/` is missing, the plugin does not fatal. It
-shows an admin notice, logs under `WP_DEBUG`, and leaves the catalog running.
+Discovery shows disabled abilities so an agent can learn what exists. Execution
+is refused until a site administrator enables the ability on **Settings -> MCP
+Server**.
 
-### Endpoint
+## Other MCP surfaces
 
-When enabled, the server registers one POST endpoint:
+When the MCP server is enabled, this plugin has more than one MCP surface. They
+serve different purposes.
+
+### Search server
+
+Endpoint:
+
+```text
+/wp-json/abilities-catalog/v1/mcp-search
+```
+
+This is the recommended server for agents. It is the scalable surface for large
+catalogs and add-ons.
+
+### Curated domain server
+
+Endpoint:
 
 ```text
 /wp-json/abilities-catalog/v1/mcp
 ```
 
-The adapter uses MCP's HTTP transport shape: JSON-RPC over POST with MCP session
-headers. GET/SSE streaming is not implemented by the adapter yet and currently
-returns 405. Authenticate with standard WordPress REST authentication: an
-Application Password for a remote agent, or cookie and nonce for same-origin use.
+This older server exposes one tool per curated domain. Each domain tool supports
+`list`, `describe`, and `execute`.
 
-The endpoint runs as the authenticated user. Capability checks are therefore
-per-user, just like other WordPress admin actions.
+It is useful and readable for the core catalog, but it depends on a maintained
+domain taxonomy and becomes less attractive as arbitrary add-ons add hundreds or
+thousands of abilities. Prefer the search server for new clients.
 
-### Connect a Client
+### Adapter default server
 
-A client connects to the endpoint and authenticates as a WordPress user with an
-Application Password. You need three things:
+The bundled adapter also has its own default server. In this plugin, only
+curated and owner-enabled abilities are marked public for that default surface.
+That keeps the exposure gate intact, but it is still not the preferred large
+catalog workflow.
 
-1. The **endpoint URL** — `https://your-site/wp-json/abilities-catalog/v1/mcp`.
-2. A **WordPress username** — the agent acts as this user.
-3. An **Application Password** for that user, created at **Users → Profile →
-   Application Passwords**. Creating one requires the site to run over HTTPS.
+Use the search server when an agent needs to work against the whole catalog
+efficiently.
 
-<details>
-<summary>Claude Desktop, Cursor, and most clients (via mcp-wordpress-remote)</summary>
+## Connecting a client
 
-Connect through the
-[`@automattic/mcp-wordpress-remote`](https://www.npmjs.com/package/@automattic/mcp-wordpress-remote)
-proxy. Add it to the client's MCP config:
+Most desktop MCP clients can connect through
+[`@automattic/mcp-wordpress-remote`](https://www.npmjs.com/package/@automattic/mcp-wordpress-remote).
+
+Example config:
 
 ```json
 {
@@ -147,7 +216,7 @@ proxy. Add it to the client's MCP config:
       "command": "npx",
       "args": [ "-y", "@automattic/mcp-wordpress-remote@latest" ],
       "env": {
-        "WP_API_URL": "https://your-site/wp-json/abilities-catalog/v1/mcp",
+        "WP_API_URL": "https://your-site/wp-json/abilities-catalog/v1/mcp-search",
         "WP_API_USERNAME": "your-username",
         "WP_API_PASSWORD": "your application password"
       }
@@ -156,52 +225,89 @@ proxy. Add it to the client's MCP config:
 }
 ```
 
-</details>
+Clients that support remote MCP servers can call the endpoint directly using:
 
-<details>
-<summary>Remote (Streamable HTTP) clients</summary>
+```text
+Authorization: Basic <base64 of "username:application-password">
+```
 
-A client that supports remote MCP servers can call the endpoint URL directly,
-authenticating with the header
-`Authorization: Basic <base64 of "username:application-password">`.
+The endpoint runs as the authenticated WordPress user. WordPress capability
+checks are therefore per-user, just like wp-admin.
 
-</details>
+## Safety
 
-> [!NOTE]
-> The agent acts as the chosen user. Enable only the abilities it needs, and
-> back up your site before enabling write or dangerous abilities.
+Safety has two layers:
 
-### Exposure Gate
+- the ability's WordPress capability check;
+- the MCP exposure gate.
 
-The MCP server has a separate per-ability exposure gate. Every ability is
-disabled by default for execution over MCP.
+### Capability checks
 
-A connected agent can still `list` and `describe` disabled abilities, so it can
-learn what exists and what schema each ability expects. `execute` is refused
-until an administrator enables that ability.
+Capability is the hard guard. Every ability has a server-side
+`permission_callback` that calls `current_user_can()`. This runs on every
+execution, independent of any MCP client or UI.
 
-Use **Settings -> MCP Server** to enable abilities. The page groups abilities by
-domain and shows read, write, destructive, and dangerous badges.
+### Risk annotations
 
-Two guards run on every MCP `execute`: the MCP exposure gate and the ability's
-own capability check. A disabled ability is refused even for an administrator;
-an enabled ability still requires the right WordPress capability.
+Risk annotations classify abilities for consumers. They are metadata, not the
+permission system.
 
-### Security Note
+- **Read**: no side effects. Declares `readonly: true`.
+- **Write**: changes data without deleting it. Declares `readonly: false` and
+  `destructive: false`.
+- **Destructive**: deletes, trashes, or permanently removes data. Declares
+  `destructive: true`.
+- **Dangerous**: can install, update, or delete plugins and themes, run updates,
+  write broad options, or trigger privacy exports. Declares `dangerous: true`
+  and runs behind dedicated guards.
+
+The Registry refuses ambiguous write abilities. A write ability must explicitly
+set `annotations.destructive` to a boolean.
+
+### MCP exposure gate
+
+The MCP server is off by default. When it is enabled, every ability is still
+disabled for MCP execution until an administrator enables it.
+
+Discovery can show disabled abilities. Execution cannot run them.
+
+Two checks run on every MCP execution:
+
+1. The MCP exposure gate must allow that ability.
+2. The authenticated WordPress user must pass the ability's capability check.
 
 > [!WARNING]
-> When you connect the MCP server to an MCP client (such as Claude, Gemini, or
-> ChatGPT), the AI acts on your site as you and can make real changes in your
-> name. AI can make mistakes. Back up your site before you enable abilities, and
-> enable only the abilities the agent actually needs.
+> An MCP client acts as the authenticated WordPress user. If you enable write,
+> destructive, or dangerous abilities, the client can make real changes. Back up
+> the site before enabling high-risk abilities, and enable only what the agent
+> needs. For example, enabling `og-plugins/install-plugin` lets an authenticated
+> administrator install executable code through MCP.
 
-Enabling a write or dangerous ability gives a network client reach to that
-ability. For example, enabling `og-plugins/install-plugin` lets an authenticated
-administrator install executable code through MCP.
+## Dangerous ability guards
 
-The server is off by default, every ability is disabled by default for MCP
-execution, and capability checks still run on every call. Enable only the
-abilities an agent actually needs.
+Dangerous abilities use additional support code under `includes/Support/`.
+Examples include:
+
+- filesystem checks;
+- wp.org source validation for plugin and theme installs;
+- option allow-lists;
+- upgrader locks.
+
+Core update execution and irreversible erase execution are deliberately
+excluded.
+
+## Where this is going
+
+This plugin is a working bridge while WordPress core and plugins grow their own
+official abilities.
+
+As official abilities appear, duplicates in this catalog should be removed. The
+catalog should make room for core and plugin-owned definitions instead of
+competing with them.
+
+The search server is also intended as a candidate for upstreaming into
+`wordpress/mcp-adapter`, because bounded search is the practical discovery model
+for large WordPress ability catalogs.
 
 ## Architecture
 
@@ -211,16 +317,16 @@ abilities-catalog/
   includes/
     Registry.php                 # discovers, categorizes, and registers abilities
     Contracts/                   # ability and category-provider contracts
-    Support/                     # guards for the dangerous tier
     Abilities/<Group>/<Domain>/  # one class per ability
-    Mcp/                         # optional, off-by-default MCP server
+    Support/                     # guards for dangerous abilities
+    Mcp/                         # optional MCP servers and search index
       Admin/                     # settings page and exposure REST API
   assets/js/                     # no-build React settings app
+  docs/                          # user-facing documentation
+  tests/phpunit/                 # unit and integration tests
 ```
 
-`GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`. The catalog has no build
-step. Only the optional MCP server needs `vendor/`, loaded through the Jetpack
-Autoloader when the server is enabled.
+`GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`.
 
 ## Development
 

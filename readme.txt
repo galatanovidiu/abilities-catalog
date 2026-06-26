@@ -1,7 +1,7 @@
 === Abilities Catalog ===
 Contributors: ovidiu-galatan
 Tags: abilities-api, ai, mcp, agents, wp-admin
-Requires at least: 7.0
+Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
 Stable tag: 0.4.0
@@ -12,7 +12,7 @@ Registers wp-admin features as abilities on the WordPress Abilities API, with an
 
 == Description ==
 
-Abilities Catalog registers a coherent, complete-enough catalog of WordPress wp-admin features as abilities on top of the core Abilities API (WordPress 7.0+).
+Abilities Catalog registers a coherent, complete-enough catalog of WordPress wp-admin features as abilities on top of the core Abilities API (WordPress 6.9+).
 
 The catalog is **consumer-agnostic**. It registers abilities and classifies them by risk, and it works standalone. It does not require any particular agent or interface. A consumer decides how to expose the abilities — for example a browser-based AI agent, a server-side MCP (Model Context Protocol) client, or any other code that reads the Abilities API.
 
@@ -105,7 +105,7 @@ The plugin classifies risk but does not decide what is exposed. Every ability en
 
 = What are the requirements? =
 
-WordPress 7.0 or later (the Abilities API ships in core) and PHP 8.1 or later.
+WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later.
 
 == Changelog ==
 

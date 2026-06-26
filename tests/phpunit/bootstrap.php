@@ -4,7 +4,7 @@
  *
  * Loads the WordPress test environment, then activates the Abilities Catalog
  * plugin so its abilities register on `wp_abilities_api_init`. The Abilities API
- * itself ships in WordPress 7.0 core, so no extra plugin is loaded here.
+ * itself ships in WordPress 6.9 core, so no extra plugin is loaded here.
  *
  * @package AbilitiesCatalog\Tests
  *

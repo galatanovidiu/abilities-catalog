@@ -15,7 +15,7 @@ infrastructure you change only by swapping the namespace.
 You ship a standalone plugin. It does two things:
 
 1. **Always:** registers `your-domain/verb-noun` abilities on the core Abilities
-   API (WordPress 7.0+). Any consumer — the catalog, a custom REST client, a
+   API (WordPress 6.9+). Any consumer — the catalog, a custom REST client, a
    different MCP server — can then call them.
 2. **Optionally:** when the Abilities Catalog and its MCP server are active,
    contributes a curated MCP *domain tool* and a *knowledge bundle* through the
@@ -71,7 +71,7 @@ change the names. (Trimmed from `abilities-catalog-cf7.php`.)
 <?php
 /**
  * Plugin Name: Abilities Catalog — Your Thing
- * Requires at least: 7.0
+ * Requires at least: 6.9
  * Requires PHP: 8.1
  * Requires Plugins: your-dependency-slug   // only if you wrap another plugin
  * License: MIT
@@ -108,7 +108,7 @@ add_action(
 		// Abilities register on the bare Abilities API — works without the catalog.
 		( new Registry() )->register();
 
-		// No Abilities API (pre-WP 7.0) means nothing to expose; bail before the MCP hooks.
+		// No Abilities API (pre-WP 6.9) means nothing to expose; bail before the MCP hooks.
 		if ( ! function_exists( 'wp_register_ability' ) ) {
 			return;
 		}

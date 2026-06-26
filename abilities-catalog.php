@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/galatanovidiu/abilities-catalog
  * Description:       Registers WordPress wp-admin features as Abilities API abilities, plus an optional, off-by-default built-in MCP server that exposes them as curated domain tools. Consumer-agnostic: the catalog works standalone, and any Abilities API consumer can expose the abilities.
  * Version:           0.4.0
- * Requires at least: 7.0
+ * Requires at least: 6.9
  * Requires PHP:      8.1
  * Author:            Ovidiu Galatan
  * Author URI:        https://github.com/galatanovidiu
@@ -63,7 +63,7 @@ add_action(
 	static function (): void {
 		( new Registry() )->register();
 
-		// The Abilities API ships with WordPress 7.0; without it the MCP layer has
+		// The Abilities API ships with WordPress 6.9; without it the MCP layer has
 		// nothing to expose, so skip all of it (the catalog above already no-ops).
 		if ( ! function_exists( 'wp_register_ability' ) ) {
 			return;
