@@ -23,3 +23,6 @@ Thumbs.db
 
 # composer.lock IS committed: the plugin now has runtime deps (mcp-adapter,
 # jetpack-autoloader), and the CI release build runs `composer install --no-dev`.
+
+# Phpactor (editor LSP) local index/config — machine-specific.
+/.phpactor.json
