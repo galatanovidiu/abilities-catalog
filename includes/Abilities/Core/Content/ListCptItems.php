@@ -140,6 +140,7 @@ final class ListCptItems implements Ability {
 					'destructive' => false,
 					'idempotent'  => true,
 				),
+				'keywords'     => array( 'search custom post type', 'list custom post type', 'find cpt items', 'list cpt entries', 'browse custom post type', 'cpt by status' ),
 				'show_in_rest' => true,
 			),
 		);
