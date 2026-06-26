@@ -148,6 +148,19 @@ final class SearchServer {
 		$index      = new AbilityIndex( new ExposurePolicy() );
 		$permission = static fn (): bool => is_user_logged_in();
 
+		// The `category` filter is constrained to the site's actual category slugs, so an agent
+		// sees what it can narrow by in the tool schema itself (no prior overview call needed)
+		// and a bad slug is rejected up front. Bounded by category count. Omit the enum when the
+		// registry is empty — an empty enum is an invalid schema that would match nothing.
+		$category_schema = array(
+			'type'        => 'string',
+			'description' => 'Optional category slug to restrict the search. See "overview" for what each category covers.',
+		);
+		$category_slugs  = $index->categorySlugs();
+		if ( array() !== $category_slugs ) {
+			$category_schema['enum'] = $category_slugs;
+		}
+
 		$specs = array(
 			array(
 				'name'        => 'overview',
@@ -160,7 +173,7 @@ final class SearchServer {
 			),
 			array(
 				'name'        => 'search-abilities',
-				'description' => 'Find abilities by describing the task in plain words (e.g. "set product sale price", "create a coupon"). Returns the best-matching abilities (name, label, description, whether enabled), ranked, capped to "limit". Optionally narrow with "category" (a slug from overview). This is how you locate an ability without listing the whole catalog. Then call "describe-ability" for its exact input schema.',
+				'description' => 'Find abilities by describing the task in plain words (e.g. "set product sale price", "create a coupon"). Returns the best-matching abilities, ranked, capped to "limit". Each hit carries name, label, description, an "input" signature (param names + types, required marked "*"), safety "annotations" (e.g. readonly, destructive, dangerous — only flags set to true), and whether it is enabled. Optionally narrow with "category". This is how you locate an ability without listing the whole catalog. Then call "describe-ability" for its exact input schema.',
 				'inputSchema' => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -168,10 +181,7 @@ final class SearchServer {
 							'type'        => 'string',
 							'description' => 'What you want to do, in plain words.',
 						),
-						'category' => array(
-							'type'        => 'string',
-							'description' => 'Optional category slug (from overview) to restrict the search.',
-						),
+						'category' => $category_schema,
 						'limit'    => array(
 							'type'        => 'integer',
 							'description' => 'Max results to return (1-50, default 20).',
@@ -202,24 +212,24 @@ final class SearchServer {
 			),
 			array(
 				'name'        => 'execute-ability',
-				'description' => 'Run one ability by its exact name with the parameters its schema requires (see describe-ability). Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
+				'description' => 'Run one ability by its exact "name", passing its arguments under "input" (an object matching the ability\'s describe-ability input_schema). Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
 				'inputSchema' => array(
 					'type'       => 'object',
 					'properties' => array(
-						'name'   => array(
+						'name'  => array(
 							'type'        => 'string',
 							'description' => 'The exact ability name.',
 						),
-						'params' => array(
+						'input' => array(
 							'type'        => 'object',
-							'description' => 'The ability input, matching its describe-ability schema.',
+							'description' => 'The ability input object, matching its describe-ability input_schema.',
 						),
 					),
 					'required'   => array( 'name' ),
 				),
 				'handler'     => static fn ( array $args ) => $index->execute(
 					(string) ( $args['name'] ?? '' ),
-					(array) ( $args['params'] ?? array() )
+					(array) ( $args['input'] ?? array() )
 				),
 			),
 		);
