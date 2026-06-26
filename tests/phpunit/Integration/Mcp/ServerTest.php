@@ -70,6 +70,7 @@ final class ServerTest extends TestCase {
 	 */
 	public function tear_down(): void {
 		remove_filter( 'mcp_adapter_create_default_server', '__return_false' );
+		remove_filter( 'mcp_adapter_tool_call_result', array( Server::class, 'objectifyResult' ) );
 		delete_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION );
 		parent::tear_down();
 	}
@@ -93,6 +94,15 @@ final class ServerTest extends TestCase {
 		add_filter( 'mcp_adapter_create_default_server', '__return_false' );
 
 		( new Server() )->register();
+
+		// Booting wires the adapter-wide list-result guard: a top-level list result is
+		// wrapped as {items: [...]} so it is valid MCP structuredContent (an object result
+		// passes through). Asserting through the real filter proves it is hooked under the
+		// right name, not just that the pure method works (see ObjectifyResultTest).
+		$this->assertSame(
+			array( 'items' => array( 1, 2, 3 ) ),
+			apply_filters( 'mcp_adapter_tool_call_result', array( 1, 2, 3 ), array(), 'demo', null, null )
+		);
 
 		// Booting also publishes the curated, owner-enabled abilities to the bundled
 		// adapter's default server by marking them mcp.public through the
