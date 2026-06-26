@@ -139,6 +139,34 @@ final class GetPostTest extends TestCase {
 		$this->assertArrayNotHasKey( 'excerpt_raw', $result );
 	}
 
+	public function test_output_includes_featured_media_id_when_set(): void {
+		$this->actingAs( 'administrator' );
+
+		$post_id       = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$attachment_id = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $attachment_id );
+		set_post_thumbnail( $post_id, $attachment_id );
+
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $post_id ) );
+
+		$this->assertIsArray( $result );
+		// The agent reads the featured image id here, then fetches the image itself
+		// with og-media/get-media — without it, it cannot see the post has one.
+		$this->assertSame( $attachment_id, $result['featured_media'] );
+	}
+
+	public function test_output_featured_media_is_zero_without_thumbnail(): void {
+		$this->actingAs( 'administrator' );
+
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $post_id ) );
+
+		$this->assertIsArray( $result );
+		// 0 means "no featured image", consistent with set/detach-featured-image's sentinel.
+		$this->assertSame( 0, $result['featured_media'] );
+	}
+
 	public function test_negative_id_is_rejected_by_schema(): void {
 		$this->actingAs( 'administrator' );
 
