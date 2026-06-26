@@ -158,8 +158,16 @@ final class AbilityIndexTest extends TestCase {
 			$this->assertIsArray( $hit['annotations'] );
 		}
 
+		// All of og-content/create-post's inputs are optional, so its signature carries no
+		// required marker. A required param does get one: og-content/get-post requires `id`.
 		$create = $result['abilities'][ array_search( self::DISABLED, $names, true ) ];
-		$this->assertStringContainsString( '*', $create['input'], 'A write ability signature marks its required params with "*".' );
+		$this->assertStringNotContainsString( '*', $create['input'], 'An all-optional signature marks nothing required.' );
+
+		$get       = $this->index()->search( 'get post by id', null, 5 )['abilities'];
+		$get_names = array_column( $get, 'name' );
+		$this->assertContains( 'og-content/get-post', $get_names, 'A "get post by id" query should surface og-content/get-post.' );
+		$hit = $get[ array_search( 'og-content/get-post', $get_names, true ) ];
+		$this->assertStringContainsString( 'id*', $hit['input'], 'A required param is marked with "*".' );
 	}
 
 	/**
