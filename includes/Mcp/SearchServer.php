@@ -13,6 +13,7 @@ use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
 use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
 use WP\MCP\Transport\HttpTransport;
+use WP_Error;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -212,7 +213,7 @@ final class SearchServer {
 			),
 			array(
 				'name'        => 'execute-ability',
-				'description' => 'Run one ability by its exact "name", passing its arguments under "input" (an object matching the ability\'s describe-ability input_schema). Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
+				'description' => 'Run one ability by its exact "name". Call "describe-ability" first to see that ability\'s input_schema, then pass its arguments as an object under "input". Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
 				'inputSchema' => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -222,15 +223,19 @@ final class SearchServer {
 						),
 						'input' => array(
 							'type'        => 'object',
-							'description' => 'The ability input object, matching its describe-ability input_schema.',
+							'description' => 'The ability\'s arguments, as an object. Use "describe-ability" on the ability name to see its exact input_schema — the keys here must match those field names. Leave empty only if the ability takes no input.',
 						),
 					),
 					'required'   => array( 'name' ),
 				),
-				'handler'     => static fn ( array $args ) => $index->execute(
-					(string) ( $args['name'] ?? '' ),
-					(array) ( $args['input'] ?? array() )
-				),
+				'handler'     => static function ( array $args ) use ( $index ) {
+					$input = self::resolveExecuteInput( $args );
+					if ( is_wp_error( $input ) ) {
+						return $input;
+					}
+
+					return $index->execute( (string) ( $args['name'] ?? '' ), $input );
+				},
 			),
 		);
 
@@ -261,6 +266,49 @@ final class SearchServer {
 		$tools[] = $knowledge;
 
 		return $tools;
+	}
+
+	/**
+	 * Resolves the ability input from execute-ability's tool arguments.
+	 *
+	 * The tool documents its wrapper key as "input". An agent that wraps the arguments
+	 * under a guessed key ("params", "args") instead leaves "input" empty, so the ability
+	 * then reports its own first required field as missing — an error that points at the
+	 * field, not at the real mistake. This detects a misnamed wrapper and returns an error
+	 * that names it, so the agent fixes the wrapper in one step instead of chasing a phantom
+	 * missing field. A call carrying only "name" is a valid no-input invocation and passes
+	 * through as empty input.
+	 *
+	 * @param array<string,mixed> $args The raw execute-ability tool arguments.
+	 * @return array<string,mixed>|\WP_Error The ability input, or an error naming the misnamed wrapper key(s).
+	 */
+	public static function resolveExecuteInput( array $args ) {
+		if ( isset( $args['input'] ) && is_array( $args['input'] ) ) {
+			return $args['input'];
+		}
+
+		$misplaced = array_keys(
+			array_diff_key(
+				$args,
+				array(
+					'name'  => true,
+					'input' => true,
+				)
+			)
+		);
+		if ( array() === $misplaced ) {
+			return array();
+		}
+
+		return new WP_Error(
+			'input_wrapper_misnamed',
+			sprintf(
+				'Pass the ability arguments as an object under "input", not "%1$s". Re-send as {"name": "%2$s", "input": { … }}.',
+				implode( '", "', $misplaced ),
+				(string) ( $args['name'] ?? '' )
+			),
+			array( 'status' => 400 )
+		);
 	}
 
 	/**

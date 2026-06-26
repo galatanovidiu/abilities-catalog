@@ -138,4 +138,59 @@ final class SearchServerTest extends TestCase {
 		$this->assertSame( 'core/create-content', $concept['concept']['uri'] );
 		$this->assertNotEmpty( $concept['concept']['body'] );
 	}
+
+	/**
+	 * execute-ability reads the ability arguments from the "input" wrapper.
+	 *
+	 * @return void
+	 */
+	public function test_resolve_execute_input_returns_the_input_object(): void {
+		$this->assertSame(
+			array(
+				'id'     => 24,
+				'status' => 'completed',
+			),
+			SearchServer::resolveExecuteInput(
+				array(
+					'name'  => 'og-wc-orders/update-order-status',
+					'input' => array(
+						'id'     => 24,
+						'status' => 'completed',
+					),
+				)
+			)
+		);
+	}
+
+	/**
+	 * A call carrying only "name" is a valid no-input invocation, resolved to empty input.
+	 *
+	 * @return void
+	 */
+	public function test_resolve_execute_input_treats_name_only_as_empty(): void {
+		$this->assertSame(
+			array(),
+			SearchServer::resolveExecuteInput( array( 'name' => 'og-dashboard/get-at-a-glance' ) )
+		);
+	}
+
+	/**
+	 * Arguments wrapped under a guessed key ("params") return an error that names the wrapper,
+	 * not a phantom missing inner field.
+	 *
+	 * @return void
+	 */
+	public function test_resolve_execute_input_rejects_a_misnamed_wrapper(): void {
+		$result = SearchServer::resolveExecuteInput(
+			array(
+				'name'   => 'og-wc-orders/update-order-status',
+				'params' => array( 'id' => 24 ),
+			)
+		);
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'input_wrapper_misnamed', $result->get_error_code() );
+		$this->assertStringContainsString( '"params"', $result->get_error_message() );
+		$this->assertStringContainsString( '"input"', $result->get_error_message() );
+	}
 }
