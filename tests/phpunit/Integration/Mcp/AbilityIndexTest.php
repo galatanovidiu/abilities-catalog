@@ -116,6 +116,23 @@ final class AbilityIndexTest extends TestCase {
 	}
 
 	/**
+	 * categorySlugs() lists the live non-empty category slugs (feeds the search tool enum).
+	 *
+	 * @return void
+	 */
+	public function test_category_slugs_lists_live_categories(): void {
+		$slugs = $this->index()->categorySlugs();
+
+		$this->assertNotEmpty( $slugs );
+		$this->assertContainsOnly( 'string', $slugs );
+		$this->assertContains(
+			'og-core-content',
+			$slugs,
+			'A registered ability\'s category must appear, so an agent can narrow to it without overview.'
+		);
+	}
+
+	/**
 	 * search() ranks the matching ability in, honors the limit, and flags enabled state.
 	 *
 	 * @return void
@@ -135,7 +152,43 @@ final class AbilityIndexTest extends TestCase {
 		foreach ( $result['abilities'] as $hit ) {
 			$this->assertArrayHasKey( 'enabled', $hit );
 			$this->assertArrayNotHasKey( '_score', $hit, 'The internal score must not leak to the client.' );
+			$this->assertArrayHasKey( 'input', $hit, 'Each hit carries an input signature so the agent need not guess param names.' );
+			$this->assertIsString( $hit['input'] );
+			$this->assertArrayHasKey( 'annotations', $hit, 'Each hit carries its true safety annotations.' );
+			$this->assertIsArray( $hit['annotations'] );
 		}
+
+		// All of og-content/create-post's inputs are optional, so its signature carries no
+		// required marker. A required param does get one: og-content/get-post requires `id`.
+		$create = $result['abilities'][ array_search( self::DISABLED, $names, true ) ];
+		$this->assertStringNotContainsString( '*', $create['input'], 'An all-optional signature marks nothing required.' );
+
+		$get       = $this->index()->search( 'get post by id', null, 5 )['abilities'];
+		$get_names = array_column( $get, 'name' );
+		$this->assertContains( 'og-content/get-post', $get_names, 'A "get post by id" query should surface og-content/get-post.' );
+		$hit = $get[ array_search( 'og-content/get-post', $get_names, true ) ];
+		$this->assertStringContainsString( 'id*', $hit['input'], 'A required param is marked with "*".' );
+	}
+
+	/**
+	 * The input signature renders non-scalar param shapes, not just scalars.
+	 *
+	 * og-comments/list-comments carries an array param (post: integer[]) and enum params
+	 * (order: asc|desc), the shapes an agent most often guesses wrong. The signature must
+	 * spell them out so the agent sends `[5]` not `"5"`, and a valid enum value.
+	 *
+	 * @return void
+	 */
+	public function test_search_signature_renders_array_and_enum(): void {
+		$result = $this->index()->search( 'list comments', null, 10 );
+		$names  = array_column( $result['abilities'], 'name' );
+		$this->assertContains( 'og-comments/list-comments', $names );
+
+		$hit = $result['abilities'][ array_search( 'og-comments/list-comments', $names, true ) ];
+		$this->assertStringContainsString( 'integer[]', $hit['input'], 'An array param must show its element type.' );
+		$this->assertStringContainsString( 'enum: ', $hit['input'], 'An enum param must spell out its allowed values.' );
+		$this->assertContains( 'readonly', $hit['annotations'], 'A read ability advertises its readonly annotation.' );
+		$this->assertNotContains( 'destructive', $hit['annotations'], 'Only true flags are listed; a false one is dropped.' );
 	}
 
 	/**

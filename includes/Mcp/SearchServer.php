@@ -13,6 +13,7 @@ use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
 use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
 use WP\MCP\Transport\HttpTransport;
+use WP_Error;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -148,6 +149,19 @@ final class SearchServer {
 		$index      = new AbilityIndex( new ExposurePolicy() );
 		$permission = static fn (): bool => is_user_logged_in();
 
+		// The `category` filter is constrained to the site's actual category slugs, so an agent
+		// sees what it can narrow by in the tool schema itself (no prior overview call needed)
+		// and a bad slug is rejected up front. Bounded by category count. Omit the enum when the
+		// registry is empty — an empty enum is an invalid schema that would match nothing.
+		$category_schema = array(
+			'type'        => 'string',
+			'description' => 'Optional category slug to restrict the search. See "overview" for what each category covers.',
+		);
+		$category_slugs  = $index->categorySlugs();
+		if ( array() !== $category_slugs ) {
+			$category_schema['enum'] = $category_slugs;
+		}
+
 		$specs = array(
 			array(
 				'name'        => 'overview',
@@ -160,7 +174,7 @@ final class SearchServer {
 			),
 			array(
 				'name'        => 'search-abilities',
-				'description' => 'Find abilities by describing the task in plain words (e.g. "set product sale price", "create a coupon"). Returns the best-matching abilities (name, label, description, whether enabled), ranked, capped to "limit". Optionally narrow with "category" (a slug from overview). This is how you locate an ability without listing the whole catalog. Then call "describe-ability" for its exact input schema.',
+				'description' => 'Find abilities by describing the task in plain words (e.g. "set product sale price", "create a coupon"). Returns the best-matching abilities, ranked, capped to "limit". Each hit carries name, label, description, an "input" signature (param names + types, required marked "*"), safety "annotations" (e.g. readonly, destructive, dangerous — only flags set to true), and whether it is enabled. Optionally narrow with "category". This is how you locate an ability without listing the whole catalog. Then call "describe-ability" for its exact input schema.',
 				'inputSchema' => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -168,10 +182,7 @@ final class SearchServer {
 							'type'        => 'string',
 							'description' => 'What you want to do, in plain words.',
 						),
-						'category' => array(
-							'type'        => 'string',
-							'description' => 'Optional category slug (from overview) to restrict the search.',
-						),
+						'category' => $category_schema,
 						'limit'    => array(
 							'type'        => 'integer',
 							'description' => 'Max results to return (1-50, default 20).',
@@ -202,25 +213,29 @@ final class SearchServer {
 			),
 			array(
 				'name'        => 'execute-ability',
-				'description' => 'Run one ability by its exact name with the parameters its schema requires (see describe-ability). Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
+				'description' => 'Run one ability by its exact "name". Call "describe-ability" first to see that ability\'s input_schema, then pass its arguments as an object under "input". Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
 				'inputSchema' => array(
 					'type'       => 'object',
 					'properties' => array(
-						'name'   => array(
+						'name'  => array(
 							'type'        => 'string',
 							'description' => 'The exact ability name.',
 						),
-						'params' => array(
+						'input' => array(
 							'type'        => 'object',
-							'description' => 'The ability input, matching its describe-ability schema.',
+							'description' => 'The ability\'s arguments, as an object. Use "describe-ability" on the ability name to see its exact input_schema — the keys here must match those field names. Leave empty only if the ability takes no input.',
 						),
 					),
 					'required'   => array( 'name' ),
 				),
-				'handler'     => static fn ( array $args ) => $index->execute(
-					(string) ( $args['name'] ?? '' ),
-					(array) ( $args['params'] ?? array() )
-				),
+				'handler'     => static function ( array $args ) use ( $index ) {
+					$input = self::resolveExecuteInput( $args );
+					if ( is_wp_error( $input ) ) {
+						return $input;
+					}
+
+					return $index->execute( (string) ( $args['name'] ?? '' ), $input );
+				},
 			),
 		);
 
@@ -251,6 +266,49 @@ final class SearchServer {
 		$tools[] = $knowledge;
 
 		return $tools;
+	}
+
+	/**
+	 * Resolves the ability input from execute-ability's tool arguments.
+	 *
+	 * The tool documents its wrapper key as "input". An agent that wraps the arguments
+	 * under a guessed key ("params", "args") instead leaves "input" empty, so the ability
+	 * then reports its own first required field as missing — an error that points at the
+	 * field, not at the real mistake. This detects a misnamed wrapper and returns an error
+	 * that names it, so the agent fixes the wrapper in one step instead of chasing a phantom
+	 * missing field. A call carrying only "name" is a valid no-input invocation and passes
+	 * through as empty input.
+	 *
+	 * @param array<string,mixed> $args The raw execute-ability tool arguments.
+	 * @return array<string,mixed>|\WP_Error The ability input, or an error naming the misnamed wrapper key(s).
+	 */
+	public static function resolveExecuteInput( array $args ) {
+		if ( isset( $args['input'] ) && is_array( $args['input'] ) ) {
+			return $args['input'];
+		}
+
+		$misplaced = array_keys(
+			array_diff_key(
+				$args,
+				array(
+					'name'  => true,
+					'input' => true,
+				)
+			)
+		);
+		if ( array() === $misplaced ) {
+			return array();
+		}
+
+		return new WP_Error(
+			'input_wrapper_misnamed',
+			sprintf(
+				'Pass the ability arguments as an object under "input", not "%1$s". Re-send as {"name": "%2$s", "input": { … }}.',
+				implode( '", "', $misplaced ),
+				(string) ( $args['name'] ?? '' )
+			),
+			array( 'status' => 400 )
+		);
 	}
 
 	/**

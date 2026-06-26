@@ -200,6 +200,19 @@ final class AbilityIndex {
 	}
 
 	/**
+	 * The slugs of every non-empty category, biggest first.
+	 *
+	 * Feeds the search tool's `category` enum so an agent sees the categories it can narrow by
+	 * in the tool schema itself, without first calling {@see overview()}. Bounded by the number
+	 * of categories, not the number of abilities, so it stays small at any catalog size.
+	 *
+	 * @return list<string> The category slugs, in the same biggest-first order as {@see overview()}.
+	 */
+	public function categorySlugs(): array {
+		return array_column( $this->overview()['categories'], 'category' );
+	}
+
+	/**
 	 * Ranked keyword search over the registry, capped to a small result set.
 	 *
 	 * Each query word and every ability field is reduced to a Porter stem first, so an
@@ -210,6 +223,10 @@ final class AbilityIndex {
 	 * the query matched, with a bonus when the whole phrase appears in the name or label.
 	 * Abilities scoring zero are dropped. An optional category narrows the corpus. The reply
 	 * reports how many abilities matched in total so the agent knows whether to refine.
+	 *
+	 * Each hit carries enough to act without a describe call in the simple case: name, label,
+	 * description, category, an `input` signature ({@see inputSignature()}), the safety
+	 * `annotations` set to true ({@see trueAnnotations()}), and whether it is `enabled`.
 	 *
 	 * A query that matches nothing is not a dead end: the reply also carries the category map
 	 * (the same orientation {@see overview()} gives) so the agent can re-orient and retry with
@@ -244,6 +261,8 @@ final class AbilityIndex {
 				'label'       => $row['label'],
 				'description' => $row['description'],
 				'category'    => $row['category'],
+				'input'       => $row['input'],
+				'annotations' => $row['annotations'],
 				'enabled'     => $row['enabled'],
 				'_score'      => $score,
 			);
@@ -401,6 +420,8 @@ final class AbilityIndex {
 				'label'         => $ability->get_label(),
 				'description'   => $ability->get_description(),
 				'category'      => (string) $ability->get_category(),
+				'input'         => self::inputSignature( $ability->get_input_schema() ),
+				'annotations'   => self::trueAnnotations( $meta ),
 				'enabled'       => $this->policy->allows( $name ),
 				'name_lc'       => strtolower( $name ),
 				'label_stems'   => $label_stems,
@@ -414,6 +435,132 @@ final class AbilityIndex {
 		$this->corpus = $rows;
 
 		return $rows;
+	}
+
+	/**
+	 * The safety annotation flags an ability set to true, as a compact list.
+	 *
+	 * A search hit carries these so an agent sees an ability's risk class — `readonly`,
+	 * `destructive`, `idempotent`, `dangerous` — without a describe call: it can prefer a read,
+	 * or treat a destructive/dangerous write with more care, before committing. Only `true`
+	 * flags are listed; a `false` carries no information and is dropped. An empty list means no
+	 * flag is set (e.g. a plain write that is neither idempotent nor destructive).
+	 *
+	 * @param array<string,mixed> $meta The ability meta.
+	 * @return list<string> The names of the annotations set to true, e.g. ["readonly"] or ["destructive","idempotent"].
+	 */
+	private static function trueAnnotations( array $meta ): array {
+		$annotations = $meta['annotations'] ?? array();
+		$annotations = is_array( $annotations ) ? $annotations : (array) $annotations;
+
+		return array_keys(
+			array_filter(
+				$annotations,
+				static fn ( $value ): bool => true === $value
+			)
+		);
+	}
+
+	/**
+	 * Highest number of enum values a signature spells out before truncating with an ellipsis.
+	 *
+	 * Enough that short enums (asc/desc, view/edit) show in full; capped so a long one does not
+	 * bloat the line. The ellipsis signals "describe-ability for the full set".
+	 */
+	private const SIGNATURE_ENUM_CAP = 6;
+
+	/**
+	 * Builds a compact one-line input signature from an ability's input schema.
+	 *
+	 * A search hit carries the parameter names and types so an agent can call execute without
+	 * first guessing them — the wrong guess (`query` for `search`, `comment_id` for `id`, an
+	 * object where a string is wanted, a scalar where an array is wanted, an invalid enum value)
+	 * is the top cause of avoidable execute errors. It lists each top-level property as
+	 * `name(*) (type)`, marking required ones with `*`. It is a signature, not the full schema:
+	 * constraints (min/max/default), descriptions, and the inner shape of objects/arrays-of-objects
+	 * still come from describe-ability.
+	 *
+	 * Type rendering covers the WP REST JSON Schema dialect the Abilities API validates against
+	 * (the same schema MCP forwards to clients verbatim): scalars, `["a","b"]` unions, `enum`,
+	 * `array` with its element type (`integer[]`), nested `object`, and `oneOf`/`anyOf`/`allOf`.
+	 *
+	 * @param array<string,mixed> $schema The ability input schema (JSON Schema object).
+	 * @return string e.g. "id* (integer)", "post (integer[]), order (enum: asc|desc)"; "no input" when empty.
+	 */
+	private static function inputSignature( array $schema ): string {
+		$props = $schema['properties'] ?? array();
+		$props = is_array( $props ) ? $props : (array) $props;
+		if ( empty( $props ) ) {
+			return 'no input';
+		}
+
+		$required = (array) ( $schema['required'] ?? array() );
+		$parts    = array();
+		foreach ( $props as $name => $spec ) {
+			$star    = in_array( $name, $required, true ) ? '*' : '';
+			$parts[] = $name . $star . ' (' . self::typeToken( (array) $spec ) . ')';
+		}
+
+		return implode( ', ', $parts );
+	}
+
+	/**
+	 * Renders one property schema as a compact type token for {@see inputSignature()}.
+	 *
+	 * @param array<string,mixed> $spec The property's schema node.
+	 * @return string e.g. "integer", "string|null", "integer[]", "enum: view|edit", "object", "oneOf".
+	 */
+	private static function typeToken( array $spec ): string {
+		// An enum's allowed values are exactly what the agent must choose from — the highest-value
+		// thing to surface, since an out-of-set value is a common rejection.
+		if ( isset( $spec['enum'] ) && is_array( $spec['enum'] ) && array() !== $spec['enum'] ) {
+			$values = array_map(
+				static fn ( $value ): string => is_scalar( $value ) ? (string) $value : gettype( $value ),
+				array_slice( $spec['enum'], 0, self::SIGNATURE_ENUM_CAP )
+			);
+			$more   = count( $spec['enum'] ) > self::SIGNATURE_ENUM_CAP ? '|…' : '';
+
+			return 'enum: ' . implode( '|', $values ) . $more;
+		}
+
+		// A composite (oneOf/anyOf/allOf) has no single type; name the keyword and defer the
+		// branches to describe-ability.
+		foreach ( array( 'oneOf', 'anyOf', 'allOf' ) as $composite ) {
+			if ( isset( $spec[ $composite ] ) ) {
+				return $composite;
+			}
+		}
+
+		if ( isset( $spec['$ref'] ) ) {
+			return 'ref';
+		}
+
+		$type = $spec['type'] ?? null;
+		if ( is_array( $type ) ) {
+			return implode( '|', array_map( 'strval', $type ) );
+		}
+		$type = (string) ( $type ?? 'mixed' );
+
+		if ( 'array' === $type ) {
+			$items = $spec['items'] ?? null;
+			if ( is_array( $items ) ) {
+				$item_type = $items['type'] ?? null;
+				if ( is_string( $item_type ) ) {
+					return $item_type . '[]';
+				}
+				if ( isset( $items['properties'] ) || isset( $items['oneOf'] ) || isset( $items['anyOf'] ) ) {
+					return 'object[]';
+				}
+			}
+
+			return 'array';
+		}
+
+		if ( 'string' === $type && isset( $spec['format'] ) && is_string( $spec['format'] ) ) {
+			return 'string:' . $spec['format'];
+		}
+
+		return $type;
 	}
 
 	/**
