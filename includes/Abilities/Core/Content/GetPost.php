@@ -122,6 +122,10 @@ final class GetPost implements Ability {
 						'type'        => 'string',
 						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
 					),
+					'featured_media'     => array(
+						'type'        => 'integer',
+						'description' => __( 'The featured image attachment ID, or 0 if the post has no featured image. Read the image itself with og-media/get-media.', 'abilities-catalog' ),
+					),
 				),
 				'additionalProperties' => false,
 			),
@@ -192,6 +196,7 @@ final class GetPost implements Ability {
 			'password_protected' => (bool) ( $data['content']['protected'] ?? $data['excerpt']['protected'] ?? false ),
 			'date'               => (string) ( $data['date'] ?? '' ),
 			'modified'           => (string) ( $data['modified'] ?? '' ),
+			'featured_media'     => (int) ( $data['featured_media'] ?? 0 ),
 		);
 
 		return $this->withRawFields( $result, $data );

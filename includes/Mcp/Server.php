@@ -117,6 +117,10 @@ final class Server {
 
 		$this->publishToDefaultServer();
 
+		// One adapter-wide guard so a list-returning ability is consumable on every
+		// server (curated, search, and the default server all share this handler).
+		add_filter( 'mcp_adapter_tool_call_result', array( self::class, 'objectifyResult' ) );
+
 		add_action( 'mcp_adapter_init', array( $this, 'createServer' ) );
 	}
 
@@ -338,6 +342,31 @@ final class Server {
 		}
 
 		return array_values( $by_name );
+	}
+
+	/**
+	 * Wraps a top-level list tool result into an object so it is valid MCP structuredContent.
+	 *
+	 * The adapter mirrors a success result verbatim into MCP `structuredContent`, which the
+	 * protocol requires to be a JSON object. An ability whose top-level result is a JSON array
+	 * (including an empty `[]`) would serialize as an array and make the client reject the whole
+	 * tool result (`-32602 "expected record, received array"`) — the ability runs, but the agent
+	 * never sees it. This wraps such a result as `{items: [...]}`; an object result, a `WP_Error`
+	 * (not an array), and an already-wrapped object all pass through untouched. `items` is the
+	 * catalog's established list envelope (every list ability returns `{items, total}`), so this
+	 * is consistent, not a new convention. Pure (it reads no filter args), so it is testable
+	 * without booting a server; registered once on `mcp_adapter_tool_call_result` in
+	 * {@see register()}, it covers every tool on every server the adapter hosts.
+	 *
+	 * @param mixed $result The raw tool execution result.
+	 * @return mixed The result, with a top-level list wrapped as `{items: [...]}`.
+	 */
+	public static function objectifyResult( $result ) {
+		if ( is_array( $result ) && array_is_list( $result ) ) {
+			return array( 'items' => $result );
+		}
+
+		return $result;
 	}
 
 	/**
