@@ -123,6 +123,7 @@ final class ListPosts implements Ability {
 					'destructive' => false,
 					'idempotent'  => true,
 				),
+				'keywords'     => array( 'search posts', 'find posts', 'list posts', 'recent posts', 'posts by author', 'posts by status', 'draft posts', 'filter posts' ),
 				'show_in_rest' => true,
 			),
 		);

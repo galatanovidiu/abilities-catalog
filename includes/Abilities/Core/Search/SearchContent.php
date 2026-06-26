@@ -43,7 +43,7 @@ final class SearchContent implements Ability {
 	public function args(): array {
 		return array(
 			'label'               => __( 'Search Content', 'abilities-catalog' ),
-			'description'         => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Only published, public content is returned: it does not surface drafts, pending, private, or trashed content, nor media. Use this to find content when you do not already know its id. Tags: search posts, search pages, search cpt', 'abilities-catalog' ),
+			'description'         => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Only published, public content is returned: it does not surface drafts, pending, private, or trashed content, nor media. Use this to find content when you do not already know its id.', 'abilities-catalog' ),
 			'category'            => 'og-core-search',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -135,6 +135,7 @@ final class SearchContent implements Ability {
 					'destructive' => false,
 					'idempotent'  => true,
 				),
+				'keywords'     => array( 'search posts', 'search pages', 'search cpt', 'find content', 'search content' ),
 				'show_in_rest' => true,
 			),
 		);

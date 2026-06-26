@@ -121,6 +121,7 @@ final class ListPages implements Ability {
 					'destructive' => false,
 					'idempotent'  => true,
 				),
+				'keywords'     => array( 'search pages', 'find pages', 'list pages', 'all pages', 'pages by author', 'pages by status', 'draft pages', 'page tree' ),
 				'show_in_rest' => true,
 			),
 		);
