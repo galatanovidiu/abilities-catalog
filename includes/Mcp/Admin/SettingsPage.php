@@ -106,6 +106,23 @@ final class SettingsPage {
 		// half translates.
 		wp_set_script_translations( self::SCRIPT_HANDLE, 'abilities-catalog' );
 
+		// Inject the full exposure endpoint URL so apiFetch can use `url:` directly,
+		// bypassing root URL resolution (which breaks on plain-permalink setups).
+		wp_add_inline_script(
+			self::SCRIPT_HANDLE,
+			sprintf(
+				'var ABILITIES_CATALOG_REST_URL = %s;',
+				wp_json_encode(
+					add_query_arg(
+						'rest_route',
+						'/' . ExposureController::REST_NAMESPACE . ExposureController::REST_ROUTE,
+						home_url( '/' )
+					)
+				)
+			),
+			'before'
+		);
+
 		wp_enqueue_style( 'wp-components' );
 	}
 }

@@ -26,6 +26,7 @@
 	var useRef = wp.element.useRef;
 	var apiFetch = wp.apiFetch;
 	var __ = wp.i18n.__;
+	var _n = wp.i18n._n;
 	var sprintf = wp.i18n.sprintf;
 
 	var c = wp.components;
@@ -39,9 +40,12 @@
 	var Notice = c.Notice;
 	var Snackbar = c.Snackbar;
 	var Spinner = c.Spinner;
-	var Modal = c.Modal;
 
-	var REST_PATH = '/abilities-catalog/v1/exposure';
+	// ABILITIES_CATALOG_REST_URL is injected by SettingsPage::enqueue() as the full
+	// ?rest_route= URL so apiFetch works regardless of permalink configuration.
+	var REST_URL = ( typeof ABILITIES_CATALOG_REST_URL !== 'undefined' )
+		? ABILITIES_CATALOG_REST_URL
+		: '/wp-json/abilities-catalog/v1/exposure';
 
 	/**
 	 * Classifies an ability into a risk badge.
@@ -237,18 +241,19 @@
 		var copied = copiedHook[ 0 ];
 		var setCopied = copiedHook[ 1 ];
 
-		// The pending "enable all" confirmation, or null. Set only when the bulk would
-		// turn on destructive or dangerous abilities, so the admin sees the risk first.
-		var pendingHook = useState( null );
-		var pendingEnable = pendingHook[ 0 ];
-		var setPendingEnable = pendingHook[ 1 ];
+		// How many dangerous abilities the last bulk "Enable all" left off, or null.
+		// Bulk enable never arms the dangerous tier (it must be a deliberate, per-ability
+		// choice), so we tell the admin which ones still need enabling by hand.
+		var skippedHook = useState( null );
+		var dangerousSkipped = skippedHook[ 0 ];
+		var setDangerousSkipped = skippedHook[ 1 ];
 
 		// Monotonic id of the latest save, so an out-of-order response from an earlier
 		// save never overwrites the newer optimistic state.
 		var seqRef = useRef( 0 );
 
 		useEffect( function () {
-			apiFetch( { path: REST_PATH } )
+			apiFetch( { url: REST_URL } )
 				.then( function ( data ) {
 					setState( data );
 					setLoading( false );
@@ -284,7 +289,7 @@
 				}
 			};
 
-			apiFetch( { path: REST_PATH, method: 'POST', data: payload } )
+			apiFetch( { url: REST_URL, method: 'POST', data: payload } )
 				.then( function ( fresh ) {
 					reconcile( fresh );
 					flash( __( 'Saved.', 'abilities-catalog' ) );
@@ -294,7 +299,7 @@
 						( err && err.message ) ||
 							__( 'Save failed.', 'abilities-catalog' )
 					);
-					return apiFetch( { path: REST_PATH } )
+					return apiFetch( { url: REST_URL } )
 						.then( reconcile )
 						.catch( function () {
 							flash(
@@ -360,56 +365,43 @@
 			return names;
 		}
 
-		function bulkDomain( domain, value ) {
-			applyBulkNames( shownNames( [ domain ] ), value );
-		}
-
-		function bulkAll( value ) {
-			applyBulkNames( shownNames( state.domains ), value );
-		}
-
-		// Enabling in bulk needs a guard: confirm first when the shown set turns on any
-		// destructive or dangerous ability (the deny-by-default gate exists exactly to keep
-		// those off by accident). A read-only-only set enables straight away.
-		function requestEnableAll() {
+		// Bulk "Enable all" turns on every shown ability except the dangerous tier, which
+		// stays off by deny-by-default and must be armed one at a time. We report how many
+		// were skipped so the admin knows they still need a deliberate per-ability choice.
+		function enableShown( domains ) {
 			var query = search.trim().toLowerCase();
-			var names = [];
-			var dangerous = 0;
-			var destructive = 0;
-			state.domains.forEach( function ( domain ) {
+			var enable = [];
+			var skipped = 0;
+			domains.forEach( function ( domain ) {
 				matchingAbilities( domain, query ).forEach(
 					function ( ability ) {
-						names.push( ability.name );
 						if ( ability.dangerous ) {
-							dangerous++;
-						} else if ( ability.destructive ) {
-							destructive++;
+							skipped++;
+						} else {
+							enable.push( ability.name );
 						}
 					}
 				);
 			} );
-
-			if ( names.length === 0 ) {
-				return;
-			}
-
-			if ( dangerous === 0 && destructive === 0 ) {
-				applyBulkNames( names, true );
-				return;
-			}
-
-			setPendingEnable( {
-				names: names,
-				total: names.length,
-				dangerous: dangerous,
-				destructive: destructive,
-			} );
+			applyBulkNames( enable, true );
+			setDangerousSkipped( skipped > 0 ? skipped : null );
 		}
 
-		function confirmEnableAll() {
-			var names = pendingEnable.names;
-			setPendingEnable( null );
-			applyBulkNames( names, true );
+		function bulkDomain( domain, value ) {
+			if ( value ) {
+				enableShown( [ domain ] );
+				return;
+			}
+			applyBulkNames( shownNames( [ domain ] ), false );
+		}
+
+		function enableAllShown() {
+			enableShown( state.domains );
+		}
+
+		function disableAllShown() {
+			setDangerousSkipped( null );
+			applyBulkNames( shownNames( state.domains ), false );
 		}
 
 		function copyEndpoint() {
@@ -519,7 +511,7 @@
 					{
 						variant: 'secondary',
 						size: 'small',
-						onClick: requestEnableAll,
+						onClick: enableAllShown,
 					},
 					__( 'Enable all', 'abilities-catalog' )
 				),
@@ -528,13 +520,36 @@
 					{
 						variant: 'tertiary',
 						size: 'small',
-						onClick: function () {
-							bulkAll( false );
-						},
+						onClick: disableAllShown,
 					},
 					__( 'Disable all', 'abilities-catalog' )
 				)
 			),
+			dangerousSkipped
+				? el(
+						'div',
+						{ style: { margin: '0 0 12px', maxWidth: '720px' } },
+						el(
+							Notice,
+							{
+								status: 'warning',
+								onRemove: function () {
+									setDangerousSkipped( null );
+								},
+							},
+							sprintf(
+								/* translators: %d: number of dangerous abilities left off. */
+								_n(
+									'Enabled every shown ability except %d dangerous one — enable it by hand if an agent should run it. Bulk actions never turn on dangerous abilities.',
+									'Enabled every shown ability except %d dangerous ones — enable them by hand if an agent should run them. Bulk actions never turn on dangerous abilities.',
+									dangerousSkipped,
+									'abilities-catalog'
+								),
+								dangerousSkipped
+							)
+						)
+				  )
+				: null,
 			el(
 				Panel,
 				null,
@@ -547,11 +562,6 @@
 					);
 				} )
 			),
-			pendingEnable
-				? enableAllModal( pendingEnable, confirmEnableAll, function () {
-						setPendingEnable( null );
-				  } )
-				: null,
 			notice
 				? el(
 						'div',
@@ -780,77 +790,6 @@
 	}
 
 	/**
-	 * Renders the "enable all" confirmation modal.
-	 *
-	 * Shown only when the bulk would turn on destructive or dangerous abilities, so the
-	 * warning always describes a real risk.
-	 *
-	 * @param {Object}   pending   The pending bulk: { total, dangerous, destructive }.
-	 * @param {Function} onConfirm Confirm handler.
-	 * @param {Function} onCancel  Cancel handler.
-	 * @return {Object} The modal element.
-	 */
-	function enableAllModal( pending, onConfirm, onCancel ) {
-		return el(
-			Modal,
-			{
-				title: __( 'Enable all shown abilities?', 'abilities-catalog' ),
-				onRequestClose: onCancel,
-			},
-			el(
-				'p',
-				null,
-				sprintf(
-					/* translators: %d: number of abilities. */
-					__(
-						'This enables %d abilities for execution over MCP.',
-						'abilities-catalog'
-					),
-					pending.total
-				)
-			),
-			el(
-				Notice,
-				{ status: 'warning', isDismissible: false },
-				sprintf(
-					/* translators: 1: dangerous count, 2: destructive count. */
-					__(
-						'Includes %1$d dangerous and %2$d destructive abilities (for example installing plugins or themes) that any authenticated agent could then run over the network.',
-						'abilities-catalog'
-					),
-					pending.dangerous,
-					pending.destructive
-				)
-			),
-			el(
-				'div',
-				{
-					style: {
-						display: 'flex',
-						gap: '8px',
-						justifyContent: 'flex-end',
-						marginTop: '16px',
-					},
-				},
-				el(
-					Button,
-					{ variant: 'tertiary', onClick: onCancel },
-					__( 'Cancel', 'abilities-catalog' )
-				),
-				el(
-					Button,
-					{
-						variant: 'primary',
-						isDestructive: pending.dangerous > 0,
-						onClick: onConfirm,
-					},
-					__( 'Enable all', 'abilities-catalog' )
-				)
-			)
-		);
-	}
-
-	/**
 	 * Renders one category's collapsible panel.
 	 *
 	 * Opens with the category description, then a master switch that is on only when every
@@ -862,19 +801,68 @@
 	 * @param {Function} bulkDomain    Per-category bulk handler.
 	 * @return {Object|null} The panel element, or null when search hides it.
 	 */
+	/**
+	 * Builds the PanelBody title: label + one colored chip per risk tier.
+	 *
+	 * @param {Object} domain The domain object.
+	 * @return {Object} A React element.
+	 */
+	function domainTitle( domain ) {
+		var TIERS = [
+			{ key: 'read',        match: function ( a ) { return a.readonly; } },
+			{ key: 'write',       match: function ( a ) { return ! a.readonly && ! a.destructive && ! a.dangerous; } },
+			{ key: 'destructive', match: function ( a ) { return a.destructive; } },
+			{ key: 'dangerous',   match: function ( a ) { return a.dangerous; } },
+		];
+
+		var chips = TIERS.map( function ( tier ) {
+			var abilities = domain.abilities.filter( tier.match );
+			if ( abilities.length === 0 ) {
+				return null;
+			}
+			var enabled = abilities.filter( function ( a ) { return a.enabled; } ).length;
+			// Reuse riskOf colors via a synthetic ability flag.
+			var synthetic = {
+				readonly:    tier.key === 'read',
+				destructive: tier.key === 'destructive',
+				dangerous:   tier.key === 'dangerous',
+			};
+			var risk = riskOf( synthetic );
+			return el(
+				'span',
+				{
+					key: tier.key,
+					style: {
+						display: 'inline-block',
+						padding: '1px 6px',
+						borderRadius: '3px',
+						fontSize: '11px',
+						fontWeight: 'normal',
+						lineHeight: '18px',
+						background: risk.bg,
+						color: risk.fg,
+						whiteSpace: 'nowrap',
+					},
+				},
+				risk.label + ' ' + enabled + '/' + abilities.length
+			);
+		} ).filter( Boolean );
+
+		return el(
+			'span',
+			{ style: { display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' } },
+			domain.label,
+			el( 'span', { style: { display: 'inline-flex', gap: '4px', flexWrap: 'wrap' } }, chips )
+		);
+	}
+
 	function domainPanel( domain, query, toggleAbility, bulkDomain ) {
 		var visible = matchingAbilities( domain, query );
 		if ( visible.length === 0 ) {
 			return null;
 		}
 
-		var title = sprintf(
-			/* translators: 1: domain label, 2: enabled count, 3: total count. */
-			__( '%1$s — %2$d/%3$d enabled', 'abilities-catalog' ),
-			domain.label,
-			enabledCount( domain ),
-			domain.abilities.length
-		);
+		var title = domainTitle( domain );
 
 		// The master switch reads as on only when nothing shown is still disabled, so a
 		// single off ability leaves it off — and toggling it acts on the shown set.

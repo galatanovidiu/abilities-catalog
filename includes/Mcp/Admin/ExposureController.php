@@ -211,7 +211,7 @@ final class ExposureController {
 		return array(
 			'server_enabled'        => abilities_catalog_mcp_is_enabled(),
 			'server_enabled_locked' => abilities_catalog_mcp_is_enable_locked(),
-			'endpoint'              => rest_url( ltrim( SearchServer::restRoute(), '/' ) ),
+			'endpoint'              => add_query_arg( 'rest_route', SearchServer::restRoute(), home_url( '/' ) ),
 			'enabled_count'         => $enabled_count,
 			'total_count'           => $total_count,
 			'domains'               => $groups,
