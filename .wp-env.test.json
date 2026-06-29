@@ -10,6 +10,7 @@
 		"WP_DEBUG_LOG": "/var/www/html/wp-content/plugins/abilities-catalog/tests/_output/debug.log"
 	},
 	"mappings": {
-		"/wp-content/plugins/abilities-catalog": "."
+		"/wp-content/plugins/abilities-catalog": ".",
+		"/wp-content/plugins/abilities-rest-adapter": "../abilities-rest-adapter"
 	}
 }
