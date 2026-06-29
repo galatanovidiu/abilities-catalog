@@ -18,11 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/pages` via the Abilities REST Adapter and returns the
  * collection plus its total counts. Read-only; REST enforces per-row visibility
- * underneath. The bare route is public for published pages, so a
- * `require_permission` floor keeps the catalog's original cap (logged-in for the
- * view/published path; `edit_pages` for edit context or a non-public status).
- * {@see shapeOutput()} flattens each row through {@see ContentListShaper} and
- * preserves the `{ items, total, total_pages }` envelope.
+ * underneath. Permission delegates to the route's own check (no `require_permission`
+ * floor): published pages are public, and the route requires `edit_pages` for edit
+ * context or a non-public status itself. {@see shapeOutput()} flattens each row
+ * through {@see ContentListShaper} and preserves the `{ items, total, total_pages }`
+ * envelope.
  *
  * @since 0.1.0
  */
@@ -42,12 +42,12 @@ final class ListPages implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/pages',
-				'method'             => 'GET',
-				'label'              => __( 'List Pages', 'abilities-catalog' ),
-				'description'        => __( 'Lists pages with optional search, status, author, parent, ordering, and pagination filters.', 'abilities-catalog' ),
-				'category'           => 'og-core-content',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/pages',
+				'method'          => 'GET',
+				'label'           => __( 'List Pages', 'abilities-catalog' ),
+				'description'     => __( 'Lists pages with optional search, status, author, parent, ordering, and pagination filters.', 'abilities-catalog' ),
+				'category'        => 'og-core-content',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'search'     => array(
@@ -102,7 +102,7 @@ final class ListPages implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -122,9 +122,8 @@ final class ListPages implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -135,30 +134,6 @@ final class ListPages implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: public for published pages; `edit_pages` for edit-context
-	 * or when a non-public status is requested.
-	 *
-	 * Mirrors the catalog's original cap so the conversion does not widen the bare
-	 * route (which serves published pages to anonymous callers). The route's own
-	 * per-row visibility check still runs at dispatch.
-	 *
-	 * @param mixed $input The raw ability input.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		$context = $input['context'] ?? 'view';
-		$status  = isset( $input['status'] ) ? (string) $input['status'] : 'publish';
-
-		if ( 'edit' === $context || ( 'publish' !== $status && '' !== $status ) ) {
-			return current_user_can( 'edit_pages' );
-		}
-
-		return is_user_logged_in();
 	}
 
 	/**

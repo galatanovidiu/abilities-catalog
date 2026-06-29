@@ -19,9 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * has the form `theme//slug`; the adapter substitutes it into the route's `id`
  * capture, whose sub-pattern accepts the literal `//`, so the value round-trips
  * raw (not URL-encoded). Part-first read: there is no `post_type` input — the route
- * is hardcoded to template parts and `area` is a first-class field. The catalog
- * gates all template-part operations on `edit_theme_options`, kept here as a
- * `require_permission` floor (the read route alone is looser, `edit_posts`).
+ * is hardcoded to template parts and `area` is a first-class field. Permission
+ * delegates to the route's own check (no `require_permission` floor): the templates
+ * route requires `edit_posts` (or edit access to a REST-enabled post type).
  * Read-only.
  *
  * @since 0.1.0
@@ -42,12 +42,12 @@ final class GetTemplatePart implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/template-parts/(?P<id>([^\/:<>\*\?"\|]+(?:\/[^\/:<>\*\?"\|]+)?)[\/\w%-]+)',
-				'method'             => 'GET',
-				'label'              => __( 'Get Template Part', 'abilities-catalog' ),
-				'description'        => __( 'Returns a single site-editor template part by its "theme//slug" id, including its block markup and area (header, footer, etc.). For full templates use og-templates/get-template.', 'abilities-catalog' ),
-				'category'           => 'og-core-templates',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/template-parts/(?P<id>([^\/:<>\*\?"\|]+(?:\/[^\/:<>\*\?"\|]+)?)[\/\w%-]+)',
+				'method'          => 'GET',
+				'label'           => __( 'Get Template Part', 'abilities-catalog' ),
+				'description'     => __( 'Returns a single site-editor template part by its "theme//slug" id, including its block markup and area (header, footer, etc.). For full templates use og-templates/get-template.', 'abilities-catalog' ),
+				'category'        => 'og-core-templates',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'required'             => array( 'id' ),
 					'properties'           => array(
@@ -65,7 +65,7 @@ final class GetTemplatePart implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'id' ),
 					'properties'           => array(
@@ -112,9 +112,8 @@ final class GetTemplatePart implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -124,20 +123,6 @@ final class GetTemplatePart implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: `edit_theme_options` (catalog capability for templates).
-	 *
-	 * Mirrors the sibling template CRUD abilities and the catalog's original cap.
-	 * The read route itself is looser (`edit_posts`), but the catalog gates all
-	 * template-part operations on `edit_theme_options`, never weaker than the route.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**

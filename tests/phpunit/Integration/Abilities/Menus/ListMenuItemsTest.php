@@ -105,16 +105,14 @@ final class ListMenuItemsTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
-		// The adapter's require_permission floor denies with a WP_Error, which
-		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it.
-		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
-
+		// Permission delegates to the route, which requires edit_theme_options; a
+		// subscriber gets the route's specific error, not the generic collapse.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-menus/list-menu-items' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_view', $result->get_error_code() );
 	}
 
 	/**

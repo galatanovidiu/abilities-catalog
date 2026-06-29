@@ -20,8 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * collection of classic menus (`nav_menu` terms) plus its total counts. Each row
  * is projected by {@see MenuListShaper} (in {@see shapeOutput()}) into a flat,
  * closed summary; the raw REST objects (`_links`, `meta`, `locations`, `auto_add`)
- * are never returned. A `require_permission` floor keeps the catalog's original
- * `edit_theme_options` cap. Read-only.
+ * are never returned. Permission delegates to the route's own check (no
+ * `require_permission` floor): the menus route already requires `edit_theme_options`.
+ * Read-only.
  *
  * @since 0.1.0
  */
@@ -41,12 +42,12 @@ final class ListClassicMenus implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/menus',
-				'method'             => 'GET',
-				'label'              => __( 'List Classic Menus', 'abilities-catalog' ),
-				'description'        => __( 'Lists classic (nav_menu term) menus with pagination.', 'abilities-catalog' ),
-				'category'           => 'og-core-menus',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/menus',
+				'method'          => 'GET',
+				'label'           => __( 'List Classic Menus', 'abilities-catalog' ),
+				'description'     => __( 'Lists classic (nav_menu term) menus with pagination.', 'abilities-catalog' ),
+				'category'        => 'og-core-menus',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'per_page' => array(
@@ -71,7 +72,7 @@ final class ListClassicMenus implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -91,9 +92,8 @@ final class ListClassicMenus implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -103,19 +103,6 @@ final class ListClassicMenus implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: managing menus requires `edit_theme_options`.
-	 *
-	 * Mirrors the catalog's original cap. The route's own check still runs at
-	 * dispatch.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**

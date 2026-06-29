@@ -20,8 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * installed themes plus their totals. Each row is projected by
  * {@see ThemeListShaper} (in {@see shapeOutput()}) into a flat, closed summary;
  * the raw REST objects (`_links`, nested rendered fields, active-theme-only deep
- * fields) are never returned. A `require_permission` floor keeps the catalog's
- * original cap (`switch_themes` or `edit_theme_options`).
+ * fields) are never returned. Permission delegates to the route's own check (no
+ * `require_permission` floor): the themes route requires `switch_themes` /
+ * `manage_network_themes` (or active-theme read access for `status=active`).
  *
  * @since 0.1.0
  */
@@ -41,12 +42,12 @@ final class ListThemes implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/themes',
-				'method'             => 'GET',
-				'label'              => __( 'List Themes', 'abilities-catalog' ),
-				'description'        => __( 'Lists installed themes, optionally filtered by status.', 'abilities-catalog' ),
-				'category'           => 'og-core-themes',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/themes',
+				'method'          => 'GET',
+				'label'           => __( 'List Themes', 'abilities-catalog' ),
+				'description'     => __( 'Lists installed themes, optionally filtered by status.', 'abilities-catalog' ),
+				'category'        => 'og-core-themes',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'status'  => array(
@@ -63,7 +64,7 @@ final class ListThemes implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items', 'total', 'total_pages' ),
 					'properties'           => array(
@@ -83,9 +84,8 @@ final class ListThemes implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -95,19 +95,6 @@ final class ListThemes implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: ability to manage themes or theme options.
-	 *
-	 * Mirrors the catalog's original cap. The route's own check still runs at
-	 * dispatch.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		return current_user_can( 'switch_themes' ) || current_user_can( 'edit_theme_options' );
 	}
 
 	/**

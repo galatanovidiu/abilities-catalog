@@ -24,8 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * parts, so `area` is a first-class filter. {@see shapeOutput()} projects each row
  * to a flat summary and DROPS the adapter's `total`/`total_pages` to keep the
  * catalog's closed `{ items }` contract (the parts route exposes no pagination
- * total). The catalog gates this on `edit_theme_options`, kept as a
- * `require_permission` floor (the read route alone is looser, `edit_posts`).
+ * total). Permission delegates to the route's own check (no `require_permission`
+ * floor): the templates route requires `edit_posts` (or edit access to a
+ * REST-enabled post type).
  *
  * @since 0.3.0
  */
@@ -45,12 +46,12 @@ final class ListTemplateParts implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/template-parts',
-				'method'             => 'GET',
-				'label'              => __( 'List Template Parts', 'abilities-catalog' ),
-				'description'        => __( 'Lists the active theme\'s template parts (reusable block regions like the header and footer), including each part\'s id, slug, area, source, title, and status. Optionally filter by area (e.g. "header"). Use og-templates/get-template-part to read one part\'s block markup. For full block templates (not parts) use og-templates/list-templates.', 'abilities-catalog' ),
-				'category'           => 'og-core-templates',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/template-parts',
+				'method'          => 'GET',
+				'label'           => __( 'List Template Parts', 'abilities-catalog' ),
+				'description'     => __( 'Lists the active theme\'s template parts (reusable block regions like the header and footer), including each part\'s id, slug, area, source, title, and status. Optionally filter by area (e.g. "header"). Use og-templates/get-template-part to read one part\'s block markup. For full block templates (not parts) use og-templates/list-templates.', 'abilities-catalog' ),
+				'category'        => 'og-core-templates',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'context' => array(
@@ -66,7 +67,7 @@ final class ListTemplateParts implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -116,9 +117,8 @@ final class ListTemplateParts implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -128,19 +128,6 @@ final class ListTemplateParts implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: `edit_theme_options` (catalog capability for templates).
-	 *
-	 * Mirrors the sibling template abilities and the catalog's original cap. The
-	 * read route alone is looser (`edit_posts`); this is never weaker than the route.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		return current_user_can( 'edit_theme_options' );
 	}
 
 	/**

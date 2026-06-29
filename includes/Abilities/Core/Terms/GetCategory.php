@@ -16,9 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Read ability: `og-terms/get-category`.
  *
  * Wraps `GET /wp/v2/categories/<id>` via the Abilities REST Adapter and shapes
- * the response into a flat field set through {@see shapeOutput()}. The bare route
- * is public for category reads, so a `require_permission` floor keeps the
- * catalog's original cap (logged-in for view; `manage_categories` for edit).
+ * the response into a flat field set through {@see shapeOutput()}. Permission
+ * delegates to the route's own check (no `require_permission` floor): category
+ * reads are public in `view`, and the route requires `manage_categories` for `edit`.
  *
  * @since 0.1.0
  */
@@ -38,12 +38,12 @@ final class GetCategory implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/categories/(?P<id>[\d]+)',
-				'method'             => 'GET',
-				'label'              => __( 'Get Category', 'abilities-catalog' ),
-				'description'        => __( 'Returns a single category term by ID.', 'abilities-catalog' ),
-				'category'           => 'og-core-terms',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/categories/(?P<id>[\d]+)',
+				'method'          => 'GET',
+				'label'           => __( 'Get Category', 'abilities-catalog' ),
+				'description'     => __( 'Returns a single category term by ID.', 'abilities-catalog' ),
+				'category'        => 'og-core-terms',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'id'      => array(
@@ -61,7 +61,7 @@ final class GetCategory implements Ability {
 					'required'             => array( 'id' ),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'id', 'name', 'slug' ),
 					'properties'           => array(
@@ -100,9 +100,8 @@ final class GetCategory implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -112,32 +111,6 @@ final class GetCategory implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: term reads require an authenticated user; edit-context
-	 * additionally requires `manage_categories`.
-	 *
-	 * Mirrors the catalog's original cap (the bare route is public for category
-	 * reads). The route's own check still runs at dispatch.
-	 *
-	 * @param mixed $input The raw ability input.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		$context = $input['context'] ?? 'view';
-		if ( 'edit' === $context ) {
-			return current_user_can( 'manage_categories' );
-		}
-
-		return is_user_logged_in();
 	}
 
 	/**

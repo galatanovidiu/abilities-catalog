@@ -21,9 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (in {@see shapeOutput()}) into a flat, closed summary; the heavy raw fields
  * (`media_details`, `meta`, `class_list`, `_links`) are never returned (file bytes
  * live behind `og-media/get-media-file`). The `media_type` and `mime_type` filters
- * accept one or more values, mirroring the core collection params. The bare route
- * is public for view, so a `require_permission` floor keeps the catalog's original
- * cap (logged-in for view; `edit_posts` for edit context).
+ * accept one or more values, mirroring the core collection params. Permission
+ * delegates to the route's own check (no `require_permission` floor): published
+ * media is public in `view`, and the route enforces `edit_posts` for edit context
+ * and per-row visibility itself.
  *
  * @since 0.1.0
  */
@@ -43,12 +44,12 @@ final class ListMedia implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/media',
-				'method'             => 'GET',
-				'label'              => __( 'List Media', 'abilities-catalog' ),
-				'description'        => __( 'Lists media library items with optional search, media_type, mime_type, parent, author, status, and pagination filters.', 'abilities-catalog' ),
-				'category'           => 'og-core-media',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/media',
+				'method'          => 'GET',
+				'label'           => __( 'List Media', 'abilities-catalog' ),
+				'description'     => __( 'Lists media library items with optional search, media_type, mime_type, parent, author, status, and pagination filters.', 'abilities-catalog' ),
+				'category'        => 'og-core-media',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'search'     => array(
@@ -114,7 +115,7 @@ final class ListMedia implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -134,9 +135,8 @@ final class ListMedia implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -146,26 +146,6 @@ final class ListMedia implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: public for view; `edit_posts` for edit-context.
-	 *
-	 * Mirrors the catalog's original cap (media view is public, but the listing
-	 * requires an authenticated user). The route's own check still runs at dispatch.
-	 *
-	 * @param mixed $input The raw ability input.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$context = $input['context'] ?? 'view';
-
-		if ( 'edit' === $context ) {
-			return current_user_can( 'edit_posts' );
-		}
-
-		return is_user_logged_in();
 	}
 
 	/**

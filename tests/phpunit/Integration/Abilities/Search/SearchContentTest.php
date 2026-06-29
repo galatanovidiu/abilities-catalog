@@ -106,20 +106,24 @@ final class SearchContentTest extends TestCase {
 		$this->assertCount( 2, $result['items'] );
 	}
 
-	public function test_subscriber_is_denied(): void {
-		// The adapter's require_permission floor denies with a WP_Error, which
-		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it to
-		// the generic ability_invalid_permissions.
-		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+	public function test_subscriber_can_search_public_content(): void {
+		// Permission delegates to the public core search route, which exposes only
+		// already-public content. A subscriber (or anonymous caller) may search it.
+		self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_title'  => 'Subscriber-visible search marker',
+			)
+		);
 
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-search/search-content' )->execute(
-			array( 'search' => 'anything' )
+			array( 'search' => 'Subscriber-visible search marker' )
 		);
 
-		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 
 	public function test_invalid_type_is_rejected_as_invalid_input(): void {

@@ -207,28 +207,34 @@ final class ListShapeTest extends TestCase {
 		}
 	}
 
-	public function test_list_post_types_view_denied_when_logged_out(): void {
+	public function test_list_post_types_view_is_public(): void {
+		// Permission delegates to the route, which is public in view context.
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'og-content/list-post-types' );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'view' ) );
 
-		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'view' ) ) );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 
-	public function test_list_post_types_edit_context_requires_edit_posts(): void {
-		$ability = wp_get_ability( 'og-content/list-post-types' );
-
+	public function test_list_post_types_edit_context_requires_edit_access(): void {
+		// The route gates edit context: a subscriber is denied with the route's
+		// specific error; an editor (edit_posts) succeeds.
 		$this->actingAs( 'subscriber' );
-		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'edit' ) );
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_view', $result->get_error_code() );
 
 		$this->actingAs( 'editor' );
-		$this->assertTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'edit' ) );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 
 	public function test_list_post_types_edit_context_allows_per_type_editor(): void {
 		// A REST-enabled CPT with its own capability set. A user who can edit this
-		// type but lacks the global edit_posts must still pass the edit-context check,
-		// mirroring core's per-type iteration in
+		// type but lacks the global edit_posts still passes the route's edit-context
+		// check, via core's per-type iteration in
 		// WP_REST_Post_Types_Controller::get_items_permissions_check().
 		register_post_type(
 			'ac_book',
@@ -244,6 +250,9 @@ final class ListShapeTest extends TestCase {
 		wp_get_current_user()->add_cap( 'edit_ac_books' );
 
 		$this->assertFalse( current_user_can( 'edit_posts' ), 'The subscriber must lack the global edit_posts cap for this test to be meaningful.' );
-		$this->assertTrue( wp_get_ability( 'og-content/list-post-types' )->check_permissions( array( 'context' => 'edit' ) ) );
+
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'edit' ) );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 }

@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Themes;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Themes\ListThemes;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
@@ -97,26 +96,13 @@ final class ListThemesTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
-		// The adapter's require_permission floor denies with a WP_Error, which
-		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it to
-		// the generic ability_invalid_permissions.
-		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
-
+		// Permission delegates to the route, which requires switch_themes /
+		// manage_network_themes; a subscriber gets the route's specific error.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-themes/list-themes' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
-	}
-
-	public function test_permission_guard_checks_theme_capabilities(): void {
-		$ability = new ListThemes();
-
-		$this->actingAs( 'administrator' );
-		$this->assertTrue( $ability->requirePermission( array() ) );
-
-		$this->actingAs( 'subscriber' );
-		$this->assertFalse( $ability->requirePermission( array() ) );
+		$this->assertSame( 'rest_cannot_view_themes', $result->get_error_code() );
 	}
 }

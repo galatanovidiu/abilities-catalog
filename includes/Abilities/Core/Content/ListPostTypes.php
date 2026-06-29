@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Wraps `GET /wp/v2/types` via the Abilities REST Adapter. The route returns an
  * object keyed by post-type slug (not a list), so the adapter passes the body
  * through unchanged and {@see shapeOutput()} normalises it into a list of objects
- * so `items` is an array. The bare route allows any logged-in user (and an
- * edit-capable user in edit context), which the catalog already matched, so a
- * `require_permission` floor mirrors that cap.
+ * so `items` is an array. Permission delegates to the route's own check (no
+ * `require_permission` floor): the route is public in `view` and requires edit
+ * access to at least one REST-enabled post type in `edit` context.
  *
  * @since 0.1.0
  */
@@ -40,12 +40,12 @@ final class ListPostTypes implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/types',
-				'method'             => 'GET',
-				'label'              => __( 'List Post Types', 'abilities-catalog' ),
-				'description'        => __( 'Lists the REST-enabled post types registered on the site.', 'abilities-catalog' ),
-				'category'           => 'og-core-content',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/types',
+				'method'          => 'GET',
+				'label'           => __( 'List Post Types', 'abilities-catalog' ),
+				'description'     => __( 'Lists the REST-enabled post types registered on the site.', 'abilities-catalog' ),
+				'category'        => 'og-core-content',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'context' => array(
@@ -57,7 +57,7 @@ final class ListPostTypes implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -109,9 +109,8 @@ final class ListPostTypes implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -121,35 +120,6 @@ final class ListPostTypes implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: for edit-context, the current user must be able to edit at
-	 * least one REST-enabled post type (mirrors core's
-	 * `WP_REST_Post_Types_Controller::get_items_permissions_check()`); otherwise any
-	 * logged-in user.
-	 *
-	 * Mirrors the catalog's original cap. The route's own check still runs at
-	 * dispatch.
-	 *
-	 * @param mixed $input The raw ability input.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$context = $input['context'] ?? 'view';
-
-		if ( 'edit' === $context ) {
-			foreach ( get_post_types( array( 'show_in_rest' => true ), 'objects' ) as $type ) {
-				if ( current_user_can( $type->cap->edit_posts ) ) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		return is_user_logged_in();
 	}
 
 	/**

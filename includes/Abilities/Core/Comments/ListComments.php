@@ -22,11 +22,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * capability can list comments. Pass `context=edit` to include `author_email`;
  * core rejects the whole request with 403 unless the user has `moderate_comments`.
  *
- * The route alone would let an anonymous visitor list approved comments, which is
- * wider than the catalog's baseline. A `require_permission` floor of `edit_posts`
- * keeps the original cap; {@see shapeOutput()} flattens each row through
- * {@see CommentListShaper} and preserves the `{ items, total, total_pages }`
- * envelope.
+ * Permission delegates to the route's own check (no `require_permission` floor):
+ * approved comments are public, and the route gates everything sensitive itself —
+ * `moderate_comments` for edit context, `edit_posts` for filtered queries (author,
+ * email, non-`approve` status), and per-post readability. {@see shapeOutput()}
+ * flattens each row through {@see CommentListShaper} and preserves the
+ * `{ items, total, total_pages }` envelope.
  *
  * @since 0.1.0
  */
@@ -46,12 +47,12 @@ final class ListComments implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/comments',
-				'method'             => 'GET',
-				'label'              => __( 'List Comments', 'abilities-catalog' ),
-				'description'        => __( 'Lists comments with optional post, status, type, author, search, and pagination filters.', 'abilities-catalog' ),
-				'category'           => 'og-core-comments',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/comments',
+				'method'          => 'GET',
+				'label'           => __( 'List Comments', 'abilities-catalog' ),
+				'description'     => __( 'Lists comments with optional post, status, type, author, search, and pagination filters.', 'abilities-catalog' ),
+				'category'        => 'og-core-comments',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'post'         => array(
@@ -117,7 +118,7 @@ final class ListComments implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -137,9 +138,8 @@ final class ListComments implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -149,22 +149,6 @@ final class ListComments implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: baseline `edit_posts` to list comments.
-	 *
-	 * Encodes the catalog baseline capability for `og-comments/list-comments`,
-	 * keeping the original cap that the bare route (public for approved comments)
-	 * would otherwise widen. Moderation contexts (non-default status, edit context)
-	 * need `moderate_comments`, which the route enforces at dispatch; `edit_posts`
-	 * is the minimum required to run the query and is not weaker than that baseline.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		return current_user_can( 'edit_posts' );
 	}
 
 	/**

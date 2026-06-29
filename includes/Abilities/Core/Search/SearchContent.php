@@ -25,9 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Core search only surfaces published, public content: published posts of public
  * `show_in_rest` post types (attachments/media excluded) and terms of public
  * `show_in_rest` taxonomies. It does not find drafts, pending, private, or trashed
- * content, nor media. The core search route is public, so a `require_permission`
- * floor keeps the catalog's `edit_posts` cap (search stays an authenticated
- * authoring tool). Read-only.
+ * content, nor media. Permission delegates to the route's own check (no
+ * `require_permission` floor): the core search route is public and exposes only
+ * already-public content. Read-only.
  *
  * @since 0.5.0
  */
@@ -47,12 +47,12 @@ final class SearchContent implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/search',
-				'method'             => 'GET',
-				'label'              => __( 'Search Content', 'abilities-catalog' ),
-				'description'        => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Only published, public content is returned: it does not surface drafts, pending, private, or trashed content, nor media. Use this to find content when you do not already know its id.', 'abilities-catalog' ),
-				'category'           => 'og-core-search',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/search',
+				'method'          => 'GET',
+				'label'           => __( 'Search Content', 'abilities-catalog' ),
+				'description'     => __( 'Searches site content by keyword using WordPress\'s unified search and returns matches with their id, title, URL, type, and subtype. Search across posts/pages (type "post"), taxonomy terms (type "term"), or post formats. Only published, public content is returned: it does not surface drafts, pending, private, or trashed content, nor media. Use this to find content when you do not already know its id.', 'abilities-catalog' ),
+				'category'        => 'og-core-search',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'search'   => array(
@@ -88,7 +88,7 @@ final class SearchContent implements Ability {
 					'required'             => array( 'search' ),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -134,9 +134,8 @@ final class SearchContent implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -147,21 +146,6 @@ final class SearchContent implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: `edit_posts` (catalog capability for content search).
-	 *
-	 * The core search route is public; this catalog ability gates it on
-	 * `edit_posts` so search stays an authenticated authoring tool, consistent with
-	 * the other content-reading abilities. The route's own check still runs at
-	 * dispatch.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input = null ): bool {
-		return current_user_can( 'edit_posts' );
 	}
 
 	/**

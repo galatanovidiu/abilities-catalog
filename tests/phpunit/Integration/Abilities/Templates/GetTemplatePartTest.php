@@ -115,10 +115,8 @@ final class GetTemplatePartTest extends TestCase {
 	}
 
 	public function test_logged_out_is_denied(): void {
-		// The adapter's require_permission floor denies with a WP_Error, which
-		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it.
-		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
-
+		// Permission delegates to the route, which requires edit_posts (or edit
+		// access to a REST-enabled type); a logged-out user gets the route's error.
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-templates/get-template-part' )->execute(
@@ -126,14 +124,12 @@ final class GetTemplatePartTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_manage_templates', $result->get_error_code() );
 	}
 
 	public function test_subscriber_is_denied(): void {
-		// The adapter's require_permission floor denies with a WP_Error, which
-		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it.
-		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
-
+		// Permission delegates to the route, which requires edit_posts (or edit
+		// access to a REST-enabled type); a subscriber gets the route's error.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-templates/get-template-part' )->execute(
@@ -141,6 +137,6 @@ final class GetTemplatePartTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_manage_templates', $result->get_error_code() );
 	}
 }

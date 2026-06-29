@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Wraps `GET /wp/v2/taxonomies` via the Abilities REST Adapter. The route returns
  * an object keyed by taxonomy slug (not a list), so the adapter passes the body
  * through unchanged and {@see shapeOutput()} converts it into a flat list of
- * objects so the output matches the list shape used elsewhere. The bare route
- * allows any logged-in user (and an edit-capable user in edit context), which the
- * catalog already matched, so a `require_permission` floor mirrors that cap.
+ * objects so the output matches the list shape used elsewhere. Permission delegates
+ * to the route's own check (no `require_permission` floor): the route is public in
+ * `view` and requires `assign_terms` on a REST-exposed taxonomy in `edit` context.
  *
  * @since 0.1.0
  */
@@ -40,12 +40,12 @@ final class ListTaxonomies implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/taxonomies',
-				'method'             => 'GET',
-				'label'              => __( 'List Taxonomies', 'abilities-catalog' ),
-				'description'        => __( 'Returns the registered taxonomies that are exposed in the REST API. Use a returned "slug" as the "taxonomy" input to og-terms/list-terms. The default "view" context returns public taxonomies.', 'abilities-catalog' ),
-				'category'           => 'og-core-terms',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/taxonomies',
+				'method'          => 'GET',
+				'label'           => __( 'List Taxonomies', 'abilities-catalog' ),
+				'description'     => __( 'Returns the registered taxonomies that are exposed in the REST API. Use a returned "slug" as the "taxonomy" input to og-terms/list-terms. The default "view" context returns public taxonomies.', 'abilities-catalog' ),
+				'category'        => 'og-core-terms',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'context' => array(
@@ -57,7 +57,7 @@ final class ListTaxonomies implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items' ),
 					'properties'           => array(
@@ -98,9 +98,8 @@ final class ListTaxonomies implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -110,27 +109,6 @@ final class ListTaxonomies implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: discovery requires an authenticated user; edit-context
-	 * additionally requires `edit_posts`.
-	 *
-	 * Mirrors the catalog's original cap. The route's own check still runs at
-	 * dispatch.
-	 *
-	 * @param mixed $input The raw ability input.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$context = $input['context'] ?? 'view';
-
-		if ( 'edit' === $context ) {
-			return current_user_can( 'edit_posts' );
-		}
-
-		return is_user_logged_in();
 	}
 
 	/**

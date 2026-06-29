@@ -19,8 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Wraps `GET /wp/v2/users` via the Abilities REST Adapter and returns flat summary
  * rows (via {@see UserListShaper} in {@see shapeOutput()}) plus the total counts
  * from the REST response headers. The full record lives behind `og-users/get-user`.
- * The bare route serves public authors to anyone, so a `require_permission` floor
- * keeps the catalog's original `list_users` cap. Read-only.
+ * Permission delegates to the route's own check (no `require_permission` floor):
+ * the route serves public authors in `view` and requires `list_users` for `edit`
+ * context, role/capability filters, and email/registered_date ordering. Read-only.
  *
  * @since 0.1.0
  */
@@ -40,12 +41,12 @@ final class ListUsers implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/users',
-				'method'             => 'GET',
-				'label'              => __( 'List Users', 'abilities-catalog' ),
-				'description'        => __( 'Returns a paginated list of users, with optional search, role, and capability filters.', 'abilities-catalog' ),
-				'category'           => 'og-core-users',
-				'input_schema'       => array(
+				'route'           => '/wp/v2/users',
+				'method'          => 'GET',
+				'label'           => __( 'List Users', 'abilities-catalog' ),
+				'description'     => __( 'Returns a paginated list of users, with optional search, role, and capability filters.', 'abilities-catalog' ),
+				'category'        => 'og-core-users',
+				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'page'         => array(
@@ -96,7 +97,7 @@ final class ListUsers implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema'   => array(
 					'type'                 => 'object',
 					'required'             => array( 'items', 'total', 'total_pages' ),
 					'properties'           => array(
@@ -116,9 +117,8 @@ final class ListUsers implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'output_callback'    => array( $this, 'shapeOutput' ),
-				'meta'               => array(
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
 					'annotations'       => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -131,19 +131,6 @@ final class ListUsers implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: the current user may list users.
-	 *
-	 * Mirrors the catalog's original `list_users` cap (the bare route serves public
-	 * authors to anyone). The route's own check still runs at dispatch.
-	 *
-	 * @param mixed $input The raw ability input. Unused.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		return current_user_can( 'list_users' );
 	}
 
 	/**

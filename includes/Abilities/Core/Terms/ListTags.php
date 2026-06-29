@@ -16,10 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Wraps `GET /wp/v2/tags` via the Abilities REST Adapter and returns the matching
  * post-tag terms in the adapter's `{ items, total, total_pages }` envelope (totals
- * from the REST response headers). The bare route is public for tag reads, so a
- * `require_permission` floor keeps the catalog's original cap (logged-in for view;
- * `manage_post_tags` for edit). No output reshaping is needed — each item is the
- * raw term object, as before.
+ * from the REST response headers). Permission delegates to the route's own check
+ * (no `require_permission` floor): tag reads are public in `view`, and the route
+ * requires `manage_post_tags` for `edit`. No output reshaping is needed — each item
+ * is the raw term object, as before.
  *
  * @since 0.1.0
  */
@@ -39,12 +39,12 @@ final class ListTags implements Ability {
 		return Rest_Route_Ability::build_args(
 			$this->name(),
 			array(
-				'route'              => '/wp/v2/tags',
-				'method'             => 'GET',
-				'label'              => __( 'List Tags', 'abilities-catalog' ),
-				'description'        => __( 'Returns a paginated list of post-tag terms, optionally filtered by search string. Each item is a raw tag term object; the result includes "total" and "total_pages" counts. Use this for the "post_tag" taxonomy; for the "category" taxonomy use og-terms/list-categories, and for an arbitrary taxonomy use og-terms/list-terms.', 'abilities-catalog' ),
-				'category'           => 'og-core-terms',
-				'input_schema'       => array(
+				'route'         => '/wp/v2/tags',
+				'method'        => 'GET',
+				'label'         => __( 'List Tags', 'abilities-catalog' ),
+				'description'   => __( 'Returns a paginated list of post-tag terms, optionally filtered by search string. Each item is a raw tag term object; the result includes "total" and "total_pages" counts. Use this for the "post_tag" taxonomy; for the "category" taxonomy use og-terms/list-categories, and for an arbitrary taxonomy use og-terms/list-terms.', 'abilities-catalog' ),
+				'category'      => 'og-core-terms',
+				'input_schema'  => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'search'   => array(
@@ -81,7 +81,7 @@ final class ListTags implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'output_schema'      => array(
+				'output_schema' => array(
 					'type'                 => 'object',
 					'required'             => array( 'items', 'total', 'total_pages' ),
 					'properties'           => array(
@@ -104,8 +104,7 @@ final class ListTags implements Ability {
 					),
 					'additionalProperties' => false,
 				),
-				'require_permission' => array( $this, 'requirePermission' ),
-				'meta'               => array(
+				'meta'          => array(
 					'annotations'  => array(
 						'readonly'    => true,
 						'destructive' => false,
@@ -115,26 +114,5 @@ final class ListTags implements Ability {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Permission floor: term reads require an authenticated user; edit-context
-	 * additionally requires `manage_post_tags`.
-	 *
-	 * Mirrors the catalog's original cap (the bare route is public for tag reads).
-	 * The route's own check still runs at dispatch.
-	 *
-	 * @param mixed $input The raw ability input.
-	 * @return bool True to defer to the route's dispatch-time check.
-	 */
-	public function requirePermission( $input ): bool {
-		$input   = is_array( $input ) ? $input : array();
-		$context = $input['context'] ?? 'view';
-
-		if ( 'edit' === $context ) {
-			return current_user_can( 'manage_post_tags' );
-		}
-
-		return is_user_logged_in();
 	}
 }
