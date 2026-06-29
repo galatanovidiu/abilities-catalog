@@ -243,6 +243,11 @@ final class UpdateCommentTest extends TestCase {
 		$this->assertSame('ability_invalid_input', $result->get_error_code());
 	}
 
+	/**
+	 * A logged-out user gets the wrapped route's specific `rest_cannot_edit` 401
+	 * (no `require_permission` floor; permission delegates to the route), not the
+	 * generic `ability_invalid_permissions` collapse.
+	 */
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user(0);
 
@@ -254,7 +259,8 @@ final class UpdateCommentTest extends TestCase {
 		);
 
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertSame('rest_cannot_edit', $result->get_error_code());
+		$this->assertSame(401, $result->get_error_data()['status']);
 	}
 
 	/**
