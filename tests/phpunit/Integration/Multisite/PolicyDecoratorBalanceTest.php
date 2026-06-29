@@ -59,16 +59,20 @@ final class PolicyDecoratorBalanceTest extends TestCase {
 	public function set_up(): void {
 		parent::set_up();
 
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Multisite required.' );
+		if ( is_multisite() ) {
+			return;
 		}
+
+		$this->markTestSkipped( 'Multisite required.' );
 	}
 
 	public function tear_down(): void {
 		foreach ( $this->created_sites as $blog_id ) {
-			if ( get_site( $blog_id ) ) {
-				wp_delete_site( $blog_id );
+			if ( ! get_site( $blog_id ) ) {
+				continue;
 			}
+
+			wp_delete_site( $blog_id );
 		}
 		$this->created_sites = array();
 
@@ -197,12 +201,13 @@ final class PolicyDecoratorBalanceTest extends TestCase {
 	}
 
 	/**
-	 * Asserts that a site-scoped ability rejects $blog_id with the recovery 404,
-	 * at both the permission layer and execute(), without leaking a blog switch.
+	 * Asserts that a site-scoped, adapter-backed ability rejects $blog_id with the
+	 * recovery 404 through execute(), without leaking a blog switch.
 	 *
 	 * Decision 3: the contract is the specific abilities_catalog_invalid_blog_id
-	 * (status 404), NOT a generic ability_invalid_permissions; and the denial is
-	 * asserted at the permission layer, not inferred only from execute().
+	 * (status 404), NOT a generic ability_invalid_permissions. For an adapter-backed
+	 * ability the decorator validates the target at dispatch, so the error surfaces
+	 * through execute() (not the guard-only check_permissions()).
 	 *
 	 * Because get_site() runs before switch_to_blog() (PLAN.md §3), a bad blog_id
 	 * never switches, so get_current_blog_id() is unchanged after the call.
@@ -220,20 +225,19 @@ final class PolicyDecoratorBalanceTest extends TestCase {
 
 		$before = get_current_blog_id();
 
-		// Permission layer (Decision 3): the decorator's perm wrapper returns the
-		// same recovery WP_Error for a bad blog_id, not a bare false/true.
-		$perm = $ability->check_permissions( $input );
-		$this->assertInstanceOf( WP_Error::class, $perm );
-		$this->assertSame( 'abilities_catalog_invalid_blog_id', $perm->get_error_code() );
-		$this->assertSame( 404, $perm->get_error_data()['status'] );
-		$this->assertNotSame( 'ability_invalid_permissions', $perm->get_error_code() );
-		$this->assertSame( $before, get_current_blog_id() );
+		// Adapter-backed ability: the decorator validates blog_id at DISPATCH (its
+		// dispatch-wrapper seam), not in the guard-only permission phase. BlogSwitchRunner
+		// rejects the bad target BEFORE any switch, so the recovery error surfaces through
+		// execute() verbatim — core only genericizes check_permissions() failures, not
+		// execute_callback results, so there is no 'ability_invalid_permissions' collapse
+		// and no _doing_it_wrong here. The recovery WP_Error is the binding contract.
+		$result = $ability->execute( $input );
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'abilities_catalog_invalid_blog_id', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 
-		// We deliberately do NOT call raw $ability->execute() on this denial: core
-		// genericizes the permission WP_Error to 'ability_invalid_permissions' AND fires
-		// _doing_it_wrong (which the WP test harness fails at teardown). The permission
-		// layer above is the binding contract (Decision 3); the MCP path surfaces the rich
-		// error by pre-checking permissions (batch 04 DomainRouter), never via raw execute().
-		// The balance assertion above already proves get_site() failed before any switch.
+		// No switch leaked: the target was rejected before switch_to_blog().
+		$this->assertSame( $before, get_current_blog_id() );
 	}
 }
