@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,9 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-content/list-post-types`.
  *
- * Wraps `GET /wp/v2/types` via `rest_do_request()`. The REST endpoint returns an
- * object keyed by post-type slug; this ability normalises it into a list of
- * objects so `items` is an array.
+ * Wraps `GET /wp/v2/types` via the Abilities REST Adapter. The route returns an
+ * object keyed by post-type slug (not a list), so the adapter passes the body
+ * through unchanged and {@see shapeOutput()} normalises it into a list of objects
+ * so `items` is an array. The bare route allows any logged-in user (and an
+ * edit-capable user in edit context), which the catalog already matched, so a
+ * `require_permission` floor mirrors that cap.
  *
  * @since 0.1.0
  */
@@ -34,97 +37,105 @@ final class ListPostTypes implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Post Types', 'abilities-catalog' ),
-			'description'         => __( 'Lists the REST-enabled post types registered on the site.', 'abilities-catalog' ),
-			'category'            => 'og-core-content',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'context' => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" or "edit".', 'abilities-catalog' ),
-					),
-				),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items' ),
-				'properties'           => array(
-					'items'       => array(
-						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'required'             => array( 'slug', 'name' ),
-							'properties'           => array(
-								'slug'         => array(
-									'type'        => 'string',
-									'description' => __( 'The post type slug.', 'abilities-catalog' ),
-								),
-								'name'         => array(
-									'type'        => 'string',
-									'description' => __( 'The human-readable post type name.', 'abilities-catalog' ),
-								),
-								'hierarchical' => array(
-									'type'        => 'boolean',
-									'description' => __( 'Whether the type is hierarchical (like pages).', 'abilities-catalog' ),
-								),
-								'rest_base'    => array(
-									'type'        => 'string',
-									'description' => __( 'The REST base segment for this type\'s collection route; the namespace defaults to wp/v2 but a type may override it.', 'abilities-catalog' ),
-								),
-								'supports'     => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'Flat list of supported feature keys (e.g. title, editor, thumbnail).', 'abilities-catalog' ),
-								),
-								'taxonomies'   => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'Taxonomy slugs associated with the type.', 'abilities-catalog' ),
-								),
-							),
-							'additionalProperties' => false,
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'              => '/wp/v2/types',
+				'method'             => 'GET',
+				'label'              => __( 'List Post Types', 'abilities-catalog' ),
+				'description'        => __( 'Lists the REST-enabled post types registered on the site.', 'abilities-catalog' ),
+				'category'           => 'og-core-content',
+				'input_schema'       => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'context' => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" or "edit".', 'abilities-catalog' ),
 						),
-						'description' => __( 'The list of post types.', 'abilities-catalog' ),
 					),
-					'total'       => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of post types returned.', 'abilities-catalog' ),
-					),
-					'total_pages' => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of result pages available.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_schema'      => array(
+					'type'                 => 'object',
+					'required'             => array( 'items' ),
+					'properties'           => array(
+						'items'       => array(
+							'type'        => 'array',
+							'items'       => array(
+								'type'                 => 'object',
+								'required'             => array( 'slug', 'name' ),
+								'properties'           => array(
+									'slug'         => array(
+										'type'        => 'string',
+										'description' => __( 'The post type slug.', 'abilities-catalog' ),
+									),
+									'name'         => array(
+										'type'        => 'string',
+										'description' => __( 'The human-readable post type name.', 'abilities-catalog' ),
+									),
+									'hierarchical' => array(
+										'type'        => 'boolean',
+										'description' => __( 'Whether the type is hierarchical (like pages).', 'abilities-catalog' ),
+									),
+									'rest_base'    => array(
+										'type'        => 'string',
+										'description' => __( 'The REST base segment for this type\'s collection route; the namespace defaults to wp/v2 but a type may override it.', 'abilities-catalog' ),
+									),
+									'supports'     => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'Flat list of supported feature keys (e.g. title, editor, thumbnail).', 'abilities-catalog' ),
+									),
+									'taxonomies'   => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'Taxonomy slugs associated with the type.', 'abilities-catalog' ),
+									),
+								),
+								'additionalProperties' => false,
+							),
+							'description' => __( 'The list of post types.', 'abilities-catalog' ),
+						),
+						'total'       => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of post types returned.', 'abilities-catalog' ),
+						),
+						'total_pages' => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of result pages available.', 'abilities-catalog' ),
+						),
+					),
+					'additionalProperties' => false,
 				),
-				'show_in_rest' => true,
-			),
+				'require_permission' => array( $this, 'requirePermission' ),
+				'output_callback'    => array( $this, 'shapeOutput' ),
+				'meta'               => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: for edit-context, the current user must be able to edit at
+	 * Permission floor: for edit-context, the current user must be able to edit at
 	 * least one REST-enabled post type (mirrors core's
 	 * `WP_REST_Post_Types_Controller::get_items_permissions_check()`); otherwise any
 	 * logged-in user.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may list post types.
+	 * Mirrors the catalog's original cap. The route's own check still runs at
+	 * dispatch.
+	 *
+	 * @param mixed $input The raw ability input.
+	 * @return bool True to defer to the route's dispatch-time check.
 	 */
-	public function hasPermission( $input ): bool {
+	public function requirePermission( $input ): bool {
 		$input   = is_array( $input ) ? $input : array();
 		$context = $input['context'] ?? 'view';
 
@@ -142,27 +153,20 @@ final class ListPostTypes implements Ability {
 	}
 
 	/**
-	 * Executes the ability by dispatching the internal REST request.
+	 * Normalises the slug-keyed `/wp/v2/types` body into a flat list of objects.
 	 *
-	 * The `/wp/v2/types` response is an object keyed by slug; it is converted
-	 * into a normalised list of objects.
+	 * Wired as the adapter's `output_callback`; runs only on success. The route's
+	 * body is an object keyed by slug, so it is iterated (not the collection
+	 * envelope) and each type is flattened, enriching `supports` from the non-REST
+	 * `get_all_post_type_supports()`. `$input` and `$response` are part of the
+	 * callback signature but unused here.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The normalised list, or the REST error.
+	 * @param mixed               $data     The slug-keyed types object.
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The normalised list and totals.
 	 */
-	public function execute( $input ) {
-		$input = is_array( $input ) ? $input : array();
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/types' );
-		$request->set_param( 'context', $input['context'] ?? 'view' );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
-
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
 		$items = array();
 		if ( is_array( $data ) ) {
 			foreach ( $data as $slug => $type ) {

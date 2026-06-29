@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Search;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Search\SearchContent;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
@@ -108,6 +107,11 @@ final class SearchContentTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// The adapter's require_permission floor denies with a WP_Error, which
+		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it to
+		// the generic ability_invalid_permissions.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-search/search-content' )->execute(
@@ -118,12 +122,13 @@ final class SearchContentTest extends TestCase {
 		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
-	public function test_invalid_type_preserves_core_error(): void {
+	public function test_invalid_type_is_rejected_as_invalid_input(): void {
 		$this->actingAs( 'administrator' );
 
-		// Call execute() directly to bypass the input-schema enum and reach
-		// core's invalid-type guard, which the ability must surface unchanged.
-		$result = ( new SearchContent() )->execute(
+		// An out-of-enum `type` is rejected before dispatch: adapter-backed, the
+		// ability's own input schema enforces the enum, so the Abilities API returns
+		// ability_invalid_input rather than reaching the route's rest_invalid_param.
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array(
 				'search' => 'anything',
 				'type'   => 'not-a-real-type',
@@ -131,9 +136,7 @@ final class SearchContentTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		// The wrapped route validates `type` against its enum, so core returns
-		// rest_invalid_param (400). The ability surfaces it unchanged.
-		$this->assertSame( 'rest_invalid_param', $result->get_error_code() );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_out_of_range_page_returns_empty_items(): void {

@@ -107,13 +107,18 @@ final class UpdateGlobalStylesTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// The adapter's require_permission floor denies with a WP_Error, which
+		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$this->actingAs( 'subscriber' );
 
 		$id      = $this->globalStylesId();
 		$ability = wp_get_ability( 'og-templates/update-global-styles' );
 
-		// A subscriber lacks edit_post on the global-styles post.
-		$this->assertFalse(
+		// A subscriber lacks edit_post on the global-styles post. The floor denies
+		// with a WP_Error (normalized rest_forbidden), so the verdict is not true.
+		$this->assertNotTrue(
 			$ability->check_permissions( array( 'id' => $id ) )
 		);
 
@@ -137,7 +142,8 @@ final class UpdateGlobalStylesTest extends TestCase {
 
 		try {
 			// A styles.css key now requires edit_css, which the user no longer has.
-			$this->assertFalse(
+			// The floor denies with a WP_Error (normalized rest_forbidden).
+			$this->assertNotTrue(
 				$ability->check_permissions(
 					array(
 						'id'     => $id,
@@ -147,7 +153,7 @@ final class UpdateGlobalStylesTest extends TestCase {
 			);
 
 			// The gate fires on key presence, even for an explicit empty css.
-			$this->assertFalse(
+			$this->assertNotTrue(
 				$ability->check_permissions(
 					array(
 						'id'     => $id,

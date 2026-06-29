@@ -97,6 +97,11 @@ final class ListThemesTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// The adapter's require_permission floor denies with a WP_Error, which
+		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it to
+		// the generic ability_invalid_permissions.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-themes/list-themes' )->execute( array() );
@@ -109,9 +114,9 @@ final class ListThemesTest extends TestCase {
 		$ability = new ListThemes();
 
 		$this->actingAs( 'administrator' );
-		$this->assertTrue( $ability->hasPermission( array() ) );
+		$this->assertTrue( $ability->requirePermission( array() ) );
 
 		$this->actingAs( 'subscriber' );
-		$this->assertFalse( $ability->hasPermission( array() ) );
+		$this->assertFalse( $ability->requirePermission( array() ) );
 	}
 }

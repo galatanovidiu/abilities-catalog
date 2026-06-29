@@ -107,6 +107,11 @@ final class ListCommentsTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied(): void {
+		// The adapter's require_permission floor denies with a WP_Error, which
+		// WP_Ability::execute() reports via _doing_it_wrong before collapsing it to
+		// the generic ability_invalid_permissions.
+		$this->setExpectedIncorrectUsage('WP_Ability::execute');
+
 		wp_set_current_user(0);
 
 		$result = wp_get_ability('og-comments/list-comments')->execute(array());
