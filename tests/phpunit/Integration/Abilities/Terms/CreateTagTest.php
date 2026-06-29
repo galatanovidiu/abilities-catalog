@@ -20,10 +20,10 @@ use WP_Error;
 final class CreateTagTest extends TestCase {
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('og-terms/create-tag');
+		$ability = wp_get_ability( 'og-terms/create-tag' );
 
-		$this->assertNotNull($ability);
-		$this->assertSame('og-terms/create-tag', $ability->get_name());
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-terms/create-tag', $ability->get_name() );
 	}
 
 	/**
@@ -31,45 +31,53 @@ final class CreateTagTest extends TestCase {
 	 * returned id/name/slug, with a non-empty archive link.
 	 */
 	public function test_creates_tag_and_returns_core_shape(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-terms/create-tag')->execute(
+		$result = wp_get_ability( 'og-terms/create-tag' )->execute(
 			array(
 				'name' => 'Featured',
 				'slug' => 'featured',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertGreaterThan(0, $result['id']);
-		$this->assertSame('Featured', $result['name']);
-		$this->assertSame('featured', $result['slug']);
-		$this->assertIsString($result['link']);
-		$this->assertNotSame('', $result['link']);
+		$this->assertIsArray( $result );
+		$this->assertGreaterThan( 0, $result['id'] );
+		$this->assertSame( 'Featured', $result['name'] );
+		$this->assertSame( 'featured', $result['slug'] );
+		$this->assertIsString( $result['link'] );
+		$this->assertNotSame( '', $result['link'] );
 
-		$term = get_term($result['id'], 'post_tag');
-		$this->assertSame('Featured', $term->name);
-		$this->assertSame('featured', $term->slug);
+		$term = get_term( $result['id'], 'post_tag' );
+		$this->assertSame( 'Featured', $term->name );
+		$this->assertSame( 'featured', $term->slug );
 	}
 
 	/**
-	 * Capability gating: a subscriber lacks the `post_tag` `assign_terms`
-	 * capability, so the ability's permission check denies execution.
+	 * Capability gating: a subscriber lacks the `post_tag` create capability, so
+	 * the wrapped route denies the write. Adapter-backed: the route's permission
+	 * check now runs at dispatch, so execute() surfaces the route's REAL error
+	 * (`rest_cannot_create`, 403) — not the generic ability_invalid_permissions
+	 * collapse, and not via check_permissions() (guard-only now; this ability has
+	 * no require_permission floor, so it returns true).
 	 */
 	public function test_subscriber_cannot_create_tag(): void {
-		$this->actingAs('subscriber');
+		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability('og-terms/create-tag');
+		$result = wp_get_ability( 'og-terms/create-tag' )->execute( array( 'name' => 'Denied' ) );
 
-		$this->assertFalse($ability->check_permissions(array('name' => 'Denied')));
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_create', $result->get_error_code() );
+		// 403 because the user is logged in but lacks the capability.
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	/**
 	 * Error specificity: creating a tag whose name already exists surfaces core's
-	 * `term_exists` error code through the shared RestError helper.
+	 * `term_exists` error code through the adapter's dispatch path.
 	 */
 	public function test_duplicate_name_surfaces_term_exists_error(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
 		self::factory()->term->create(
 			array(
@@ -79,14 +87,14 @@ final class CreateTagTest extends TestCase {
 			)
 		);
 
-		$result = wp_get_ability('og-terms/create-tag')->execute(
+		$result = wp_get_ability( 'og-terms/create-tag' )->execute(
 			array(
 				'name' => 'Duplicate',
 				'slug' => 'duplicate',
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('term_exists', $result->get_error_code());
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'term_exists', $result->get_error_code() );
 	}
 }

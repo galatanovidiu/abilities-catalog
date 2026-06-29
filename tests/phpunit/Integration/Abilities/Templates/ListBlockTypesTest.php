@@ -2,10 +2,12 @@
 /**
  * Integration tests for og-templates/list-block-types output and contract.
  *
- * Covers the happy path (returns an `items` array whose rows carry the four
- * guaranteed keys and includes `core/paragraph`), the output-shape guarantee
- * (each row exposes only the declared flat keys), and the wrong-capability
- * denial (a subscriber lacks edit_posts).
+ * Covers registration, the happy path (returns an `items` array whose rows carry
+ * the four guaranteed keys and includes `core/paragraph`), the output-shape
+ * guarantee (each row exposes only the declared flat keys), and the
+ * wrong-capability denial. Adapter-backed: permission delegates to the wrapped
+ * route, so a subscriber denial surfaces through execute() as the route's REAL
+ * REST error, not the generic ability_invalid_permissions collapse.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -21,6 +23,13 @@ use WP_Error;
  * Exercises og-templates/list-block-types.
  */
 final class ListBlockTypesTest extends TestCase {
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-templates/list-block-types' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-templates/list-block-types', $ability->get_name() );
+	}
 
 	public function test_returns_items_with_guaranteed_keys_including_core_paragraph(): void {
 		$this->actingAs( 'administrator' );
@@ -67,10 +76,16 @@ final class ListBlockTypesTest extends TestCase {
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
-		// edit_posts is the catalog guard; a subscriber lacks it.
+		// The wrapped route requires edit_posts and runs its own permission_callback
+		// at dispatch, so execute() surfaces the route's REAL error — not the generic
+		// collapse. This ability sets no require_permission guard, so the denial lives
+		// on the execute() path.
 		$result = wp_get_ability( 'og-templates/list-block-types' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_block_type_cannot_view', $result->get_error_code() );
+		// 403 because the subscriber is logged in but lacks edit_posts.
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

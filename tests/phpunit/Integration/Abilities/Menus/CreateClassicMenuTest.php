@@ -80,6 +80,11 @@ final class CreateClassicMenuTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied(): void {
+		// Adapter-backed: the route's own create permission check (assign_terms ->
+		// edit_theme_options for nav_menu) runs at dispatch, so execute() surfaces the
+		// route's REAL error — not the generic collapse. The adapter's permission phase
+		// is guard-only and this ability has no require_permission guard, so the denial
+		// lives on the execute() path.
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-menus/create-classic-menu' )->execute(
@@ -87,6 +92,9 @@ final class CreateClassicMenuTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_create', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

@@ -90,11 +90,17 @@ final class ListFontCollectionsTest extends TestCase {
 	}
 
 	public function test_non_admin_is_denied(): void {
+		// Adapter-backed: the route's own get_items_permissions_check requires
+		// edit_theme_options (equal to the catalog cap — no floor was added). It runs
+		// at dispatch, so execute() surfaces the route's REAL error, not the generic
+		// ability_invalid_permissions collapse. An editor lacks edit_theme_options, so
+		// the route denies with a 403 (the user is logged in).
 		$this->actingAs( 'editor' );
 
 		$result = wp_get_ability( 'og-fonts/list-font-collections' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

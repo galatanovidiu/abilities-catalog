@@ -15,9 +15,10 @@ use WP_Error;
 
 /**
  * og-settings/update-writing writes the Writing Settings screen via
- * POST /wp/v2/settings. manage_options is the hard capability guard. The output
- * always carries all three fields and normalizes the falsy default_post_format
- * sentinel to 'standard'.
+ * POST /wp/v2/settings, wrapped through the Abilities REST Adapter. The route's
+ * own permission check (manage_options) is the hard guard. The output always
+ * carries all three fields and normalizes the falsy default_post_format sentinel
+ * to 'standard'.
  */
 final class UpdateWritingTest extends TestCase {
 
@@ -83,31 +84,34 @@ final class UpdateWritingTest extends TestCase {
 	}
 
 	public function test_invalid_post_format_is_rejected_by_schema(): void {
-		$this->actingAs( 'administrator' );
-
-		$schema = ( new UpdateWriting() )->args()['input_schema']['properties'];
+		$schema = ( new UpdateWriting() )->args()['rest_args']['input_schema']['properties'];
 
 		$this->assertContains( 'standard', $schema['default_post_format']['enum'] );
 		$this->assertNotContains( 'not-a-format', $schema['default_post_format']['enum'] );
 	}
 
 	public function test_default_category_declares_minimum_one(): void {
-		$schema = ( new UpdateWriting() )->args()['input_schema']['properties'];
+		$schema = ( new UpdateWriting() )->args()['rest_args']['input_schema']['properties'];
 
 		$this->assertSame( 1, $schema['default_category']['minimum'] );
 	}
 
 	public function test_no_fields_returns_error(): void {
-		$ability = new UpdateWriting();
+		// The empty-update rejection now lives in the adapter's input_callback, which runs
+		// at dispatch (not the guard-only permission phase), so its real WP_Error surfaces
+		// through execute() rather than collapsing to ability_invalid_permissions.
 		$this->actingAs( 'administrator' );
 
-		$result = $ability->execute( array() );
+		$result = wp_get_ability( 'og-settings/update-writing' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'abilities_catalog_no_fields', $result->get_error_code() );
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// Permission delegates to the wrapped route (update_items_permissions_check,
+		// manage_options). Under the guard-only adapter the route's denial runs at dispatch
+		// and surfaces through execute() as the REAL REST error, not the generic collapse.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-settings/update-writing' )->execute(
@@ -115,6 +119,10 @@ final class UpdateWritingTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		// The settings route's permission_callback returns a bare false, so the REST
+		// server raises rest_forbidden; 403 because the subscriber is logged in.
+		$this->assertSame( 'rest_forbidden', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

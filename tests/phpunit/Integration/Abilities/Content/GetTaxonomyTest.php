@@ -9,14 +9,14 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content\GetTaxonomy;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
  * Exercises og-content/get-taxonomy end-to-end: a registered taxonomy slug in,
- * a flat shaped field set out. The wrapped GET /wp/v2/taxonomies/{taxonomy}
- * route allows public view reads, so the ability defers permission to it.
+ * a flat shaped field set out. Adapter-backed — the wrapped
+ * GET /wp/v2/taxonomies/{taxonomy} route allows a public view read, so the
+ * ability defers permission to it and route errors surface through execute().
  */
 final class GetTaxonomyTest extends TestCase {
 
@@ -71,14 +71,14 @@ final class GetTaxonomyTest extends TestCase {
 	public function test_unknown_taxonomy_returns_specific_not_found_error(): void {
 		$this->actingAs( 'administrator' );
 
+		// The route runs at dispatch, so execute() surfaces the route's REAL error
+		// (core's specific 404), never the generic permission collapse.
 		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'nope_xyz' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		// Core's specific 404, never the generic permission collapse.
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 'rest_taxonomy_invalid', $result->get_error_code() );
-		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
-		$data = $result->get_error_data();
-		$this->assertSame( 404, $data['status'] );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_missing_taxonomy_is_rejected_by_schema(): void {
@@ -91,22 +91,13 @@ final class GetTaxonomyTest extends TestCase {
 	}
 
 	public function test_public_view_read_is_allowed_logged_out(): void {
+		// Adapter-backed: permission delegates to the wrapped route, which allows an
+		// anonymous read of a registered taxonomy in the default "view" context. The
+		// catalog imposes no floor; a stricter floor would use the adapter's
+		// require_permission knob.
 		wp_set_current_user( 0 );
 
-		// The wrapped taxonomies/{taxonomy} view route is public, so the ability
-		// defers to it and does not collapse a logged-out reader into a
-		// permission error.
 		$result = wp_get_ability( 'og-content/get-taxonomy' )->execute( array( 'taxonomy' => 'category' ) );
-
-		$this->assertIsArray( $result );
-		$this->assertSame( 'category', $result['slug'] );
-	}
-
-	public function test_direct_instantiation_executes(): void {
-		$this->actingAs( 'administrator' );
-
-		// Exercise the class wiring directly, not only the registry lookup.
-		$result = ( new GetTaxonomy() )->execute( array( 'taxonomy' => 'category' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'category', $result['slug'] );

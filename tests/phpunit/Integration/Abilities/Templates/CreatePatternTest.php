@@ -2,10 +2,11 @@
 /**
  * Integration tests for og-templates/create-pattern output and contract.
  *
- * Covers the publish-by-default contract (status injected when omitted), the
- * non-empty title read from the blocks controller's raw field, the additive
- * edit_link (Site Editor URL), a wrong-capability denial, and error
- * preservation on a failed create.
+ * Covers registration, the publish-by-default contract (status injected when
+ * omitted by the adapter's input_callback), the non-empty title read from the
+ * blocks controller's raw field, the additive edit_link (Site Editor URL), a
+ * wrong-capability denial surfacing the route's real REST error through
+ * execute(), and error preservation on a failed create.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -18,9 +19,16 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises og-templates/create-pattern.
+ * Exercises og-templates/create-pattern as an adapter-backed write ability.
  */
 final class CreatePatternTest extends TestCase {
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-templates/create-pattern' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-templates/create-pattern', $ability->get_name() );
+	}
 
 	public function test_create_returns_title_publish_status_and_edit_link(): void {
 		$this->actingAs( 'administrator' );
@@ -35,7 +43,7 @@ final class CreatePatternTest extends TestCase {
 		$this->assertIsArray( $result );
 		// Title must come back non-empty (read from title.raw).
 		$this->assertSame( 'My Pattern', $result['title'] );
-		// Status defaults to publish when omitted.
+		// Status defaults to publish when omitted (injected by the input_callback).
 		$this->assertSame( 'publish', $result['status'] );
 		$this->assertSame( 'publish', get_post( $result['id'] )->post_status );
 		// edit_link points at the Site Editor for the new wp_block.
@@ -62,27 +70,24 @@ final class CreatePatternTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// The route enforces the create capability (wp_block maps create_posts to
+		// publish_posts) at dispatch, so execute() surfaces the route's REAL error —
+		// not the generic ability_invalid_permissions collapse. The adapter's
+		// permission phase is guard-only and this ability has no require_permission
+		// guard, so the denial lives on the execute() path.
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'og-templates/create-pattern' );
-
-		// The capability gate must reject a subscriber.
-		$this->assertFalse(
-			$ability->check_permissions(
-				array(
-					'title'   => 'Nope',
-					'content' => 'x',
-				)
-			)
-		);
-
-		$result = $ability->execute(
+		$result = wp_get_ability( 'og-templates/create-pattern' )->execute(
 			array(
 				'title'   => 'Nope',
 				'content' => 'x',
 			)
 		);
+
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		// 403 because the user is logged in but lacks publish_posts.
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_missing_required_content_returns_error_without_creating(): void {

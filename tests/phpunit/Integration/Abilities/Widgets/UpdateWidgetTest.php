@@ -17,7 +17,10 @@ use WP_REST_Request;
  * Exercises the update write ability end-to-end: a core "block" widget is
  * updated in place (settings and sidebar), the output shape is exact, a missing
  * widget surfaces the route's specific 404 (not a permission collapse), and the
- * capability guard is enforced for logged-out and subscriber callers.
+ * route's own capability check denies logged-out and subscriber callers. The
+ * ability is adapter-backed: denials surface through execute() as the route's
+ * REAL error (rest_cannot_manage_widgets, 401/403), not the generic
+ * ability_invalid_permissions collapse, and the widget is left unchanged.
  */
 final class UpdateWidgetTest extends TestCase {
 
@@ -197,6 +200,13 @@ final class UpdateWidgetTest extends TestCase {
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
+	/**
+	 * A logged-out caller is denied by the wrapped route. Adapter-backed: the
+	 * route's own permission check runs at dispatch, so execute() surfaces the
+	 * REAL error (rest_cannot_manage_widgets, 401 — logged-out maps to
+	 * rest_authorization_required_code()), not the generic
+	 * ability_invalid_permissions collapse, and the widget is unchanged.
+	 */
 	public function test_logged_out_user_is_denied_and_widget_unchanged(): void {
 		wp_set_current_user( 0 );
 
@@ -208,12 +218,21 @@ final class UpdateWidgetTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		$this->actingAs( 'administrator' );
 		$this->assertStringContainsString( 'W3 original', $this->readWidgetContent( $this->widget_id ) );
 	}
 
+	/**
+	 * A subscriber is denied by the wrapped route. Adapter-backed: execute()
+	 * surfaces the route's REAL error (rest_cannot_manage_widgets, 403 — a
+	 * logged-in user lacking edit_theme_options maps to
+	 * rest_authorization_required_code()), not the generic collapse, and the
+	 * widget is unchanged.
+	 */
 	public function test_subscriber_is_denied_and_widget_unchanged(): void {
 		$this->actingAs( 'subscriber' );
 
@@ -225,7 +244,9 @@ final class UpdateWidgetTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		$this->actingAs( 'administrator' );
 		$this->assertStringContainsString( 'W3 original', $this->readWidgetContent( $this->widget_id ) );

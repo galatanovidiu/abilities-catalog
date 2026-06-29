@@ -95,6 +95,11 @@ final class GetFontFamilyTest extends TestCase {
 	}
 
 	public function test_non_admin_is_denied(): void {
+		// Adapter-backed: the route enforces edit_theme_options itself and now runs at
+		// dispatch, so execute() surfaces the route's REAL error — not the generic
+		// collapse. The editor lacks edit_theme_options, so the route denies the read.
+		// The adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so the denial lives on the execute() path.
 		$this->actingAs( 'editor' );
 
 		$family_id = $this->createFontFamily(
@@ -107,6 +112,10 @@ final class GetFontFamilyTest extends TestCase {
 		$result = wp_get_ability( 'og-fonts/get-font-family' )->execute( array( 'id' => $family_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_read', $result->get_error_code() );
+		// 403 because the user is logged in but lacks the capability
+		// (rest_authorization_required_code()).
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

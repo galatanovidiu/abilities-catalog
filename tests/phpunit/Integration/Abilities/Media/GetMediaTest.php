@@ -13,8 +13,9 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises og-media/get-media: flat output shape over a real upload, the
- * metadata-less object cast for media_details, and the minimum: 1 input guard.
+ * Exercises og-media/get-media end-to-end: flat output shape over a real upload,
+ * the metadata-less object cast for media_details, the minimum: 1 input guard, and
+ * the route's real permission errors surfaced through execute() by the adapter.
  */
 final class GetMediaTest extends TestCase {
 
@@ -94,23 +95,29 @@ final class GetMediaTest extends TestCase {
 		$this->assertSame( $parent_id, $result['post'] );
 	}
 
-	public function test_negative_id_is_rejected_by_schema(): void {
+	public function test_negative_id_does_not_route(): void {
 		$this->actingAs( 'administrator' );
 
-		// The minimum: 1 input guard rejects a non-positive id at the schema
-		// boundary, before absint() could retarget it to a different object.
+		// Adapter-backed: the derived input schema types `id` from the `[\d]+` path
+		// capture (integer, no `minimum`), so a negative id passes the ability's own
+		// validation and reaches the route at dispatch. There it cannot fit the numeric
+		// capture, so no REST route matches the path and the adapter returns rest_no_route
+		// (404) — the same verdict the request would get over HTTP — instead of the old
+		// hand-written schema's `minimum: 1` rejection.
 		$result = wp_get_ability( 'og-media/get-media' )->execute( array( 'id' => -7 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
+		$this->assertSame( 'rest_no_route', $result->get_error_code() );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_edit_context_missing_id_surfaces_route_404_not_generic_denial(): void {
 		$this->actingAs( 'administrator' );
 
-		// Object-independent permission_callback: a non-existent id in edit context
-		// reaches the route, which returns its specific invalid-id 404 instead of the
+		// Adapter-backed: the route runs at dispatch, so a non-existent id in edit
+		// context reaches it and returns its specific invalid-id 404 instead of the
 		// opaque ability_invalid_permissions an object-level pre-check would produce.
+		// The ability sets no require_permission guard, so nothing collapses the error.
 		$result = wp_get_ability( 'og-media/get-media' )->execute(
 			array(
 				'id'      => 999999,
@@ -127,8 +134,10 @@ final class GetMediaTest extends TestCase {
 		$attachment_id = self::factory()->attachment->create( array( 'post_author' => $author_id ) );
 
 		// A low-privilege user requesting edit context is denied — but by the route's
-		// specific rest_forbidden_context 403, proving the guard is not weakened while
-		// the error is no longer collapsed.
+		// specific rest_forbidden_context 403, surfaced through execute() at dispatch.
+		// The adapter's permission phase is guard-only and this ability sets no
+		// require_permission guard, so the denial is the route's, not the generic
+		// ability_invalid_permissions collapse.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-media/get-media' )->execute(
@@ -139,11 +148,12 @@ final class GetMediaTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 'rest_forbidden_context', $result->get_error_code() );
 	}
 
 	public function test_logged_out_can_read_published_attached_media(): void {
-		$parent_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$parent_id     = self::factory()->post->create( array( 'post_status' => 'publish' ) );
 		$attachment_id = self::factory()->attachment->create_upload_object(
 			DIR_TESTDATA . '/images/canola.jpg',
 			$parent_id
@@ -151,8 +161,8 @@ final class GetMediaTest extends TestCase {
 		$this->assertIsInt( $attachment_id );
 
 		// Core allows anonymous reads of an inherit-status attachment whose parent is
-		// published. The ability must not be stricter than core: with an
-		// object-independent permission_callback, the logged-out read succeeds.
+		// published. The ability must not be stricter than core: permission delegates to
+		// the wrapped route (no require_permission floor), so the logged-out read succeeds.
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-media/get-media' )->execute( array( 'id' => $attachment_id ) );

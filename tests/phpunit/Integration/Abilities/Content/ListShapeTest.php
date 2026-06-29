@@ -146,12 +146,18 @@ final class ListShapeTest extends TestCase {
 	}
 
 	public function test_list_post_revisions_negative_parent_returns_404_not_retargeted(): void {
+		// Adapter-backed: the route enforces edit_post on the parent itself and now runs
+		// at dispatch, so execute() surfaces the REAL REST error — not the generic
+		// ability_invalid_permissions collapse. A negative parent does not fit the route's
+		// numeric path capture, so dispatch returns a 404 instead of masking it as a
+		// permission failure.
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create();
 
 		$result = wp_get_ability( 'og-content/list-post-revisions' )->execute( array( 'parent' => -$post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Media;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,8 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-media/get-media`.
  *
- * Wraps `GET /wp/v2/media/<id>` via `rest_do_request()` and shapes the response
- * into a flat field set. Read-only; REST enforces per-object visibility.
+ * Wraps `GET /wp/v2/media/<id>` via the Abilities REST Adapter. The input schema
+ * is DERIVED from the route — the path capture `id` plus the route's query args,
+ * including `context` (`view`/`edit`), where `edit` requires edit access. The
+ * output is OVERRIDDEN to the catalog's flat field set through {@see shapeOutput()}.
+ * Permission delegates to the route's own check (no `require_permission` floor is
+ * set), so visibility follows REST: public reads of published (or published-parent)
+ * attachments, `edit_post` for `edit` context, and denial of private items.
  *
  * @since 0.1.0
  */
@@ -33,131 +38,91 @@ final class GetMedia implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'Get Media', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single media library item by ID, including its source URL, alt text, and media details.', 'abilities-catalog' ),
-			'category'            => 'og-core-media',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'id'      => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => __( 'The attachment (media item) ID.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/media/(?P<id>[\d]+)',
+				'method'          => 'GET',
+				'label'           => __( 'Get Media', 'abilities-catalog' ),
+				'description'     => __( 'Returns a single media library item by ID, including its source URL, alt text, and media details.', 'abilities-catalog' ),
+				'category'        => 'og-core-media',
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'id', 'source_url' ),
+					'properties'           => array(
+						'id'            => array(
+							'type'        => 'integer',
+							'description' => __( 'The attachment ID.', 'abilities-catalog' ),
+						),
+						'title'         => array(
+							'type'        => 'string',
+							'description' => __( 'The rendered media title.', 'abilities-catalog' ),
+						),
+						'alt_text'      => array(
+							'type'        => 'string',
+							'description' => __( 'Alternative text for the media item.', 'abilities-catalog' ),
+						),
+						'caption'       => array(
+							'type'        => 'string',
+							'description' => __( 'The rendered caption.', 'abilities-catalog' ),
+						),
+						'description'   => array(
+							'type'        => 'string',
+							'description' => __( 'The rendered description.', 'abilities-catalog' ),
+						),
+						'source_url'    => array(
+							'type'        => 'string',
+							'description' => __( 'The direct URL of the media file.', 'abilities-catalog' ),
+						),
+						'media_type'    => array(
+							'type'        => 'string',
+							'description' => __( 'The media type (e.g. "image", "file").', 'abilities-catalog' ),
+						),
+						'mime_type'     => array(
+							'type'        => 'string',
+							'description' => __( 'The MIME type of the media file.', 'abilities-catalog' ),
+						),
+						'media_details' => array(
+							'type'                 => 'object',
+							'additionalProperties' => true,
+							'description'          => __( 'Media-specific metadata (dimensions, sizes, etc.).', 'abilities-catalog' ),
+						),
+						'post'          => array(
+							'type'        => array( 'integer', 'null' ),
+							'description' => __( 'The ID of the post the media is attached to, or null if unattached.', 'abilities-catalog' ),
+						),
 					),
-					'context' => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'required'             => array( 'id' ),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'id', 'source_url' ),
-				'properties'           => array(
-					'id'            => array(
-						'type'        => 'integer',
-						'description' => __( 'The attachment ID.', 'abilities-catalog' ),
-					),
-					'title'         => array(
-						'type'        => 'string',
-						'description' => __( 'The rendered media title.', 'abilities-catalog' ),
-					),
-					'alt_text'      => array(
-						'type'        => 'string',
-						'description' => __( 'Alternative text for the media item.', 'abilities-catalog' ),
-					),
-					'caption'       => array(
-						'type'        => 'string',
-						'description' => __( 'The rendered caption.', 'abilities-catalog' ),
-					),
-					'description'   => array(
-						'type'        => 'string',
-						'description' => __( 'The rendered description.', 'abilities-catalog' ),
-					),
-					'source_url'    => array(
-						'type'        => 'string',
-						'description' => __( 'The direct URL of the media file.', 'abilities-catalog' ),
-					),
-					'media_type'    => array(
-						'type'        => 'string',
-						'description' => __( 'The media type (e.g. "image", "file").', 'abilities-catalog' ),
-					),
-					'mime_type'     => array(
-						'type'        => 'string',
-						'description' => __( 'The MIME type of the media file.', 'abilities-catalog' ),
-					),
-					'media_details' => array(
-						'type'                 => 'object',
-						'additionalProperties' => true,
-						'description'          => __( 'Media-specific metadata (dimensions, sizes, etc.).', 'abilities-catalog' ),
-					),
-					'post'          => array(
-						'type'        => array( 'integer', 'null' ),
-						'description' => __( 'The ID of the post the media is attached to, or null if unattached.', 'abilities-catalog' ),
-					),
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'show_in_rest' => true,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
-				),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: delegated to the wrapped REST route.
+	 * Flattens the REST media body to the catalog's 10-field set.
 	 *
-	 * `og-media/get-media` reads through `GET /wp/v2/media/<id>`, whose own permission
-	 * check enforces visibility on the object — public access to published (or
-	 * published-parent) attachments, `edit_post` for `edit` context, and denial of
-	 * private items. Doing the object-level check here instead would (a) narrow core
-	 * by blocking the anonymous reads it allows and (b) collapse the route's specific
-	 * errors (`rest_post_invalid_id` 404, `rest_forbidden_context` 403) into one
-	 * opaque permission error, because the Abilities API swallows a non-`true` return
-	 * and replaces it with a single generic denial.
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over the
+	 * REST media body. `title`, `caption`, and `description` are un-nested from their
+	 * `{ rendered: ... }` shape. `media_details` is cast to a `stdClass` when REST
+	 * returns it empty, so it serializes as `{}` (not `[]`) under the `type: object`
+	 * output schema. `post` is preserved as `null` for an unattached item rather than
+	 * flattened to `0`. `$input` and `$response` are part of the callback signature
+	 * but unused here — the body carries everything this shape needs.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool Always true; the wrapped route is the server-side guard.
+	 * @param mixed               $data     The REST media body (associative array).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat media fields.
 	 */
-	public function hasPermission( $input ): bool {
-		return true;
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error Flat media fields, or the REST error.
-	 */
-	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
-		$context = $input['context'] ?? 'view';
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/media/' . $id );
-		$request->set_param( 'context', $context );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data = is_array( $data ) ? $data : array();
 
 		return array(
-			'id'            => (int) ( $data['id'] ?? $id ),
+			'id'            => (int) ( $data['id'] ?? 0 ),
 			'title'         => (string) ( $data['title']['rendered'] ?? '' ),
 			'alt_text'      => (string) ( $data['alt_text'] ?? '' ),
 			'caption'       => (string) ( $data['caption']['rendered'] ?? '' ),

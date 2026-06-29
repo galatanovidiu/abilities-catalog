@@ -13,8 +13,9 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the create wrap: happy path surfacing the stored CSS family,
- * default slug derivation, and capability denial.
+ * Exercises the adapter-backed create wrap: happy path surfacing the stored CSS
+ * family, default slug derivation (now performed by the input_callback), and the
+ * route's real capability denial on execute().
  */
 final class InstallFontFamilyTest extends TestCase {
 
@@ -63,6 +64,11 @@ final class InstallFontFamilyTest extends TestCase {
 	}
 
 	public function test_non_admin_is_denied(): void {
+		// Adapter-backed: the route's create check (create_posts -> edit_theme_options)
+		// runs at dispatch, so execute() surfaces the route's REAL error, not the
+		// generic collapse. The adapter's permission phase is guard-only and this
+		// ability has no require_permission guard, so check_permissions() would just
+		// return true; the denial lives on the execute() path.
 		$this->actingAs( 'editor' );
 
 		$result = wp_get_ability( 'og-fonts/install-font-family' )->execute(
@@ -73,6 +79,9 @@ final class InstallFontFamilyTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_create', $result->get_error_code() );
+		// 403 because the editor is logged in but lacks edit_theme_options.
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

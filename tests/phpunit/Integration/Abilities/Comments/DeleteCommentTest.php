@@ -13,9 +13,10 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the destructive delete ability end-to-end: real comment in,
- * permanent delete out, with the negative-ID guard and the flattened
- * prior-comment fields verified.
+ * Exercises the adapter-backed destructive delete ability end-to-end: real comment
+ * in, permanent delete out, with the negative-ID guard and the flattened
+ * prior-comment fields verified. Permission delegates to the wrapped route, so
+ * denials surface through execute() as the route's REAL REST error.
  */
 final class DeleteCommentTest extends TestCase {
 
@@ -80,13 +81,19 @@ final class DeleteCommentTest extends TestCase {
 		$this->assertNotNull( get_comment( $this->comment_id ) );
 	}
 
+	/**
+	 * Permission now delegates to the wrapped route, which runs at dispatch, so
+	 * execute() surfaces the route's REAL error — not the generic collapse. A
+	 * logged-out user cannot delete the comment, and it survives.
+	 */
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-comments/delete-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
 		$this->assertNotNull( get_comment( $this->comment_id ) );
 	}
 

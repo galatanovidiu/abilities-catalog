@@ -2,9 +2,10 @@
 /**
  * Integration tests for og-templates/list-synced-patterns output and contract.
  *
- * Covers the flattened happy-path row shape (including the additive sync_status
- * field and the pagination totals), the fact that unsynced patterns are listed
- * (the route is not synced-only), and the coarse edit_posts permission guard.
+ * Covers registration, the flattened happy-path row shape (including the additive
+ * sync_status field and the pagination totals), the fact that unsynced patterns
+ * are listed (the route is not synced-only), and that an unauthorized edit-context
+ * read surfaces the wrapped route's REAL REST error through execute().
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -39,6 +40,13 @@ final class ListSyncedPatternsTest extends TestCase {
 				$args
 			)
 		);
+	}
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-templates/list-synced-patterns' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-templates/list-synced-patterns', $ability->get_name() );
 	}
 
 	public function test_returns_flattened_rows_with_sync_status_and_totals(): void {
@@ -91,16 +99,26 @@ final class ListSyncedPatternsTest extends TestCase {
 		$this->assertSame( 'unsynced', $row['sync_status'] );
 	}
 
-	public function test_subscriber_is_denied(): void {
-		$this->actingAs( 'subscriber' );
+	public function test_logged_out_user_is_denied_edit_context(): void {
+		// Adapter-backed: the blocks route's own get_items permission check denies an
+		// edit-context read when the user lacks edit_posts. That check now runs at
+		// dispatch, so execute() surfaces the route's REAL error (rest_forbidden_context),
+		// not the old generic ability_invalid_permissions. This ability sets no
+		// require_permission floor, so the denial lives on the execute() path, not in
+		// check_permissions().
+		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'og-templates/list-synced-patterns' );
+		$result = wp_get_ability( 'og-templates/list-synced-patterns' )->execute(
+			array(
+				'context' => 'edit',
+			)
+		);
 
-		// wp_block maps its edit_posts cap to edit_posts, which a subscriber lacks.
-		$this->assertFalse( $ability->check_permissions( array() ) );
-
-		$result = $ability->execute( array() );
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_forbidden_context', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	/**

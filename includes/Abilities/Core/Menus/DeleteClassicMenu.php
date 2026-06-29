@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,18 +15,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T2 destructive write ability: `og-menus/delete-classic-menu`.
  *
- * Wraps `DELETE /wp/v2/menus/<id>` with `force=true` via `rest_do_request()`,
- * permanently deleting a whole classic menu (a `nav_menu` term) and all of its
- * menu items. Classic menus have no Trash: the menus controller returns HTTP 501
- * when `force` is false, so a permanent delete is the only option. This deletes
- * the entire menu, not a single item — use `og-menus/delete-menu-item` for one item.
+ * Wraps `DELETE /wp/v2/menus/<id>` via the Abilities REST Adapter, permanently
+ * deleting a whole classic menu (a `nav_menu` term) and all of its menu items.
+ * Classic menus have no Trash: the menus controller returns HTTP 501 when `force`
+ * is false, so {@see injectForce()} pins `force=true` before dispatch. This
+ * deletes the entire menu, not a single item — use `og-menus/delete-menu-item`
+ * for one item.
  *
- * The `permission_callback` mirrors the terms controller
- * `delete_item_permissions_check`: object-level `delete_term` on the menu term id,
- * which `map_meta_cap` resolves to `edit_theme_options` for `nav_menu`. This
- * ability never calls `wp_delete_nav_menu()` directly; it surfaces the REST
- * route's `WP_Error` unchanged. Destructive: exposed to the browser only when both
- * the write and destructive adapter settings are on. Capability is the hard guard.
+ * The input is OVERRIDDEN to the single `id` path capture (the caller never
+ * passes `force`); the output is OVERRIDDEN to the catalog's flat snapshot via
+ * {@see shapeOutput()}, drawn from the force-delete response body
+ * (`deleted` + `previous{ name, slug, locations }`). Permission delegates to the
+ * route's own check — the terms controller's `delete_item_permissions_check`,
+ * which `map_meta_cap` resolves to `edit_theme_options` for `nav_menu`. No
+ * `require_permission` floor is set: the route is the authority. Capability is
+ * the hard guard. Destructive: exposed to the browser only when both the write
+ * and destructive adapter settings are on.
  *
  * @since 0.5.0
  */
@@ -43,106 +47,107 @@ final class DeleteClassicMenu implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'Delete Classic Menu', 'abilities-catalog' ),
-			'description'         => __( 'Permanently deletes an entire classic menu (a nav_menu term) and all of its items by menu ID. Classic menus have no Trash, so this cannot be undone. Also clears the menu from any theme locations it was assigned to. Deletes the whole menu, not a single item.', 'abilities-catalog' ),
-			'category'            => 'og-core-menus',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'id' => array(
-						'type'        => 'integer',
-						'description' => __( 'The classic menu (nav_menu term) ID to permanently delete. Discover it with og-menus/list-classic-menus or og-menus/get-classic-menu.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/menus/(?P<id>[\d]+)',
+				'method'          => 'DELETE',
+				'label'           => __( 'Delete Classic Menu', 'abilities-catalog' ),
+				'description'     => __( 'Permanently deletes an entire classic menu (a nav_menu term) and all of its items by menu ID. Classic menus have no Trash, so this cannot be undone. Also clears the menu from any theme locations it was assigned to. Deletes the whole menu, not a single item.', 'abilities-catalog' ),
+				'category'        => 'og-core-menus',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The classic menu (nav_menu term) ID to permanently delete. Discover it with og-menus/list-classic-menus or og-menus/get-classic-menu.', 'abilities-catalog' ),
+						),
 					),
+					'required'             => array( 'id' ),
+					'additionalProperties' => false,
 				),
-				'required'             => array( 'id' ),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'deleted', 'id' ),
-				'properties'           => array(
-					'deleted'           => array(
-						'type'        => 'boolean',
-						'description' => __( 'Whether the menu was permanently deleted.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'deleted', 'id' ),
+					'properties'           => array(
+						'deleted'           => array(
+							'type'        => 'boolean',
+							'description' => __( 'Whether the menu was permanently deleted.', 'abilities-catalog' ),
+						),
+						'id'                => array(
+							'type'        => 'integer',
+							'description' => __( 'The deleted menu ID.', 'abilities-catalog' ),
+						),
+						'name'              => array(
+							'type'        => 'string',
+							'description' => __( 'The name of the menu that was deleted.', 'abilities-catalog' ),
+						),
+						'slug'              => array(
+							'type'        => 'string',
+							'description' => __( 'The slug of the menu that was deleted.', 'abilities-catalog' ),
+						),
+						'removed_locations' => array(
+							'type'        => 'array',
+							'items'       => array( 'type' => 'string' ),
+							'description' => __( 'Theme location slugs the deleted menu was cleared from.', 'abilities-catalog' ),
+						),
 					),
-					'id'                => array(
-						'type'        => 'integer',
-						'description' => __( 'The deleted menu ID.', 'abilities-catalog' ),
-					),
-					'name'              => array(
-						'type'        => 'string',
-						'description' => __( 'The name of the menu that was deleted.', 'abilities-catalog' ),
-					),
-					'slug'              => array(
-						'type'        => 'string',
-						'description' => __( 'The slug of the menu that was deleted.', 'abilities-catalog' ),
-					),
-					'removed_locations' => array(
-						'type'        => 'array',
-						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Theme location slugs the deleted menu was cleared from.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => false,
-					'destructive' => true,
-					'idempotent'  => false,
+				'input_callback'  => array( $this, 'injectForce' ),
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => true,
+						'idempotent'  => false,
+					),
+					'show_in_rest' => true,
+					'screen'       => 'nav-menus.php',
 				),
-				'show_in_rest' => true,
-				'screen'       => 'nav-menus.php',
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: object-level `delete_term` on the target menu.
+	 * Pins `force=true` before dispatch.
 	 *
-	 * For `nav_menu`, `delete_term` maps to `edit_theme_options` with no owner-vs-others
-	 * split, so this coarse, object-independent check is exactly what core requires —
-	 * never stricter, never weaker. The object decision (and a missing-id 404) is left
-	 * to the wrapped `DELETE /wp/v2/menus/<id>` route, so its specific `rest_term_invalid`
-	 * 404 reaches the caller instead of the generic denial the Abilities API substitutes
-	 * for a non-`true` return.
+	 * Classic menus have no Trash — the menus controller returns HTTP 501 unless
+	 * the delete is forced. The caller never passes `force` (it is not in the
+	 * input schema); this fixed param is injected here. `id` passes through
+	 * unchanged as the route's path capture.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user can manage nav menus.
+	 * @param array<string,mixed> $params The validated ability input.
+	 * @return array<string,mixed> The params with `force` forced on.
 	 */
-	public function hasPermission( $input ): bool {
-		return current_user_can( 'edit_theme_options' );
+	public function injectForce( array $params ): array {
+		$params['force'] = true;
+
+		return $params;
 	}
 
 	/**
-	 * Executes the ability by dispatching the internal REST delete request.
+	 * Flattens the REST force-delete body to the catalog's snapshot shape.
 	 *
-	 * Forces `force=true` so the menu is permanently deleted (classic menus have
-	 * no Trash). Any REST error is returned to the caller unchanged.
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over
+	 * the force-delete response body. The body carries `deleted` plus a
+	 * `previous` object holding the destroyed menu's `name`, `slug`, and
+	 * `locations` — everything this shape needs, with no pre-state required. `id`
+	 * is taken from the original ability input. `$response` is part of the
+	 * callback signature but unused here.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The deleted flag, id, and a snapshot of the destroyed menu, or the REST error.
+	 * @param mixed               $data     The REST force-delete body (associative array).
+	 * @param array<string,mixed> $input    The original ability input.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The deleted flag, id, and a snapshot of the destroyed menu.
 	 */
-	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
-		$request = new WP_REST_Request( 'DELETE', '/wp/v2/menus/' . $id );
-		$request->set_param( 'force', true );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data     = rest_get_server()->response_to_data( $response, false );
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data     = is_array( $data ) ? $data : array();
 		$previous = isset( $data['previous'] ) && is_array( $data['previous'] ) ? $data['previous'] : array();
 
 		$result = array(
 			'deleted' => (bool) ( $data['deleted'] ?? false ),
-			'id'      => $id,
+			'id'      => (int) ( $input['id'] ?? 0 ),
 		);
 
 		if ( isset( $previous['name'] ) ) {

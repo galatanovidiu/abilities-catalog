@@ -7,6 +7,13 @@
  * wrong-capability denial that creates no part, and a logged-out denial. Uses
  * only valid areas (header) so no core area-fallback warning fires.
  *
+ * Adapter-backed: permission delegates to the wrapped `POST /wp/v2/template-parts`
+ * route, which now runs at dispatch. A denied call therefore surfaces the route's
+ * REAL REST error through execute() (a forbidden/unauthorized WP_Error), NOT the
+ * generic ability_invalid_permissions collapse, and NOT via check_permissions()
+ * (which is the adapter's guard-only phase — this ability has no require_permission
+ * floor, so it returns true).
+ *
  * @package AbilitiesCatalog\Tests
  */
 
@@ -79,21 +86,20 @@ final class CreateTemplatePartTest extends TestCase {
 	public function test_subscriber_is_denied_and_creates_no_part(): void {
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'og-templates/create-template-part' );
-
-		$this->assertFalse(
-			$ability->check_permissions(
-				array( 'slug' => 'abilities-catalog-denied-part' )
-			)
-		);
-
-		$result = $ability->execute(
+		// The route enforces edit_theme_options itself and runs at dispatch, so
+		// execute() surfaces the route's REAL error — not the generic collapse.
+		// The adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so the denial lives on the execute() path.
+		$result = wp_get_ability( 'og-templates/create-template-part' )->execute(
 			array(
 				'slug' => 'abilities-catalog-denied-part',
 				'area' => 'header',
 			)
 		);
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		// 403 because the subscriber is logged in (rest_authorization_required_code()).
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		// The denied write created nothing.
 		$part = get_block_template( get_stylesheet() . '//abilities-catalog-denied-part', 'wp_template_part' );
@@ -103,20 +109,19 @@ final class CreateTemplatePartTest extends TestCase {
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'og-templates/create-template-part' );
-
-		$this->assertFalse(
-			$ability->check_permissions(
-				array( 'slug' => 'abilities-catalog-loggedout-part' )
-			)
-		);
-
-		$result = $ability->execute(
+		$result = wp_get_ability( 'og-templates/create-template-part' )->execute(
 			array(
 				'slug' => 'abilities-catalog-loggedout-part',
 				'area' => 'header',
 			)
 		);
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+
+		// The denied write created nothing.
+		$part = get_block_template( get_stylesheet() . '//abilities-catalog-loggedout-part', 'wp_template_part' );
+		$this->assertNull( $part );
 	}
 }

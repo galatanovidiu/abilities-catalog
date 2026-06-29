@@ -65,12 +65,38 @@ final class GetCommentTest extends TestCase {
 		$this->assertSame('approved', $result['status']);
 	}
 
-	public function test_logged_out_user_is_denied(): void {
+	public function test_logged_out_user_can_read_approved_comment(): void {
+		// Adapter-backed: permission delegates to the wrapped route, which allows an
+		// anonymous read of an approved comment in the default "view" context. The
+		// catalog no longer imposes its old edit_posts floor; a stricter floor would be
+		// added via the adapter's require_permission knob.
 		wp_set_current_user(0);
 
 		$result = wp_get_ability('og-comments/get-comment')->execute(array('id' => $this->comment_id));
 
+		$this->assertIsArray($result);
+		$this->assertSame($this->comment_id, $result['id']);
+	}
+
+	public function test_logged_out_user_is_denied_edit_context(): void {
+		// The route enforces edit context itself (requires moderate_comments) and now
+		// runs at dispatch, so execute() surfaces the route's REAL error — not the
+		// generic collapse. The adapter's permission phase is guard-only and this
+		// ability has no require_permission guard, so check_permissions() would just
+		// return true; the denial lives on the execute() path.
+		wp_set_current_user(0);
+
+		$result = wp_get_ability('og-comments/get-comment')->execute(
+			array(
+				'id'      => $this->comment_id,
+				'context' => 'edit',
+			)
+		);
+
 		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertNotSame('ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse');
+		$this->assertSame('rest_forbidden_context', $result->get_error_code());
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame(401, (int) ($result->get_error_data()['status'] ?? 0));
 	}
 }

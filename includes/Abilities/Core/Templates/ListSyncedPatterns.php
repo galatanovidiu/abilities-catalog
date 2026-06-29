@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Templates;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,15 +15,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-templates/list-synced-patterns`.
  *
- * Wraps `GET /wp/v2/blocks` via `rest_do_request()` and shapes the result. A
- * user pattern is a reusable block stored as a `wp_block` post. The route lists
- * the whole user pattern library, not just synced ones: a fully synced pattern
- * updates every place it is inserted, while `partial` and `unsynced` patterns do
- * not. Returns a flattened list (id, title, slug, status, modified, sync_status)
- * so an agent can find a pattern's id, tell its sync state apart, and then read
- * it with `og-templates/get-pattern`. This is the editable user pattern library,
- * distinct from `og-templates/list-patterns` (the read-only registered pattern
- * registry). Read-only.
+ * Wraps `GET /wp/v2/blocks` via the Abilities REST Adapter. A user pattern is a
+ * reusable block stored as a `wp_block` post. The route lists the whole user
+ * pattern library, not just synced ones: a fully synced pattern updates every
+ * place it is inserted, while `partial` and `unsynced` patterns do not. The
+ * blocks route is a `get_items` collection, so the adapter wraps the result in
+ * `{ items, total, total_pages }` (reading `X-WP-Total`/`X-WP-TotalPages` from the
+ * headers); {@see shapeOutput()} flattens each row to (id, title, slug, status,
+ * modified, sync_status) so an agent can find a pattern's id, tell its sync state
+ * apart, and then read it with `og-templates/get-pattern`. This is the editable
+ * user pattern library, distinct from `og-templates/list-patterns` (the read-only
+ * registered pattern registry). Permission delegates to the route's own check (no
+ * `require_permission` floor is set), so visibility follows REST. Read-only.
  *
  * @since 0.5.0
  */
@@ -40,139 +43,120 @@ final class ListSyncedPatterns implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Synced Patterns', 'abilities-catalog' ),
-			'description'         => __( 'Lists the user pattern library (reusable blocks, post type "wp_block"): synced, partial, and unsynced patterns. Returns id, title, slug, status, and sync_status (empty for fully synced, otherwise "partial" or "unsynced") so the pattern can then be read with the get-pattern ability. This is the editable user pattern library, not the read-only registered pattern registry.', 'abilities-catalog' ),
-			'category'            => 'og-core-templates',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'context'  => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'The request context. Defaults to "view".', 'abilities-catalog' ),
-					),
-					'page'     => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'default'     => 1,
-						'description' => __( 'The page of results to return.', 'abilities-catalog' ),
-					),
-					'per_page' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'maximum'     => 100,
-						'default'     => 10,
-						'description' => __( 'The number of synced patterns per page (1-100).', 'abilities-catalog' ),
-					),
-				),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items' ),
-				'properties'           => array(
-					'items'       => array(
-						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'required'             => array( 'id', 'title', 'status' ),
-							'properties'           => array(
-								'id'          => array(
-									'type'        => 'integer',
-									'description' => __( 'The user pattern (wp_block) post ID.', 'abilities-catalog' ),
-								),
-								'title'       => array(
-									'type'        => 'string',
-									'description' => __( 'The user pattern title.', 'abilities-catalog' ),
-								),
-								'slug'        => array(
-									'type'        => 'string',
-									'description' => __( 'The user pattern slug.', 'abilities-catalog' ),
-								),
-								'status'      => array(
-									'type'        => 'string',
-									'description' => __( 'The user pattern post status.', 'abilities-catalog' ),
-								),
-								'modified'    => array(
-									'type'        => 'string',
-									'description' => __( 'The last-modified date (site time).', 'abilities-catalog' ),
-								),
-								'sync_status' => array(
-									'type'        => 'string',
-									'description' => __( 'The pattern sync status: empty for a fully synced pattern, otherwise "partial" or "unsynced".', 'abilities-catalog' ),
-								),
-							),
-							'additionalProperties' => false,
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/blocks',
+				'method'          => 'GET',
+				'label'           => __( 'List Synced Patterns', 'abilities-catalog' ),
+				'description'     => __( 'Lists the user pattern library (reusable blocks, post type "wp_block"): synced, partial, and unsynced patterns. Returns id, title, slug, status, and sync_status (empty for fully synced, otherwise "partial" or "unsynced") so the pattern can then be read with the get-pattern ability. This is the editable user pattern library, not the read-only registered pattern registry.', 'abilities-catalog' ),
+				'category'        => 'og-core-templates',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'context'  => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'The request context. Defaults to "view".', 'abilities-catalog' ),
 						),
-						'description' => __( 'The list of user patterns (synced, partial, and unsynced).', 'abilities-catalog' ),
+						'page'     => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'default'     => 1,
+							'description' => __( 'The page of results to return.', 'abilities-catalog' ),
+						),
+						'per_page' => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'maximum'     => 100,
+							'default'     => 10,
+							'description' => __( 'The number of synced patterns per page (1-100).', 'abilities-catalog' ),
+						),
 					),
-					'total'       => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of user patterns matching the query.', 'abilities-catalog' ),
-					),
-					'total_pages' => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of pages available.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'items' ),
+					'properties'           => array(
+						'items'       => array(
+							'type'        => 'array',
+							'items'       => array(
+								'type'                 => 'object',
+								'required'             => array( 'id', 'title', 'status' ),
+								'properties'           => array(
+									'id'          => array(
+										'type'        => 'integer',
+										'description' => __( 'The user pattern (wp_block) post ID.', 'abilities-catalog' ),
+									),
+									'title'       => array(
+										'type'        => 'string',
+										'description' => __( 'The user pattern title.', 'abilities-catalog' ),
+									),
+									'slug'        => array(
+										'type'        => 'string',
+										'description' => __( 'The user pattern slug.', 'abilities-catalog' ),
+									),
+									'status'      => array(
+										'type'        => 'string',
+										'description' => __( 'The user pattern post status.', 'abilities-catalog' ),
+									),
+									'modified'    => array(
+										'type'        => 'string',
+										'description' => __( 'The last-modified date (site time).', 'abilities-catalog' ),
+									),
+									'sync_status' => array(
+										'type'        => 'string',
+										'description' => __( 'The pattern sync status: empty for a fully synced pattern, otherwise "partial" or "unsynced".', 'abilities-catalog' ),
+									),
+								),
+								'additionalProperties' => false,
+							),
+							'description' => __( 'The list of user patterns (synced, partial, and unsynced).', 'abilities-catalog' ),
+						),
+						'total'       => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of user patterns matching the query.', 'abilities-catalog' ),
+						),
+						'total_pages' => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of pages available.', 'abilities-catalog' ),
+						),
+					),
+					'additionalProperties' => false,
 				),
-				'show_in_rest' => true,
-			),
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'show_in_rest' => true,
+				),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: the `wp_block` post type's `edit_posts` capability.
+	 * Flattens the wrapped collection to the catalog's row shape and totals.
 	 *
-	 * Resolved dynamically from the post type object so the gate matches the
-	 * blocks (posts) controller and is never weaker than the wrapped REST route.
+	 * Wired as the adapter's `output_callback`, so it runs only on success. The
+	 * blocks route is a `get_items` collection, so the adapter hands this callback
+	 * the `{ items, total, total_pages }` envelope: `items` is the raw REST row
+	 * list, and the totals come from the `X-WP-Total`/`X-WP-TotalPages` headers.
+	 * Each row is flattened to the six-field shape, un-nesting `title` from its
+	 * `{ rendered, raw }` form and reading `sync_status` from the row's
+	 * `wp_pattern_sync_status` field. `$input` and `$response` are part of the
+	 * callback signature but unused here — the envelope carries everything needed.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may list synced patterns.
+	 * @param mixed               $data     The collection envelope (`{ items, total, total_pages }`).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The shaped collection.
 	 */
-	public function hasPermission( $input = null ): bool {
-		$post_type = get_post_type_object( 'wp_block' );
-		if ( null === $post_type ) {
-			return false;
-		}
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data  = is_array( $data ) ? $data : array();
+		$rows  = isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : array();
+		$items = array();
 
-		return current_user_can( $post_type->cap->edit_posts );
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request and shaping the result.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The shaped collection, or the REST error.
-	 */
-	public function execute( $input = null ) {
-		$input   = is_array( $input ) ? $input : array();
-		$request = new WP_REST_Request( 'GET', '/wp/v2/blocks' );
-		$request->set_param( 'context', isset( $input['context'] ) ? sanitize_key( (string) $input['context'] ) : 'view' );
-		$request->set_param( 'page', isset( $input['page'] ) ? absint( $input['page'] ) : 1 );
-		$request->set_param( 'per_page', isset( $input['per_page'] ) ? absint( $input['per_page'] ) : 10 );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data    = rest_get_server()->response_to_data( $response, false );
-		$headers = $response->get_headers();
-		$items   = array();
-
-		foreach ( is_array( $data ) ? $data : array() as $row ) {
+		foreach ( $rows as $row ) {
 			$title = $row['title'] ?? '';
 			if ( is_array( $title ) ) {
 				$title = $title['rendered'] ?? ( $title['raw'] ?? '' );
@@ -190,8 +174,8 @@ final class ListSyncedPatterns implements Ability {
 
 		return array(
 			'items'       => $items,
-			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
-			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
+			'total'       => (int) ( $data['total'] ?? 0 ),
+			'total_pages' => (int) ( $data['total_pages'] ?? 0 ),
 		);
 	}
 }

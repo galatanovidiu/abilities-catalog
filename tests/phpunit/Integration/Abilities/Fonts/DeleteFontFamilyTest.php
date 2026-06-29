@@ -13,8 +13,9 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the destructive, no-Trash delete: happy path with cascade reporting,
- * capability denial, and rejection of non-positive IDs without permission collapse.
+ * Exercises the destructive, no-Trash delete end-to-end: happy path with cascade
+ * reporting, the route's real capability denial surfaced through execute(), and
+ * rejection of non-positive IDs by the ability's input schema.
  */
 final class DeleteFontFamilyTest extends TestCase {
 
@@ -90,6 +91,11 @@ final class DeleteFontFamilyTest extends TestCase {
 	}
 
 	public function test_non_admin_is_denied(): void {
+		// Adapter-backed: the permission phase is guard-only and this ability sets no
+		// require_permission floor, so the route's own delete_item_permissions_check runs
+		// at dispatch and execute() surfaces its REAL error (rest_cannot_delete, 403), not
+		// the generic ability_invalid_permissions collapse. An editor lacks
+		// edit_theme_options, so the family survives.
 		$this->actingAs( 'editor' );
 
 		$family_id = $this->createFontFamily(
@@ -102,7 +108,9 @@ final class DeleteFontFamilyTest extends TestCase {
 		$result = wp_get_ability( 'og-fonts/delete-font-family' )->execute( array( 'id' => $family_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 		$this->assertNotNull( get_post( $family_id ) );
 	}
 

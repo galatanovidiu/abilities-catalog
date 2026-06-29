@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Templates;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,11 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-templates/list-patterns`.
  *
- * Wraps `GET /wp/v2/block-patterns/patterns` via `rest_do_request()` and shapes
- * the result. Returns the flat list of registered block patterns (the read-only
+ * Wraps `GET /wp/v2/block-patterns/patterns` via the Abilities REST Adapter. The
+ * input schema is DERIVED from the route (a no-input collection read). The output
+ * is OVERRIDDEN to the catalog's closed field set through {@see shapeOutput()},
+ * which projects the adapter's `{ items, total, total_pages }` collection envelope
+ * down to `{ items }` of flattened pattern rows. Returns the read-only registered
  * pattern registry, not user-created `wp_block` synced patterns; for those use
- * `og-templates/list-synced-patterns`). Each row is projected into a closed set of
- * fields. Read-only.
+ * `og-templates/list-synced-patterns`. Permission delegates to the route's own
+ * check (no `require_permission` floor), so visibility follows REST. Read-only.
  *
  * @since 0.1.0
  */
@@ -36,127 +39,118 @@ final class ListPatterns implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Patterns', 'abilities-catalog' ),
-			'description'         => __( 'Lists the registered block patterns available on the site (the read-only registered pattern registry). For user-created synced patterns use the list-synced-patterns ability.', 'abilities-catalog' ),
-			'category'            => 'og-core-templates',
-			'input_schema'        => array(),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items' ),
-				'properties'           => array(
-					'items' => array(
-						'type'        => 'array',
-						'items'       => array(
-							'type'                 => 'object',
-							'required'             => array( 'name', 'title' ),
-							'properties'           => array(
-								'name'           => array(
-									'type'        => 'string',
-									'description' => __( 'The pattern name (e.g. "core/query-standard-posts").', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/block-patterns/patterns',
+				'method'          => 'GET',
+				'label'           => __( 'List Patterns', 'abilities-catalog' ),
+				'description'     => __( 'Lists the registered block patterns available on the site (the read-only registered pattern registry). For user-created synced patterns use the list-synced-patterns ability.', 'abilities-catalog' ),
+				'category'        => 'og-core-templates',
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'items' ),
+					'properties'           => array(
+						'items' => array(
+							'type'        => 'array',
+							'items'       => array(
+								'type'                 => 'object',
+								'required'             => array( 'name', 'title' ),
+								'properties'           => array(
+									'name'           => array(
+										'type'        => 'string',
+										'description' => __( 'The pattern name (e.g. "core/query-standard-posts").', 'abilities-catalog' ),
+									),
+									'title'          => array(
+										'type'        => 'string',
+										'description' => __( 'The human-readable pattern title.', 'abilities-catalog' ),
+									),
+									'description'    => array(
+										'type'        => 'string',
+										'description' => __( 'The pattern description.', 'abilities-catalog' ),
+									),
+									'content'        => array(
+										'type'        => 'string',
+										'description' => __( 'The resolved block markup for the pattern.', 'abilities-catalog' ),
+									),
+									'viewport_width' => array(
+										'type'        => 'number',
+										'description' => __( 'The pattern viewport width for inserter preview.', 'abilities-catalog' ),
+									),
+									'inserter'       => array(
+										'type'        => 'boolean',
+										'description' => __( 'Whether the pattern is visible in the inserter.', 'abilities-catalog' ),
+									),
+									'categories'     => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'The pattern category slugs.', 'abilities-catalog' ),
+									),
+									'keywords'       => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'The pattern keywords.', 'abilities-catalog' ),
+									),
+									'block_types'    => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'Block types the pattern is intended to be used with.', 'abilities-catalog' ),
+									),
+									'post_types'     => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'Post types the pattern is restricted to.', 'abilities-catalog' ),
+									),
+									'template_types' => array(
+										'type'        => 'array',
+										'items'       => array( 'type' => 'string' ),
+										'description' => __( 'Template types where the pattern fits.', 'abilities-catalog' ),
+									),
+									'source'         => array(
+										'type'        => 'string',
+										'description' => __( 'Where the pattern comes from (e.g. "core", "plugin", "theme").', 'abilities-catalog' ),
+									),
 								),
-								'title'          => array(
-									'type'        => 'string',
-									'description' => __( 'The human-readable pattern title.', 'abilities-catalog' ),
-								),
-								'description'    => array(
-									'type'        => 'string',
-									'description' => __( 'The pattern description.', 'abilities-catalog' ),
-								),
-								'content'        => array(
-									'type'        => 'string',
-									'description' => __( 'The resolved block markup for the pattern.', 'abilities-catalog' ),
-								),
-								'viewport_width' => array(
-									'type'        => 'number',
-									'description' => __( 'The pattern viewport width for inserter preview.', 'abilities-catalog' ),
-								),
-								'inserter'       => array(
-									'type'        => 'boolean',
-									'description' => __( 'Whether the pattern is visible in the inserter.', 'abilities-catalog' ),
-								),
-								'categories'     => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'The pattern category slugs.', 'abilities-catalog' ),
-								),
-								'keywords'       => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'The pattern keywords.', 'abilities-catalog' ),
-								),
-								'block_types'    => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'Block types the pattern is intended to be used with.', 'abilities-catalog' ),
-								),
-								'post_types'     => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'Post types the pattern is restricted to.', 'abilities-catalog' ),
-								),
-								'template_types' => array(
-									'type'        => 'array',
-									'items'       => array( 'type' => 'string' ),
-									'description' => __( 'Template types where the pattern fits.', 'abilities-catalog' ),
-								),
-								'source'         => array(
-									'type'        => 'string',
-									'description' => __( 'Where the pattern comes from (e.g. "core", "plugin", "theme").', 'abilities-catalog' ),
-								),
+								'additionalProperties' => false,
 							),
-							'additionalProperties' => false,
+							'description' => __( 'The list of registered block patterns.', 'abilities-catalog' ),
 						),
-						'description' => __( 'The list of registered block patterns.', 'abilities-catalog' ),
 					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'show_in_rest' => true,
 				),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: `edit_posts` (catalog capability for listing patterns).
+	 * Projects the adapter's collection envelope to the catalog's closed row set.
 	 *
-	 * Deliberately hardens the read to the catalog `edit_posts` capability. Core's
-	 * controller permits `edit_posts` OR the `edit_posts` cap of any `show_in_rest`
-	 * post type; this coarser guard is never weaker than the wrapped REST route.
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over the
+	 * `{ items, total, total_pages }` envelope the adapter builds for a `get_items`
+	 * collection route. Each row is reduced to the two guaranteed keys plus the
+	 * optional keys that REST actually returned, so the shaped result never leaks the
+	 * runtime-appended extra fields core attaches to a raw pattern row. `$input` and
+	 * `$response` are part of the callback signature but unused here — the envelope
+	 * carries everything this shape needs.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the pattern registry.
+	 * @param mixed               $data     The collection envelope (associative array with `items`).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The shaped `{ items }` collection.
 	 */
-	public function hasPermission( $input = null ): bool {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request and shaping the result.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The shaped collection, or the REST error.
-	 */
-	public function execute( $input = null ) {
-		$request = new WP_REST_Request( 'GET', '/wp/v2/block-patterns/patterns' );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data  = rest_get_server()->response_to_data( $response, false );
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$rows  = is_array( $data ) && isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : array();
 		$items = array();
 
-		foreach ( is_array( $data ) ? $data : array() as $row ) {
+		foreach ( $rows as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+
 			$item = array(
 				'name'  => (string) ( $row['name'] ?? '' ),
 				'title' => (string) ( $row['title'] ?? '' ),
