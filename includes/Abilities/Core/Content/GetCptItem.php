@@ -21,6 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `rest_namespace`) and wraps `GET <route>/<id>` via `rest_do_request()`. The
  * capability is object-level `read_post`.
  *
+ * Not adapter-convertible: the REST route is resolved from the `post_type` input
+ * at call time (`rest_get_route_for_post_type_items()`).
+ *
  * @since 0.1.0
  */
 final class GetCptItem implements Ability {

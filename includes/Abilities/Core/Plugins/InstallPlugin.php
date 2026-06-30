@@ -26,6 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ({@see FilesystemGuard::ensureDirect()}); otherwise a generic 503 is returned with
  * no path or credential detail.
  *
+ * Not adapter-convertible: it runs the dangerous-tier guard pipeline
+ * ({@see SourceValidator}, {@see FilesystemGuard}); kept hand-written so the safety
+ * pipeline is not relocated into adapter callbacks.
+ *
  * @since 0.4.0
  */
 final class InstallPlugin implements Ability {

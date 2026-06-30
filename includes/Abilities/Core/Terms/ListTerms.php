@@ -19,6 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Wraps `GET /wp/v2/<rest_base>` for any REST-exposed taxonomy keyed by the
  * `taxonomy` input. Pagination totals come from the REST response headers.
  *
+ * Not adapter-convertible: the REST route is resolved from the `taxonomy` input
+ * at call time (`rest_base` per taxonomy).
+ *
  * @since 0.1.0
  */
 final class ListTerms implements Ability {

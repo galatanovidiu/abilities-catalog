@@ -28,6 +28,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Destructive: registered, but exposed to the browser only when both the write
  * and destructive adapter settings are on. Capability remains the hard guard.
  *
+ * Not adapter-convertible: the REST route is resolved from the `taxonomy` input
+ * at call time (`rest_base` per taxonomy).
+ *
  * @since 0.4.0
  */
 final class DeleteTerm implements Ability {

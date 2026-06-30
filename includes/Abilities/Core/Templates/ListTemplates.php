@@ -19,6 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `rest_do_request()`, selected by the `post_type` input. Returns the
  * registered/customized site-editor templates for the active theme. Read-only.
  *
+ * Not adapter-convertible: the REST route is chosen from the post_type input at call time (templates vs template-parts).
+ *
  * @since 0.1.0
  */
 final class ListTemplates implements Ability {

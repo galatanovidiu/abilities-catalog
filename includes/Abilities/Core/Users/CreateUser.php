@@ -26,6 +26,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * other submitted value) can never be echoed back to the browser. No input is
  * logged. The password is never returned in the output.
  *
+ * Not adapter-convertible: it redacts REST errors via {@see SecretSafeError} to avoid
+ * leaking submitted secrets; the adapter cannot run on a dispatch error.
+ *
  * @since 0.3.0
  */
 final class CreateUser implements Ability {

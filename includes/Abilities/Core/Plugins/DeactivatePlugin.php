@@ -28,6 +28,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `sanitize_plugin_param()` appends `.php`. The outer `/run` call is POST (status
  * update, not a delete) and the internal REST request is POST too.
  *
+ * Not adapter-convertible: it captures the plugin's prior active status BEFORE deactivation, which is overwritten after dispatch.
+ *
  * @since 0.3.0
  */
 final class DeactivatePlugin implements Ability {

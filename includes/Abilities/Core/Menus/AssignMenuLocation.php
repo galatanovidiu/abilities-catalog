@@ -24,6 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * annotations (`readonly:false, destructive:false, idempotent:false`) route the
  * call as POST.
  *
+ * Not adapter-convertible: it captures the previous location assignments BEFORE the write, which are overwritten after dispatch.
+ *
  * @since 0.3.0
  */
 final class AssignMenuLocation implements Ability {

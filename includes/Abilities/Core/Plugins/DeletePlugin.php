@@ -29,6 +29,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (for example `hello`); the route is built by concatenation so the slash survives and
  * the controller appends `.php`.
  *
+ * Not adapter-convertible: it runs the dangerous-tier guard pipeline
+ * ({@see FilesystemGuard}, `WP_Plugin_Dependencies`); kept hand-written so the safety
+ * pipeline is not relocated into adapter callbacks.
+ *
  * @since 0.4.0
  */
 final class DeletePlugin implements Ability {

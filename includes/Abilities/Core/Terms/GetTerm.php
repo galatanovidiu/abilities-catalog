@@ -19,6 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Wraps `GET /wp/v2/<rest_base>/<id>` for any REST-exposed taxonomy keyed by the
  * `taxonomy` input, and shapes the response into a flat field set.
  *
+ * Not adapter-convertible: the REST route is resolved from the `taxonomy` input
+ * at call time (`rest_base` per taxonomy).
+ *
  * @since 0.1.0
  */
 final class GetTerm implements Ability {

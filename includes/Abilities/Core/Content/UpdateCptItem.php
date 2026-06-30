@@ -43,6 +43,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * route the call as POST. The REST route re-checks every capability underneath
  * (defense in depth) and handles content sanitization.
  *
+ * Not adapter-convertible: the REST route is resolved from the `post_type` input
+ * at call time (`rest_get_route_for_post_type_items()`).
+ *
  * @since 0.4.0
  */
 final class UpdateCptItem implements Ability {

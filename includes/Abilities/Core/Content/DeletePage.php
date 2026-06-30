@@ -24,6 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Destructive: registered, but exposed to the browser only when both the write
  * and destructive adapter settings are on. Capability remains the hard guard.
  *
+ * Not adapter-convertible: it snapshots front-page/parent/child-cascade state BEFORE deletion, which is unrecoverable after dispatch (the adapter output_callback runs after).
+ *
  * @since 0.4.0
  */
 final class DeletePage implements Ability {

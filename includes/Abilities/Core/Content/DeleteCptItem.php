@@ -38,6 +38,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Destructive: registered, but exposed to the browser only when both the write
  * and destructive adapter settings are on. Capability remains the hard guard.
  *
+ * Not adapter-convertible: the REST route is resolved from the `post_type` input
+ * at call time (`rest_get_route_for_post_type_items()`).
+ *
  * @since 0.4.0
  */
 final class DeleteCptItem implements Ability {
