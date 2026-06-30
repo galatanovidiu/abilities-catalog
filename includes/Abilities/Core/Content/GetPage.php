@@ -46,24 +46,25 @@ final class GetPage implements Ability {
 				'route'           => '/wp/v2/pages/(?P<id>[\d]+)',
 				'method'          => 'GET',
 				'label'           => __( 'Get Page', 'abilities-catalog' ),
-				'description'     => __( 'Returns a single page by ID, including its rendered title, content, and excerpt.', 'abilities-catalog' ),
+				'description'     => __( 'Returns a single WordPress page by its numeric ID — rendered title, content, and excerpt, plus slug, status, author, parent, menu order, and dates. Use this for pages (the "page" post type); for blog posts use og-content/get-post instead, and to find a page ID first call og-content/list-pages. Pass context "edit" (requires edit access) to also get the stored block markup as title_raw, content_raw, and excerpt_raw for diffing or editing; the default "view" context omits those. For a password-protected page, supply the password to unlock the rendered content and excerpt — otherwise password_protected is true and they come back empty.', 'abilities-catalog' ),
 				'category'        => 'og-core-content',
 				'input_schema'    => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'id'       => array(
 							'type'        => 'integer',
-							'description' => __( 'The page ID.', 'abilities-catalog' ),
+							'minimum'     => 1,
+							'description' => __( 'The page ID. Find it with og-content/list-pages.', 'abilities-catalog' ),
 						),
 						'context'  => array(
 							'type'        => 'string',
 							'enum'        => array( 'view', 'edit' ),
 							'default'     => 'view',
-							'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+							'description' => __( 'Scope of the request: exactly "view" (public fields, the default) or "edit" (requires edit access; adds the title_raw/content_raw/excerpt_raw fields).', 'abilities-catalog' ),
 						),
 						'password' => array(
 							'type'        => 'string',
-							'description' => __( 'Password for a password-protected page.', 'abilities-catalog' ),
+							'description' => __( 'The password for a password-protected page; supply it to unlock the rendered content and excerpt.', 'abilities-catalog' ),
 						),
 					),
 					'required'             => array( 'id' ),

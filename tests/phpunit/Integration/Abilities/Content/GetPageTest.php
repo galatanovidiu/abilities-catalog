@@ -197,4 +197,18 @@ final class GetPageTest extends TestCase {
 		// 401 because the user is logged out (rest_authorization_required_code()).
 		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
+
+	public function test_missing_page_returns_invalid_id_error(): void {
+		$this->actingAs( 'administrator' );
+
+		// A non-existent ID: the route's invalid-id check runs before any read
+		// permission, so execute() surfaces the specific 404 — not the generic
+		// permission collapse.
+		$result = wp_get_ability( 'og-content/get-page' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
 }
