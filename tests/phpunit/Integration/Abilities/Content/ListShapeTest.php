@@ -32,6 +32,8 @@ final class ListShapeTest extends TestCase {
 		$this->assertArrayHasKey( 'title', $row );
 		$this->assertIsString( $row['title'] );
 		$this->assertArrayHasKey( 'edit_link', $row );
+		$this->assertArrayHasKey( 'password_protected', $row );
+		$this->assertIsBool( $row['password_protected'] );
 	}
 
 	public function test_list_posts_returns_shaped_rows(): void {
@@ -46,6 +48,35 @@ final class ListShapeTest extends TestCase {
 		foreach ( $result['items'] as $row ) {
 			$this->assertShapedRow( $row );
 		}
+	}
+
+	public function test_list_posts_flags_password_protected_rows(): void {
+		$this->actingAs( 'administrator' );
+
+		$plain     = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$protected = self::factory()->post->create(
+			array(
+				'post_status'   => 'publish',
+				'post_password' => 'hunter2',
+			)
+		);
+
+		$result = wp_get_ability( 'og-content/list-posts' )->execute( array( 'per_page' => 100 ) );
+
+		$this->assertIsArray( $result );
+		$by_id = array();
+		foreach ( $result['items'] as $row ) {
+			$by_id[ $row['id'] ] = $row;
+		}
+
+		$this->assertArrayHasKey( $protected, $by_id );
+		$this->assertTrue( $by_id[ $protected ]['password_protected'], 'A password-protected post must be flagged in the list.' );
+		// The flag carries even though the rendered excerpt comes back empty — the
+		// password itself is never exposed in the list row.
+		$this->assertSame( '', $by_id[ $protected ]['excerpt'] );
+
+		$this->assertArrayHasKey( $plain, $by_id );
+		$this->assertFalse( $by_id[ $plain ]['password_protected'] );
 	}
 
 	public function test_list_pages_returns_shaped_rows(): void {

@@ -36,16 +36,17 @@ final class ContentListShaper {
 		$id = (int) ( $item['id'] ?? 0 );
 
 		return array(
-			'id'        => $id,
-			'title'     => (string) ( $item['title']['rendered'] ?? '' ),
-			'status'    => (string) ( $item['status'] ?? '' ),
-			'type'      => (string) ( $item['type'] ?? '' ),
-			'link'      => (string) ( $item['link'] ?? '' ),
-			'edit_link' => (string) get_edit_post_link( $id, 'raw' ),
-			'date'      => (string) ( $item['date'] ?? '' ),
-			'slug'      => (string) ( $item['slug'] ?? '' ),
-			'author'    => (int) ( $item['author'] ?? 0 ),
-			'excerpt'   => (string) ( $item['excerpt']['rendered'] ?? '' ),
+			'id'                 => $id,
+			'title'              => (string) ( $item['title']['rendered'] ?? '' ),
+			'status'             => (string) ( $item['status'] ?? '' ),
+			'type'               => (string) ( $item['type'] ?? '' ),
+			'link'               => (string) ( $item['link'] ?? '' ),
+			'edit_link'          => (string) get_edit_post_link( $id, 'raw' ),
+			'date'               => (string) ( $item['date'] ?? '' ),
+			'slug'               => (string) ( $item['slug'] ?? '' ),
+			'author'             => (int) ( $item['author'] ?? 0 ),
+			'excerpt'            => (string) ( $item['excerpt']['rendered'] ?? '' ),
+			'password_protected' => (bool) ( $item['content']['protected'] ?? $item['excerpt']['protected'] ?? false ),
 		);
 	}
 
@@ -59,45 +60,49 @@ final class ContentListShaper {
 			'type'                 => 'object',
 			'required'             => array( 'id', 'title', 'status', 'type', 'link' ),
 			'properties'           => array(
-				'id'        => array(
+				'id'                 => array(
 					'type'        => 'integer',
 					'description' => __( 'The item ID.', 'abilities-catalog' ),
 				),
-				'title'     => array(
+				'title'              => array(
 					'type'        => 'string',
 					'description' => __( 'The rendered title.', 'abilities-catalog' ),
 				),
-				'status'    => array(
+				'status'             => array(
 					'type'        => 'string',
 					'description' => __( 'The item status.', 'abilities-catalog' ),
 				),
-				'type'      => array(
+				'type'               => array(
 					'type'        => 'string',
 					'description' => __( 'The post type slug.', 'abilities-catalog' ),
 				),
-				'link'      => array(
+				'link'               => array(
 					'type'        => 'string',
 					'description' => __( 'The public permalink.', 'abilities-catalog' ),
 				),
-				'edit_link' => array(
+				'edit_link'          => array(
 					'type'        => 'string',
 					'description' => __( 'The wp-admin URL to edit the item.', 'abilities-catalog' ),
 				),
-				'date'      => array(
+				'date'               => array(
 					'type'        => 'string',
 					'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
 				),
-				'slug'      => array(
+				'slug'               => array(
 					'type'        => 'string',
 					'description' => __( 'The item slug.', 'abilities-catalog' ),
 				),
-				'author'    => array(
+				'author'             => array(
 					'type'        => 'integer',
 					'description' => __( 'The author user ID.', 'abilities-catalog' ),
 				),
-				'excerpt'   => array(
+				'excerpt'            => array(
 					'type'        => 'string',
 					'description' => __( 'The rendered excerpt. Use the matching get ability for the full content body.', 'abilities-catalog' ),
+				),
+				'password_protected' => array(
+					'type'        => 'boolean',
+					'description' => __( 'True when the item is password-protected, so its excerpt is empty here; read the body with the matching get ability and the password.', 'abilities-catalog' ),
 				),
 			),
 			'additionalProperties' => false,
