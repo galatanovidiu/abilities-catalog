@@ -82,13 +82,28 @@ final class GetGlobalStylesTest extends TestCase {
 		$this->assertIsObject( $result['styles'] );
 	}
 
+	/**
+	 * Converted to the REST adapter, the ability delegates permission to the wrapped
+	 * route. With a record present (so shapeInput resolves an id and dispatch reaches
+	 * the route's permission check), a subscriber is denied by the route itself — its
+	 * get_item_permissions_check requires read_post on the wp_global_styles record,
+	 * which maps to edit_theme_options. So the denial now surfaces as the route's real
+	 * rest_cannot_view 403, not the Abilities API's generic ability_invalid_permissions.
+	 */
 	public function test_subscriber_is_denied(): void {
+		// Create the record as admin so the route's permission check is reached for the
+		// subscriber (without a record, shapeInput would 404 before any permission check).
+		$this->actingAs( 'administrator' );
+		$id = (int) WP_Theme_JSON_Resolver::get_user_global_styles_post_id();
+		$this->assertGreaterThan( 0, $id );
+
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-templates/get-global-styles' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_view', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
 	}
 
 	/**

@@ -135,7 +135,13 @@ final class GetNavigationTest extends TestCase {
 
 		$result = wp_get_ability( 'og-menus/get-navigation' )->execute( array( 'id' => $nav_id ) );
 
+		// Converted to the REST adapter: the wrapped route's edit-context check denies
+		// the logged-out user with its specific error rather than the Abilities API
+		// collapsing it into a generic permission failure. The wp_navigation post type
+		// maps its edit caps to edit_theme_options; the route returns rest_forbidden_context
+		// (status from rest_authorization_required_code(): 401 when logged out).
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_forbidden_context', $result->get_error_code() );
+		$this->assertSame( 401, $result->get_error_data()['status'] );
 	}
 }

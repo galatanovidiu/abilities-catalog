@@ -77,8 +77,15 @@ final class GetThemeStylesTest extends TestCase {
 
 		$ability = wp_get_ability( 'og-templates/get-theme-styles' );
 
-		// edit_theme_options is the catalog guard; a subscriber lacks it.
-		$this->assertFalse( $ability->check_permissions( array() ) );
+		// edit_theme_options is the catalog guard; a subscriber lacks it. The
+		// REST adapter floor returns a rest_forbidden WP_Error (401/403).
+		$denied = $ability->check_permissions( array() );
+		$this->assertInstanceOf( WP_Error::class, $denied );
+		$this->assertSame( 'rest_forbidden', $denied->get_error_code() );
+
+		// The denied execute() leaks its permission WP_Error, which WP_Ability
+		// flags via _doing_it_wrong(); expect it so the notice does not fail.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$result = $ability->execute( array() );
 		$this->assertInstanceOf( WP_Error::class, $result );

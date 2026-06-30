@@ -82,6 +82,12 @@ final class CreateNavigationTest extends TestCase {
 		$this->assertSame( 'draft', $result['status'] );
 	}
 
+	/**
+	 * A logged-out user gets the wrapped route's specific `rest_cannot_create` 401
+	 * (`create_item_permissions_check` with `rest_authorization_required_code()`),
+	 * not the generic `ability_invalid_permissions` collapse, because permission now
+	 * delegates to the route (no `require_permission` floor).
+	 */
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
@@ -90,7 +96,10 @@ final class CreateNavigationTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_create', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_route_error_is_preserved(): void {

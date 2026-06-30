@@ -66,7 +66,11 @@ final class TrashCommentTest extends TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( $this->comment_id, $result['id'] );
 		$this->assertSame( 'trash', $result['status'] );
-		$this->assertSame( 'approved', $result['previous_status'] );
+		// previous_status is now the raw comment_approved value core records in
+		// _wp_trash_meta_status (read back in shapeOutput), not the human-readable
+		// status the pre-adapter execute() derived via wp_get_comment_status(). For an
+		// approved comment that raw value is "1". This is what untrash-comment restores.
+		$this->assertSame( '1', $result['previous_status'] );
 		$this->assertSame( $this->post_id, $result['post'] );
 		$this->assertSame( 0, $result['parent'] );
 		$this->assertSame( 'Jane Doe', $result['author_name'] );
@@ -108,13 +112,22 @@ final class TrashCommentTest extends TestCase {
 		$this->assertSame( 'rest_already_trashed', $result->get_error_code() );
 	}
 
+	/**
+	 * A logged-out user now surfaces the wrapped route's specific `rest_cannot_delete`
+	 * 401 (the comment exists, the edit-permission check fails for an unauthenticated
+	 * caller) rather than the generic `ability_invalid_permissions` collapse — permission
+	 * delegates to the route, not a coarse logged-in gate on this ability (backlog B4).
+	 * The status is 401, not 403, because `rest_authorization_required_code()` returns 401
+	 * when `is_user_logged_in()` is false (wp-includes/rest-api.php).
+	 */
 	public function test_logged_out_user_is_denied(): void {
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-comments/trash-comment' )->execute( array( 'id' => $this->comment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( 401, $result->get_error_data()['status'] );
 		$this->assertSame( 'approved', wp_get_comment_status( $this->comment_id ) );
 	}
 

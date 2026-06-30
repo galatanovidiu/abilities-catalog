@@ -79,8 +79,21 @@ final class ListNavigationTest extends TestCase {
 		}
 	}
 
+	/**
+	 * A subscriber is blocked by the ability's `require_permission`
+	 * (`edit_theme_options`) floor. A bare `execute()` collapses that floor's
+	 * denial to the generic `ability_invalid_permissions` code (the floor fires in
+	 * the ability's permission phase, before dispatch), so the assertion is
+	 * unchanged from the pre-adapter contract.
+	 */
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
+
+		// The catalog keeps a stricter edit_theme_options floor via require_permission
+		// (the list route is more permissive). A guard denial is normalized to a
+		// WP_Error, which WP_Ability::execute() collapses to ability_invalid_permissions
+		// and flags with a _doing_it_wrong notice — expected here.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$result = wp_get_ability( 'og-menus/list-navigation' )->execute( array() );
 

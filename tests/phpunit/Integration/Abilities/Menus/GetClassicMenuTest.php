@@ -125,6 +125,10 @@ final class GetClassicMenuTest extends TestCase {
 		$result = wp_get_ability( 'og-menus/get-classic-menu' )->execute( array( 'id' => $menu_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		// Converted to the REST adapter: permission delegates to the route, so the
+		// menus controller's own denial surfaces instead of the generic
+		// `ability_invalid_permissions` collapse.
+		$this->assertSame( 'rest_cannot_view', $result->get_error_code() );
+		$this->assertSame( 401, $result->get_error_data()['status'] ?? null );
 	}
 }

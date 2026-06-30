@@ -149,7 +149,12 @@ final class UpdateNavigationTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		// With no require_permission floor, the call reaches the wrapped route, whose
+		// update_item_permissions_check denies a subscriber with its specific error
+		// instead of the generic ability_invalid_permissions the old object-level
+		// pre-check produced.
+		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
 	}
 
 	public function test_route_error_is_preserved(): void {
