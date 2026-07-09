@@ -14,11 +14,14 @@ use WP_Application_Passwords;
 use WP_Error;
 
 /**
- * Exercises the read end-to-end: an admin lists a user's application passwords and
- * gets metadata rows back. Locks the closed output shape so the response carries
- * only the documented allowlist (uuid, name, created, last_used, last_ip) and never
- * a password field or any plaintext credential. Proves a non-existent user surfaces
- * core's typed error unchanged.
+ * Exercises the adapter-backed read end-to-end: an admin lists a user's application
+ * passwords and gets metadata rows back. Locks the closed output shape so the
+ * response carries only the documented allowlist (uuid, name, created, last_used,
+ * last_ip) and never a password field or any plaintext credential. Denials surface
+ * through execute() as the wrapped route's REAL typed error — the permission phase is
+ * guard-only and this ability sets no require_permission floor, so the route stays
+ * the authority: a non-existent user yields its 404, another user's credentials
+ * without the cap yield its specific 403.
  */
 final class ListApplicationPasswordsTest extends TestCase {
 
@@ -110,9 +113,11 @@ final class ListApplicationPasswordsTest extends TestCase {
 	}
 
 	public function test_listing_another_users_passwords_without_cap_surfaces_specific_403(): void {
-		// A subscriber may not list another user's application passwords. After
-		// coarsening, the logged-in floor passes and the wrapped route's own guard
-		// denies with its specific 403 instead of the generic permission collapse.
+		// A subscriber may not list another user's application passwords. The adapter's
+		// permission phase is guard-only and this ability sets no require_permission
+		// floor, so the wrapped route's own get_items_permissions_check runs at dispatch
+		// and denies with its specific 403 — surfaced through execute() unchanged, not
+		// collapsed to the generic ability_invalid_permissions.
 		$owner_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		WP_Application_Passwords::create_new_application_password(
 			$owner_id,

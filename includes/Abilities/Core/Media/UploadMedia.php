@@ -32,6 +32,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * is supplied. Write annotations (`readonly:false, destructive:false,
  * idempotent:false`) route the outer `/run` call as POST.
  *
+ * Not adapter-convertible: it sets a raw request body and `Content-Type` /
+ * `Content-Disposition` headers; the adapter builds requests from a params array only.
+ *
  * @since 0.3.0
  */
 final class UploadMedia implements Ability {

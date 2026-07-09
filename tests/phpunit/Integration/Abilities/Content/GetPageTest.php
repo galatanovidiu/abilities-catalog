@@ -1,10 +1,10 @@
 <?php
 /**
- * Integration tests for og-content/get-page output fidelity.
+ * Integration tests for the og-content/get-page ability.
  *
- * Covers the additive output fields (slug, password_protected) the ability
- * returns so a caller can tell a locked page from a genuinely empty one and
- * read the page's semantic slug.
+ * Covers registration through the Abilities REST Adapter seam, the additive
+ * output fields (slug, password_protected, *_raw) the ability returns, and the
+ * route's real permission errors surfacing through execute().
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,11 +14,19 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
+use WP_Error;
 
 /**
- * Exercises og-content/get-page output.
+ * Exercises og-content/get-page output and the adapter-backed permission contract.
  */
 final class GetPageTest extends TestCase {
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-content/get-page' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-content/get-page', $ability->get_name() );
+	}
 
 	public function test_output_returns_slug_for_published_page(): void {
 		$this->actingAs( 'administrator' );
@@ -138,5 +146,69 @@ final class GetPageTest extends TestCase {
 		$this->assertArrayNotHasKey( 'content_raw', $result );
 		$this->assertArrayNotHasKey( 'title_raw', $result );
 		$this->assertArrayNotHasKey( 'excerpt_raw', $result );
+	}
+
+	public function test_logged_out_user_can_read_published_page(): void {
+		// Adapter-backed: permission delegates to the wrapped route, which allows an
+		// anonymous read of a published public page in the default "view" context. The
+		// catalog imposes no stricter floor; one would be added via the adapter's
+		// require_permission knob.
+		wp_set_current_user( 0 );
+
+		$id = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+				'post_title'  => 'Public page',
+			)
+		);
+
+		$result = wp_get_ability( 'og-content/get-page' )->execute( array( 'id' => $id ) );
+
+		$this->assertIsArray( $result );
+		$this->assertSame( $id, $result['id'] );
+	}
+
+	public function test_logged_out_user_is_denied_edit_context(): void {
+		// The route enforces edit context itself (requires edit access) and runs at
+		// dispatch, so execute() surfaces the route's REAL error — not the generic
+		// collapse. The adapter's permission phase is guard-only and this ability has
+		// no require_permission guard, so the denial lives on the execute() path.
+		wp_set_current_user( 0 );
+
+		$id = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+				'post_title'  => 'Public page',
+			)
+		);
+
+		$result = wp_get_ability( 'og-content/get-page' )->execute(
+			array(
+				'id'      => $id,
+				'context' => 'edit',
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_forbidden_context', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+	}
+
+	public function test_missing_page_returns_invalid_id_error(): void {
+		$this->actingAs( 'administrator' );
+
+		// A non-existent ID: the route's invalid-id check runs before any read
+		// permission, so execute() surfaces the specific 404 — not the generic
+		// permission collapse.
+		$result = wp_get_ability( 'og-content/get-page' )->execute( array( 'id' => 999999 ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

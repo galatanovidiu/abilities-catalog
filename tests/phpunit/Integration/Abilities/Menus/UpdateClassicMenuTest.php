@@ -14,7 +14,7 @@ use WP_Error;
 
 /**
  * Exercises classic menu updates: happy path, assigned-locations output shape,
- * and the capability guard on execute().
+ * and the wrapped route's capability check surfacing through execute().
  */
 final class UpdateClassicMenuTest extends TestCase {
 
@@ -103,6 +103,10 @@ final class UpdateClassicMenuTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// Adapter-backed: the route's own edit_term check (edit_theme_options for the
+		// nav_menu taxonomy) runs at dispatch, so execute() surfaces the route's REAL
+		// error, not the generic ability_invalid_permissions collapse. This ability sets
+		// no require_permission floor, so the route is the sole authority.
 		$this->actingAs( 'subscriber' );
 		$menu_id = wp_create_nav_menu( 'Header Menu' );
 
@@ -114,7 +118,8 @@ final class UpdateClassicMenuTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_negative_id_is_rejected_by_schema(): void {
@@ -133,9 +138,9 @@ final class UpdateClassicMenuTest extends TestCase {
 	public function test_missing_menu_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// An admin holds edit_theme_options (the coarse guard), so a non-existent menu
-		// reaches the route and surfaces its specific 404 instead of the opaque
-		// ability_invalid_permissions the object-level pre-check produced.
+		// An admin holds edit_theme_options, so a non-existent menu reaches the route and
+		// surfaces its real rest_term_invalid 404 through execute() — not the opaque
+		// ability_invalid_permissions the old object-level pre-check produced.
 		$result = wp_get_ability( 'og-menus/update-classic-menu' )->execute(
 			array(
 				'id'   => 999999,
@@ -145,6 +150,7 @@ final class UpdateClassicMenuTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
-		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
+		$this->assertSame( 'rest_term_invalid', $result->get_error_code() );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

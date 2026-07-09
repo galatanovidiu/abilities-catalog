@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Terms;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,8 +15,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-terms/get-category`.
  *
- * Wraps `GET /wp/v2/categories/<id>` via `rest_do_request()` and shapes the
- * response into a flat field set.
+ * Wraps `GET /wp/v2/categories/<id>` via the Abilities REST Adapter and shapes
+ * the response into a flat field set through {@see shapeOutput()}. Permission
+ * delegates to the route's own check (no `require_permission` floor): category
+ * reads are public in `view`, and the route requires `manage_categories` for `edit`.
  *
  * @since 0.1.0
  */
@@ -33,124 +35,99 @@ final class GetCategory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'Get Category', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single category term by ID.', 'abilities-catalog' ),
-			'category'            => 'og-core-terms',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'id'      => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => __( 'The category term ID. Discover IDs with og-terms/list-categories.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/categories/(?P<id>[\d]+)',
+				'method'          => 'GET',
+				'label'           => __( 'Get Category', 'abilities-catalog' ),
+				'description'     => __( 'Returns a single category term by ID.', 'abilities-catalog' ),
+				'category'        => 'og-core-terms',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'id'      => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'description' => __( 'The category term ID. Discover IDs with og-terms/list-categories.', 'abilities-catalog' ),
+						),
+						'context' => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						),
 					),
-					'context' => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
-					),
+					'required'             => array( 'id' ),
+					'additionalProperties' => false,
 				),
-				'required'             => array( 'id' ),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'id', 'name', 'slug' ),
-				'properties'           => array(
-					'id'          => array(
-						'type'        => 'integer',
-						'description' => __( 'The term ID.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'id', 'name', 'slug' ),
+					'properties'           => array(
+						'id'          => array(
+							'type'        => 'integer',
+							'description' => __( 'The term ID.', 'abilities-catalog' ),
+						),
+						'name'        => array(
+							'type'        => 'string',
+							'description' => __( 'The term name.', 'abilities-catalog' ),
+						),
+						'slug'        => array(
+							'type'        => 'string',
+							'description' => __( 'The term slug.', 'abilities-catalog' ),
+						),
+						'description' => array(
+							'type'        => 'string',
+							'description' => __( 'The term description.', 'abilities-catalog' ),
+						),
+						'parent'      => array(
+							'type'        => 'integer',
+							'description' => __( 'The parent term ID.', 'abilities-catalog' ),
+						),
+						'count'       => array(
+							'type'        => 'integer',
+							'description' => __( 'Number of objects assigned to the term.', 'abilities-catalog' ),
+						),
+						'taxonomy'    => array(
+							'type'        => 'string',
+							'description' => __( 'The taxonomy the term belongs to.', 'abilities-catalog' ),
+						),
+						'link'        => array(
+							'type'        => 'string',
+							'description' => __( 'The public term archive URL.', 'abilities-catalog' ),
+						),
 					),
-					'name'        => array(
-						'type'        => 'string',
-						'description' => __( 'The term name.', 'abilities-catalog' ),
-					),
-					'slug'        => array(
-						'type'        => 'string',
-						'description' => __( 'The term slug.', 'abilities-catalog' ),
-					),
-					'description' => array(
-						'type'        => 'string',
-						'description' => __( 'The term description.', 'abilities-catalog' ),
-					),
-					'parent'      => array(
-						'type'        => 'integer',
-						'description' => __( 'The parent term ID.', 'abilities-catalog' ),
-					),
-					'count'       => array(
-						'type'        => 'integer',
-						'description' => __( 'Number of objects assigned to the term.', 'abilities-catalog' ),
-					),
-					'taxonomy'    => array(
-						'type'        => 'string',
-						'description' => __( 'The taxonomy the term belongs to.', 'abilities-catalog' ),
-					),
-					'link'        => array(
-						'type'        => 'string',
-						'description' => __( 'The public term archive URL.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
 				),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: term reads require an authenticated user.
+	 * Maps the REST term body to the catalog's flat output shape.
 	 *
-	 * Edit-context additionally requires `manage_categories`.
+	 * Wired as the adapter's `output_callback`; runs only on success. `$input['id']`
+	 * is the fallback ID when the body omits its own. `$response` is part of the
+	 * callback signature but unused here.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read the category.
+	 * @param mixed               $data     The REST term body (associative array).
+	 * @param array<string,mixed> $input    The original ability input.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat term fields.
 	 */
-	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-		$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-
-		if ( $id <= 0 ) {
-			return false;
-		}
-
-		$context = $input['context'] ?? 'view';
-		if ( 'edit' === $context ) {
-			return current_user_can( 'manage_categories' );
-		}
-
-		return is_user_logged_in();
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error Flat term fields, or the REST error.
-	 */
-	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = (int) $input['id'];
-		$context = $input['context'] ?? 'view';
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/categories/' . $id );
-		$request->set_param( 'context', $context );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data = is_array( $data ) ? $data : array();
+		$id   = absint( $input['id'] ?? 0 );
 
 		return array(
 			'id'          => (int) ( $data['id'] ?? $id ),

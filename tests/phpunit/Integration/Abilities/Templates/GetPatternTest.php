@@ -2,9 +2,11 @@
 /**
  * Integration tests for og-templates/get-pattern output and contract.
  *
- * Covers the non-empty title in the default "view" context (read from the
- * blocks controller's title.raw field), the additive sync_status output
- * field, and the existing object-level read permission behavior.
+ * Adapter-backed: permission delegates to the wrapped route, which now runs at
+ * dispatch, so denials surface through execute() as the route's REAL REST error.
+ * Covers the non-empty title in the default "view" context (read from the blocks
+ * controller's title.raw field), the additive sync_status output field, and the
+ * route's permission/404 behavior on execute().
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -39,6 +41,13 @@ final class GetPatternTest extends TestCase {
 				$args
 			)
 		);
+	}
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-templates/get-pattern' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-templates/get-pattern', $ability->get_name() );
 	}
 
 	public function test_view_context_returns_non_empty_title_and_content(): void {
@@ -91,27 +100,33 @@ final class GetPatternTest extends TestCase {
 		$this->assertSame( 'unsynced', $result['sync_status'] );
 	}
 
-	public function test_subscriber_is_denied_object_level_read(): void {
+	public function test_subscriber_is_denied_read(): void {
+		// The route enforces its permission at dispatch, so execute() surfaces the
+		// route's REAL error — not the generic collapse. A subscriber lacks edit_posts
+		// (wp_block maps its read cap to edit_posts), so the route denies the read. The
+		// adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so check_permissions() just returns true; the denial
+		// lives on the execute() path.
 		$this->actingAs( 'subscriber' );
 
 		$id = $this->createPattern();
 
 		$ability = wp_get_ability( 'og-templates/get-pattern' );
 
-		// The coarse edit_posts guard rejects a subscriber: wp_block maps its read cap
-		// to edit_posts, which a subscriber lacks, so they cannot read reusable blocks.
-		$this->assertFalse( $ability->check_permissions( array( 'id' => $id ) ) );
+		$this->assertTrue( $ability->check_permissions( array( 'id' => $id ) ) );
 
 		$result = $ability->execute( array( 'id' => $id ) );
+
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_missing_pattern_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// An admin holds edit_posts (the coarse guard), so a non-existent id reaches the
-		// route and surfaces its specific 404 instead of the opaque generic denial the
-		// object-level read_post pre-check produced.
+		// An admin passes the route's coarse read floor, so a non-existent id reaches the
+		// route and surfaces its specific 404 instead of the opaque generic denial.
 		$result = wp_get_ability( 'og-templates/get-pattern' )->execute( array( 'id' => 999999 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );

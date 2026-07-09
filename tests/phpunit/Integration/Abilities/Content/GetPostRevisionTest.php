@@ -2,9 +2,13 @@
 /**
  * Integration tests for og-content/get-post-revision.
  *
- * Covers the happy-path flat field set, the specific invalid-id 404 (so a
- * missing revision is not collapsed to a generic permission failure), and the
- * cross-author 403 denial inherited from the parent post's edit_post check.
+ * Adapter-backed: the ability wraps `GET /wp/v2/posts/<parent>/revisions/<id>`
+ * through the Abilities REST Adapter. Permission delegates to the route (no
+ * require_permission floor), so route denials surface through execute() as the
+ * REAL REST error, not the generic ability_invalid_permissions collapse. Covers
+ * the happy-path flat field set, the specific invalid-id 404 (so a missing
+ * revision is not collapsed to a permission failure), and the cross-author 403
+ * denial inherited from the parent post's edit_post check.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -50,6 +54,13 @@ final class GetPostRevisionTest extends TestCase {
 		return array( $post_id, $revision_id );
 	}
 
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-content/get-post-revision' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-content/get-post-revision', $ability->get_name() );
+	}
+
 	public function test_output_returns_flat_revision_fields(): void {
 		$admin = $this->actingAs( 'administrator' );
 
@@ -83,7 +94,7 @@ final class GetPostRevisionTest extends TestCase {
 				'post_content' => '<!-- wp:paragraph --><p>v1</p><!-- /wp:paragraph -->',
 			)
 		);
-		$markup = '<!-- wp:paragraph --><p>v2 block</p><!-- /wp:paragraph -->';
+		$markup  = '<!-- wp:paragraph --><p>v2 block</p><!-- /wp:paragraph -->';
 		wp_update_post(
 			array(
 				'ID'           => $post_id,
@@ -143,7 +154,10 @@ final class GetPostRevisionTest extends TestCase {
 			)
 		);
 
+		// The route runs at dispatch, so execute() surfaces the route's REAL 404
+		// code, not the generic ability_invalid_permissions collapse.
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
 	}
 
@@ -154,7 +168,10 @@ final class GetPostRevisionTest extends TestCase {
 		[ $post_id, $revision_id ] = $this->createRevision( $owner );
 
 		// A different author cannot read the revision: the wrapped route enforces
-		// edit_post on the parent, surfacing a specific 403 rather than collapsing.
+		// edit_post on the parent and runs at dispatch, so execute() surfaces the
+		// route's specific 403 rather than the generic permission collapse. The
+		// adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so the denial lives on the execute() path.
 		$this->actingAs( 'author' );
 		$result = wp_get_ability( 'og-content/get-post-revision' )->execute(
 			array(
@@ -164,6 +181,8 @@ final class GetPostRevisionTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 'rest_cannot_read', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

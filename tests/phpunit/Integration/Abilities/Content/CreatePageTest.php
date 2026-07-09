@@ -1,10 +1,11 @@
 <?php
 /**
- * Integration tests for og-content/create-page output fidelity.
+ * Integration tests for the og-content/create-page ability.
  *
- * Covers the signed menu_order pass-through and the additive output fields
- * (slug, date, featured_media) the ability returns so a caller can detect how
- * core resolved the request.
+ * Covers registration, the curated input pass-through (signed menu_order, the
+ * additive output fields slug/date/featured_media a caller uses to detect how
+ * core resolved the request), and the adapter-backed denial path: a route-level
+ * permission failure now surfaces through execute() as the real REST error.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,11 +15,20 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
+use WP_Error;
 
 /**
- * Exercises og-content/create-page output.
+ * Exercises og-content/create-page end-to-end: curated input in, shaped field set
+ * out, with the capability check enforced by the wrapped REST route on execute().
  */
 final class CreatePageTest extends TestCase {
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-content/create-page' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-content/create-page', $ability->get_name() );
+	}
 
 	public function test_negative_menu_order_reaches_post_unchanged(): void {
 		$this->actingAs( 'administrator' );
@@ -67,5 +77,25 @@ final class CreatePageTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 0, $result['featured_media'] );
+	}
+
+	public function test_logged_out_user_is_denied(): void {
+		// The route enforces the create capability itself and runs at dispatch, so
+		// execute() surfaces the route's REAL error — not the generic collapse. The
+		// adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so the denial lives on the execute() path.
+		wp_set_current_user( 0 );
+
+		$result = wp_get_ability( 'og-content/create-page' )->execute(
+			array(
+				'title' => 'Should not exist',
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_create', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

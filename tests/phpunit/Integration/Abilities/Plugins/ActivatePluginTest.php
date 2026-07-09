@@ -94,11 +94,20 @@ final class ActivatePluginTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// Adapter-backed: the route's own permission check runs at dispatch, so execute()
+		// surfaces the plugins controller's REAL denial — not the generic collapse. A
+		// subscriber lacks `activate_plugins`, so update_item_permissions_check() returns
+		// rest_cannot_manage_plugins. This ability has no require_permission floor, so the
+		// permission phase (check_permissions()) is guard-only and the denial lives on the
+		// execute() path.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-plugins/activate-plugin' )->execute( array( 'plugin' => self::PLUGIN ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_plugins', $result->get_error_code() );
+		// 403 because the subscriber is logged in but lacks the capability.
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

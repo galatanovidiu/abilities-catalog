@@ -53,16 +53,20 @@ final class PolicyDecoratorGatesTest extends TestCase {
 	public function set_up(): void {
 		parent::set_up();
 
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Multisite required.' );
+		if ( is_multisite() ) {
+			return;
 		}
+
+		$this->markTestSkipped( 'Multisite required.' );
 	}
 
 	public function tear_down(): void {
 		foreach ( $this->created_sites as $blog_id ) {
-			if ( get_site( $blog_id ) ) {
-				wp_delete_site( $blog_id );
+			if ( ! get_site( $blog_id ) ) {
+				continue;
 			}
+
+			wp_delete_site( $blog_id );
 		}
 		$this->created_sites = array();
 
@@ -198,7 +202,9 @@ final class PolicyDecoratorGatesTest extends TestCase {
 			'content' => '<!-- wp:paragraph --><p>Body.</p><!-- /wp:paragraph -->',
 		);
 
-		// Permission layer: re-resolves the capability on the target blog.
+		// Adapter-backed: the capability re-resolves at DISPATCH, inside the switch to
+		// the target blog; the guard-only permission phase just passes. The binding proof
+		// is below — the post lands on blog 2 (allowed there), with the switch balanced.
 		$this->assertTrue( $ability->check_permissions( $input ) );
 
 		$before = get_current_blog_id();
@@ -211,10 +217,11 @@ final class PolicyDecoratorGatesTest extends TestCase {
 	}
 
 	/**
-	 * Gate 2 (denied leg, layer-pinned): the SAME blog-2-only administrator is
-	 * DENIED when targeting the main blog, and the denial is asserted at the
-	 * permission layer — proving the capability re-resolves on the TARGET blog
-	 * at the permission step, not a split-brain.
+	 * Gate 2 (denied leg): the SAME blog-2-only administrator is DENIED when
+	 * targeting the main blog. For an adapter-backed ability the capability
+	 * re-resolves at DISPATCH, inside the switch to the target blog, so the denial
+	 * is asserted through execute() (a real 403) — proving the cap is evaluated on
+	 * the TARGET blog, with no split-brain (permission and body both run switched).
 	 */
 	public function test_gate2_blog_local_admin_is_denied_on_main_blog(): void {
 		$blog2     = $this->seedSite();
@@ -232,21 +239,19 @@ final class PolicyDecoratorGatesTest extends TestCase {
 			'content' => '<!-- wp:paragraph --><p>Body.</p><!-- /wp:paragraph -->',
 		);
 
-		// Denial pinned to the permission layer (the binding assertion).
-		$this->assertNotTrue( $ability->check_permissions( $input ) );
-
+		// Adapter-backed: the capability re-resolves at DISPATCH (inside the switch to
+		// the main blog), not in the guard-only permission phase, so the denial surfaces
+		// through execute() as the route's real 403.
 		$before = get_current_blog_id();
 		$result = $ability->execute( $input );
 
 		// Balance holds even on the denied path.
 		$this->assertSame( $before, get_current_blog_id() );
 
-		// The denial is the real permission contract, not a generic blog_id
-		// mismatch: the main blog is a valid site, so this is a capability
-		// denial, surfaced as ability_invalid_permissions — never the 404
-		// invalid_blog_id error (that is reserved for a bad/forbidden site).
+		// A capability denial on a VALID site (the main blog) is a real 403 route error,
+		// never the 404 invalid_blog_id error (reserved for a bad/forbidden site).
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 403, (int) $result->get_error_data()['status'] );
 		$this->assertNotSame( 'abilities_catalog_invalid_blog_id', $result->get_error_code() );
 	}
 }

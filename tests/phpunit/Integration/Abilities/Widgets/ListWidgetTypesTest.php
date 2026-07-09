@@ -81,20 +81,32 @@ final class ListWidgetTypesTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied(): void {
+		// Adapter-backed: permission delegates to the wrapped route, whose own
+		// check_read_permission() requires edit_theme_options and now runs at dispatch,
+		// so execute() surfaces the route's REAL error — not the generic collapse. The
+		// adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so the denial lives on the execute() path.
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-widgets/list-widget-types' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// A subscriber is logged in but lacks edit_theme_options, so the route denies
+		// at dispatch with the same code at status 403 (logged-in authorization code).
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-widgets/list-widget-types' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

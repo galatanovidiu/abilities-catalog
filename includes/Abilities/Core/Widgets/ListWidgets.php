@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Widgets;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,12 +15,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-widgets/list-widgets`.
  *
- * Wraps `GET /wp/v2/widgets` via `rest_do_request()` and returns the widget
- * instances as flat rows, optionally filtered to one sidebar. The widgets
- * collection route returns a bare JSON array (no `X-WP-Total` header), so the
- * total is the row count. Each row is projected to the shared widget shape
- * (`id`, `id_base`, `sidebar`, `rendered`), dropping `rendered_form` and the
- * `instance` object, which are admin-form noise for an agent.
+ * Wraps `GET /wp/v2/widgets` via the Abilities REST Adapter. The widgets
+ * collection route returns a list, so the adapter wraps it as
+ * `{ items, total, total_pages }`; {@see shapeOutput()} then reshapes that to the
+ * catalog's `{ items, total }`, projecting each row to the closed widget shape
+ * (`id`, `id_base`, `sidebar`, `rendered`) and dropping `rendered_form` and the
+ * `instance` object, which are admin-form noise for an agent. The input schema is
+ * OVERRIDDEN to the catalog's narrow two-knob shape (`sidebar`, `context`) instead
+ * of the route's full query-arg surface; both pass through to the route. Permission
+ * delegates to the route's own check (no `require_permission` floor), which reads
+ * any sidebar marked `show_in_rest` and otherwise requires `edit_theme_options`.
  *
  * @since 0.1.0
  */
@@ -37,60 +41,59 @@ final class ListWidgets implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Widgets', 'abilities-catalog' ),
-			'description'         => __( 'Lists widget instances, optionally filtered to one sidebar, returning each widget\'s id, id_base (type), sidebar, and rendered HTML. Use this to find the widget id needed by og-widgets/get-widget, og-widgets/update-widget, or og-widgets/delete-widget. Discover sidebar ids with og-widgets/list-sidebars; an empty or unknown sidebar returns no items.', 'abilities-catalog' ),
-			'category'            => 'og-core-widgets',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'sidebar' => array(
-						'type'        => 'string',
-						'description' => __( 'Limit results to widgets in this sidebar id (e.g. "sidebar-1" or "wp_inactive_widgets"). Discover sidebar ids with og-widgets/list-sidebars. Omit to list widgets across all sidebars.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/widgets',
+				'method'          => 'GET',
+				'label'           => __( 'List Widgets', 'abilities-catalog' ),
+				'description'     => __( 'Lists widget instances, optionally filtered to one sidebar, returning each widget\'s id, id_base (type), sidebar, and rendered HTML. Use this to find the widget id needed by og-widgets/get-widget, og-widgets/update-widget, or og-widgets/delete-widget. Discover sidebar ids with og-widgets/list-sidebars; an empty or unknown sidebar returns no items.', 'abilities-catalog' ),
+				'category'        => 'og-core-widgets',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'sidebar' => array(
+							'type'        => 'string',
+							'description' => __( 'Limit results to widgets in this sidebar id (e.g. "sidebar-1" or "wp_inactive_widgets"). Discover sidebar ids with og-widgets/list-sidebars. Omit to list widgets across all sidebars.', 'abilities-catalog' ),
+						),
+						'context' => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						),
 					),
-					'context' => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items', 'total' ),
-				'properties'           => array(
-					'items' => array(
-						'type'        => 'array',
-						'items'       => self::widgetItemSchema(),
-						'description' => __( 'The list of widget instances as flat rows. Use og-widgets/get-widget for a single widget.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'items', 'total' ),
+					'properties'           => array(
+						'items' => array(
+							'type'        => 'array',
+							'items'       => self::widgetItemSchema(),
+							'description' => __( 'The list of widget instances as flat rows. Use og-widgets/get-widget for a single widget.', 'abilities-catalog' ),
+						),
+						'total' => array(
+							'type'        => 'integer',
+							'description' => __( 'Number of widget instances returned (the count of items).', 'abilities-catalog' ),
+						),
 					),
-					'total' => array(
-						'type'        => 'integer',
-						'description' => __( 'Number of widget instances returned (the count of items).', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'show_in_rest' => true,
 				),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
 	 * Closed schema for one projected widget row.
 	 *
-	 * Kept beside the projection in execute() so the declared shape and the
-	 * runtime row cannot drift. `rendered` is empty for inactive widgets, so it
+	 * Kept beside the projection in {@see shapeOutput()} so the declared shape and
+	 * the runtime row cannot drift. `rendered` is empty for inactive widgets, so it
 	 * is not required.
 	 *
 	 * @return array<string,mixed> The widget item schema.
@@ -122,49 +125,31 @@ final class ListWidgets implements Ability {
 	}
 
 	/**
-	 * Permission check: baseline `edit_theme_options` to list widgets.
+	 * Reshapes the adapter's collection envelope to the catalog's `{ items, total }`.
 	 *
-	 * Coarse, object-independent gate matching the widgets REST routes, which
-	 * all check `edit_theme_options` in `permissions_check()`. The wrapped route
-	 * runs its own permission check under `rest_do_request`, so this is not
-	 * weaker than core; an unknown `sidebar` simply yields no rows rather than a
-	 * permission collapse.
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over the
+	 * `{ items, total, total_pages }` envelope the adapter builds for this collection
+	 * route. Each row is projected to the closed widget shape via {@see widgetRow()},
+	 * and `total` becomes the count of returned rows (the widgets route returns a
+	 * bare array with no `X-WP-Total` header, so the count is the only honest total).
+	 * `$input` and `$response` are part of the callback signature but unused here.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may list widgets.
+	 * @param mixed               $data     The adapter collection envelope (associative array).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The reshaped collection and count-based total.
 	 */
-	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data  = is_array( $data ) ? $data : array();
+		$items = isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : array();
+		$rows  = array();
 
-		return current_user_can( 'edit_theme_options' );
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The collection and total, or the REST error.
-	 */
-	public function execute( $input ) {
-		$input = is_array( $input ) ? $input : array();
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/widgets' );
-		$request->set_param( 'context', $input['context'] ?? 'view' );
-
-		if ( isset( $input['sidebar'] ) ) {
-			$request->set_param( 'sidebar', (string) $input['sidebar'] );
+		foreach ( $items as $widget ) {
+			$rows[] = self::widgetRow( is_array( $widget ) ? $widget : array() );
 		}
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
-		$rows = is_array( $data ) ? array_map( array( self::class, 'widgetRow' ), $data ) : array();
 
 		return array(
-			'items' => array_values( $rows ),
+			'items' => $rows,
 			'total' => count( $rows ),
 		);
 	}

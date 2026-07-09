@@ -6,8 +6,8 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\ContentListShaper;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,8 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-content/list-pages`.
  *
- * Wraps `GET /wp/v2/pages` via `rest_do_request()` and returns the collection
- * plus its total counts. Read-only; REST enforces per-row visibility underneath.
+ * Wraps `GET /wp/v2/pages` via the Abilities REST Adapter and returns the
+ * collection plus its total counts. Read-only; REST enforces per-row visibility
+ * underneath. Permission delegates to the route's own check (no `require_permission`
+ * floor): published pages are public, and the route requires `edit_pages` for edit
+ * context or a non-public status itself. {@see shapeOutput()} flattens each row
+ * through {@see ContentListShaper} and preserves the `{ items, total, total_pages }`
+ * envelope.
  *
  * @since 0.1.0
  */
@@ -34,172 +39,133 @@ final class ListPages implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Pages', 'abilities-catalog' ),
-			'description'         => __( 'Lists pages with optional search, status, author, parent, ordering, and pagination filters.', 'abilities-catalog' ),
-			'category'            => 'og-core-content',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'search'     => array(
-						'type'        => 'string',
-						'description' => __( 'Limit results to those matching a search term.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/pages',
+				'method'          => 'GET',
+				'label'           => __( 'List Pages', 'abilities-catalog' ),
+				'description'     => __( 'Lists pages with optional search, status, author, parent, ordering, and pagination filters.', 'abilities-catalog' ),
+				'category'        => 'og-core-content',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'search'     => array(
+							'type'        => 'string',
+							'description' => __( 'Limit results to those matching a search term.', 'abilities-catalog' ),
+						),
+						'status'     => array(
+							'type'        => 'string',
+							'description' => __( 'Limit results to a page status (e.g. "publish", "draft").', 'abilities-catalog' ),
+						),
+						'author'     => array(
+							'type'        => 'integer',
+							'description' => __( 'Limit results to a given author user ID.', 'abilities-catalog' ),
+						),
+						'parent'     => array(
+							'type'        => 'integer',
+							'description' => __( 'Limit results to pages with a given parent page ID.', 'abilities-catalog' ),
+						),
+						'menu_order' => array(
+							'type'        => 'integer',
+							'description' => __( 'Limit results to pages with a given menu order value.', 'abilities-catalog' ),
+						),
+						'per_page'   => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'maximum'     => 100,
+							'default'     => 10,
+							'description' => __( 'Number of items to return per page.', 'abilities-catalog' ),
+						),
+						'page'       => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'default'     => 1,
+							'description' => __( 'Page of the result set to return.', 'abilities-catalog' ),
+						),
+						'orderby'    => array(
+							'type'        => 'string',
+							'enum'        => array( 'author', 'date', 'id', 'include', 'modified', 'parent', 'relevance', 'slug', 'include_slugs', 'title', 'menu_order' ),
+							'description' => __( 'Field to sort by (e.g. "date", "title", "menu_order").', 'abilities-catalog' ),
+						),
+						'order'      => array(
+							'type'        => 'string',
+							'enum'        => array( 'asc', 'desc' ),
+							'description' => __( 'Sort direction.', 'abilities-catalog' ),
+						),
+						'context'    => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						),
 					),
-					'status'     => array(
-						'type'        => 'string',
-						'description' => __( 'Limit results to a page status (e.g. "publish", "draft").', 'abilities-catalog' ),
-					),
-					'author'     => array(
-						'type'        => 'integer',
-						'description' => __( 'Limit results to a given author user ID.', 'abilities-catalog' ),
-					),
-					'parent'     => array(
-						'type'        => 'integer',
-						'description' => __( 'Limit results to pages with a given parent page ID.', 'abilities-catalog' ),
-					),
-					'menu_order' => array(
-						'type'        => 'integer',
-						'description' => __( 'Limit results to pages with a given menu order value.', 'abilities-catalog' ),
-					),
-					'per_page'   => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'maximum'     => 100,
-						'default'     => 10,
-						'description' => __( 'Number of items to return per page.', 'abilities-catalog' ),
-					),
-					'page'       => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'default'     => 1,
-						'description' => __( 'Page of the result set to return.', 'abilities-catalog' ),
-					),
-					'orderby'    => array(
-						'type'        => 'string',
-						'enum'        => array( 'author', 'date', 'id', 'include', 'modified', 'parent', 'relevance', 'slug', 'include_slugs', 'title', 'menu_order' ),
-						'description' => __( 'Field to sort by (e.g. "date", "title", "menu_order").', 'abilities-catalog' ),
-					),
-					'order'      => array(
-						'type'        => 'string',
-						'enum'        => array( 'asc', 'desc' ),
-						'description' => __( 'Sort direction.', 'abilities-catalog' ),
-					),
-					'context'    => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items' ),
-				'properties'           => array(
-					'items'       => array(
-						'type'        => 'array',
-						'items'       => ContentListShaper::pageItemSchema(),
-						'description' => __( 'The list of pages as flat summary rows. Use og-content/get-page for a single page body.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'items' ),
+					'properties'           => array(
+						'items'       => array(
+							'type'        => 'array',
+							'items'       => ContentListShaper::pageItemSchema(),
+							'description' => __( 'The list of pages as flat summary rows. Use og-content/get-page for a single page body.', 'abilities-catalog' ),
+						),
+						'total'       => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of pages matching the query.', 'abilities-catalog' ),
+						),
+						'total_pages' => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of result pages available.', 'abilities-catalog' ),
+						),
 					),
-					'total'       => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of pages matching the query.', 'abilities-catalog' ),
-					),
-					'total_pages' => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of result pages available.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'keywords'     => array( 'search pages', 'find pages', 'list pages', 'all pages', 'pages by author', 'pages by status', 'draft pages', 'page tree' ),
+					'show_in_rest' => true,
 				),
-				'keywords'     => array( 'search pages', 'find pages', 'list pages', 'all pages', 'pages by author', 'pages by status', 'draft pages', 'page tree' ),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: public for published pages; `edit_pages` for edit-context
-	 * or when a non-public status is requested.
+	 * Flattens the collection envelope into the catalog's summary-row shape.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may run the query.
-	 */
-	public function hasPermission( $input ): bool {
-		$input = is_array( $input ) ? $input : array();
-
-		$context = $input['context'] ?? 'view';
-		$status  = isset( $input['status'] ) ? (string) $input['status'] : 'publish';
-
-		if ( 'edit' === $context || ( 'publish' !== $status && '' !== $status ) ) {
-			return current_user_can( 'edit_pages' );
-		}
-
-		return is_user_logged_in();
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
+	 * Wired as the adapter's `output_callback`; runs only on success, over the
+	 * `{ items, total, total_pages }` envelope. Each row is flattened by
+	 * {@see ContentListShaper::pageSummary()}; the totals carry through unchanged.
+	 * `$input` and `$response` are part of the callback signature but unused here.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The collection and totals, or the REST error.
+	 * @param mixed               $data     The collection envelope (`{ items, total, total_pages }`).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat page summary rows and totals.
 	 */
-	public function execute( $input ) {
-		$input = is_array( $input ) ? $input : array();
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data  = is_array( $data ) ? $data : array();
+		$items = isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : array();
 
-		$request = new WP_REST_Request( 'GET', '/wp/v2/pages' );
-		$request->set_param( 'context', $input['context'] ?? 'view' );
+		$rows = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
 
-		if ( isset( $input['search'] ) ) {
-			$request->set_param( 'search', (string) $input['search'] );
+			$rows[] = ContentListShaper::pageSummary( $item );
 		}
-		if ( isset( $input['status'] ) ) {
-			$request->set_param( 'status', (string) $input['status'] );
-		}
-		if ( isset( $input['author'] ) ) {
-			$request->set_param( 'author', absint( $input['author'] ) );
-		}
-		if ( isset( $input['parent'] ) ) {
-			$request->set_param( 'parent', absint( $input['parent'] ) );
-		}
-		if ( isset( $input['menu_order'] ) ) {
-			$request->set_param( 'menu_order', (int) $input['menu_order'] );
-		}
-		if ( isset( $input['per_page'] ) ) {
-			$request->set_param( 'per_page', absint( $input['per_page'] ) );
-		}
-		if ( isset( $input['page'] ) ) {
-			$request->set_param( 'page', absint( $input['page'] ) );
-		}
-		if ( isset( $input['orderby'] ) ) {
-			$request->set_param( 'orderby', (string) $input['orderby'] );
-		}
-		if ( isset( $input['order'] ) ) {
-			$request->set_param( 'order', (string) $input['order'] );
-		}
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$items   = rest_get_server()->response_to_data( $response, false );
-		$headers = $response->get_headers();
-		$rows    = is_array( $items ) ? array_map( array( ContentListShaper::class, 'pageSummary' ), $items ) : array();
 
 		return array(
 			'items'       => $rows,
-			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
-			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
+			'total'       => (int) ( $data['total'] ?? count( $rows ) ),
+			'total_pages' => (int) ( $data['total_pages'] ?? 0 ),
 		);
 	}
 }

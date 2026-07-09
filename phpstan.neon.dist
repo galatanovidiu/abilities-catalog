@@ -24,6 +24,9 @@ parameters:
 	paths:
 		- abilities-catalog.php
 		- includes/
+	# Index the Composer-shipped REST adapter for symbols only (not analysed).
+	scanDirectories:
+		- vendor/galatanovidiu/abilities-rest-adapter/includes
 	excludePaths:
 		analyse:
 			- vendor/

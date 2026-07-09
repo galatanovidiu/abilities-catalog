@@ -9,14 +9,14 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content\GetPostType;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
  * Exercises og-content/get-post-type end-to-end: a registered post-type slug in,
- * a flat shaped field set out. The wrapped GET /wp/v2/types/{type} route allows
- * public view reads, so the ability defers permission to it.
+ * a flat shaped field set out. Adapter-backed: the wrapped GET /wp/v2/types/{type}
+ * route allows public view reads, so the ability defers permission to it, and the
+ * route's own errors (404 unknown, 403 non-REST) surface through execute().
  */
 final class GetPostTypeTest extends TestCase {
 
@@ -74,7 +74,8 @@ final class GetPostTypeTest extends TestCase {
 		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'does-not-exist' ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		// Core's specific 404, never the generic permission collapse.
+		// The route runs at dispatch, so execute() surfaces its REAL 404 — never the
+		// generic permission collapse.
 		$this->assertSame( 'rest_type_invalid', $result->get_error_code() );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 		$data = $result->get_error_data();
@@ -97,7 +98,8 @@ final class GetPostTypeTest extends TestCase {
 		unregister_post_type( 'ac_hidden_type' );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		// The route refuses a non-REST type rather than leaking its details.
+		// The route refuses a non-REST type at dispatch; execute() surfaces that real
+		// error rather than collapsing it to the generic permission code.
 		$this->assertSame( 'rest_cannot_read_type', $result->get_error_code() );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
@@ -117,16 +119,6 @@ final class GetPostTypeTest extends TestCase {
 		// The wrapped types/{type} view route is public, so the ability defers to
 		// it and does not collapse a logged-out reader into a permission error.
 		$result = wp_get_ability( 'og-content/get-post-type' )->execute( array( 'type' => 'post' ) );
-
-		$this->assertIsArray( $result );
-		$this->assertSame( 'post', $result['slug'] );
-	}
-
-	public function test_direct_instantiation_executes(): void {
-		$this->actingAs( 'administrator' );
-
-		// Exercise the class wiring directly, not only the registry lookup.
-		$result = ( new GetPostType() )->execute( array( 'type' => 'post' ) );
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'post', $result['slug'] );

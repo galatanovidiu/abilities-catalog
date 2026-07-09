@@ -100,9 +100,10 @@ final class UpdateMediaTest extends TestCase {
 	}
 
 	public function test_author_updating_missing_media_surfaces_route_404_not_generic(): void {
-		// An author holds edit_posts (the coarse floor), so a non-existent id now
-		// reaches the route and surfaces its specific invalid-id 404 instead of the
-		// opaque ability_invalid_permissions an object-level pre-check produced.
+		// Adapter-backed: the ability has no require_permission floor, so the permission
+		// phase returns true and the wrapped route runs at dispatch. A non-existent id
+		// surfaces the route's specific invalid-id 404 instead of the opaque
+		// ability_invalid_permissions an object-level pre-check produced.
 		$this->actingAs( 'author' );
 
 		$result = wp_get_ability( 'og-media/update-media' )->execute(
@@ -125,9 +126,10 @@ final class UpdateMediaTest extends TestCase {
 			)
 		);
 
-		// The author clears the coarse edit_posts guard but lacks edit_others_posts,
-		// so the route's object-level check still denies — by a specific 403, not the
-		// generic collapse — and the title is unchanged.
+		// The author lacks edit_others_posts, so the wrapped route's object-level check
+		// denies at dispatch — by a specific 403, not the generic collapse — and the
+		// title is unchanged. The adapter's permission phase is guard-only (no
+		// require_permission here), so the denial lives on the execute() path.
 		$this->actingAs( 'author' );
 
 		$result = wp_get_ability( 'og-media/update-media' )->execute(

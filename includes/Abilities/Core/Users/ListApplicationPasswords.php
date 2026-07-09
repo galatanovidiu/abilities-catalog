@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Users;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,10 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-users/list-application-passwords`.
  *
- * Wraps `GET /wp/v2/users/<user_id>/application-passwords` via `rest_do_request()`
- * and returns the list of application-password records. The list route returns
- * only metadata (uuid, name, created, last_used); the plaintext password is never
- * available here and is never output. Read-only.
+ * Wraps `GET /wp/v2/users/<user_id>/application-passwords` via the Abilities REST
+ * Adapter. The route's callback is `get_items`, so the adapter wraps its body in the
+ * collection envelope `{ items, total, total_pages }`; this ability OVERRIDES the
+ * output back to the catalog's flat `{ items }` shape, each row narrowed to the
+ * documented metadata allowlist (uuid, name, created, last_used, last_ip) via
+ * {@see shapeOutput()}. The path capture `user_id` is required by the route, so the
+ * input schema keeps it OPTIONAL and an {@see fillUserId()} `input_callback` defaults
+ * it to the current user when absent. The plaintext password is never present in a
+ * list response and is never output. Permission delegates to the route's own check
+ * (no `require_permission` floor): the object decision (own credentials vs another
+ * user's `edit_user`) and its typed errors reach the caller unchanged. Read-only.
  *
  * @since 0.1.0
  */
@@ -35,103 +42,101 @@ final class ListApplicationPasswords implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Application Passwords', 'abilities-catalog' ),
-			'description'         => __( 'Returns the application passwords for a user (metadata only, never the plaintext password).', 'abilities-catalog' ),
-			'category'            => 'og-core-users',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'user_id' => array(
-						'type'        => 'integer',
-						'description' => __( 'The user ID. Defaults to the current user.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/users/(?P<user_id>(?:[\d]+|me))/application-passwords',
+				'method'          => 'GET',
+				'label'           => __( 'List Application Passwords', 'abilities-catalog' ),
+				'description'     => __( 'Returns the application passwords for a user (metadata only, never the plaintext password).', 'abilities-catalog' ),
+				'category'        => 'og-core-users',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'user_id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The user ID. Defaults to the current user.', 'abilities-catalog' ),
+						),
+						'context' => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" or "edit".', 'abilities-catalog' ),
+						),
 					),
-					'context' => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" or "edit".', 'abilities-catalog' ),
+					'additionalProperties' => false,
+				),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'items' ),
+					'properties'           => array(
+						'items' => array(
+							'type'        => 'array',
+							'items'       => self::itemSchema(),
+							'description' => __( 'The application-password records (metadata only, never the plaintext password).', 'abilities-catalog' ),
+						),
 					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items' ),
-				'properties'           => array(
-					'items' => array(
-						'type'        => 'array',
-						'items'       => self::itemSchema(),
-						'description' => __( 'The application-password records (metadata only, never the plaintext password).', 'abilities-catalog' ),
+				'input_callback'  => array( $this, 'fillUserId' ),
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'abilities_catalog' => array(
+						'scope' => 'user',
 					),
+					'show_in_rest'      => true,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'       => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
-				),
-				'abilities_catalog' => array(
-					'scope' => 'user',
-				),
-				'show_in_rest'      => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: a logged-in user; the route enforces the object.
+	 * Defaults the required `user_id` path capture to the current user.
 	 *
-	 * Application passwords are user-scoped, so a logged-in user is the
-	 * object-independent floor every successful caller holds — `list_app_passwords`
-	 * is never granted to a logged-out request, so this is never stricter than core.
-	 * The object-level decision (own credentials are allowed, another user requires
-	 * `edit_user`) is enforced by the wrapped
-	 * `GET /wp/v2/users/<id>/application-passwords` route's
-	 * `get_items_permissions_check`, so its specific errors (`rest_user_invalid_id`
-	 * 404, `rest_cannot_list_application_passwords` 403) reach the caller instead of
-	 * the generic denial the Abilities API substitutes for a non-`true` return.
+	 * Wired as the adapter's `input_callback`, it runs after input validation, so the
+	 * `user_id` schema property stays OPTIONAL (the route's path capture would
+	 * otherwise force it required and reject a call that means "my own credentials").
+	 * When the caller omits `user_id`, this injects the current user's ID so the
+	 * route's `/users/<user_id>/...` path can be built.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if a user is logged in.
+	 * @param array<string,mixed> $params The validated ability input.
+	 * @return array<string,mixed> The params with `user_id` guaranteed present.
 	 */
-	public function hasPermission( $input ): bool {
-		return is_user_logged_in();
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The app-password list, or the REST error.
-	 */
-	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$user_id = $this->resolveUserId( $input );
-		$context = $input['context'] ?? 'view';
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/users/' . $user_id . '/application-passwords' );
-		$request->set_param( 'context', $context );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
+	public function fillUserId( array $params ): array {
+		if ( ! isset( $params['user_id'] ) ) {
+			$params['user_id'] = get_current_user_id();
 		}
 
-		$data = rest_get_server()->response_to_data( $response, false );
-		$data = is_array( $data ) ? $data : array();
+		return $params;
+	}
 
-		$items = array_map(
+	/**
+	 * Narrows the collection envelope to the catalog's flat metadata shape.
+	 *
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over the
+	 * `{ items, total, total_pages }` envelope the adapter builds for this `get_items`
+	 * route. It reads the envelope's `items`, projects each row through
+	 * {@see shapeItem()}, and returns `{ items }` — dropping `total`/`total_pages` and
+	 * any field outside the documented allowlist. `$input` and `$response` are part of
+	 * the callback signature but unused here; the envelope carries everything this
+	 * shape needs.
+	 *
+	 * @param mixed               $data     The collection envelope (associative array).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat `{ items }` shape.
+	 */
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data  = is_array( $data ) ? $data : array();
+		$items = isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : array();
+
+		$rows = array_map(
 			static fn ( $item ): array => self::shapeItem( is_array( $item ) ? $item : array() ),
-			array_values( $data )
+			array_values( $items )
 		);
 
 		return array(
-			'items' => $items,
+			'items' => $rows,
 		);
 	}
 
@@ -139,11 +144,11 @@ final class ListApplicationPasswords implements Ability {
 	 * Projects a raw REST application-password item into a fixed safe metadata row.
 	 *
 	 * Core's list route runs each row through `response_to_data()`, which carries
-	 * extra fields beyond the documented metadata (`app_id`, `last_ip`, `_links`),
-	 * and the `rest_prepare_application_password` filter lets plugins add arbitrary
-	 * fields. This allowlist keeps the output aligned with the documented
-	 * "metadata only" contract. The plaintext password is never present in a list
-	 * response, so there is nothing to strip there.
+	 * extra fields beyond the documented metadata (`app_id`, `_links`), and the
+	 * `rest_prepare_application_password` filter lets plugins add arbitrary fields.
+	 * This allowlist keeps the output aligned with the documented "metadata only"
+	 * contract. The plaintext password is never present in a list response, so there
+	 * is nothing to strip there.
 	 *
 	 * @param array<string,mixed> $item A single application-password record from the REST response.
 	 * @return array<string,mixed> The metadata row: uuid, name, created, last_used, last_ip.
@@ -191,21 +196,5 @@ final class ListApplicationPasswords implements Ability {
 			),
 			'additionalProperties' => false,
 		);
-	}
-
-	/**
-	 * Resolves the target user ID, defaulting to the current user.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return int The resolved user ID, or 0 when none is available.
-	 */
-	private function resolveUserId( $input ): int {
-		$input = is_array( $input ) ? $input : array();
-
-		if ( isset( $input['user_id'] ) ) {
-			return absint( $input['user_id'] );
-		}
-
-		return get_current_user_id();
 	}
 }

@@ -61,6 +61,12 @@ require_once __DIR__ . '/includes/Mcp/Enable.php';
 add_action(
 	'plugins_loaded',
 	static function (): void {
+		$abilities_catalog_autoload_packages = ABILITIES_CATALOG_DIR . 'vendor/autoload_packages.php';
+		if ( is_readable( $abilities_catalog_autoload_packages ) ) {
+			// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path built from a plugin constant and an internal literal, not user input.
+			require_once $abilities_catalog_autoload_packages;
+		}
+
 		( new Registry() )->register();
 
 		// The Abilities API ships with WordPress 6.9; without it the MCP layer has

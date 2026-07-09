@@ -227,18 +227,27 @@ final class WriteLinksTest extends TestCase {
 	}
 
 	public function test_trash_post_subscriber_is_denied(): void {
-		$this->actingAs( 'subscriber' );
-		$post_id = self::factory()->post->create(
+		// The route enforces the object-level delete_post capability itself and now
+		// runs at dispatch, so execute() surfaces the route's REAL error (rest_cannot_delete,
+		// 403), not the generic ability_invalid_permissions collapse. This ability sets no
+		// require_permission guard, so the denial lives entirely on the execute() path.
+		$author_id = self::factory()->user->create( array( 'role' => 'author' ) );
+		$post_id   = self::factory()->post->create(
 			array(
 				'post_title'  => 'Protected',
+				'post_author' => $author_id,
 				'post_status' => 'publish',
 			)
 		);
+		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-content/trash-post' )->execute( array( 'id' => $post_id ) );
 
 		$this->assertInstanceOf( \WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+		$this->assertSame( 'publish', get_post_status( $post_id ) );
 	}
 
 	public function test_trash_post_missing_object_returns_invalid_id(): void {

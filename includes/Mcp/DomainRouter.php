@@ -162,25 +162,63 @@ final class DomainRouter {
 			return $allowed;
 		}
 		if ( ! $allowed ) {
-			$message = sprintf(
-				/* translators: %s: the ability name. */
-				__( 'You do not have permission to run "%s". Your account lacks the capability this action requires; an administrator must grant it.', 'abilities-catalog' ),
-				$ability
-			);
-
-			// A capability denial while targeting a specific site is usually "you are not
-			// a member of that site" — point the agent at the sites it can act on, the same
-			// recovery the invalid-blog_id error gives (PLAN Decision 3 / spec A3).
-			if ( isset( $input['blog_id'] ) ) {
-				$message .= ' ' . __( 'You targeted a specific site with blog_id and may not be able to act on it; list the sites you can act on with og-users/list-my-sites.', 'abilities-catalog' );
-			}
-
-			return new WP_Error( 'forbidden', $message, array( 'status' => 403 ) );
+			return $this->forbidden( $ability, $input );
 		}
 
 		$result = $resolved->execute( $args );
+		if ( ! is_wp_error( $result ) ) {
+			return $result;
+		}
 
-		return is_wp_error( $result ) ? $this->guideInvalidInput( $result, $ability ) : $result;
+		// An adapter-backed (REST-route) ability defers its real permission decision to
+		// dispatch, so check_permissions() above passed (it is guard-only) and the denial
+		// only appears now, as the route's own 401/403. Fold it into the same recovery
+		// 'forbidden' a hand-written ability's pre-check returns, so the agent gets one
+		// consistent recovery either way; the route's real code/status stay in the data.
+		$data   = $result->get_error_data();
+		$status = is_array( $data ) && isset( $data['status'] ) ? (int) $data['status'] : 0;
+		if ( 401 === $status || 403 === $status ) {
+			return $this->forbidden( $ability, $input, $result );
+		}
+
+		return $this->guideInvalidInput( $result, $ability );
+	}
+
+	/**
+	 * Builds the recovery-oriented permission denial the router returns for any
+	 * authorization failure — whether the pre-check caught it (a hand-written ability's
+	 * bare-`false` verdict) or it surfaced from dispatch (an adapter-backed ability's
+	 * real 401/403). The agent gets one consistent, actionable `forbidden`; when the
+	 * denial came from a real REST error, its original code and status are preserved in
+	 * the error data so a capable consumer can still read them.
+	 *
+	 * @param string              $ability  The full ability name.
+	 * @param array<string,mixed> $input    The original input (read only for the blog_id hint).
+	 * @param \WP_Error|null      $original The route's real error, when the denial surfaced from dispatch.
+	 * @return \WP_Error The `forbidden` denial.
+	 */
+	private function forbidden( string $ability, array $input, ?WP_Error $original = null ): WP_Error {
+		$message = sprintf(
+			/* translators: %s: the ability name. */
+			__( 'You do not have permission to run "%s". Your account lacks the capability this action requires; an administrator must grant it.', 'abilities-catalog' ),
+			$ability
+		);
+
+		// A capability denial while targeting a specific site is usually "you are not
+		// a member of that site" — point the agent at the sites it can act on, the same
+		// recovery the invalid-blog_id error gives (PLAN Decision 3 / spec A3).
+		if ( isset( $input['blog_id'] ) ) {
+			$message .= ' ' . __( 'You targeted a specific site with blog_id and may not be able to act on it; list the sites you can act on with og-users/list-my-sites.', 'abilities-catalog' );
+		}
+
+		$data = array( 'status' => 403 );
+		if ( $original instanceof WP_Error ) {
+			$data['rest_code']   = $original->get_error_code();
+			$original_data       = $original->get_error_data();
+			$data['rest_status'] = is_array( $original_data ) && isset( $original_data['status'] ) ? (int) $original_data['status'] : 403;
+		}
+
+		return new WP_Error( 'forbidden', $message, $data );
 	}
 
 	/**

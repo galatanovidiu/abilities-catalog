@@ -149,6 +149,10 @@ final class UpdateMenuItemTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
+		// Adapter-backed: the route's own permission check runs at dispatch, so execute()
+		// surfaces the REAL REST error (rest_cannot_edit, 403) instead of the generic
+		// ability_invalid_permissions collapse. This ability has no require_permission
+		// guard (route cap == catalog cap), so nothing tightens or collapses.
 		$result = wp_get_ability( 'og-menus/update-menu-item' )->execute(
 			array(
 				'id'    => $item_id,
@@ -157,7 +161,9 @@ final class UpdateMenuItemTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_edit', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_missing_item_id_surfaces_route_404_not_generic(): void {

@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Search;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Search\SearchContent;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
@@ -107,23 +106,33 @@ final class SearchContentTest extends TestCase {
 		$this->assertCount( 2, $result['items'] );
 	}
 
-	public function test_subscriber_is_denied(): void {
+	public function test_subscriber_can_search_public_content(): void {
+		// Permission delegates to the public core search route, which exposes only
+		// already-public content. A subscriber (or anonymous caller) may search it.
+		self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_title'  => 'Subscriber-visible search marker',
+			)
+		);
+
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-search/search-content' )->execute(
-			array( 'search' => 'anything' )
+			array( 'search' => 'Subscriber-visible search marker' )
 		);
 
-		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 
-	public function test_invalid_type_preserves_core_error(): void {
+	public function test_invalid_type_is_rejected_as_invalid_input(): void {
 		$this->actingAs( 'administrator' );
 
-		// Call execute() directly to bypass the input-schema enum and reach
-		// core's invalid-type guard, which the ability must surface unchanged.
-		$result = ( new SearchContent() )->execute(
+		// An out-of-enum `type` is rejected before dispatch: adapter-backed, the
+		// ability's own input schema enforces the enum, so the Abilities API returns
+		// ability_invalid_input rather than reaching the route's rest_invalid_param.
+		$result = wp_get_ability( 'og-search/search-content' )->execute(
 			array(
 				'search' => 'anything',
 				'type'   => 'not-a-real-type',
@@ -131,9 +140,7 @@ final class SearchContentTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		// The wrapped route validates `type` against its enum, so core returns
-		// rest_invalid_param (400). The ability surfaces it unchanged.
-		$this->assertSame( 'rest_invalid_param', $result->get_error_code() );
+		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
 	public function test_out_of_range_page_returns_empty_items(): void {

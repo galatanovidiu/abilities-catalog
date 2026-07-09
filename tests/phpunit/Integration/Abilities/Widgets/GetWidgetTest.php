@@ -120,20 +120,34 @@ final class GetWidgetTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied(): void {
+		// Adapter-backed: permission delegates to the wrapped route, which runs at
+		// dispatch, so execute() surfaces the route's REAL error — not the generic
+		// collapse. The test widget sits in wp_inactive_widgets (not publicly readable),
+		// so the route requires edit_theme_options and denies an anonymous read with
+		// rest_cannot_manage_widgets. 401 because the user is logged out
+		// (rest_authorization_required_code()). check_permissions() is guard-only now and
+		// this ability has no require_permission floor, so the denial lives on execute().
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// A logged-in subscriber lacks edit_theme_options, so the route denies the read
+		// with the same rest_cannot_manage_widgets via execute(). 403 because the user is
+		// authenticated (rest_authorization_required_code()).
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-widgets/get-widget' )->execute( array( 'id' => $this->widget_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

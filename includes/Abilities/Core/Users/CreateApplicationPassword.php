@@ -29,6 +29,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - The error path is routed through {@see SecretSafeError::redact()} so no
  *   submitted value is echoed back to the browser. No input is logged.
  *
+ * Not adapter-convertible: it redacts REST errors via {@see SecretSafeError} to avoid
+ * leaking the generated password; the adapter cannot run on a dispatch error.
+ *
  * @since 0.3.0
  */
 final class CreateApplicationPassword implements Ability {

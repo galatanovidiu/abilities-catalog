@@ -13,9 +13,10 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the destructive, no-Trash media delete: happy path with previous_*
- * identity reporting, capability denial, and rejection of non-positive IDs
- * without absint() retargeting.
+ * Exercises the adapter-backed destructive, no-Trash media delete: happy path with
+ * previous_* identity reporting, rejection of non-positive IDs without absint()
+ * retargeting, and capability denials. Permission delegates to the wrapped route,
+ * so denials surface through execute() as the route's REAL REST error.
  */
 final class DeleteMediaTest extends TestCase {
 
@@ -53,6 +54,12 @@ final class DeleteMediaTest extends TestCase {
 		$this->assertNull( get_post( $attachment_id ) );
 	}
 
+	/**
+	 * A subscriber lacks the object-level delete permission. With no
+	 * require_permission floor, the route runs at dispatch and execute() surfaces
+	 * its specific `rest_cannot_delete` 403 — not the generic collapse — and the
+	 * attachment survives.
+	 */
 	public function test_subscriber_is_denied(): void {
 		$this->actingAs( 'subscriber' );
 
@@ -61,7 +68,9 @@ final class DeleteMediaTest extends TestCase {
 		$result = wp_get_ability( 'og-media/delete-media' )->execute( array( 'id' => $attachment_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
 		$this->assertNotNull( get_post( $attachment_id ) );
 	}
 

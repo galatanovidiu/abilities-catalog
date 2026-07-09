@@ -23,6 +23,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * tests perform live loopback or outbound HTTP requests; none mutate data, so the
  * ability stays read-only.
  *
+ * Not adapter-convertible: the REST route is resolved from the test slug at call time
+ * (core registers one literal route per test, with no path capture), which the
+ * single-route adapter cannot express.
+ *
  * @since 0.1.0
  */
 final class RunTests implements Ability {

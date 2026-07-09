@@ -26,6 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   directly with `update_option()` after the capability check and per-type
  *   sanitization.
  *
+ * Not adapter-convertible: it writes some options via `POST /wp/v2/settings` and
+ * others via direct `update_option()` — a multi-step write the single-route adapter
+ * cannot model.
+ *
  * @since 0.3.0
  */
 final class UpdateReading implements Ability {

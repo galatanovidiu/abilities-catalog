@@ -4,8 +4,8 @@
  *
  * Covers the additive output fields (slug, password_protected) the ability
  * returns so a caller can tell a locked post from a genuinely empty one and
- * read the post's semantic slug, plus core's invalid-id error contract for a
- * non-positive id.
+ * read the post's semantic slug, plus the route's invalid-id error contract
+ * surfaced through execute().
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -14,7 +14,6 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Content;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content\GetPost;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
@@ -22,6 +21,13 @@ use WP_Error;
  * Exercises og-content/get-post output.
  */
 final class GetPostTest extends TestCase {
+
+	public function test_ability_is_registered(): void {
+		$ability = wp_get_ability( 'og-content/get-post' );
+
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-content/get-post', $ability->get_name() );
+	}
 
 	public function test_output_returns_slug_for_published_post(): void {
 		$this->actingAs( 'administrator' );
@@ -171,22 +177,27 @@ final class GetPostTest extends TestCase {
 		$this->actingAs( 'administrator' );
 
 		// The `minimum: 1` input guard rejects a non-positive id at the schema
-		// boundary, before execute() builds a REST path.
+		// boundary, before the adapter builds a REST path.
 		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => -12 ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'ability_invalid_input', $result->get_error_code() );
 	}
 
-	public function test_execute_preserves_core_invalid_id_error_for_zero_id(): void {
+	public function test_execute_surfaces_core_invalid_id_error_for_missing_post(): void {
 		$this->actingAs( 'administrator' );
 
-		// Call execute() directly to bypass schema validation: with the
-		// absolute-value coercion removed, a non-positive id preserves core's
-		// invalid-id 404 path instead of resolving a different post.
-		$result = ( new GetPost() )->execute( array( 'id' => 0 ) );
+		// Adapter-backed: the route runs at dispatch, so execute() surfaces the
+		// route's REAL error — not the generic ability collapse. A schema-valid id
+		// (>= 1) that resolves to no post hits core's invalid-id 404 path.
+		$missing_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		wp_delete_post( $missing_id, true );
+
+		$result = wp_get_ability( 'og-content/get-post' )->execute( array( 'id' => $missing_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 'rest_post_invalid_id', $result->get_error_code() );
+		$this->assertSame( 404, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

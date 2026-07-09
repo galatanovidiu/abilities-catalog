@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Terms;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,13 +15,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * T1 safe-write ability: `og-terms/create-category`.
  *
- * Wraps `POST /wp/v2/categories` via `rest_do_request()` and returns the new
- * term's id, name, slug, parent, and public archive link. The `category`
- * taxonomy is hierarchical, so the
- * permission check mirrors the REST terms controller create path for a
- * hierarchical taxonomy: `current_user_can( get_taxonomy('category')->cap->edit_terms )`
- * (which resolves to `manage_categories`). The REST route re-checks the
- * capability and sanitizes term fields underneath (defense in depth).
+ * Wraps `POST /wp/v2/categories` via the Abilities REST Adapter and returns the
+ * new term's id, name, slug, parent, and public archive link. The input schema is
+ * OVERRIDDEN to a closed set (`name`, `slug`, `description`, `parent`) so the
+ * route's other write fields (`meta`, etc.) stay hidden; the route still
+ * sanitizes those it accepts at dispatch. The output is OVERRIDDEN to the
+ * catalog's flat five-field set through {@see shapeOutput()}. Permission delegates
+ * to the route's own check (no `require_permission` floor is set): the create cap
+ * for the hierarchical `category` taxonomy is `manage_categories`, which matches
+ * the catalog's previous baseline, so visibility does not widen.
  *
  * @since 0.3.0
  */
@@ -38,124 +40,93 @@ final class CreateCategory implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'Create Category', 'abilities-catalog' ),
-			'description'         => __( 'Creates a new category term.', 'abilities-catalog' ),
-			'category'            => 'og-core-terms',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'name'        => array(
-						'type'        => 'string',
-						'description' => __( 'The category name (required).', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/categories',
+				'method'          => 'POST',
+				'label'           => __( 'Create Category', 'abilities-catalog' ),
+				'description'     => __( 'Creates a new category term.', 'abilities-catalog' ),
+				'category'        => 'og-core-terms',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'name'        => array(
+							'type'        => 'string',
+							'description' => __( 'The category name (required).', 'abilities-catalog' ),
+						),
+						'slug'        => array(
+							'type'        => 'string',
+							'description' => __( 'The category slug. Generated from the name when omitted.', 'abilities-catalog' ),
+						),
+						'description' => array(
+							'type'        => 'string',
+							'description' => __( 'The category description.', 'abilities-catalog' ),
+						),
+						'parent'      => array(
+							'type'        => 'integer',
+							'description' => __( 'The parent category term ID.', 'abilities-catalog' ),
+						),
 					),
-					'slug'        => array(
-						'type'        => 'string',
-						'description' => __( 'The category slug. Generated from the name when omitted.', 'abilities-catalog' ),
-					),
-					'description' => array(
-						'type'        => 'string',
-						'description' => __( 'The category description.', 'abilities-catalog' ),
-					),
-					'parent'      => array(
-						'type'        => 'integer',
-						'description' => __( 'The parent category term ID.', 'abilities-catalog' ),
-					),
+					'required'             => array( 'name' ),
+					'additionalProperties' => false,
 				),
-				'required'             => array( 'name' ),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'id', 'name', 'slug' ),
-				'properties'           => array(
-					'id'     => array(
-						'type'        => 'integer',
-						'description' => __( 'The new category term ID.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'id', 'name', 'slug' ),
+					'properties'           => array(
+						'id'     => array(
+							'type'        => 'integer',
+							'description' => __( 'The new category term ID.', 'abilities-catalog' ),
+						),
+						'name'   => array(
+							'type'        => 'string',
+							'description' => __( 'The category name.', 'abilities-catalog' ),
+						),
+						'slug'   => array(
+							'type'        => 'string',
+							'description' => __( 'The category slug.', 'abilities-catalog' ),
+						),
+						'parent' => array(
+							'type'        => 'integer',
+							'description' => __( 'The parent category term ID (0 when top-level).', 'abilities-catalog' ),
+						),
+						'link'   => array(
+							'type'        => 'string',
+							'description' => __( 'The public category archive URL.', 'abilities-catalog' ),
+						),
 					),
-					'name'   => array(
-						'type'        => 'string',
-						'description' => __( 'The category name.', 'abilities-catalog' ),
-					),
-					'slug'   => array(
-						'type'        => 'string',
-						'description' => __( 'The category slug.', 'abilities-catalog' ),
-					),
-					'parent' => array(
-						'type'        => 'integer',
-						'description' => __( 'The parent category term ID (0 when top-level).', 'abilities-catalog' ),
-					),
-					'link'   => array(
-						'type'        => 'string',
-						'description' => __( 'The public category archive URL.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => false,
-					'destructive' => false,
-					'idempotent'  => false,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => false,
+						'idempotent'  => false,
+					),
+					'show_in_rest' => true,
+					'screen'       => 'edit-tags.php?taxonomy=category',
 				),
-				'show_in_rest' => true,
-				'screen'       => 'edit-tags.php?taxonomy=category',
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check mirroring the REST terms controller create path.
+	 * Flattens the REST term body to the catalog's five-field set.
 	 *
-	 * `category` is hierarchical, so creation requires the taxonomy's
-	 * `edit_terms` capability (`manage_categories`).
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over the
+	 * REST term body. Each field copies across with a type cast and a safe default.
+	 * `$input` and `$response` are part of the callback signature but unused here —
+	 * the body carries everything this shape needs.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may create a category.
+	 * @param mixed               $data     The REST term body (associative array).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat term fields.
 	 */
-	public function hasPermission( $input ): bool {
-		$taxonomy = get_taxonomy( 'category' );
-		if ( ! $taxonomy ) {
-			return false;
-		}
-
-		return current_user_can( $taxonomy->cap->edit_terms );
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST create request.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The new term's id, name, slug, parent, link, or the REST error.
-	 */
-	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$request = new WP_REST_Request( 'POST', '/wp/v2/categories' );
-
-		if ( isset( $input['name'] ) ) {
-			$request->set_param( 'name', sanitize_text_field( (string) $input['name'] ) );
-		}
-
-		if ( isset( $input['slug'] ) && '' !== $input['slug'] ) {
-			$request->set_param( 'slug', sanitize_title( (string) $input['slug'] ) );
-		}
-
-		if ( isset( $input['description'] ) ) {
-			$request->set_param( 'description', sanitize_text_field( (string) $input['description'] ) );
-		}
-
-		if ( ! empty( $input['parent'] ) ) {
-			$request->set_param( 'parent', absint( $input['parent'] ) );
-		}
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data = is_array( $data ) ? $data : array();
 
 		return array(
 			'id'     => (int) ( $data['id'] ?? 0 ),

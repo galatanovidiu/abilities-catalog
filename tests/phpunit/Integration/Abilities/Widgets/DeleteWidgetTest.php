@@ -161,7 +161,11 @@ final class DeleteWidgetTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied_and_widget_survives(): void {
-		// Create the widget as an administrator, then drop privileges.
+		// Adapter-backed: the route's own delete_item_permissions_check runs at dispatch,
+		// so execute() surfaces the route's REAL error (rest_cannot_manage_widgets, 401 for
+		// a logged-out user) — not the generic ability_invalid_permissions collapse. This
+		// ability sets no require_permission guard, so the permission phase returns true and
+		// the denial lives entirely on the execute() / dispatch path.
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget();
 		wp_set_current_user( 0 );
@@ -174,7 +178,10 @@ final class DeleteWidgetTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		// The widget still exists (verify back as an administrator).
 		$this->actingAs( 'administrator' );
@@ -184,6 +191,8 @@ final class DeleteWidgetTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied_and_widget_survives(): void {
+		// A logged-in caller without edit_theme_options gets the route's real denial at
+		// dispatch (rest_cannot_manage_widgets, 403), again not the generic collapse.
 		$this->actingAs( 'administrator' );
 		$widget_id = $this->createBlockWidget();
 		$this->actingAs( 'subscriber' );
@@ -196,7 +205,10 @@ final class DeleteWidgetTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		// 403 because the user is logged in but lacks edit_theme_options.
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		// The widget still exists (verify back as an administrator).
 		$this->actingAs( 'administrator' );

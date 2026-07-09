@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Templates;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,9 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-templates/get-pattern`.
  *
- * Wraps `GET /wp/v2/blocks/<id>` via `rest_do_request()`. A user pattern is a
- * `wp_block` post (a reusable block / synced pattern). The permission is the
- * object-level `read_post` capability for that post id. Read-only.
+ * Wraps `GET /wp/v2/blocks/<id>` via the Abilities REST Adapter. A user pattern
+ * is a `wp_block` post (a reusable block / synced pattern). The input schema is
+ * OVERRIDDEN with the catalog's tighter one (`id` required, `context` enum
+ * `view`/`edit` defaulting to `view`) so the derived schema is replaced. The
+ * output is OVERRIDDEN to the catalog's flat field set through {@see shapeOutput()}.
+ *
+ * Permission delegates to the route's own check (no `require_permission` floor):
+ * core maps the `wp_block` `read` capability to `edit_posts`, which is the route's
+ * coarse read floor — the catalog's old `edit_posts` baseline matched it, so there
+ * is nothing to widen. The route's object-level `read_post` denial and its
+ * `rest_post_invalid_id` 404 now surface through `execute()`.
  *
  * @since 0.1.0
  */
@@ -34,113 +42,92 @@ final class GetPattern implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'Get Pattern', 'abilities-catalog' ),
-			'description'         => __( 'Returns a single user pattern (reusable block, post type "wp_block") by ID.', 'abilities-catalog' ),
-			'category'            => 'og-core-templates',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'id'      => array(
-						'type'        => 'integer',
-						'description' => __( 'The pattern (wp_block) post ID. Discover IDs via og-templates/list-synced-patterns.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/blocks/(?P<id>[\d]+)',
+				'method'          => 'GET',
+				'label'           => __( 'Get Pattern', 'abilities-catalog' ),
+				'description'     => __( 'Returns a single user pattern (reusable block, post type "wp_block") by ID.', 'abilities-catalog' ),
+				'category'        => 'og-core-templates',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'id'      => array(
+							'type'        => 'integer',
+							'description' => __( 'The pattern (wp_block) post ID. Discover IDs via og-templates/list-synced-patterns.', 'abilities-catalog' ),
+						),
+						'context' => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						),
 					),
-					'context' => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
-					),
+					'required'             => array( 'id' ),
+					'additionalProperties' => false,
 				),
-				'required'             => array( 'id' ),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'id' ),
-				'properties'           => array(
-					'id'          => array(
-						'type'        => 'integer',
-						'description' => __( 'The pattern post ID.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'id' ),
+					'properties'           => array(
+						'id'          => array(
+							'type'        => 'integer',
+							'description' => __( 'The pattern post ID.', 'abilities-catalog' ),
+						),
+						'title'       => array(
+							'type'        => 'string',
+							'description' => __( 'The pattern title.', 'abilities-catalog' ),
+						),
+						'content'     => array(
+							'type'        => 'string',
+							'description' => __( 'The pattern block markup.', 'abilities-catalog' ),
+						),
+						'status'      => array(
+							'type'        => 'string',
+							'description' => __( 'The pattern status.', 'abilities-catalog' ),
+						),
+						'date'        => array(
+							'type'        => 'string',
+							'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
+						),
+						'modified'    => array(
+							'type'        => 'string',
+							'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
+						),
+						'sync_status' => array(
+							'type'        => 'string',
+							'description' => __( 'The pattern sync status: "partial", "unsynced", or empty for a fully synced pattern.', 'abilities-catalog' ),
+						),
 					),
-					'title'       => array(
-						'type'        => 'string',
-						'description' => __( 'The pattern title.', 'abilities-catalog' ),
-					),
-					'content'     => array(
-						'type'        => 'string',
-						'description' => __( 'The pattern block markup.', 'abilities-catalog' ),
-					),
-					'status'      => array(
-						'type'        => 'string',
-						'description' => __( 'The pattern status.', 'abilities-catalog' ),
-					),
-					'date'        => array(
-						'type'        => 'string',
-						'description' => __( 'The publish date in site time.', 'abilities-catalog' ),
-					),
-					'modified'    => array(
-						'type'        => 'string',
-						'description' => __( 'The last-modified date in site time.', 'abilities-catalog' ),
-					),
-					'sync_status' => array(
-						'type'        => 'string',
-						'description' => __( 'The pattern sync status: "partial", "unsynced", or empty for a fully synced pattern.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'show_in_rest' => true,
 				),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: coarse `edit_posts`; the route enforces the object.
+	 * Flattens the REST block body to the catalog's 7-field pattern set.
 	 *
-	 * Reusable blocks (`wp_block`) are editor constructs, not public — core maps their
-	 * `read` capability to `edit_posts`, so `edit_posts` is the floor every reader holds
-	 * and requiring it here is never stricter than core. The object-level decision
-	 * (a private block needs `read_private_blocks`; a missing id is a 404) is left to the
-	 * wrapped `GET /wp/v2/blocks/<id>` route, so its specific `rest_post_invalid_id` 404
-	 * reaches the caller instead of the generic denial the Abilities API substitutes for
-	 * a non-`true` return.
+	 * Wired as the adapter's `output_callback`, so it runs only on success, over the
+	 * REST block body. `title` and `content` are un-nested from their
+	 * `{ raw, rendered }` shape, preferring `raw`; `sync_status` is read from the
+	 * controller's `wp_pattern_sync_status` field; the rest copy across with a type
+	 * cast and a safe default so an omitted value comes back as `''` rather than a
+	 * missing key. `$input` and `$response` are part of the callback signature but
+	 * unused here — the body carries everything this shape needs.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user can read reusable blocks.
+	 * @param mixed               $data     The REST block body (associative array).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat pattern fields.
 	 */
-	public function hasPermission( $input ): bool {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
-	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The shaped pattern, or the REST error.
-	 */
-	public function execute( $input ) {
-		$input   = is_array( $input ) ? $input : array();
-		$id      = absint( $input['id'] );
-		$context = $input['context'] ?? 'view';
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/blocks/' . $id );
-		$request->set_param( 'context', $context );
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$data = rest_get_server()->response_to_data( $response, false );
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data = is_array( $data ) ? $data : array();
 
 		$title = $data['title'] ?? '';
 		if ( is_array( $title ) ) {
@@ -153,7 +140,7 @@ final class GetPattern implements Ability {
 		}
 
 		return array(
-			'id'          => (int) ( $data['id'] ?? $id ),
+			'id'          => (int) ( $data['id'] ?? 0 ),
 			'title'       => (string) $title,
 			'content'     => (string) $content,
 			'status'      => (string) ( $data['status'] ?? '' ),

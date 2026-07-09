@@ -33,48 +33,48 @@ final class CreateCommentTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('og-comments/create-comment');
+		$ability = wp_get_ability( 'og-comments/create-comment' );
 
-		$this->assertNotNull($ability);
-		$this->assertSame('og-comments/create-comment', $ability->get_name());
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-comments/create-comment', $ability->get_name() );
 	}
 
 	public function test_admin_can_create_comment(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'A freshly created comment.',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertGreaterThan(0, $result['id']);
-		$this->assertNotSame('', $result['status']);
+		$this->assertIsArray( $result );
+		$this->assertGreaterThan( 0, $result['id'] );
+		$this->assertNotSame( '', $result['status'] );
 	}
 
 	public function test_output_includes_edit_link(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Comment with edit link.',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertSame(array('id', 'status', 'link', 'edit_link'), array_keys($result));
-		$this->assertStringContainsString('comment.php', $result['edit_link']);
-		$this->assertStringContainsString('action=editcomment', $result['edit_link']);
-		$this->assertStringContainsString((string) $result['id'], $result['edit_link']);
+		$this->assertIsArray( $result );
+		$this->assertSame( array( 'id', 'status', 'link', 'edit_link' ), array_keys( $result ) );
+		$this->assertStringContainsString( 'comment.php', $result['edit_link'] );
+		$this->assertStringContainsString( 'action=editcomment', $result['edit_link'] );
+		$this->assertStringContainsString( (string) $result['id'], $result['edit_link'] );
 	}
 
 	public function test_status_enum_rejects_unknown_value(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Bad status value.',
@@ -82,21 +82,36 @@ final class CreateCommentTest extends TestCase {
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertInstanceOf( WP_Error::class, $result );
 	}
 
+	/**
+	 * A logged-out user now reaches the wrapped route's own permission check at
+	 * dispatch (no `require_permission` floor), so the specific route error surfaces
+	 * instead of the generic `ability_invalid_permissions` collapse. With the default
+	 * `comment_registration` option off and no author identity supplied, the create
+	 * route returns `rest_comment_author_data_required` (400).
+	 */
 	public function test_logged_out_user_is_denied(): void {
-		wp_set_current_user(0);
+		wp_set_current_user( 0 );
+		// Require registration so the anonymous create is denied deterministically by
+		// the route, regardless of the site's default comment settings.
+		update_option( 'comment_registration', 1 );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Should be denied.',
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertInstanceOf( WP_Error::class, $result );
+		// Permission delegates to the route, so its specific check surfaces instead of
+		// the generic ability_invalid_permissions collapse. With registration required
+		// the anonymous create is denied as rest_comment_login_required (401).
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_comment_login_required', $result->get_error_code() );
+		$this->assertSame( 401, $result->get_error_data()['status'] );
 	}
 
 	/**
@@ -104,17 +119,17 @@ final class CreateCommentTest extends TestCase {
 	 * post. Relaxing the gate to is_user_logged_in() must not break legitimate use.
 	 */
 	public function test_non_moderator_can_create_plain_comment(): void {
-		$this->actingAs('subscriber');
+		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'A subscriber comment.',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertGreaterThan(0, $result['id']);
+		$this->assertIsArray( $result );
+		$this->assertGreaterThan( 0, $result['id'] );
 	}
 
 	/**
@@ -124,11 +139,16 @@ final class CreateCommentTest extends TestCase {
 	 * 403, and no comment is created.
 	 */
 	public function test_non_moderator_cannot_spoof_author_name(): void {
-		$this->actingAs('subscriber');
+		$this->actingAs( 'subscriber' );
 
-		$before = get_comments(array('post_id' => $this->post_id, 'count' => true));
+		$before = get_comments(
+			array(
+				'post_id' => $this->post_id,
+				'count'   => true,
+			)
+		);
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'        => $this->post_id,
 				'content'     => 'Spoofed identity attempt.',
@@ -136,12 +156,17 @@ final class CreateCommentTest extends TestCase {
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('rest_comment_invalid_author', $result->get_error_code());
-		$this->assertSame(403, $result->get_error_data()['status']);
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_comment_invalid_author', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] );
 		$this->assertSame(
 			$before,
-			get_comments(array('post_id' => $this->post_id, 'count' => true)),
+			get_comments(
+				array(
+					'post_id' => $this->post_id,
+					'count'   => true,
+				)
+			),
 			'No comment should be created when author spoofing is rejected.'
 		);
 	}
@@ -151,9 +176,9 @@ final class CreateCommentTest extends TestCase {
 	 * wrapped route and must be blocked in execute() for a non-moderator.
 	 */
 	public function test_non_moderator_cannot_spoof_author_email(): void {
-		$this->actingAs('subscriber');
+		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'         => $this->post_id,
 				'content'      => 'Spoofed email attempt.',
@@ -161,9 +186,9 @@ final class CreateCommentTest extends TestCase {
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('rest_comment_invalid_author', $result->get_error_code());
-		$this->assertSame(403, $result->get_error_data()['status']);
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_comment_invalid_author', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] );
 	}
 
 	/**
@@ -173,11 +198,16 @@ final class CreateCommentTest extends TestCase {
 	 * and silently drop it.
 	 */
 	public function test_malformed_author_email_surfaces_core_validation_error(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$before = get_comments(array('post_id' => $this->post_id, 'count' => true));
+		$before = get_comments(
+			array(
+				'post_id' => $this->post_id,
+				'count'   => true,
+			)
+		);
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'         => $this->post_id,
 				'content'      => 'Comment with a broken email.',
@@ -185,16 +215,21 @@ final class CreateCommentTest extends TestCase {
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
+		$this->assertInstanceOf( WP_Error::class, $result );
 		// Core wraps the per-param failure in `rest_invalid_param` and nests the
 		// specific `rest_invalid_email` code under error_data details.
-		$this->assertSame('rest_invalid_param', $result->get_error_code());
+		$this->assertSame( 'rest_invalid_param', $result->get_error_code() );
 		$data = $result->get_error_data();
-		$this->assertSame(400, $data['status']);
-		$this->assertSame('rest_invalid_email', $data['details']['author_email']['code']);
+		$this->assertSame( 400, $data['status'] );
+		$this->assertSame( 'rest_invalid_email', $data['details']['author_email']['code'] );
 		$this->assertSame(
 			$before,
-			get_comments(array('post_id' => $this->post_id, 'count' => true)),
+			get_comments(
+				array(
+					'post_id' => $this->post_id,
+					'count'   => true,
+				)
+			),
 			'No comment should be created when the email is rejected by core.'
 		);
 	}
@@ -204,9 +239,9 @@ final class CreateCommentTest extends TestCase {
 	 * is stored on the created comment.
 	 */
 	public function test_valid_author_email_is_stored(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'         => $this->post_id,
 				'content'      => 'Comment with a valid email.',
@@ -215,10 +250,10 @@ final class CreateCommentTest extends TestCase {
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertGreaterThan(0, $result['id']);
-		$comment = get_comment($result['id']);
-		$this->assertSame('valid.author@example.com', $comment->comment_author_email);
+		$this->assertIsArray( $result );
+		$this->assertGreaterThan( 0, $result['id'] );
+		$comment = get_comment( $result['id'] );
+		$this->assertSame( 'valid.author@example.com', $comment->comment_author_email );
 	}
 
 	/**
@@ -227,9 +262,9 @@ final class CreateCommentTest extends TestCase {
 	 * Abilities API collapsing it into a generic permission failure.
 	 */
 	public function test_non_moderator_setting_status_gets_specific_route_error(): void {
-		$this->actingAs('subscriber');
+		$this->actingAs( 'subscriber' );
 
-		$result = wp_get_ability('og-comments/create-comment')->execute(
+		$result = wp_get_ability( 'og-comments/create-comment' )->execute(
 			array(
 				'post'    => $this->post_id,
 				'content' => 'Trying to self-approve.',
@@ -237,7 +272,7 @@ final class CreateCommentTest extends TestCase {
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('rest_comment_invalid_status', $result->get_error_code());
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_comment_invalid_status', $result->get_error_code() );
 	}
 }

@@ -29,6 +29,13 @@ final class DomainRouterTest extends TestCase {
 	private DomainRouter $router;
 
 	/**
+	 * Sub-sites created during a test (multisite only), removed in tear_down().
+	 *
+	 * @var int[]
+	 */
+	private array $created_sites = array();
+
+	/**
 	 * Builds a fresh deny-by-default router for each test.
 	 *
 	 * @return void
@@ -39,12 +46,23 @@ final class DomainRouterTest extends TestCase {
 	}
 
 	/**
-	 * Clears the exposure option so each test starts from the shipped default.
+	 * Resets per-test state: clears the exposure option and removes any sub-sites a
+	 * multisite test created.
 	 *
 	 * @return void
 	 */
 	public function tear_down(): void {
 		delete_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION );
+
+		foreach ( $this->created_sites as $blog_id ) {
+			if ( ! get_site( $blog_id ) ) {
+				continue;
+			}
+
+			wp_delete_site( $blog_id );
+		}
+		$this->created_sites = array();
+
 		parent::tear_down();
 	}
 
@@ -392,15 +410,36 @@ final class DomainRouterTest extends TestCase {
 	 *
 	 * The usual cause is that the caller is not a member of the targeted site, so the
 	 * recovery matches the invalid-blog_id error: list the sites you can act on. The hint
-	 * is added only when the input carried a blog_id.
+	 * is added only when the input carried a blog_id. `blog_id` is a multisite-only
+	 * parameter (the policy decorator injects it only on a network), so this is asserted
+	 * on multisite; it skips on a single-site install, where blog_id is meaningless and
+	 * the "other sites" recovery does not apply.
+	 *
+	 * @group multisite
 	 *
 	 * @return void
 	 */
 	public function test_execute_denial_with_blog_id_points_to_list_my_sites(): void {
+		if ( ! is_multisite() ) {
+			$this->markTestSkipped( 'blog_id targeting is a multisite-only feature.' );
+		}
+
+		// A subscriber on the main blog has no role on a freshly created sub-site, so the
+		// converted og-content/create-post route denies the call at dispatch (switched to
+		// blog 2); DomainRouter folds that 403 into the recovery 'forbidden' + blog_id hint.
 		$this->actingAs( 'subscriber' );
+		$blog2                 = self::factory()->blog->create();
+		$this->created_sites[] = $blog2;
 
 		$router = $this->routerWith( array( 'og-content/create-post' ) );
-		$result = $router->execute( 'content', 'og-content/create-post', array( 'title' => 'Nope', 'blog_id' => 2 ) );
+		$result = $router->execute(
+			'content',
+			'og-content/create-post',
+			array(
+				'title'   => 'Nope',
+				'blog_id' => $blog2,
+			)
+		);
 
 		$this->assertWPError( $result );
 		$this->assertSame( 'forbidden', $result->get_error_code() );

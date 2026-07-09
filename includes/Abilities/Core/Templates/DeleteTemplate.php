@@ -36,6 +36,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * {@see \WP_REST_Templates_Controller::delete_item_permissions_check()}
  * (`edit_theme_options`); the REST route re-checks it (defense in depth).
  *
+ * Not adapter-convertible: the REST route is chosen from the post_type input at call time (templates vs template-parts).
+ *
  * @since 0.5.0
  */
 final class DeleteTemplate implements Ability {

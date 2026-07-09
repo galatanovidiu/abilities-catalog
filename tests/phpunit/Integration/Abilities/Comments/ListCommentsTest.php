@@ -106,13 +106,18 @@ final class ListCommentsTest extends TestCase {
 		$this->assertCount(3, $result['items']);
 	}
 
-	public function test_logged_out_user_is_denied(): void {
+	public function test_logged_out_user_can_list_approved_comments(): void {
+		// Permission delegates to the route, which is public for approved comments
+		// on readable posts. A logged-out caller lists them (the same data the
+		// rendered site already exposes); the route still gates moderation fields,
+		// filtered queries, and non-approved statuses.
 		wp_set_current_user(0);
 
-		$result = wp_get_ability('og-comments/list-comments')->execute(array());
+		$result = wp_get_ability('og-comments/list-comments')->execute(array('post' => array($this->post_id)));
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('ability_invalid_permissions', $result->get_error_code());
+		$this->assertIsArray($result);
+		$this->assertCount(3, $result['items']);
+		$this->assertNotNull($this->rowById($result['items'], $this->known_comment_id));
 	}
 
 	public function test_view_context_row_has_exactly_the_closed_view_field_set(): void {

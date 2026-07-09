@@ -15,8 +15,8 @@ use WP_Error;
 /**
  * Exercises the sidebars list read end-to-end: the always-present
  * `wp_inactive_widgets` holding area must appear with status "inactive", the row
- * is the flat closed projection, and `edit_theme_options` is the hard guard the
- * Abilities API enforces on execute().
+ * is the flat closed projection, and the wrapped route's `edit_theme_options`
+ * check is the guard enforced on execute().
  */
 final class ListSidebarsTest extends TestCase {
 
@@ -78,20 +78,32 @@ final class ListSidebarsTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied(): void {
+		// Adapter-backed: the route's own permission check runs at dispatch, so execute()
+		// surfaces the REAL REST error — not the generic collapse. No test sidebar opts
+		// into REST (show_in_rest defaults to false), so the sidebars controller denies a
+		// caller without edit_theme_options via rest_cannot_manage_widgets. The catalog
+		// imposes no require_permission floor, so this denial lives on the execute() path.
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-widgets/list-sidebars' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		// 401 because the user is logged out (rest_authorization_required_code()).
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// Same route denial as logged-out, but a logged-in subscriber lacks
+		// edit_theme_options, so the controller returns 403 rather than 401.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-widgets/list-sidebars' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

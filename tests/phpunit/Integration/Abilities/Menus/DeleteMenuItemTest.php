@@ -13,10 +13,11 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the T2 destructive write ability: permanently deletes a single
- * classic menu item, with the capability guard, the missing-object error, the
- * negative-id rejection before any coercion, and the snapshot output shape
- * (previous_title, previous_menus) drawn from the REST `previous`.
+ * Exercises the T2 destructive write ability, now adapter-backed: permanently
+ * deletes a single classic menu item, with the route's capability check enforced
+ * at execute(), the missing-object error, the negative-id rejection before any
+ * coercion, and the snapshot output shape (previous_title, previous_menus) drawn
+ * from the REST `previous`.
  */
 final class DeleteMenuItemTest extends TestCase {
 
@@ -101,9 +102,9 @@ final class DeleteMenuItemTest extends TestCase {
 	public function test_missing_item_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// An admin holds edit_theme_options (the coarse guard), so a non-existent id
-		// reaches the route and surfaces its specific 404 instead of the opaque
-		// ability_invalid_permissions the object-level pre-check produced.
+		// An admin holds edit_theme_options, so a non-existent id reaches the route at
+		// dispatch and surfaces its specific 404 instead of the opaque
+		// ability_invalid_permissions the old object-level pre-check produced.
 		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => 999999 )
 		);
@@ -126,11 +127,21 @@ final class DeleteMenuItemTest extends TestCase {
 			)
 		);
 
+		// Adapter-backed: the route's own permission check runs at dispatch, so
+		// execute() surfaces the route's REAL denial (rest_cannot_delete, 403) rather
+		// than the generic ability_invalid_permissions the old object-level pre-check
+		// produced. The permission phase (check_permissions()) is guard-only now, and
+		// this ability sets no require_permission floor.
 		$result = wp_get_ability( 'og-menus/delete-menu-item' )->execute(
 			array( 'id' => $item_id )
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+
+		// The menu item was not deleted.
+		$this->assertInstanceOf( \WP_Post::class, get_post( $item_id ) );
 	}
 }

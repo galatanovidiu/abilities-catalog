@@ -32,6 +32,8 @@ final class ListShapeTest extends TestCase {
 		$this->assertArrayHasKey( 'title', $row );
 		$this->assertIsString( $row['title'] );
 		$this->assertArrayHasKey( 'edit_link', $row );
+		$this->assertArrayHasKey( 'password_protected', $row );
+		$this->assertIsBool( $row['password_protected'] );
 	}
 
 	public function test_list_posts_returns_shaped_rows(): void {
@@ -46,6 +48,35 @@ final class ListShapeTest extends TestCase {
 		foreach ( $result['items'] as $row ) {
 			$this->assertShapedRow( $row );
 		}
+	}
+
+	public function test_list_posts_flags_password_protected_rows(): void {
+		$this->actingAs( 'administrator' );
+
+		$plain     = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$protected = self::factory()->post->create(
+			array(
+				'post_status'   => 'publish',
+				'post_password' => 'hunter2',
+			)
+		);
+
+		$result = wp_get_ability( 'og-content/list-posts' )->execute( array( 'per_page' => 100 ) );
+
+		$this->assertIsArray( $result );
+		$by_id = array();
+		foreach ( $result['items'] as $row ) {
+			$by_id[ $row['id'] ] = $row;
+		}
+
+		$this->assertArrayHasKey( $protected, $by_id );
+		$this->assertTrue( $by_id[ $protected ]['password_protected'], 'A password-protected post must be flagged in the list.' );
+		// The flag carries even though the rendered excerpt comes back empty — the
+		// password itself is never exposed in the list row.
+		$this->assertSame( '', $by_id[ $protected ]['excerpt'] );
+
+		$this->assertArrayHasKey( $plain, $by_id );
+		$this->assertFalse( $by_id[ $plain ]['password_protected'] );
 	}
 
 	public function test_list_pages_returns_shaped_rows(): void {
@@ -146,12 +177,18 @@ final class ListShapeTest extends TestCase {
 	}
 
 	public function test_list_post_revisions_negative_parent_returns_404_not_retargeted(): void {
+		// Adapter-backed: the route enforces edit_post on the parent itself and now runs
+		// at dispatch, so execute() surfaces the REAL REST error — not the generic
+		// ability_invalid_permissions collapse. A negative parent does not fit the route's
+		// numeric path capture, so dispatch returns a 404 instead of masking it as a
+		// permission failure.
 		$this->actingAs( 'administrator' );
 		$post_id = self::factory()->post->create();
 
 		$result = wp_get_ability( 'og-content/list-post-revisions' )->execute( array( 'parent' => -$post_id ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
 		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 
@@ -201,28 +238,34 @@ final class ListShapeTest extends TestCase {
 		}
 	}
 
-	public function test_list_post_types_view_denied_when_logged_out(): void {
+	public function test_list_post_types_view_is_public(): void {
+		// Permission delegates to the route, which is public in view context.
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'og-content/list-post-types' );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'view' ) );
 
-		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'view' ) ) );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 
-	public function test_list_post_types_edit_context_requires_edit_posts(): void {
-		$ability = wp_get_ability( 'og-content/list-post-types' );
-
+	public function test_list_post_types_edit_context_requires_edit_access(): void {
+		// The route gates edit context: a subscriber is denied with the route's
+		// specific error; an editor (edit_posts) succeeds.
 		$this->actingAs( 'subscriber' );
-		$this->assertNotTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'edit' ) );
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_view', $result->get_error_code() );
 
 		$this->actingAs( 'editor' );
-		$this->assertTrue( $ability->check_permissions( array( 'context' => 'edit' ) ) );
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'edit' ) );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 
 	public function test_list_post_types_edit_context_allows_per_type_editor(): void {
 		// A REST-enabled CPT with its own capability set. A user who can edit this
-		// type but lacks the global edit_posts must still pass the edit-context check,
-		// mirroring core's per-type iteration in
+		// type but lacks the global edit_posts still passes the route's edit-context
+		// check, via core's per-type iteration in
 		// WP_REST_Post_Types_Controller::get_items_permissions_check().
 		register_post_type(
 			'ac_book',
@@ -238,6 +281,9 @@ final class ListShapeTest extends TestCase {
 		wp_get_current_user()->add_cap( 'edit_ac_books' );
 
 		$this->assertFalse( current_user_can( 'edit_posts' ), 'The subscriber must lack the global edit_posts cap for this test to be meaningful.' );
-		$this->assertTrue( wp_get_ability( 'og-content/list-post-types' )->check_permissions( array( 'context' => 'edit' ) ) );
+
+		$result = wp_get_ability( 'og-content/list-post-types' )->execute( array( 'context' => 'edit' ) );
+		$this->assertIsArray( $result );
+		$this->assertNotEmpty( $result['items'] );
 	}
 }

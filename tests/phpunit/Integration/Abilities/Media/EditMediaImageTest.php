@@ -15,6 +15,10 @@ use WP_Error;
 /**
  * Exercises og-media/edit-media-image: a rotation edit over a real uploaded image
  * (happy path + output shape), the missing-object guard, and the capability gate.
+ *
+ * Adapter-backed: permission delegates to the wrapped route, which runs at dispatch,
+ * so denials surface through execute() as the route's REAL REST error rather than the
+ * generic ability_invalid_permissions collapse.
  */
 final class EditMediaImageTest extends TestCase {
 
@@ -102,6 +106,10 @@ final class EditMediaImageTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
+		// Adapter-backed: a subscriber lacks upload_files. With no require_permission
+		// guard the denial comes from the route at dispatch and surfaces through
+		// execute() as the route's REAL 403 (rest_cannot_edit), not the generic
+		// ability_invalid_permissions collapse an ability-level pre-check produced.
 		$result = wp_get_ability( 'og-media/edit-media-image' )->execute(
 			array(
 				'id'       => $attachment_id,
@@ -111,6 +119,7 @@ final class EditMediaImageTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
 	}
 }

@@ -13,9 +13,11 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the update-tag write ability, focused on the B7 follow-up: an
- * explicit empty `name`/`slug` must reach core (the validator), not be dropped
- * by a `'' !==` guard.
+ * Exercises the adapter-backed update-tag write ability. The catalog's
+ * input/output reshape is preserved through the adapter's `input_schema` /
+ * `output_schema` / `output_callback` knobs, and an explicit empty `name`/`slug`
+ * still reaches core: the adapter forwards exactly the supplied keys, with no
+ * schema defaults injected, so an explicit empty string stays an empty string.
  */
 final class UpdateTagTest extends TestCase {
 
@@ -38,10 +40,10 @@ final class UpdateTagTest extends TestCase {
 	}
 
 	public function test_ability_is_registered(): void {
-		$ability = wp_get_ability('og-terms/update-tag');
+		$ability = wp_get_ability( 'og-terms/update-tag' );
 
-		$this->assertNotNull($ability);
-		$this->assertSame('og-terms/update-tag', $ability->get_name());
+		$this->assertNotNull( $ability );
+		$this->assertSame( 'og-terms/update-tag', $ability->get_name() );
 	}
 
 	/**
@@ -50,20 +52,20 @@ final class UpdateTagTest extends TestCase {
 	 * no-op, hiding core's validation error.
 	 */
 	public function test_explicit_empty_name_surfaces_core_validation_error(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-terms/update-tag')->execute(
+		$result = wp_get_ability( 'og-terms/update-tag' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'name' => '',
 			)
 		);
 
-		$this->assertInstanceOf(WP_Error::class, $result);
-		$this->assertSame('empty_term_name', $result->get_error_code());
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'empty_term_name', $result->get_error_code() );
 		$this->assertSame(
 			'Original Tag',
-			get_term($this->term_id, 'post_tag')->name,
+			get_term( $this->term_id, 'post_tag' )->name,
 			'The stored name must be unchanged when core rejects an empty name.'
 		);
 	}
@@ -77,20 +79,20 @@ final class UpdateTagTest extends TestCase {
 	 * the empty slug never reached core.
 	 */
 	public function test_explicit_empty_slug_is_forwarded_to_core(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-terms/update-tag')->execute(
+		$result = wp_get_ability( 'og-terms/update-tag' )->execute(
 			array(
 				'id'   => $this->term_id,
 				'slug' => '',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertSame('original-tag', $result['slug']);
+		$this->assertIsArray( $result );
+		$this->assertSame( 'original-tag', $result['slug'] );
 		$this->assertSame(
 			'original-tag',
-			get_term($this->term_id, 'post_tag')->slug,
+			get_term( $this->term_id, 'post_tag' )->slug,
 			'An empty slug must reach core, which regenerates the slug from the name.'
 		);
 	}
@@ -100,21 +102,21 @@ final class UpdateTagTest extends TestCase {
 	 * result returns the updated `description` and the public archive `link`.
 	 */
 	public function test_description_update_is_returned_in_output(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-terms/update-tag')->execute(
+		$result = wp_get_ability( 'og-terms/update-tag' )->execute(
 			array(
 				'id'          => $this->term_id,
 				'description' => 'A fresh description.',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertSame('A fresh description.', $result['description']);
-		$this->assertNotEmpty($result['link']);
+		$this->assertIsArray( $result );
+		$this->assertSame( 'A fresh description.', $result['description'] );
+		$this->assertNotEmpty( $result['link'] );
 		$this->assertSame(
 			'A fresh description.',
-			get_term($this->term_id, 'post_tag')->description,
+			get_term( $this->term_id, 'post_tag' )->description,
 			'The stored description must reflect the update.'
 		);
 	}
@@ -123,39 +125,40 @@ final class UpdateTagTest extends TestCase {
 	 * An omitted `name` means "leave unchanged".
 	 */
 	public function test_omitted_name_leaves_name_unchanged(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		$result = wp_get_ability('og-terms/update-tag')->execute(
+		$result = wp_get_ability( 'og-terms/update-tag' )->execute(
 			array(
 				'id'          => $this->term_id,
 				'description' => 'New description.',
 			)
 		);
 
-		$this->assertIsArray($result);
-		$this->assertSame('Original Tag', $result['name']);
+		$this->assertIsArray( $result );
+		$this->assertSame( 'Original Tag', $result['name'] );
 		$this->assertSame(
 			'Original Tag',
-			get_term($this->term_id, 'post_tag')->name,
+			get_term( $this->term_id, 'post_tag' )->name,
 			'An omitted name must leave the stored name unchanged.'
 		);
 	}
 
 	public function test_missing_tag_id_surfaces_route_404_not_generic(): void {
-		$this->actingAs('administrator');
+		$this->actingAs( 'administrator' );
 
-		// An admin holds edit_post_tags (the coarse guard), so a non-existent id
-		// reaches the route and surfaces its specific 404 instead of the opaque
-		// ability_invalid_permissions the object-level pre-check produced.
-		$result = wp_get_ability('og-terms/update-tag')->execute(
+		// Adapter-backed: the permission phase is guard-only and this ability sets no
+		// require_permission floor, so the route's own check (edit_post_tags) runs at
+		// dispatch. A non-existent id reaches the route and surfaces its specific 404
+		// through execute() instead of the generic ability_invalid_permissions collapse.
+		$result = wp_get_ability( 'og-terms/update-tag' )->execute(
 			array(
 				'id'   => 999999,
 				'name' => 'Renamed',
 			)
 		);
 
-		$this->assertInstanceOf(\WP_Error::class, $result);
-		$this->assertNotSame('ability_invalid_permissions', $result->get_error_code());
-		$this->assertSame(404, $result->get_error_data()['status'] ?? null);
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}
 }

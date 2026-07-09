@@ -144,6 +144,13 @@ final class DeleteTemplatePartTest extends TestCase {
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
+	/**
+	 * A subscriber is denied at dispatch by the wrapped route, which surfaces its
+	 * own permission error (rest_cannot_manage_templates 403) rather than a generic
+	 * collapse. Permission delegates to the route (no adapter floor), so
+	 * check_permissions() defers (true); the route is the authority that denies, and
+	 * the part survives untouched.
+	 */
 	public function test_subscriber_is_denied_and_part_survives(): void {
 		$this->actingAs( 'administrator' );
 		$id = $this->seedCustomPart( 'abilities-catalog-survives-part' );
@@ -152,29 +159,32 @@ final class DeleteTemplatePartTest extends TestCase {
 		$this->actingAs( 'subscriber' );
 
 		$ability = wp_get_ability( 'og-templates/delete-template-part' );
-		$this->assertFalse( $ability->check_permissions( array( 'id' => $id ) ) );
 
 		$result = $ability->execute( array( 'id' => $id ) );
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 'rest_cannot_manage_templates', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 
 		// The part survives the denied attempt.
 		$this->assertNotNull( get_block_template( $id, 'wp_template_part' ) );
 	}
 
+	/**
+	 * A logged-out caller is denied at dispatch by the wrapped route, which surfaces
+	 * rest_cannot_manage_templates 401 (not a generic permission collapse). Permission
+	 * delegates to the route, so the route is the authority that denies.
+	 */
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
 		$ability = wp_get_ability( 'og-templates/delete-template-part' );
-		$this->assertFalse(
-			$ability->check_permissions(
-				array( 'id' => get_stylesheet() . '//abilities-catalog-loggedout-part' )
-			)
-		);
 
 		$result = $ability->execute(
 			array( 'id' => get_stylesheet() . '//abilities-catalog-loggedout-part' )
 		);
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_manage_templates', $result->get_error_code() );
+		$this->assertSame( 401, $result->get_error_data()['status'] );
 	}
 }

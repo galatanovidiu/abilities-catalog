@@ -53,6 +53,18 @@ final class PolicyDecorator {
 	private const WRAPPED_FLAG = '_abilities_catalog_decorated';
 
 	/**
+	 * Fully-qualified name of the REST adapter ability class.
+	 *
+	 * Compared as a string so the catalog does not hard-depend on the optional
+	 * adapter being loaded. An ability registered with this `ability_class` derives
+	 * its schema lazily and sets its callbacks internally, so it is decorated through
+	 * the adapter's runtime seams instead of the registration-time args transform.
+	 *
+	 * @var string
+	 */
+	private const ADAPTER_CLASS = 'GalatanOvidiu\\AbilitiesRestAdapter\\Rest_Route_Ability';
+
+	/**
 	 * Runs an ability callback inside a balanced blog switch.
 	 *
 	 * @var \GalatanOvidiu\AbilitiesCatalog\Support\BlogSwitchRunner
@@ -100,6 +112,14 @@ final class PolicyDecorator {
 	 */
 	public function register(): void {
 		add_filter( 'wp_register_ability_args', array( $this, 'decorate' ), 20, 2 );
+
+		// Adapter-backed abilities derive their schema and wire their callbacks after
+		// registration, so the `wp_register_ability_args` transform above cannot inject
+		// blog_id or wrap the switch for them. The adapter exposes two runtime seams for
+		// exactly this; hook both so converted site abilities get the same multisite
+		// targeting as hand-written ones.
+		add_filter( 'abilities_rest_adapter_input_schema', array( $this, 'filterDerivedInputSchema' ), 10, 3 );
+		add_filter( 'abilities_rest_adapter_dispatch_wrapper', array( $this, 'filterDispatchWrapper' ), 10, 3 );
 	}
 
 	/**
@@ -126,7 +146,42 @@ final class PolicyDecorator {
 			return $args; // Non-site scope, or single-site: no flag written (F6).
 		}
 
+		if ( $this->isAdapterBacked( $args ) ) {
+			return $this->decorateAdapterBacked( $args );
+		}
+
 		return $this->decorateForMultisite( $args );
+	}
+
+	/**
+	 * Reports whether an ability is registered through the REST adapter.
+	 *
+	 * @param array<string,mixed> $args The ability's registration args.
+	 * @return bool True when the ability's `ability_class` is the REST adapter class.
+	 */
+	private function isAdapterBacked( array $args ): bool {
+		return isset( $args['ability_class'] ) && self::ADAPTER_CLASS === $args['ability_class'];
+	}
+
+	/**
+	 * The site-scoped, multisite branch for an adapter-backed ability.
+	 *
+	 * An adapter ability derives its input schema lazily and sets its callbacks
+	 * internally via the `ability_class` seam, so the registration-time `blog_id`
+	 * injection and callback wrapping used for hand-written abilities cannot reach it.
+	 * Here we do only what registration CAN do — append the multisite hint and mark the
+	 * args wrapped — and defer `blog_id` injection and the balanced switch to the
+	 * adapter's runtime seams ({@see filterDerivedInputSchema()} and
+	 * {@see filterDispatchWrapper()}).
+	 *
+	 * @param array<string,mixed> $args The ability's registration args.
+	 * @return array<string,mixed> The decorated args.
+	 */
+	private function decorateAdapterBacked( array $args ): array {
+		$args                               = $this->appendMultisiteHint( $args );
+		$args['meta'][ self::WRAPPED_FLAG ] = true;
+
+		return $args;
 	}
 
 	/**
@@ -209,6 +264,79 @@ final class PolicyDecorator {
 			'args'  => $args,
 			'added' => true,
 		);
+	}
+
+	/**
+	 * Injects an optional `blog_id` into an adapter-backed ability's DERIVED input
+	 * schema at runtime — the `abilities_rest_adapter_input_schema` seam, which a
+	 * registration-time args transform cannot reach.
+	 *
+	 * Same gates as {@see decorate()}: multisite only, site scope only, never a
+	 * dispatcher ability, and only an object schema that does not already own a
+	 * `blog_id`. Mirrors {@see injectBlogId()} but operates on the lazily-derived
+	 * schema instead of the registration args.
+	 *
+	 * @param array<string,mixed> $schema    The derived input schema.
+	 * @param string              $name      The ability name.
+	 * @param array<string,mixed> $rest_args The developer's registration args.
+	 * @return array<string,mixed> The schema, with `blog_id` injected when applicable.
+	 */
+	public function filterDerivedInputSchema( array $schema, string $name, array $rest_args ): array {
+		if ( ! ( $this->is_multisite )() || $this->isExcluded( $name ) ) {
+			return $schema;
+		}
+		if ( ScopeResolver::DEFAULT !== ScopeResolver::resolve( $rest_args, $name ) ) {
+			return $schema;
+		}
+		if ( ( $schema['type'] ?? null ) !== 'object' ) {
+			return $schema;
+		}
+
+		$props = $schema['properties'] ?? array();
+		$props = is_array( $props ) ? $props : (array) $props;
+		if ( isset( $props['blog_id'] ) ) {
+			return $schema; // The ability already owns a blog_id field.
+		}
+
+		$props['blog_id']     = array(
+			'type'        => 'integer',
+			'minimum'     => 1,
+			'description' => __( 'Optional. On multisite, the site (blog) ID to target. Omit to act on the current site. Discover IDs with og-users/list-my-sites, or og-network/list-sites if you are a super admin.', 'abilities-catalog' ),
+		);
+		$schema['properties'] = $props; // Non-empty array -> serializes as object.
+
+		return $schema;
+	}
+
+	/**
+	 * Returns a dispatch wrapper that runs an adapter-backed ability's dispatch inside
+	 * a balanced `switch_to_blog()` when the input carries a `blog_id` — the
+	 * `abilities_rest_adapter_dispatch_wrapper` seam.
+	 *
+	 * The adapter's real permission runs at dispatch, so wrapping dispatch runs BOTH
+	 * the route's permission check and the handler on the target site — the same
+	 * retarget + balance the hand-written path gets from wrapping its callbacks, with no
+	 * split-brain. The shared {@see BlogSwitchRunner} validates and strips `blog_id`,
+	 * switches, and restores on every exit (return, `WP_Error`, or exception).
+	 *
+	 * @param callable|null $wrapper The incoming wrapper (null by default).
+	 * @param string        $name    The ability name.
+	 * @param mixed         $input   The validated ability input.
+	 * @return callable|null A switch wrapper when a `blog_id` target is present, else the wrapper unchanged.
+	 */
+	public function filterDispatchWrapper( $wrapper, string $name, $input ) {
+		if ( ! ( $this->is_multisite )() || $this->isExcluded( $name ) ) {
+			return $wrapper;
+		}
+		if ( ! is_array( $input ) || ! array_key_exists( 'blog_id', $input ) ) {
+			return $wrapper; // No target: dispatch unwrapped.
+		}
+
+		$runner = $this->runner;
+
+		return static function ( callable $proceed, $in ) use ( $runner ) {
+			return $runner->run( $in, $proceed );
+		};
 	}
 
 	/**

@@ -10,11 +10,14 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Terms;
 
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
+use WP_Error;
 
 /**
- * Exercises the delete-category destructive write ability: registration, the
- * happy path, the additive previous_* output shape, capability gating, and the
- * default-category restriction.
+ * Exercises the delete-category destructive write ability end-to-end: registration,
+ * the happy path, the additive previous_* output shape, and capability gating. The
+ * ability is adapter-backed, so permission delegates to the wrapped DELETE route and
+ * denials surface through execute() as the route's REAL error, not the generic
+ * ability_invalid_permissions collapse.
  */
 final class DeleteCategoryTest extends TestCase {
 
@@ -79,25 +82,31 @@ final class DeleteCategoryTest extends TestCase {
 	}
 
 	/**
-	 * Capability gating: a subscriber lacks delete_term, so the permission check
-	 * denies execution.
+	 * Capability gating: a subscriber lacks delete_categories, so the route denies
+	 * the delete. The adapter's permission phase is guard-only and this ability sets
+	 * no require_permission floor, so check_permissions() returns true; the denial
+	 * lives on the execute() path, where the route's REAL error surfaces (not the
+	 * generic ability_invalid_permissions collapse) and the term survives.
 	 */
 	public function test_subscriber_cannot_delete_category(): void {
 		$this->actingAs( 'subscriber' );
 
-		$id      = self::factory()->category->create( array( 'name' => 'Guarded' ) );
-		$ability = wp_get_ability( 'og-terms/delete-category' );
+		$id = self::factory()->category->create( array( 'name' => 'Guarded' ) );
 
-		$this->assertFalse( $ability->check_permissions( array( 'id' => $id ) ) );
+		$result = wp_get_ability( 'og-terms/delete-category' )->execute( array( 'id' => $id ) );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
+		$this->assertNotNull( get_term( $id, 'category' ) );
 	}
 
 	/**
 	 * Restriction: even an administrator cannot delete the site's default category.
 	 *
-	 * The coarse permission_callback grants `delete_categories`, but the protection is
-	 * not weakened — the wrapped route refuses to delete the default category, so
-	 * execute() returns an error and the term survives. The specific route error now
-	 * reaches the caller instead of a generic permission denial.
+	 * Permission delegates to the route, which refuses to delete the default
+	 * category, so execute() returns the route's error and the term survives. The
+	 * specific route error reaches the caller, not a generic permission denial.
 	 */
 	public function test_default_category_cannot_be_deleted(): void {
 		$this->actingAs( 'administrator' );
@@ -106,7 +115,7 @@ final class DeleteCategoryTest extends TestCase {
 
 		$result = wp_get_ability( 'og-terms/delete-category' )->execute( array( 'id' => $default_id ) );
 
-		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 		$this->assertNotNull( get_term( $default_id, 'category' ) );
 	}
@@ -114,12 +123,12 @@ final class DeleteCategoryTest extends TestCase {
 	public function test_missing_category_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// An admin holds delete_categories (the coarse guard), so a non-existent id
-		// reaches the route and surfaces its specific 404 instead of the opaque
-		// ability_invalid_permissions the object-level pre-check produced.
+		// An admin holds delete_categories, so a non-existent id reaches the route and
+		// surfaces its specific 404 through execute(), not the opaque
+		// ability_invalid_permissions an object-level pre-check would produce.
 		$result = wp_get_ability( 'og-terms/delete-category' )->execute( array( 'id' => 999999 ) );
 
-		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 		$this->assertSame( 404, $result->get_error_data()['status'] ?? null );
 	}

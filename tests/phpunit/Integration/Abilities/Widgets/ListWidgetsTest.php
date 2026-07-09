@@ -15,10 +15,12 @@ use WP_REST_Request;
 
 /**
  * Exercises the list read end-to-end: real widgets in, shaped flat rows plus a
- * count-based total out, with the capability guard enforced by the Abilities
- * API on execute(). Targets the always-present `wp_inactive_widgets` holding
- * area (the wp-env block theme registers no classic sidebars) and a registered
- * test sidebar so the `sidebar` filter is exercised against an active area.
+ * count-based total out, with permission delegated to the wrapped route on
+ * execute(). Targets the always-present `wp_inactive_widgets` holding area (the
+ * wp-env block theme registers no classic sidebars) and a registered test
+ * sidebar so the `sidebar` filter is exercised against an active area. The test
+ * sidebar is NOT marked `show_in_rest`, so no sidebar is publicly readable and a
+ * non-manager is denied by the route's own `edit_theme_options` check.
  */
 final class ListWidgetsTest extends TestCase {
 
@@ -177,21 +179,32 @@ final class ListWidgetsTest extends TestCase {
 		$this->assertIsString( $row['rendered'] );
 	}
 
-	public function test_logged_out_user_is_denied(): void {
+	public function test_logged_out_user_is_denied_with_the_real_route_error(): void {
+		// Adapter-backed: permission delegates to the wrapped route, whose check runs
+		// at dispatch, so execute() surfaces the route's REAL error — not the generic
+		// collapse. No sidebar here is marked show_in_rest, so the route falls back to
+		// its edit_theme_options check and denies. 401 because the user is logged out
+		// (rest_authorization_required_code()).
 		wp_set_current_user( 0 );
 
 		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
-	public function test_subscriber_is_denied(): void {
+	public function test_subscriber_is_denied_with_the_real_route_error(): void {
+		// As above, but logged in without edit_theme_options, so the route denies with
+		// 403 (rest_authorization_required_code() for an authenticated user).
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-widgets/list-widgets' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

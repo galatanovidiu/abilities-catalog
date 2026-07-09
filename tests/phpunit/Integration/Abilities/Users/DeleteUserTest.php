@@ -17,11 +17,12 @@ use WP_Error;
  * content reassigned to another existing account, and the output carries the
  * deleted flag, ids, and the flattened `previous_*` identity snapshot.
  *
- * The permission_callback is the object-independent delete_users floor; the
- * object-level guard and the reassign data-loss guard run in execute(), so an
- * invalid reassign target now surfaces the specific abilities_catalog_invalid_reassign 400 (and
- * a missing user the route's rest_user_invalid_id 404) instead of the generic
- * permission collapse — while a caller lacking delete_users is still denied.
+ * The ability now wraps DELETE /wp/v2/users/<id> via the Abilities REST Adapter and
+ * delegates permission and reassign validation to the route. So a caller lacking
+ * the capability surfaces the route's rest_user_cannot_delete 401, a missing user
+ * its rest_user_invalid_id 404, and an invalid reassign target (nonexistent or
+ * equal to the deleted id) its rest_user_invalid_reassign 400 — each the route's
+ * own error rather than the generic permission collapse or a catalog-specific code.
  */
 final class DeleteUserTest extends TestCase {
 
@@ -144,14 +145,16 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		// The route's own permission check now surfaces, not the generic collapse.
+		$this->assertSame( 'rest_user_cannot_delete', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 		$this->assertNotFalse( get_userdata( $victim ), 'A denied delete must not remove the user.' );
 	}
 
 	public function test_nonexistent_reassign_target_returns_specific_400_and_user_survives(): void {
-		// After coarsening, the delete_users floor passes and execute() re-runs the
-		// reassign data-loss guard, surfacing the specific 400 instead of the generic
-		// permission collapse. No user is deleted.
+		// The wrapped route validates reassign itself: a nonexistent target surfaces
+		// its specific rest_user_invalid_reassign 400, not a catalog-specific code or
+		// the generic permission collapse. No user is deleted.
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
@@ -163,7 +166,7 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'abilities_catalog_invalid_reassign', $result->get_error_code() );
+		$this->assertSame( 'rest_user_invalid_reassign', $result->get_error_code() );
 		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
 
 		$data = $result->get_error_data();
@@ -174,6 +177,7 @@ final class DeleteUserTest extends TestCase {
 	}
 
 	public function test_reassign_equal_to_id_returns_specific_400_and_user_survives(): void {
+		// The route rejects reassign === id with the same rest_user_invalid_reassign 400.
 		$this->actingAs( 'administrator' );
 		$victim = $this->createVictim();
 
@@ -185,7 +189,7 @@ final class DeleteUserTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'abilities_catalog_invalid_reassign', $result->get_error_code() );
+		$this->assertSame( 'rest_user_invalid_reassign', $result->get_error_code() );
 
 		$data = $result->get_error_data();
 		$this->assertIsArray( $data );

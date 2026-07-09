@@ -6,8 +6,8 @@ namespace GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Menus;
 
 use GalatanOvidiu\AbilitiesCatalog\Contracts\Ability;
 use GalatanOvidiu\AbilitiesCatalog\Support\MenuListShaper;
-use GalatanOvidiu\AbilitiesCatalog\Support\RestError;
-use WP_REST_Request;
+use GalatanOvidiu\AbilitiesRestAdapter\Rest_Route_Ability;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,10 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read ability: `og-menus/list-classic-menus`.
  *
- * Wraps `GET /wp/v2/menus` via `rest_do_request()` and returns the collection
- * of classic menus (`nav_menu` terms) plus its total counts. Each row is
- * projected by {@see MenuListShaper} into a flat, closed summary; the raw REST
- * objects (`_links`, `meta`, `locations`, `auto_add`) are never returned.
+ * Wraps `GET /wp/v2/menus` via the Abilities REST Adapter and returns the
+ * collection of classic menus (`nav_menu` terms) plus its total counts. Each row
+ * is projected by {@see MenuListShaper} (in {@see shapeOutput()}) into a flat,
+ * closed summary; the raw REST objects (`_links`, `meta`, `locations`, `auto_add`)
+ * are never returned. Permission delegates to the route's own check (no
+ * `require_permission` floor): the menus route already requires `edit_theme_options`.
  * Read-only.
  *
  * @since 0.1.0
@@ -37,107 +39,92 @@ final class ListClassicMenus implements Ability {
 	 * {@inheritDoc}
 	 */
 	public function args(): array {
-		return array(
-			'label'               => __( 'List Classic Menus', 'abilities-catalog' ),
-			'description'         => __( 'Lists classic (nav_menu term) menus with pagination.', 'abilities-catalog' ),
-			'category'            => 'og-core-menus',
-			'input_schema'        => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'per_page' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'maximum'     => 100,
-						'default'     => 10,
-						'description' => __( 'Number of items to return per page.', 'abilities-catalog' ),
+		return Rest_Route_Ability::build_args(
+			$this->name(),
+			array(
+				'route'           => '/wp/v2/menus',
+				'method'          => 'GET',
+				'label'           => __( 'List Classic Menus', 'abilities-catalog' ),
+				'description'     => __( 'Lists classic (nav_menu term) menus with pagination.', 'abilities-catalog' ),
+				'category'        => 'og-core-menus',
+				'input_schema'    => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'per_page' => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'maximum'     => 100,
+							'default'     => 10,
+							'description' => __( 'Number of items to return per page.', 'abilities-catalog' ),
+						),
+						'page'     => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'default'     => 1,
+							'description' => __( 'Page of the result set to return.', 'abilities-catalog' ),
+						),
+						'context'  => array(
+							'type'        => 'string',
+							'enum'        => array( 'view', 'edit' ),
+							'default'     => 'view',
+							'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
+						),
 					),
-					'page'     => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'default'     => 1,
-						'description' => __( 'Page of the result set to return.', 'abilities-catalog' ),
-					),
-					'context'  => array(
-						'type'        => 'string',
-						'enum'        => array( 'view', 'edit' ),
-						'default'     => 'view',
-						'description' => __( 'Scope of the request: "view" (public fields) or "edit" (requires edit access).', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'output_schema'       => array(
-				'type'                 => 'object',
-				'required'             => array( 'items' ),
-				'properties'           => array(
-					'items'       => array(
-						'type'        => 'array',
-						'items'       => MenuListShaper::classicMenuItemSchema(),
-						'description' => __( 'The list of classic menus.', 'abilities-catalog' ),
+				'output_schema'   => array(
+					'type'                 => 'object',
+					'required'             => array( 'items' ),
+					'properties'           => array(
+						'items'       => array(
+							'type'        => 'array',
+							'items'       => MenuListShaper::classicMenuItemSchema(),
+							'description' => __( 'The list of classic menus.', 'abilities-catalog' ),
+						),
+						'total'       => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of classic menus matching the query.', 'abilities-catalog' ),
+						),
+						'total_pages' => array(
+							'type'        => 'integer',
+							'description' => __( 'Total number of pages available.', 'abilities-catalog' ),
+						),
 					),
-					'total'       => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of classic menus matching the query.', 'abilities-catalog' ),
-					),
-					'total_pages' => array(
-						'type'        => 'integer',
-						'description' => __( 'Total number of pages available.', 'abilities-catalog' ),
-					),
+					'additionalProperties' => false,
 				),
-				'additionalProperties' => false,
-			),
-			'execute_callback'    => array( $this, 'execute' ),
-			'permission_callback' => array( $this, 'hasPermission' ),
-			'meta'                => array(
-				'annotations'  => array(
-					'readonly'    => true,
-					'destructive' => false,
-					'idempotent'  => true,
+				'output_callback' => array( $this, 'shapeOutput' ),
+				'meta'            => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
 				),
-				'show_in_rest' => true,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Permission check: managing menus requires `edit_theme_options`.
+	 * Flattens the collection envelope into the catalog's summary-row shape.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return bool True if the current user may read classic menus.
-	 */
-	public function hasPermission( $input ): bool {
-		return current_user_can( 'edit_theme_options' );
-	}
-
-	/**
-	 * Executes the ability by dispatching the internal REST request.
+	 * Wired as the adapter's `output_callback`; runs only on success, over the
+	 * `{ items, total, total_pages }` envelope. Each row is flattened by
+	 * {@see MenuListShaper::classicMenuSummary()}; the totals carry through
+	 * unchanged. `$input` and `$response` are part of the callback signature but
+	 * unused here.
 	 *
-	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed>|\WP_Error The collection and totals, or the REST error.
+	 * @param mixed               $data     The collection envelope (`{ items, total, total_pages }`).
+	 * @param array<string,mixed> $input    The original ability input. Unused.
+	 * @param \WP_REST_Response   $response The REST response. Unused.
+	 * @return array<string,mixed> The flat classic-menu summary rows and totals.
 	 */
-	public function execute( $input ) {
-		$input = is_array( $input ) ? $input : array();
-
-		$request = new WP_REST_Request( 'GET', '/wp/v2/menus' );
-		$request->set_param( 'context', $input['context'] ?? 'view' );
-
-		if ( isset( $input['per_page'] ) ) {
-			$request->set_param( 'per_page', absint( $input['per_page'] ) );
-		}
-		if ( isset( $input['page'] ) ) {
-			$request->set_param( 'page', absint( $input['page'] ) );
-		}
-
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return RestError::from( $response );
-		}
-
-		$items   = rest_get_server()->response_to_data( $response, false );
-		$headers = $response->get_headers();
+	public function shapeOutput( $data, array $input, WP_REST_Response $response ): array {
+		$data  = is_array( $data ) ? $data : array();
+		$items = isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : array();
 
 		$rows = array();
-		foreach ( is_array( $items ) ? $items : array() as $item ) {
+		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) ) {
 				continue;
 			}
@@ -147,8 +134,8 @@ final class ListClassicMenus implements Ability {
 
 		return array(
 			'items'       => $rows,
-			'total'       => (int) ( $headers['X-WP-Total'] ?? 0 ),
-			'total_pages' => (int) ( $headers['X-WP-TotalPages'] ?? 0 ),
+			'total'       => (int) ( $data['total'] ?? count( $rows ) ),
+			'total_pages' => (int) ( $data['total_pages'] ?? 0 ),
 		);
 	}
 }

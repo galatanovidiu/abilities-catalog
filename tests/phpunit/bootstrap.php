@@ -15,7 +15,9 @@ declare(strict_types=1);
 
 define('TESTS_REPO_ROOT_DIR', dirname(__DIR__, 2));
 
-// Load Composer dev dependencies (PHPUnit polyfills) when present.
+// Load Composer dev dependencies (PHPUnit polyfills) when present. Production
+// packages (REST adapter, MCP adapter) load through the Jetpack autoloader inside
+// abilities-catalog.php on plugins_loaded, once WordPress functions are available.
 if (file_exists(TESTS_REPO_ROOT_DIR . '/vendor/autoload.php')) {
 	require_once TESTS_REPO_ROOT_DIR . '/vendor/autoload.php';
 }

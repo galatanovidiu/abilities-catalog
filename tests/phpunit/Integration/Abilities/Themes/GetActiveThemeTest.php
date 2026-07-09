@@ -9,14 +9,15 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Abilities\Themes;
 
-use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Themes\GetActiveTheme;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
  * og-themes/get-active-theme wraps `GET /wp/v2/themes?status=active` and shapes the
- * single active item into a flat, closed field set. switch_themes or
- * edit_theme_options is the coarse capability guard.
+ * single active item into a flat, closed field set. Permission delegates to the
+ * themes route's own check (no catalog floor): with `status=active` the route allows
+ * any `switch_themes`/`manage_network_themes` user, or any `edit_posts`-capable user,
+ * and otherwise returns `rest_cannot_view_active_theme` (401).
  */
 final class GetActiveThemeTest extends TestCase {
 
@@ -68,16 +69,10 @@ final class GetActiveThemeTest extends TestCase {
 		$result = wp_get_ability( 'og-themes/get-active-theme' )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
-	}
-
-	public function test_permission_guard_checks_theme_capabilities(): void {
-		$ability = new GetActiveTheme();
-
-		$this->actingAs( 'administrator' );
-		$this->assertTrue( $ability->hasPermission() );
-
-		$this->actingAs( 'subscriber' );
-		$this->assertFalse( $ability->hasPermission() );
+		// The adapter surfaces the themes route's real denial: a subscriber cannot
+		// switch_themes nor edit_posts, so the active-theme read is refused with the
+		// route's specific code/status, not the generic ability_invalid_permissions.
+		$this->assertSame( 'rest_cannot_view_active_theme', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] ?? null );
 	}
 }

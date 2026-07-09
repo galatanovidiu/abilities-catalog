@@ -13,9 +13,11 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * Exercises the T2 destructive write ability: trashes (default) or permanently
- * deletes a block navigation menu, with the capability guard, missing-object
- * error preservation, and the snapshot output shape (title, status).
+ * Exercises the T2 destructive write ability end-to-end: trashes (default) or
+ * permanently deletes a block navigation menu, with the snapshot output shape
+ * (title, status). Adapter-backed: permission delegates to the wrapped route, so a
+ * denial surfaces through execute() as the route's REAL REST error (not the generic
+ * ability_invalid_permissions collapse), and the missing-id 404 reaches the caller.
  */
 final class DeleteNavigationTest extends TestCase {
 
@@ -112,9 +114,10 @@ final class DeleteNavigationTest extends TestCase {
 	public function test_missing_navigation_id_surfaces_route_404_not_generic(): void {
 		$this->actingAs( 'administrator' );
 
-		// An admin holds edit_theme_options (the coarse guard), so a non-existent id
-		// reaches the route and surfaces its specific 404 instead of the opaque
-		// ability_invalid_permissions the object-level pre-check produced.
+		// Adapter-backed: the ability has no require_permission guard, so the permission
+		// phase returns true and the wrapped route runs at dispatch. An admin holds
+		// edit_theme_options, so a non-existent id reaches the route and surfaces its
+		// specific 404 through execute() — not the opaque ability_invalid_permissions.
 		$result = wp_get_ability( 'og-menus/delete-navigation' )->execute(
 			array( 'id' => 999999 )
 		);
@@ -125,6 +128,10 @@ final class DeleteNavigationTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// The route enforces its own delete_item_permissions_check (delete_post →
+		// edit_theme_options) at dispatch. This ability sets no require_permission floor,
+		// so the permission phase returns true and execute() surfaces the route's REAL
+		// error — rest_cannot_delete (403) — not the generic ability_invalid_permissions.
 		$this->actingAs( 'subscriber' );
 		$nav_id = $this->createNavigation( 'Denied Navigation' );
 
@@ -133,6 +140,9 @@ final class DeleteNavigationTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_delete', $result->get_error_code() );
+		// 403 because the subscriber is logged in (rest_authorization_required_code()).
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

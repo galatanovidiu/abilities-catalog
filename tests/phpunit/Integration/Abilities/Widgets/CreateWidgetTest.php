@@ -114,6 +114,11 @@ final class CreateWidgetTest extends TestCase {
 	}
 
 	public function test_logged_out_user_is_denied_and_no_widget_created(): void {
+		// Adapter-backed: this write has no require_permission guard, so the permission
+		// phase returns true and the wrapped route's own check runs at dispatch. execute()
+		// surfaces the route's REAL error (rest_cannot_manage_widgets), not the generic
+		// ability_invalid_permissions collapse. 401 because the user is logged out
+		// (rest_authorization_required_code()).
 		wp_set_current_user( 0 );
 
 		$before = wp_get_sidebars_widgets()['wp_inactive_widgets'] ?? array();
@@ -126,13 +131,17 @@ final class CreateWidgetTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 401, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		$after = wp_get_sidebars_widgets()['wp_inactive_widgets'] ?? array();
 		$this->assertSame( $before, $after, 'No widget should be created when the caller is denied.' );
 	}
 
 	public function test_subscriber_is_denied_and_no_widget_created(): void {
+		// A logged-in caller without edit_theme_options: the route denies at dispatch with
+		// rest_cannot_manage_widgets, status 403 (logged in but forbidden).
 		$this->actingAs( 'subscriber' );
 
 		$before = wp_get_sidebars_widgets()['wp_inactive_widgets'] ?? array();
@@ -145,7 +154,9 @@ final class CreateWidgetTest extends TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_manage_widgets', $result->get_error_code() );
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 
 		$after = wp_get_sidebars_widgets()['wp_inactive_widgets'] ?? array();
 		$this->assertSame( $before, $after, 'No widget should be created when the caller is denied.' );

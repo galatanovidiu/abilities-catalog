@@ -19,6 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `rest_do_request()`. The template id has the form `theme//slug`; the `//`
  * separator is part of the route path and is not URL-encoded. Read-only.
  *
+ * Not adapter-convertible: the REST route is chosen from the post_type input at call time (templates vs template-parts).
+ *
  * @since 0.1.0
  */
 final class GetTemplate implements Ability {

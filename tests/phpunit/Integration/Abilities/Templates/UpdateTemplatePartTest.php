@@ -4,8 +4,11 @@
  *
  * Covers a successful part update (title + area change reported as the resulting
  * area and confirmed via read-back), a missing-id 404 that stays a specific core
- * error (not a permission collapse), a subscriber denial that leaves the part
- * unchanged, and a logged-out denial.
+ * error (not a permission collapse), a subscriber denial that surfaces the route's
+ * `rest_cannot_manage_templates` 403 and leaves the part unchanged, and a logged-out
+ * `rest_cannot_manage_templates` 401 denial. The ability now delegates permission to
+ * the wrapped route via the Abilities REST Adapter, so denials carry the route's real
+ * error rather than collapsing to a generic permission failure.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -130,6 +133,16 @@ final class UpdateTemplatePartTest extends TestCase {
 		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
+	/**
+	 * A logged-in non-admin (subscriber) gets the wrapped route's specific
+	 * `rest_cannot_manage_templates` 403, and the part is left unchanged.
+	 *
+	 * Permission now delegates to the route ({@see WP_REST_Templates_Controller::update_item_permissions_check()}
+	 * -> `permissions_check()`, which requires `edit_theme_options`), so the denial
+	 * surfaces as the route's real error at `execute()` rather than as a generic
+	 * `ability_invalid_permissions` collapse. `check_permissions()` no longer denies
+	 * (it carries no `require_permission` floor); the route stays the authority.
+	 */
 	public function test_subscriber_is_denied_and_part_unchanged(): void {
 		$this->actingAs( 'administrator' );
 		$id = $this->seedPart( 'header-subscriber-guard', 'header' );
@@ -139,13 +152,7 @@ final class UpdateTemplatePartTest extends TestCase {
 
 		$this->actingAs( 'subscriber' );
 
-		$ability = wp_get_ability( 'og-templates/update-template-part' );
-
-		$this->assertFalse(
-			$ability->check_permissions( array( 'id' => $id ) )
-		);
-
-		$result = $ability->execute(
+		$result = wp_get_ability( 'og-templates/update-template-part' )->execute(
 			array(
 				'id'    => $id,
 				'title' => 'Hijacked',
@@ -153,6 +160,9 @@ final class UpdateTemplatePartTest extends TestCase {
 			)
 		);
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_manage_templates', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertSame( 403, $result->get_error_data()['status'] );
 
 		// The part survived unchanged.
 		$after = get_block_template( $id, 'wp_template_part' );
@@ -162,20 +172,18 @@ final class UpdateTemplatePartTest extends TestCase {
 		$this->assertSame( $before->content, $after->content );
 	}
 
+	/**
+	 * A logged-out user gets the wrapped route's specific `rest_cannot_manage_templates`
+	 * 401 (the route's `permissions_check` denies before it touches the id).
+	 */
 	public function test_logged_out_is_denied(): void {
 		wp_set_current_user( 0 );
 
-		$ability = wp_get_ability( 'og-templates/update-template-part' );
-
-		$this->assertFalse(
-			$ability->check_permissions(
-				array( 'id' => get_stylesheet() . '//header-nope' )
-			)
-		);
-
-		$result = $ability->execute(
+		$result = wp_get_ability( 'og-templates/update-template-part' )->execute(
 			array( 'id' => get_stylesheet() . '//header-nope' )
 		);
 		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'rest_cannot_manage_templates', $result->get_error_code() );
+		$this->assertSame( 401, $result->get_error_data()['status'] );
 	}
 }

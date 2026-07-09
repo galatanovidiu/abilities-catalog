@@ -24,6 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * requires `->cap->assign_terms`. The REST route re-checks the capability and
  * sanitizes term fields underneath (defense in depth).
  *
+ * Not adapter-convertible: the REST route is resolved from the taxonomy input at call time (rest_base per taxonomy).
+ *
  * @since 0.3.0
  */
 final class CreateTerm implements Ability {

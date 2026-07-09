@@ -92,11 +92,18 @@ final class ListPluginsTest extends TestCase {
 	}
 
 	public function test_subscriber_is_denied(): void {
+		// Adapter-backed: the route's own permission_callback (activate_plugins) runs at
+		// dispatch, so execute() surfaces the route's REAL error — not the generic
+		// collapse. The adapter's permission phase is guard-only and this ability has no
+		// require_permission guard, so the denial lives on the execute() path.
 		$this->actingAs( 'subscriber' );
 
 		$result = wp_get_ability( 'og-plugins/list-plugins' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_view_plugins', $result->get_error_code() );
+		// 403 because the subscriber is logged in (rest_authorization_required_code()).
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 }

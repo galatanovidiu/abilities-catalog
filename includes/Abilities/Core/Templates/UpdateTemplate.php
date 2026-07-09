@@ -35,6 +35,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * route re-checks the capability underneath (defense in depth) and handles
  * content sanitization.
  *
+ * Not adapter-convertible: the REST route is chosen from the post_type input at call time (templates vs template-parts).
+ *
  * @since 0.3.0
  */
 final class UpdateTemplate implements Ability {

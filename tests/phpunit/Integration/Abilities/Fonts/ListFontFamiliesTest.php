@@ -13,10 +13,12 @@ use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_Error;
 
 /**
- * og-fonts/list-font-families wraps `GET /wp/v2/font-families` and projects each
- * `wp_font_family` post into a flat, closed summary row via FontListShaper: the
- * descriptive fields are flattened out of font_family_settings and the faces are
- * reduced to a count. edit_theme_options is the coarse capability guard.
+ * og-fonts/list-font-families wraps `GET /wp/v2/font-families` via the Abilities
+ * REST Adapter and projects each `wp_font_family` post into a flat, closed summary
+ * row via FontListShaper: the descriptive fields are flattened out of
+ * font_family_settings and the faces are reduced to a count. The wrapped route
+ * requires edit_theme_options, so a denial surfaces through execute() as the
+ * route's real REST error.
  */
 final class ListFontFamiliesTest extends TestCase {
 
@@ -91,12 +93,20 @@ final class ListFontFamiliesTest extends TestCase {
 	}
 
 	public function test_non_admin_is_denied(): void {
+		// Adapter-backed: the route's own permission check runs at dispatch (it requires
+		// edit_theme_options, which an editor lacks) and now surfaces through execute()
+		// as the route's REAL error — not the generic ability_invalid_permissions
+		// collapse. This ability sets no require_permission guard, so check_permissions()
+		// would just return true; the denial lives on the execute() path.
 		$this->actingAs( 'editor' );
 
 		$result = wp_get_ability( 'og-fonts/list-font-families' )->execute( array() );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'ability_invalid_permissions', $result->get_error_code() );
+		$this->assertNotSame( 'ability_invalid_permissions', $result->get_error_code(), 'real route error, not the generic collapse' );
+		$this->assertSame( 'rest_cannot_read', $result->get_error_code() );
+		// 403 because the editor is logged in (rest_authorization_required_code()).
+		$this->assertSame( 403, (int) ( $result->get_error_data()['status'] ?? 0 ) );
 	}
 
 	/**
