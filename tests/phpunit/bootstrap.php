@@ -15,7 +15,9 @@ declare(strict_types=1);
 
 define('TESTS_REPO_ROOT_DIR', dirname(__DIR__, 2));
 
-// Load Composer dev dependencies (PHPUnit polyfills) when present.
+// Load Composer dev dependencies (PHPUnit polyfills) when present. Production
+// packages (REST adapter, MCP adapter) load through the Jetpack autoloader inside
+// abilities-catalog.php on plugins_loaded, once WordPress functions are available.
 if (file_exists(TESTS_REPO_ROOT_DIR . '/vendor/autoload.php')) {
 	require_once TESTS_REPO_ROOT_DIR . '/vendor/autoload.php';
 }
@@ -40,14 +42,6 @@ require_once $_test_root . '/includes/functions.php';
 tests_add_filter(
 	'muplugins_loaded',
 	static function (): void {
-		// Load the Abilities REST Adapter first: it registers its autoloader and the
-		// `wp_register_ability_from_rest_route()` helper that adapter-backed abilities
-		// in this catalog depend on. Mounted as a sibling plugin via .wp-env.test.json.
-		$adapter = TESTS_REPO_ROOT_DIR . '/../abilities-rest-adapter/abilities-rest-adapter.php';
-		if (file_exists($adapter)) {
-			require $adapter;
-		}
-
 		// Use require (not require_once) so the plugin file always loads here.
 		require TESTS_REPO_ROOT_DIR . '/abilities-catalog.php';
 	}

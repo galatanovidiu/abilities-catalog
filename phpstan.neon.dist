@@ -24,11 +24,9 @@ parameters:
 	paths:
 		- abilities-catalog.php
 		- includes/
-	# Index the sibling Abilities REST Adapter for symbols only (not analysed), so
-	# adapter-backed abilities resolve `Rest_Route_Ability`. Mounted as a sibling
-	# checkout, matching .wp-env.test.json and tests/phpunit/bootstrap.php.
+	# Index the Composer-shipped REST adapter for symbols only (not analysed).
 	scanDirectories:
-		- ../abilities-rest-adapter/includes
+		- vendor/galatanovidiu/abilities-rest-adapter/includes
 	excludePaths:
 		analyse:
 			- vendor/

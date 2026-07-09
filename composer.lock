@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bfa655f06d5a2758eb81253111f39121",
+    "content-hash": "6fd2fc18ccb30410a7d9cb2cbbd28c29",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
@@ -69,6 +69,69 @@
                 "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.20"
             },
             "time": "2026-06-15T12:15:05+00:00"
+        },
+        {
+            "name": "galatanovidiu/abilities-rest-adapter",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/galatanovidiu/abilities-rest-adapter.git",
+                "reference": "9fff86a2ddf4ea4a73eb55fe634f2a4317ae0c9b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/galatanovidiu/abilities-rest-adapter/zipball/9fff86a2ddf4ea4a73eb55fe634f2a4317ae0c9b",
+                "reference": "9fff86a2ddf4ea4a73eb55fe634f2a4317ae0c9b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "automattic/vipwpcs": "^3.0",
+                "php-stubs/wordpress-stubs": "^6.9",
+                "php-stubs/wp-cli-stubs": "^2.12",
+                "phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
+                "phpstan/extension-installer": "^1.3",
+                "phpstan/phpstan": "^2.1.22",
+                "phpstan/phpstan-deprecation-rules": "^2.0.3",
+                "phpunit/phpunit": "^9.6",
+                "slevomat/coding-standard": "^8.0",
+                "szepeviktor/phpstan-wordpress": "^2.0",
+                "yoast/phpunit-polyfills": "^4.0"
+            },
+            "type": "wordpress-plugin",
+            "autoload": {
+                "files": [
+                    "includes/api.php"
+                ],
+                "classmap": [
+                    "includes/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ovidiu Galatan",
+                    "homepage": "https://github.com/galatanovidiu"
+                }
+            ],
+            "description": "Defines Abilities API abilities by reusing existing REST API routes (schema, validation, permission, handler) via rest_do_request().",
+            "homepage": "https://github.com/galatanovidiu/abilities-rest-adapter",
+            "keywords": [
+                "abilities-api",
+                "ai",
+                "rest-api",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/galatanovidiu/abilities-rest-adapter/issues",
+                "source": "https://github.com/galatanovidiu/abilities-rest-adapter"
+            },
+            "time": "2026-07-09T09:27:38+00:00"
         },
         {
             "name": "wordpress/mcp-adapter",
