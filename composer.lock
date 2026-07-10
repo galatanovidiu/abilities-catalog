@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6fd2fc18ccb30410a7d9cb2cbbd28c29",
+    "content-hash": "de66fada1a57d03a5793e5d96c99e836",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
@@ -72,16 +72,16 @@
         },
         {
             "name": "galatanovidiu/abilities-rest-adapter",
-            "version": "v0.1.1",
+            "version": "v0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/galatanovidiu/abilities-rest-adapter.git",
-                "reference": "9fff86a2ddf4ea4a73eb55fe634f2a4317ae0c9b"
+                "reference": "1288998be421d239c0c8ffdc05570bc75202fdd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/galatanovidiu/abilities-rest-adapter/zipball/9fff86a2ddf4ea4a73eb55fe634f2a4317ae0c9b",
-                "reference": "9fff86a2ddf4ea4a73eb55fe634f2a4317ae0c9b",
+                "url": "https://api.github.com/repos/galatanovidiu/abilities-rest-adapter/zipball/1288998be421d239c0c8ffdc05570bc75202fdd0",
+                "reference": "1288998be421d239c0c8ffdc05570bc75202fdd0",
                 "shasum": ""
             },
             "require": {
@@ -131,7 +131,7 @@
                 "issues": "https://github.com/galatanovidiu/abilities-rest-adapter/issues",
                 "source": "https://github.com/galatanovidiu/abilities-rest-adapter"
             },
-            "time": "2026-07-09T09:27:38+00:00"
+            "time": "2026-07-10T09:24:29+00:00"
         },
         {
             "name": "wordpress/mcp-adapter",
