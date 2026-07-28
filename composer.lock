@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de66fada1a57d03a5793e5d96c99e836",
+    "content-hash": "21614f2f16c30c395d016d24bcab4cf2",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
@@ -135,19 +135,14 @@
         },
         {
             "name": "wordpress/mcp-adapter",
-            "version": "v0.5.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/WordPress/mcp-adapter.git",
-                "reference": "7bfc49f46b3ea7544dded49d5a606089f825a80b"
-            },
+            "version": "dev-fix/preserve-resource-contents-meta",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/7bfc49f46b3ea7544dded49d5a606089f825a80b",
-                "reference": "7bfc49f46b3ea7544dded49d5a606089f825a80b",
-                "shasum": ""
+                "type": "path",
+                "url": "../mcp-adapter",
+                "reference": "961f470b0bd77034ddd480d9c445aa73790b9f18"
             },
             "require": {
+                "automattic/jetpack-autoloader": "^5.0",
                 "ext-json": "*",
                 "php": "^7.4 || ^8.0",
                 "wordpress/php-mcp-schema": "^0.1.0"
@@ -156,33 +151,44 @@
                 "automattic/vipwpcs": "^3.0",
                 "php-stubs/wordpress-stubs": "^6.9",
                 "php-stubs/wp-cli-stubs": "^2.12",
-                "phpcompatibility/php-compatibility": "10.x-dev as 9.99.99",
-                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
                 "phpstan/extension-installer": "^1.3",
-                "phpstan/php-8-stubs": "^0.4.24",
-                "phpstan/phpstan": "^2.1.22",
+                "phpstan/php-8-stubs": "^0.4.36",
+                "phpstan/phpstan": "^2.2.5",
                 "phpstan/phpstan-deprecation-rules": "^2.0.3",
                 "phpunit/phpunit": "^9.6",
                 "slevomat/coding-standard": "^8.0",
                 "szepeviktor/phpstan-wordpress": "^2.0",
-                "wp-phpunit/wp-phpunit": "^6.5",
-                "wpackagist-plugin/plugin-check": "^1.6",
+                "wp-phpunit/wp-phpunit": "^7.0",
                 "yoast/phpunit-polyfills": "^4.0"
             },
             "type": "wordpress-plugin",
-            "extra": {
-                "installer-paths": {
-                    "vendor/{$vendor}/{$name}/": [
-                        "wpackagist-plugin/plugin-check"
-                    ]
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "WP\\MCP\\": "includes/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "WP\\MCP\\Tests\\": [
+                        "tests/phpunit/"
+                    ]
+                }
+            },
+            "scripts": {
+                "format": [
+                    "phpcbf"
+                ],
+                "lint": [
+                    "phpcs"
+                ],
+                "phpstan": [
+                    "phpstan analyse --memory-limit=1G"
+                ],
+                "test": [
+                    "phpunit --strict-coverage"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
@@ -208,21 +214,18 @@
                 "issues": "https://github.com/wordpress/mcp-adapter/issues",
                 "source": "https://github.com/wordpress/mcp-adapter"
             },
-            "time": "2026-04-14T12:12:58+00:00"
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
         },
         {
             "name": "wordpress/php-mcp-schema",
-            "version": "v0.1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/WordPress/php-mcp-schema",
-                "reference": "95df8a50a3bd54f6b7c4869c6e2185db380d4d63"
-            },
+            "version": "dev-fix/open-type-passthrough",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/php-mcp-schema/zipball/95df8a50a3bd54f6b7c4869c6e2185db380d4d63",
-                "reference": "95df8a50a3bd54f6b7c4869c6e2185db380d4d63",
-                "shasum": ""
+                "type": "path",
+                "url": "../php-mcp-schema",
+                "reference": "e81794964f17a5a7433cd841913b461467a49631"
             },
             "require": {
                 "php": ">=7.4"
@@ -236,7 +239,14 @@
                     "WP\\McpSchema\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "analyse": [
+                    "phpstan analyse"
+                ],
+                "phpstan": [
+                    "@analyse"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
@@ -255,7 +265,10 @@
                 "php",
                 "schema"
             ],
-            "time": "2026-06-05T08:26:32+00:00"
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
         }
     ],
     "packages-dev": [
@@ -3263,9 +3276,25 @@
             "time": "2025-02-09T18:58:54+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "wordpress/mcp-adapter",
+            "version": "dev-fix/preserve-resource-contents-meta",
+            "alias": "0.5.0",
+            "alias_normalized": "0.5.0.0"
+        },
+        {
+            "package": "wordpress/php-mcp-schema",
+            "version": "dev-fix/open-type-passthrough",
+            "alias": "0.1.2",
+            "alias_normalized": "0.1.2.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "wordpress/mcp-adapter": 20,
+        "wordpress/php-mcp-schema": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

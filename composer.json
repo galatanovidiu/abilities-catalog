@@ -11,6 +11,22 @@
 	"homepage": "https://github.com/galatanovidiu/abilities-catalog",
 	"minimum-stability": "dev",
 	"prefer-stable": true,
+	"repositories": [
+		{
+			"type": "path",
+			"url": "../mcp-adapter",
+			"options": {
+				"symlink": false
+			}
+		},
+		{
+			"type": "path",
+			"url": "../php-mcp-schema",
+			"options": {
+				"symlink": false
+			}
+		}
+	],
 	"config": {
 		"platform": {
 			"php": "8.1"
@@ -31,7 +47,8 @@
 		"php": "^8.1",
 		"automattic/jetpack-autoloader": "^5.0",
 		"galatanovidiu/abilities-rest-adapter": "^0.1.2",
-		"wordpress/mcp-adapter": "^0.5.0"
+		"wordpress/mcp-adapter": "dev-fix/preserve-resource-contents-meta as 0.5.0",
+		"wordpress/php-mcp-schema": "dev-fix/open-type-passthrough as 0.1.2"
 	},
 	"require-dev": {
 		"automattic/vipwpcs": "^3.0",
