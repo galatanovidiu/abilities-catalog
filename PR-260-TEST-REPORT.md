@@ -5,7 +5,7 @@ A record of an end-to-end test of [WordPress/mcp-adapter#260](https://github.com
 WordPress install with a real MCP client, rather than against the unit suite alone.
 
 Everything below is reproducible from public branches. The harness lives in
-[galatanovidiu/abilities-catalog](https://github.com/galatanovidiu/abilities-catalog)
+[galatanovidiu/abilities-catalog#90](https://github.com/galatanovidiu/abilities-catalog/pull/90)
 on the throwaway branch `test/meta-annotations-e2e`, **which is not intended to merge** —
 it exists only to host this test.
 
