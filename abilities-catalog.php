@@ -100,5 +100,9 @@ add_action(
 		// The scalable, search-based server is a second consumer of the same registry,
 		// on its own route. It boots after Server::boot() has loaded the adapter bundle.
 		Mcp\SearchServer::boot();
+
+		// Throwaway probe for mcp-adapter PR #260, behind its own constant. Boots last
+		// so it can rely on the adapter bundle Server::boot() loaded.
+		Mcp\Probe\ProbeServer::boot();
 	}
 );
