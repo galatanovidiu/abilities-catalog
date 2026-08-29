@@ -164,7 +164,7 @@ final class Server {
 	}
 
 	/**
-	 * Creates the custom server, with its curated domain tools, on `mcp_adapter_init`.
+	 * Creates the custom server with its curated tools, shared resources, and workflow prompt.
 	 *
 	 * `create_server()` returns the adapter on success or a `WP_Error`; it never
 	 * throws. A failure is logged under WP_DEBUG and otherwise swallowed so a server
@@ -197,6 +197,8 @@ final class Server {
 			$observability_handler = null;
 		}
 
+		$permission = $this->toolPermission();
+
 		$result = $adapter->create_server(
 			self::SERVER_ID,
 			self::ROUTE_NAMESPACE,
@@ -207,10 +209,10 @@ final class Server {
 			array( HttpTransport::class ),
 			null,
 			$observability_handler,
-			$this->tools(),
-			array(),
-			array(),
-			static fn (): bool => is_user_logged_in()
+			$this->tools( $permission ),
+			DiscoveryContentFactory::resources( $permission ),
+			DiscoveryContentFactory::prompts( $permission ),
+			$permission
 		);
 
 		if ( ! is_wp_error( $result ) ) {
@@ -233,13 +235,13 @@ final class Server {
 	 *
 	 * The domain tools and the knowledge tool share the same coarse permission floor.
 	 *
+	 * @param callable $permission The shared coarse permission floor.
 	 * @return list<\WP\MCP\Domain\Tools\McpTool> The tools to register.
 	 */
-	private function tools(): array {
+	private function tools( callable $permission ): array {
 		$map = new DomainMap();
 
-		$permission = $this->toolPermission();
-		$factory    = new DomainToolFactory( new DomainRouter( $map, new ExposurePolicy() ), $permission );
+		$factory = new DomainToolFactory( new DomainRouter( $map, new ExposurePolicy() ), $permission );
 
 		$tools = array();
 		foreach ( $map->domains() as $domain ) {
@@ -376,7 +378,7 @@ final class Server {
 	 * @return string The tool name.
 	 */
 	private static function toolName( McpTool $tool ): string {
-		return $tool->get_protocol_dto()->getName();
+		return $tool->get_name();
 	}
 
 	/**

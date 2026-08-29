@@ -9,11 +9,13 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\DiscoveryContentFactory;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\Server;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Core\McpServer;
 use WP\MCP\Domain\Tools\McpTool;
+use WP\McpSchema\Schemas;
 
 /**
  * Proves the Phase 1 boot wiring against a really-booted adapter.
@@ -154,22 +156,32 @@ final class ServerTest extends TestCase {
 
 		// The server exposes one curated tool per domain, not flat ability tools, plus
 		// the one cross-cutting knowledge tool.
-		$tools = $server->get_tools();
-		foreach ( self::CURATED_DOMAINS as $slug ) {
-			$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered.', $slug ) );
+		foreach ( array( Schemas::V2025_11_25, Schemas::V2026_07_28 ) as $revision ) {
+			$schema = $server->get_schema_provider()->for_revision( $revision );
+			$tools  = $server->get_tools( $schema );
+			foreach ( self::CURATED_DOMAINS as $slug ) {
+				$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered under %s.', $slug, $revision ) );
+			}
+
+			$this->assertArrayHasKey( 'knowledge', $tools );
+			$this->assertCount( count( self::CURATED_DOMAINS ) + 1, $tools );
+			$this->assertSame(
+				array( DiscoveryContentFactory::CAPABILITIES_URI, DiscoveryContentFactory::KNOWLEDGE_URI ),
+				array_keys( $server->get_resources( $schema ) )
+			);
+			$this->assertSame(
+				array( DiscoveryContentFactory::WORKFLOW_PROMPT ),
+				array_keys( $server->get_prompts( $schema ) )
+			);
 		}
-		$this->assertArrayHasKey( 'knowledge', $tools, 'The cross-cutting knowledge tool should be registered.' );
-		$this->assertCount(
-			count( self::CURATED_DOMAINS ) + 1,
-			$tools,
-			'The server should expose exactly the curated domain tools plus the knowledge tool.'
-		);
+
+		$legacy_schema = $server->get_schema_provider()->for_revision( Schemas::V2025_11_25 );
 
 		// Each curated domain carries its own hand-written blurb, never the generic
 		// "third-party domain" fallback — a forgotten case would ship that fallback as
 		// a real tool's routing description.
 		foreach ( self::CURATED_DOMAINS as $slug ) {
-			$description = $server->get_mcp_tool( $slug )->get_protocol_dto()->getDescription();
+			$description = $server->get_mcp_tool( $slug )->get_protocol_record( $legacy_schema )->getDescription();
 			$this->assertStringNotContainsString(
 				'another plugin contributed',
 				(string) $description,
