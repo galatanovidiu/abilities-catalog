@@ -33,6 +33,8 @@ trap cleanup EXIT INT TERM
 cleanup
 trap cleanup EXIT INT TERM
 
+wp_cli plugin activate abilities-catalog --quiet >/dev/null
+
 exposed='[
 	"og-content/list-post-types",
 	"og-media/list-image-sizes",
