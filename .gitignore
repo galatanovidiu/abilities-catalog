@@ -20,6 +20,8 @@ Thumbs.db
 # Test output (keep the directory, ignore generated reports/caches)
 /tests/_output/*
 !/tests/_output/.gitkeep
+!/tests/e2e/
+!/tests/e2e/**
 
 # composer.lock IS committed: the plugin now has runtime deps (mcp-adapter,
 # jetpack-autoloader), and the CI release build runs `composer install --no-dev`.
