@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de66fada1a57d03a5793e5d96c99e836",
+    "content-hash": "400b4975d7ad0d7d3c57cf5be8cba47e",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
-            "version": "v5.0.20",
+            "version": "v5.0.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Automattic/jetpack-autoloader.git",
-                "reference": "b6abf43a9ea638d6a0edc02f0dd7575703f9c2a1"
+                "reference": "d11b2d621035dcb920abce8ae09bebd5da5f9ff8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Automattic/jetpack-autoloader/zipball/b6abf43a9ea638d6a0edc02f0dd7575703f9c2a1",
-                "reference": "b6abf43a9ea638d6a0edc02f0dd7575703f9c2a1",
+                "url": "https://api.github.com/repos/Automattic/jetpack-autoloader/zipball/d11b2d621035dcb920abce8ae09bebd5da5f9ff8",
+                "reference": "d11b2d621035dcb920abce8ae09bebd5da5f9ff8",
                 "shasum": ""
             },
             "require": {
@@ -66,9 +66,9 @@
                 "wordpress"
             ],
             "support": {
-                "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.20"
+                "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.23"
             },
-            "time": "2026-06-15T12:15:05+00:00"
+            "time": "2026-08-11T18:32:06+00:00"
         },
         {
             "name": "galatanovidiu/abilities-rest-adapter",
@@ -135,54 +135,69 @@
         },
         {
             "name": "wordpress/mcp-adapter",
-            "version": "v0.5.0",
+            "version": "dev-feature/dual-revision-schema-runtime",
             "source": {
                 "type": "git",
                 "url": "https://github.com/WordPress/mcp-adapter.git",
-                "reference": "7bfc49f46b3ea7544dded49d5a606089f825a80b"
+                "reference": "dea336e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/7bfc49f46b3ea7544dded49d5a606089f825a80b",
-                "reference": "7bfc49f46b3ea7544dded49d5a606089f825a80b",
+                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/dea336e",
+                "reference": "dea336e",
                 "shasum": ""
             },
             "require": {
+                "automattic/jetpack-autoloader": "^5.0",
                 "ext-json": "*",
                 "php": "^7.4 || ^8.0",
-                "wordpress/php-mcp-schema": "^0.1.0"
+                "wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#a0fb1ee"
             },
             "require-dev": {
-                "automattic/vipwpcs": "^3.0",
+                "automattic/vipwpcs": "^3.1",
                 "php-stubs/wordpress-stubs": "^6.9",
                 "php-stubs/wp-cli-stubs": "^2.12",
-                "phpcompatibility/php-compatibility": "10.x-dev as 9.99.99",
-                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
                 "phpstan/extension-installer": "^1.3",
-                "phpstan/php-8-stubs": "^0.4.24",
-                "phpstan/phpstan": "^2.1.22",
-                "phpstan/phpstan-deprecation-rules": "^2.0.3",
+                "phpstan/php-8-stubs": "^0.4.36",
+                "phpstan/phpstan": "^2.2.8",
+                "phpstan/phpstan-deprecation-rules": "^2.0.5",
                 "phpunit/phpunit": "^9.6",
                 "slevomat/coding-standard": "^8.0",
                 "szepeviktor/phpstan-wordpress": "^2.0",
-                "wp-phpunit/wp-phpunit": "^6.5",
-                "wpackagist-plugin/plugin-check": "^1.6",
+                "wp-phpunit/wp-phpunit": "^7.0",
                 "yoast/phpunit-polyfills": "^4.0"
             },
             "type": "wordpress-plugin",
-            "extra": {
-                "installer-paths": {
-                    "vendor/{$vendor}/{$name}/": [
-                        "wpackagist-plugin/plugin-check"
-                    ]
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "WP\\MCP\\": "includes/"
+                },
+                "exclude-from-classmap": [
+                    "tests/phpunit/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "WP\\MCP\\Tests\\": [
+                        "tests/phpunit/"
+                    ]
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "format": [
+                    "phpcbf"
+                ],
+                "lint": [
+                    "phpcs"
+                ],
+                "phpstan": [
+                    "phpstan analyse --memory-limit=1G"
+                ],
+                "test": [
+                    "phpunit --strict-coverage"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
@@ -208,35 +223,53 @@
                 "issues": "https://github.com/wordpress/mcp-adapter/issues",
                 "source": "https://github.com/wordpress/mcp-adapter"
             },
-            "time": "2026-04-14T12:12:58+00:00"
+            "time": "2026-08-29T07:08:53+00:00"
         },
         {
             "name": "wordpress/php-mcp-schema",
-            "version": "v0.1.2",
+            "version": "dev-feature/dual-revision-schema-runtime",
             "source": {
                 "type": "git",
-                "url": "https://github.com/WordPress/php-mcp-schema",
-                "reference": "95df8a50a3bd54f6b7c4869c6e2185db380d4d63"
+                "url": "https://github.com/WordPress/php-mcp-schema.git",
+                "reference": "a0fb1ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/php-mcp-schema/zipball/95df8a50a3bd54f6b7c4869c6e2185db380d4d63",
-                "reference": "95df8a50a3bd54f6b7c4869c6e2185db380d4d63",
+                "url": "https://api.github.com/repos/WordPress/php-mcp-schema/zipball/a0fb1ee",
+                "reference": "a0fb1ee",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4"
             },
             "require-dev": {
-                "phpstan/phpstan": "^1.10"
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.6"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
+                    "WP\\McpSchema\\Contract\\": "src/Generated/Contract/",
+                    "WP\\McpSchema\\Generated\\": "src/Generated/",
+                    "WP\\McpSchema\\Record\\": "src/Generated/Record/",
+                    "WP\\McpSchema\\Value\\": "src/Generated/Value/",
                     "WP\\McpSchema\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "analyse": [
+                    "phpstan analyse"
+                ],
+                "artifact:verify": [
+                    "tests/artifact/verify.sh"
+                ],
+                "phpstan": [
+                    "@analyse"
+                ],
+                "test": [
+                    "phpunit"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
@@ -246,16 +279,19 @@
                     "homepage": "https://wordpress.org"
                 }
             ],
-            "description": "PHP DTOs for the Model Context Protocol (MCP) specification",
+            "description": "Exact-revision PHP schema runtime for the Model Context Protocol (MCP)",
             "homepage": "https://github.com/WordPress/php-mcp-schema",
             "keywords": [
-                "dto",
                 "mcp",
                 "model-context-protocol",
                 "php",
                 "schema"
             ],
-            "time": "2026-06-05T08:26:32+00:00"
+            "support": {
+                "source": "https://github.com/WordPress/php-mcp-schema/tree/feature/dual-revision-schema-runtime",
+                "issues": "https://github.com/WordPress/php-mcp-schema/issues"
+            },
+            "time": "2026-08-28T13:28:34+00:00"
         }
     ],
     "packages-dev": [
@@ -3265,7 +3301,10 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "wordpress/mcp-adapter": 20,
+        "wordpress/php-mcp-schema": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

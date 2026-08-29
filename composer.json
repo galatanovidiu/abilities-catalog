@@ -11,6 +11,16 @@
 	"homepage": "https://github.com/galatanovidiu/abilities-catalog",
 	"minimum-stability": "dev",
 	"prefer-stable": true,
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/WordPress/mcp-adapter"
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/WordPress/php-mcp-schema"
+		}
+	],
 	"config": {
 		"platform": {
 			"php": "8.1"
@@ -31,7 +41,8 @@
 		"php": "^8.1",
 		"automattic/jetpack-autoloader": "^5.0",
 		"galatanovidiu/abilities-rest-adapter": "^0.1.2",
-		"wordpress/mcp-adapter": "^0.5.0"
+		"wordpress/mcp-adapter": "dev-feature/dual-revision-schema-runtime#dea336e",
+		"wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#a0fb1ee"
 	},
 	"require-dev": {
 		"automattic/vipwpcs": "^3.0",
