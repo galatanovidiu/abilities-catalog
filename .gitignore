@@ -21,6 +21,11 @@ Thumbs.db
 /tests/_output/*
 !/tests/_output/.gitkeep
 
+# The global excludes file ignores directories named `e2e`; keep this test
+# harness versioned with the repository.
+!/tests/e2e/
+!/tests/e2e/**
+
 # composer.lock IS committed: the plugin now has runtime deps (mcp-adapter,
 # jetpack-autoloader), and the CI release build runs `composer install --no-dev`.
 
