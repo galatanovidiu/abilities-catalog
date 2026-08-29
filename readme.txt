@@ -55,14 +55,16 @@ It exposes five tools:
 * **execute-ability** — runs one exact ability name with arguments under `input`.
 * **knowledge** — serves file-based OKF concept bundles: task recipes, authoring guidance, and live site facts for agents. It is experimental, a file-based bridge until WordPress has an official `wp-knowledge` standard in core.
 
+The search and curated servers also expose two native read-only resources — `abilities-catalog://capabilities` and `abilities-catalog://knowledge` — plus the `find-wordpress-ability` discovery workflow prompt.
+
 The usual agent loop is `overview` -> `search-abilities` -> `describe-ability` -> `execute-ability`. Discovery shows disabled abilities so an agent can learn what exists; execution is refused until a site administrator enables the ability on **Settings → MCP Server**.
 
 = Other MCP surfaces =
 
 When the MCP server is enabled, this plugin has more than one MCP surface:
 
-* **Search server** (`/wp-json/abilities-catalog/v1/mcp-search`) — the recommended, scalable surface for large catalogs and add-ons.
-* **Curated domain server** (`/wp-json/abilities-catalog/v1/mcp`) — an older server that exposes one tool per curated domain, each with `list`, `describe`, and `execute`. Readable for the core catalog, but it depends on a maintained domain taxonomy and is less attractive as add-ons add thousands of abilities. Prefer the search server for new clients.
+* **Search server** (`/wp-json/abilities-catalog/v1/mcp-search`) — the recommended, scalable surface for large catalogs and add-ons, with the shared resources and workflow prompt.
+* **Curated domain server** (`/wp-json/abilities-catalog/v1/mcp`) — an older server that exposes one tool per curated domain, each with `list`, `describe`, and `execute`, plus the shared resources and prompt. Readable for the core catalog, but it depends on a maintained domain taxonomy and is less attractive as add-ons add thousands of abilities. Prefer the search server for new clients.
 * **Adapter default server** — the bundled adapter's own default surface; only curated, owner-enabled abilities are marked public there, keeping the exposure gate intact.
 
 = Add-ons =
