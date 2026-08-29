@@ -9,15 +9,19 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\DiscoveryContentFactory;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\SearchServer;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Core\McpServer;
+use WP\MCP\Domain\Prompts\McpPrompt;
+use WP\MCP\Domain\Resources\McpResource;
 use WP\MCP\Domain\Tools\McpTool;
+use WP\McpSchema\Schemas;
 
 /**
- * Proves the search server boots, registers its route, and exposes its four bounded
- * discovery tools plus the standalone knowledge tool.
+ * Proves the search server boots, registers its route, and exposes its tools,
+ * resources, and prompt under both exact revisions.
  *
  * Adapter-dependent: it needs the `vendor/` bundle, so it skips when that bundle is
  * absent. The adapter is a process-wide singleton with no reset, so the whole wiring is
@@ -69,8 +73,7 @@ final class SearchServerTest extends TestCase {
 	}
 
 	/**
-	 * Booting registers the search route, exposes the four discovery tools plus the
-	 * standalone knowledge tool, and runs the knowledge tool end-to-end.
+	 * Booting registers the search route and runs its tools, resources, and prompt.
 	 *
 	 * The knowledge tool is the same standalone tool the curated {@see Server} exposes
 	 * (both build it from {@see KnowledgeToolFactory}), not folded into the discovery
@@ -107,19 +110,34 @@ final class SearchServerTest extends TestCase {
 			'create_server() should have stored the search server (i.e. returned no WP_Error).'
 		);
 
-		$tools = $server->get_tools();
-		foreach ( self::SEARCH_TOOLS as $name ) {
-			$this->assertArrayHasKey( $name, $tools, sprintf( 'The "%s" tool should be registered on the search server.', $name ) );
+		foreach ( array( Schemas::V2025_11_25, Schemas::V2026_07_28 ) as $revision ) {
+			$schema = $server->get_schema_provider()->for_revision( $revision );
+			$tools  = $server->get_tools( $schema );
+			foreach ( self::SEARCH_TOOLS as $name ) {
+				$this->assertArrayHasKey( $name, $tools, sprintf( 'The "%s" tool should be registered under %s.', $name, $revision ) );
+			}
+			$this->assertCount( count( self::SEARCH_TOOLS ), $tools );
+
+			$resources = $server->get_resources( $schema );
+			$this->assertSame(
+				array( DiscoveryContentFactory::CAPABILITIES_URI, DiscoveryContentFactory::KNOWLEDGE_URI ),
+				array_keys( $resources ),
+				'The search server should expose both shared resources under ' . $revision . '.'
+			);
+
+			$prompts = $server->get_prompts( $schema );
+			$this->assertSame(
+				array( DiscoveryContentFactory::WORKFLOW_PROMPT ),
+				array_keys( $prompts ),
+				'The search server should expose the shared workflow prompt under ' . $revision . '.'
+			);
 		}
-		$this->assertCount(
-			count( self::SEARCH_TOOLS ),
-			$tools,
-			'The search server should expose exactly its four discovery tools plus the knowledge tool.'
-		);
 
 		// The shared permission floor refuses a logged-out caller.
 		wp_set_current_user( 0 );
 		$this->assertFalse( $server->get_mcp_tool( 'overview' )->check_permission( array() ) );
+		$this->assertFalse( $server->get_mcp_resource( DiscoveryContentFactory::CAPABILITIES_URI )->check_permission( array() ) );
+		$this->assertFalse( $server->get_mcp_prompt( DiscoveryContentFactory::WORKFLOW_PROMPT )->check_permission( array() ) );
 
 		// End-to-end knowledge round-trip: no uri returns the index, a uri returns one
 		// concept's body. Both need no ability capability, only the shared floor.
@@ -137,6 +155,27 @@ final class SearchServerTest extends TestCase {
 		$this->assertArrayHasKey( 'concept', $concept );
 		$this->assertSame( 'core/create-content', $concept['concept']['uri'] );
 		$this->assertNotEmpty( $concept['concept']['body'] );
+
+		$capabilities = $server->get_mcp_resource( DiscoveryContentFactory::CAPABILITIES_URI );
+		$this->assertInstanceOf( McpResource::class, $capabilities );
+		$capability_contents = $capabilities->execute( array() );
+		$this->assertIsArray( $capability_contents );
+		$this->assertSame( DiscoveryContentFactory::CAPABILITIES_URI, $capability_contents[0]['uri'] );
+		$this->assertSame( 'application/json', $capability_contents[0]['mimeType'] );
+		$capability_map = json_decode( $capability_contents[0]['text'], true );
+		$this->assertIsArray( $capability_map );
+		$this->assertArrayHasKey( 'categories', $capability_map );
+
+		$knowledge_resource = $server->get_mcp_resource( DiscoveryContentFactory::KNOWLEDGE_URI );
+		$this->assertInstanceOf( McpResource::class, $knowledge_resource );
+		$knowledge_contents = $knowledge_resource->execute( array() );
+		$this->assertStringContainsString( 'core/create-content', $knowledge_contents[0]['text'] );
+
+		$workflow = $server->get_mcp_prompt( DiscoveryContentFactory::WORKFLOW_PROMPT );
+		$this->assertInstanceOf( McpPrompt::class, $workflow );
+		$prompt = $workflow->execute( array( 'task' => 'Inspect installed plugins.' ) );
+		$this->assertSame( 'user', $prompt['messages'][0]['role'] );
+		$this->assertStringContainsString( 'Inspect installed plugins.', $prompt['messages'][0]['content']['text'] );
 	}
 
 	/**

@@ -47,8 +47,8 @@
 		"php": "^8.1",
 		"automattic/jetpack-autoloader": "^5.0",
 		"galatanovidiu/abilities-rest-adapter": "^0.1.2",
-		"wordpress/mcp-adapter": "dev-fix/preserve-resource-contents-meta as 0.5.0",
-		"wordpress/php-mcp-schema": "dev-fix/open-type-passthrough as 0.1.2"
+		"wordpress/mcp-adapter": "dev-feature/dual-revision-schema-runtime as 0.5.0",
+		"wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime"
 	},
 	"require-dev": {
 		"automattic/vipwpcs": "^3.0",

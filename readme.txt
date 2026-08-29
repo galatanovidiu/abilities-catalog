@@ -55,6 +55,8 @@ It exposes five tools:
 * **execute-ability** — runs one exact ability name with arguments under `input`.
 * **knowledge** — serves file-based OKF concept bundles: task recipes, authoring guidance, and live site facts for agents. It is experimental, a file-based bridge until WordPress has an official `wp-knowledge` standard in core.
 
+The search and curated servers also expose two native resources and one prompt: `abilities-catalog://capabilities` (the live JSON capability map), `abilities-catalog://knowledge` (the live Markdown knowledge index), and `find-wordpress-ability` (a discovery-first workflow prompt). The adapter currently has no resource-template registration concept, so `resources/templates/list` is empty.
+
 The usual agent loop is `overview` -> `search-abilities` -> `describe-ability` -> `execute-ability`. Discovery shows disabled abilities so an agent can learn what exists; execution is refused until a site administrator enables the ability on **Settings → MCP Server**.
 
 = Other MCP surfaces =

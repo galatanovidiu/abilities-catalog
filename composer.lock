@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "21614f2f16c30c395d016d24bcab4cf2",
+    "content-hash": "89c5c7fd64ed6cee998694b61eec1fc3",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
@@ -135,27 +135,27 @@
         },
         {
             "name": "wordpress/mcp-adapter",
-            "version": "dev-fix/preserve-resource-contents-meta",
+            "version": "dev-feature/dual-revision-schema-runtime",
             "dist": {
                 "type": "path",
                 "url": "../mcp-adapter",
-                "reference": "961f470b0bd77034ddd480d9c445aa73790b9f18"
+                "reference": "2b98fee235220c3771f3726e294a9bba5be6546a"
             },
             "require": {
                 "automattic/jetpack-autoloader": "^5.0",
                 "ext-json": "*",
                 "php": "^7.4 || ^8.0",
-                "wordpress/php-mcp-schema": "^0.1.0"
+                "wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#a0fb1ee"
             },
             "require-dev": {
-                "automattic/vipwpcs": "^3.0",
+                "automattic/vipwpcs": "^3.1",
                 "php-stubs/wordpress-stubs": "^6.9",
                 "php-stubs/wp-cli-stubs": "^2.12",
                 "phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
                 "phpstan/extension-installer": "^1.3",
                 "phpstan/php-8-stubs": "^0.4.36",
-                "phpstan/phpstan": "^2.2.5",
-                "phpstan/phpstan-deprecation-rules": "^2.0.3",
+                "phpstan/phpstan": "^2.2.8",
+                "phpstan/phpstan-deprecation-rules": "^2.0.5",
                 "phpunit/phpunit": "^9.6",
                 "slevomat/coding-standard": "^8.0",
                 "szepeviktor/phpstan-wordpress": "^2.0",
@@ -166,7 +166,10 @@
             "autoload": {
                 "psr-4": {
                     "WP\\MCP\\": "includes/"
-                }
+                },
+                "exclude-from-classmap": [
+                    "tests/phpunit/"
+                ]
             },
             "autoload-dev": {
                 "psr-4": {
@@ -221,21 +224,26 @@
         },
         {
             "name": "wordpress/php-mcp-schema",
-            "version": "dev-fix/open-type-passthrough",
+            "version": "dev-feature/dual-revision-schema-runtime",
             "dist": {
                 "type": "path",
                 "url": "../php-mcp-schema",
-                "reference": "e81794964f17a5a7433cd841913b461467a49631"
+                "reference": "b85596951c2a032a5759a5d083f3a741844b689a"
             },
             "require": {
                 "php": ">=7.4"
             },
             "require-dev": {
-                "phpstan/phpstan": "^1.10"
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.6"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
+                    "WP\\McpSchema\\Contract\\": "src/Generated/Contract/",
+                    "WP\\McpSchema\\Generated\\": "src/Generated/",
+                    "WP\\McpSchema\\Record\\": "src/Generated/Record/",
+                    "WP\\McpSchema\\Value\\": "src/Generated/Value/",
                     "WP\\McpSchema\\": "src/"
                 }
             },
@@ -243,8 +251,14 @@
                 "analyse": [
                     "phpstan analyse"
                 ],
+                "artifact:verify": [
+                    "tests/artifact/verify.sh"
+                ],
                 "phpstan": [
                     "@analyse"
+                ],
+                "test": [
+                    "phpunit"
                 ]
             },
             "license": [
@@ -256,10 +270,9 @@
                     "homepage": "https://wordpress.org"
                 }
             ],
-            "description": "PHP DTOs for the Model Context Protocol (MCP) specification",
+            "description": "Exact-revision PHP schema runtime for the Model Context Protocol (MCP)",
             "homepage": "https://github.com/WordPress/php-mcp-schema",
             "keywords": [
-                "dto",
                 "mcp",
                 "model-context-protocol",
                 "php",
@@ -3279,15 +3292,9 @@
     "aliases": [
         {
             "package": "wordpress/mcp-adapter",
-            "version": "dev-fix/preserve-resource-contents-meta",
+            "version": "dev-feature/dual-revision-schema-runtime",
             "alias": "0.5.0",
             "alias_normalized": "0.5.0.0"
-        },
-        {
-            "package": "wordpress/php-mcp-schema",
-            "version": "dev-fix/open-type-passthrough",
-            "alias": "0.1.2",
-            "alias_normalized": "0.1.2.0"
         }
     ],
     "minimum-stability": "dev",

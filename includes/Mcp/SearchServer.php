@@ -95,7 +95,7 @@ final class SearchServer {
 	}
 
 	/**
-	 * Creates the search server with its four discovery tools plus the knowledge tool on `mcp_adapter_init`.
+	 * Creates the search server with its discovery tools, shared resources, and workflow prompt.
 	 *
 	 * `create_server()` returns the adapter on success or a `WP_Error`; a failure is logged
 	 * under WP_DEBUG and otherwise swallowed so a server that cannot boot never breaks the
@@ -114,6 +114,8 @@ final class SearchServer {
 			$observability_handler = null;
 		}
 
+		$permission = static fn (): bool => is_user_logged_in();
+
 		$result = $adapter->create_server(
 			self::SERVER_ID,
 			self::ROUTE_NAMESPACE,
@@ -124,10 +126,10 @@ final class SearchServer {
 			array( HttpTransport::class ),
 			null,
 			$observability_handler,
-			$this->tools(),
-			array(),
-			array(),
-			static fn (): bool => is_user_logged_in()
+			$this->tools( $permission ),
+			DiscoveryContentFactory::resources( $permission ),
+			DiscoveryContentFactory::prompts( $permission ),
+			$permission
 		);
 
 		if ( ! is_wp_error( $result ) ) {
@@ -143,11 +145,11 @@ final class SearchServer {
 	 *
 	 * A tool the adapter rejects is logged and skipped rather than aborting the server.
 	 *
+	 * @param callable $permission The shared coarse permission floor.
 	 * @return list<\WP\MCP\Domain\Tools\McpTool> The tools to register.
 	 */
-	private function tools(): array {
-		$index      = new AbilityIndex( new ExposurePolicy() );
-		$permission = static fn (): bool => is_user_logged_in();
+	private function tools( callable $permission ): array {
+		$index = new AbilityIndex( new ExposurePolicy() );
 
 		// The `category` filter is constrained to the site's actual category slugs, so an agent
 		// sees what it can narrow by in the tool schema itself (no prior overview call needed)

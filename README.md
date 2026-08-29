@@ -155,6 +155,18 @@ The `knowledge` tool is experimental. It is this plugin's file-based bridge
 until WordPress has an official `wp-knowledge` standard in core. It lets an
 agent read task recipes and authoring guidance instead of guessing.
 
+The search and curated servers also share native MCP resources and a prompt:
+
+- **`abilities-catalog://capabilities`** - a live JSON capability map backed by
+  the same bounded ability index as `overview`.
+- **`abilities-catalog://knowledge`** - the live Markdown knowledge index backed
+  by the same registry as the `knowledge` tool.
+- **`find-wordpress-ability`** - a prompt that turns a task into a
+  discovery-first, describe-before-execute workflow.
+
+The adapter currently has no resource-template registration concept, so
+`resources/templates/list` returns an empty list.
+
 The usual agent loop is:
 
 ```text
