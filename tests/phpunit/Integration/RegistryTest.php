@@ -214,10 +214,14 @@ final class RegistryTest extends TestCase {
 				$registered_meta,
 				$name . ' carries the decorator flag on single-site; the decorator wrote meta it should not have.'
 			);
-			$this->assertEquals(
+			$expected_meta = wp_parse_args(
 				$ability->args()['meta'],
+				array( 'public' => false )
+			);
+			$this->assertEquals(
+				$expected_meta,
 				$registered_meta,
-				$name . ' registered meta differs from its class args() meta on single-site (the decorator mutated meta).'
+				$name . ' registered meta differs from its class args() plus WordPress core defaults on single-site (the decorator mutated meta).'
 			);
 		}
 	}
