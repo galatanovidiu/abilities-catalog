@@ -111,9 +111,11 @@ final class ProbeServer {
 			return;
 		}
 
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Probe-only diagnostics behind WP_DEBUG.
-			error_log( '[abilities-catalog probe] server creation failed: ' . $result->get_error_message() );
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+			return;
 		}
+
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Probe-only diagnostics behind WP_DEBUG.
+		error_log( '[abilities-catalog probe] server creation failed: ' . $result->get_error_message() );
 	}
 }

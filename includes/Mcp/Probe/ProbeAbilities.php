@@ -126,7 +126,12 @@ final class ProbeAbilities {
 	 */
 	public static function registerAbilities(): void {
 		foreach ( self::definitions() as $name => $args ) {
-			wp_register_ability( $name, $args );
+			$ability_name = strtolower( $name );
+			if ( '' === $ability_name || '0' === $ability_name || $ability_name !== $name ) {
+				throw new \UnexpectedValueException( 'Probe ability names must be non-empty and lowercase.' );
+			}
+
+			wp_register_ability( $ability_name, $args );
 		}
 	}
 
@@ -193,12 +198,16 @@ final class ProbeAbilities {
 				'List posts',
 				'Lists recent posts. Renders as an interactive list in hosts that support MCP Apps.',
 				static function (): array {
+					// Filters remain enabled so cache integrations can intercept the query.
+					// phpcs:disable WordPressVIPMinimum.Functions.RestrictedFunctions.get_posts_get_posts
 					$posts = get_posts(
 						array(
-							'numberposts' => 20,
-							'post_status' => array( 'publish', 'draft', 'pending', 'future' ),
+							'numberposts'      => 20,
+							'post_status'      => array( 'publish', 'draft', 'pending', 'future' ),
+							'suppress_filters' => false,
 						)
 					);
+					// phpcs:enable WordPressVIPMinimum.Functions.RestrictedFunctions.get_posts_get_posts
 
 					$rows = array();
 					foreach ( $posts as $post ) {
@@ -303,7 +312,7 @@ final class ProbeAbilities {
 				},
 				array(
 					'mcp' => array(
-						'uri' => 'probe://blob',
+						'uri'      => 'probe://blob',
 						// Declared so `resources/list` tells a client this is an image
 						// before it ever reads the resource.
 						'mimeType' => 'image/png',
