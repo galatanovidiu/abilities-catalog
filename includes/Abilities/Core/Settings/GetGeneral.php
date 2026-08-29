@@ -36,10 +36,69 @@ final class GetGeneral implements Ability {
 			'description'         => __( 'Returns the General Settings screen values: site title, tagline, URLs, admin email, timezone, date and time formats, week start, and language.', 'abilities-catalog' ),
 			'category'            => 'og-core-settings',
 			'input_schema'        => array(),
-			// Emptied for the PR #260 probe: this ability now returns an MCP App UI
-			// resource content block rather than the flat settings object the schema
-			// described, and a stale output_schema would reject it.
-			'output_schema'       => array(),
+			'output_schema'       => array(
+				'type'                 => 'object',
+				'required'             => array(
+					'title',
+					'description',
+					'url',
+					'wpurl',
+					'admin_email',
+					'timezone',
+					'gmt_offset',
+					'date_format',
+					'time_format',
+					'start_of_week',
+					'language',
+				),
+				'properties'           => array(
+					'title'         => array(
+						'type'        => 'string',
+						'description' => __( 'The site title (blogname).', 'abilities-catalog' ),
+					),
+					'description'   => array(
+						'type'        => 'string',
+						'description' => __( 'The site tagline (blogdescription).', 'abilities-catalog' ),
+					),
+					'url'           => array(
+						'type'        => 'string',
+						'description' => __( 'The site home URL.', 'abilities-catalog' ),
+					),
+					'wpurl'         => array(
+						'type'        => 'string',
+						'description' => __( 'The WordPress core install URL (site URL).', 'abilities-catalog' ),
+					),
+					'admin_email'   => array(
+						'type'        => 'string',
+						'description' => __( 'The site administration email address.', 'abilities-catalog' ),
+					),
+					'timezone'      => array(
+						'type'        => 'string',
+						'description' => __( 'The timezone string (e.g. "Europe/Berlin"); empty if a manual offset is used.', 'abilities-catalog' ),
+					),
+					'gmt_offset'    => array(
+						'type'        => 'string',
+						'description' => __( 'The effective current UTC offset in hours; empty or zero means none. Reflects the active timezone (computed and DST-sensitive when a timezone string is set), not necessarily a manually set offset.', 'abilities-catalog' ),
+					),
+					'date_format'   => array(
+						'type'        => 'string',
+						'description' => __( 'The PHP date format string.', 'abilities-catalog' ),
+					),
+					'time_format'   => array(
+						'type'        => 'string',
+						'description' => __( 'The PHP time format string.', 'abilities-catalog' ),
+					),
+					'start_of_week' => array(
+						'type'        => 'integer',
+						'description' => __( 'The day the week starts on (0 = Sunday).', 'abilities-catalog' ),
+					),
+					'language'      => array(
+						'type'        => 'string',
+						'description' => __( 'The active resolved site locale (e.g. "en_US"). This may differ from the stored Site Language value; it is "en_US" when the stored value is empty (English).', 'abilities-catalog' ),
+					),
+				),
+				'additionalProperties' => false,
+			),
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( $this, 'hasPermission' ),
 			'meta'                => array(
@@ -49,15 +108,6 @@ final class GetGeneral implements Ability {
 					'idempotent'  => true,
 				),
 				'show_in_rest' => true,
-				'mcp'          => array(
-					// Descriptor `_meta`. On the curated and search servers this never
-					// reaches tools/list: those expose synthetic domain tools, and this
-					// ability is reached through their `execute` action rather than being
-					// a tool in its own right.
-					'_meta' => array(
-						'com.example/probe' => 'get-general-descriptor-meta',
-					),
-				),
 			),
 		);
 	}
@@ -73,52 +123,12 @@ final class GetGeneral implements Ability {
 	}
 
 	/**
-	 * Executes the ability, returning the settings as an MCP App UI resource.
-	 *
-	 * Returns the nested embedded-resource form so both `_meta` levels are in play:
-	 * the outer one describes the content block, the inner one carries the `ui`
-	 * config an MCP App client reads. This is the shape PR #260 exists to preserve.
+	 * Executes the ability by reading general settings directly.
 	 *
 	 * @param mixed $input The validated input data.
-	 * @return array<string,mixed> An embedded resource content block.
-	 */
-	public function execute( $input = null ) {
-		$settings = $this->settings();
-
-		$rows = '';
-		foreach ( $settings as $key => $value ) {
-			$rows .= '<tr><th>' . esc_html( (string) $key ) . '</th><td>' . esc_html( (string) $value ) . '</td></tr>';
-		}
-
-		return array(
-			'type'        => 'resource',
-			'resource'    => array(
-				'uri'      => 'ui://abilities-catalog/settings/general',
-				'mimeType' => 'text/html;profile=mcp-app',
-				'text'     => '<!doctype html><title>General Settings</title><table>' . $rows . '</table>',
-				'_meta'    => array(
-					'ui' => array(
-						'prefersBorder'    => true,
-						'preferredHeight'  => 420,
-					),
-				),
-			),
-			'annotations' => array(
-				'audience' => array( 'user' ),
-				'priority' => 0.8,
-			),
-			'_meta'       => array(
-				'com.example/probe' => 'get-general-block-meta',
-			),
-		);
-	}
-
-	/**
-	 * Reads the General Settings screen values.
-	 *
 	 * @return array<string,mixed> The general settings fields.
 	 */
-	private function settings(): array {
+	public function execute( $input = null ) {
 		return array(
 			'title'         => (string) ( get_option( 'blogname' ) ?? '' ),
 			'description'   => (string) ( get_option( 'blogdescription' ) ?? '' ),
