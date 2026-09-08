@@ -19,8 +19,8 @@ npm run wp-env:test stop
 
 `run-local.sh` creates one temporary administrator application password and
 three temporary options, keeps the credential out of files and output, and
-removes all four in a trap. The tracked mu-plugin fixture is inert unless its
-temporary option is enabled.
+removes all four in a trap. The tracked mu-plugin fixtures are inert unless
+their temporary option is enabled.
 
 For another site, configure the same abilities and direct-tool fixture, then
 run the Node entrypoint with either `MCP_AUTH_HEADER` or
@@ -39,7 +39,13 @@ script (`MCP_BASE_URL`, `MCP_SEARCH_ENDPOINT`, `MCP_CURATED_ENDPOINT`, and
   representative read-only abilities, exact modern result fields, and valid
   `x-mcp-header` mirroring.
 - The raw companion here covers malformed headers/envelopes, revision-specific
-  method rejection, typed errors, Origin/method policy, and one persistent
-  STDIO process alternating exact revisions.
+  method rejection, typed errors, Origin/method policy, one persistent STDIO
+  process alternating exact revisions, and the `execute-ability` consent gate on
+  both mechanisms — the asserted flag, the elicitation round trip, its
+  argument/state binding, a decline, and read passthrough. The elicitation path
+  exists only here: Inspector's proxy speaks `2025-11-25`, which cannot carry
+  MRTR.
 
-No write ability is executed.
+No catalog write ability is executed. The consent checks drive one mu-plugin
+fixture ability, annotated as a write so the gate applies, whose callback
+returns its own input and changes nothing.

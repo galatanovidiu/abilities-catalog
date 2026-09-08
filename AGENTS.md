@@ -91,6 +91,14 @@ The cause of most "registers but won't run" bugs:
 - **Classification, not enforcement.** Abilities tag `readonly` / `destructive` /
   `idempotent` / `dangerous` in `meta.annotations`. How those are surfaced is the
   consumer's concern. Never document this plugin as requiring a specific consumer.
+- **Per-call consent** (`Mcp\ExecutionConsent`, search server only). Any ability not
+  annotated `readonly` needs the user's agreement for the call in front of it. A
+  `2026-07-28` client that declared `elicitation` is asked with a form and answers under
+  a signed state bound to the acting user, the site, and a digest of the exact input; every
+  other client asserts `user_confirmed: true`. Consent is checked after the exposure gate
+  and the capability check, so a call that would be refused anyway never raises a question.
+  Neither mechanism proves a human agreed — do not describe it as proof. Every satisfied
+  gate fires `abilities_catalog_ability_confirmed` naming the mechanism.
 - **Dangerous tier** (plugin/theme install·update·delete, option writes, update runs,
   privacy export) runs behind the guards in `includes/Support/`: filesystem guard,
   source validation (wp.org slugs only), option allow-list (deny-by-default), upgrader
@@ -117,7 +125,9 @@ fatal.
     built for scale and the piece headed upstream. Five bounded tools backed by
     `Mcp\AbilityIndex`: `overview` (capability map), `search-abilities` (ranked keyword
     retrieval), `describe-ability`, `execute-ability` — plus the shared `knowledge`
-    tool. Discovery cost tracks the result set, not the catalog size.
+    tool. Discovery cost tracks the result set, not the catalog size. `execute-ability`
+    is the only surface behind the per-call consent gate; `describe-ability` reports
+    `requires_confirmation` so an agent learns the requirement before it calls.
   - **Curated domain server** (`Mcp\Server`, route `mcp`) — legacy alternative. One
     tool per hand-curated domain (`list` / `describe` / `execute`, mapped by
     `Mcp\DomainMap`) plus `knowledge`. Boots first; `SearchServer` boots after it.
