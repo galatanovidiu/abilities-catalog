@@ -147,7 +147,8 @@ It exposes five tools:
 - **`describe-ability`** - returns the full input/output schema and metadata for
   one exact ability name.
 - **`execute-ability`** - runs one exact ability name with arguments under
-  `input`.
+  `input`. Any ability that is not annotated `readonly` needs the user's
+  confirmation first; see [Per-call confirmation](#per-call-confirmation).
 - **`knowledge`** - serves file-based OKF concept bundles: task recipes,
   authoring guidance, and live site facts for agents.
 
@@ -170,7 +171,7 @@ overview -> search-abilities -> describe-ability -> execute-ability
 
 Discovery shows disabled abilities so an agent can learn what exists. Execution
 is refused until a site administrator enables the ability on **Settings -> MCP
-Server**.
+Server**, and a write is refused again until the user confirms it.
 
 ## Other MCP surfaces
 
@@ -288,6 +289,60 @@ Two checks run on every MCP execution:
 
 1. The MCP exposure gate must allow that ability.
 2. The authenticated WordPress user must pass the ability's capability check.
+
+On the search server a third check follows them: see
+[Per-call confirmation](#per-call-confirmation).
+
+### Per-call confirmation
+
+The exposure gate is the site owner's standing decision, and capability is the
+hard guard. Neither says anything about the operation in front of you: an agent
+holding an administrator's credentials can run every enabled write unobserved.
+
+The search server's `execute-ability` therefore asks for consent per call. It
+applies to any ability that is not annotated `readonly` — an ability carrying no
+annotations at all is treated as a write. It never applies to reads. Consent is
+checked last, so a call the exposure gate or the user's capabilities would have
+refused never raises a question.
+
+Which mechanism applies depends on what the client can do:
+
+- **Form elicitation**, when the request is MCP `2026-07-28` and the client
+  declared the `elicitation` capability. The first call returns an
+  `input_required` result naming the ability, its risk flags, and its exact
+  arguments. The client shows the form and retries the same call with the
+  answer and the `requestState` it was given. The state is signed and bound to
+  the acting user, the site, and a digest of those exact arguments, so a
+  question rendered from one operation cannot be answered into another. It
+  expires after ten minutes.
+- **An asserted flag** for every other client, because MRTR does not exist
+  before `2026-07-28`. The client re-sends the call with `user_confirmed: true`,
+  the same contract the WordPress.com MCP surfaces use.
+
+A client that can answer a form is always asked; the flag does not substitute
+for the answer.
+
+`describe-ability` reports `requires_confirmation`, so an agent can raise the
+question with the user before its first attempt rather than after a refusal.
+
+Neither mechanism proves that a human agreed: an `accept` answer is consent
+*reported by the client*, and the flag is consent *asserted by the agent*. Every
+satisfied gate fires an action naming which one it was, so a site can keep the
+trail:
+
+```php
+add_action(
+    'abilities_catalog_ability_confirmed',
+    function ( $ability, $digest, $mechanism, $user_id ) {
+        // $mechanism is 'elicitation' or 'asserted'.
+    },
+    10,
+    4
+);
+```
+
+The gate covers the search server only. The curated domain server and the
+adapter's own default server execute the same abilities without it.
 
 > [!WARNING]
 > An MCP client acts as the authenticated WordPress user. If you enable write,

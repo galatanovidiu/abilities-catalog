@@ -926,10 +926,10 @@ function jsonHeaders( authorization, extra = {} ) {
 	};
 }
 
-function modernMeta( revision = PROTOCOLS.modern ) {
+function modernMeta( revision = PROTOCOLS.modern, capabilities = {} ) {
 	return {
 		'io.modelcontextprotocol/protocolVersion': revision,
-		'io.modelcontextprotocol/clientCapabilities': {},
+		'io.modelcontextprotocol/clientCapabilities': capabilities,
 		'io.modelcontextprotocol/clientInfo': {
 			name: 'abilities-catalog-e2e',
 			version: '1.0.0',
@@ -937,12 +937,18 @@ function modernMeta( revision = PROTOCOLS.modern ) {
 	};
 }
 
-function modernBody( id, method, params = {}, revision = PROTOCOLS.modern ) {
+function modernBody(
+	id,
+	method,
+	params = {},
+	revision = PROTOCOLS.modern,
+	capabilities = {}
+) {
 	return {
 		jsonrpc: '2.0',
 		id,
 		method,
-		params: { ...params, _meta: modernMeta( revision ) },
+		params: { ...params, _meta: modernMeta( revision, capabilities ) },
 	};
 }
 
@@ -1348,6 +1354,155 @@ async function assertMixedRevisionStdio() {
 	}
 }
 
+const CONSENT_ABILITY = 'e2e-consent/echo-note';
+const FORM_ELICITATION = { elicitation: { form: {} } };
+
+function consentCall( id, args, capabilities = {} ) {
+	return modernBody(
+		id,
+		'tools/call',
+		{ name: 'execute-ability', arguments: args },
+		PROTOCOLS.modern,
+		capabilities
+	);
+}
+
+function consentPost( authorization, body ) {
+	return rawPost( endpoints.search, authorization, body, {
+		'MCP-Protocol-Version': PROTOCOLS.modern,
+		'Mcp-Method': 'tools/call',
+		'Mcp-Name': body.params.name,
+	} );
+}
+
+function toolText( response ) {
+	return ( response.payload?.result?.content || [] )
+		.map( ( block ) => block?.text || '' )
+		.join( '\n' );
+}
+
+/**
+ * Drives the execute-ability consent gate over raw HTTP, on both mechanisms.
+ *
+ * The recording proxy speaks 2025-11-25 and cannot carry MRTR, so the elicitation round
+ * trip only exists at this level: a client that declares form elicitation is asked, and
+ * only an answer bound to the state it was issued under lets the write run.
+ */
+async function assertConsentGate( authorization ) {
+	const input = { note: 'consent gate' };
+	const args = { name: CONSENT_ABILITY, input };
+
+	// A client that cannot elicit is refused until it asserts the flag.
+	let response = await consentPost( authorization, consentCall( 700, args ) );
+	assertSame( response.status, 200, 'unconfirmed write HTTP status' );
+	assertSame( response.payload?.result?.isError, true, 'unconfirmed write is an error result' );
+	assert(
+		toolText( response ).includes( 'user_confirmed' ),
+		'The refusal must name the field that unblocks it.'
+	);
+
+	response = await consentPost(
+		authorization,
+		consentCall( 701, { ...args, user_confirmed: true } )
+	);
+	assertSame( response.status, 200, 'confirmed write HTTP status' );
+	assertSame(
+		response.payload?.result?.structuredContent?.note,
+		input.note,
+		'confirmed write result'
+	);
+
+	// A client that CAN elicit is asked instead, and the flag does not substitute.
+	response = await consentPost(
+		authorization,
+		consentCall( 702, { ...args, user_confirmed: true }, FORM_ELICITATION )
+	);
+	assertSame( response.status, 200, 'elicited write HTTP status' );
+	assertSame(
+		response.payload?.result?.resultType,
+		'input_required',
+		'a capable client must be asked, not satisfied by the flag'
+	);
+	const request = response.payload?.result?.inputRequests?.confirm;
+	assertSame( request?.method, 'elicitation/create', 'input request method' );
+	assertSame( request?.params?.mode, 'form', 'input request mode' );
+	assert(
+		request?.params?.message?.includes( CONSENT_ABILITY ),
+		'The question must name the ability.'
+	);
+	assert(
+		request?.params?.message?.includes( input.note ),
+		'The question must show the exact input.'
+	);
+	const state = response.payload?.result?.requestState;
+	assert( 'string' === typeof state && state.length > 0, 'input_required requestState' );
+
+	// The answer only counts under the state it was issued for.
+	const retry = ( id, overrides ) =>
+		consentPost(
+			authorization,
+			modernBody(
+				id,
+				'tools/call',
+				{
+					name: 'execute-ability',
+					arguments: args,
+					requestState: state,
+					inputResponses: { confirm: { action: 'accept', content: { allow: true } } },
+					...overrides,
+				},
+				PROTOCOLS.modern,
+				FORM_ELICITATION
+			)
+		);
+
+	response = await retry( 703, {
+		arguments: { name: CONSENT_ABILITY, input: { note: 'something else' } },
+	} );
+	assertSame( response.payload?.result?.isError, true, 'swapped-argument retry is refused' );
+
+	response = await retry( 704, { requestState: `${ state }x` } );
+	assertSame( response.payload?.result?.isError, true, 'tampered-state retry is refused' );
+
+	response = await retry( 705, {
+		inputResponses: { confirm: { action: 'decline' } },
+	} );
+	assertSame(
+		response.payload?.result?.structuredContent?.outcome,
+		'declined',
+		'a declined answer reports an outcome, not an error'
+	);
+	assert(
+		true !== response.payload?.result?.isError,
+		'a declined answer must not be an error result'
+	);
+
+	response = await retry( 706, {} );
+	assertSame(
+		response.payload?.result?.structuredContent?.note,
+		input.note,
+		'an accepted answer under its own state runs the ability'
+	);
+
+	// A read never needs any of this.
+	response = await consentPost(
+		authorization,
+		consentCall( 707, { name: 'og-settings/get-general', input: {} }, FORM_ELICITATION )
+	);
+	assert(
+		'input_required' !== response.payload?.result?.resultType,
+		'A read must never raise a confirmation question.'
+	);
+	assert(
+		'string' === typeof response.payload?.result?.structuredContent?.title,
+		'A read must complete on the first call, with no confirmation of any kind.'
+	);
+
+	process.stdout.write(
+		'consent gate: flag path, elicitation round trip, binding, decline, and read passthrough passed\n'
+	);
+}
+
 async function assertPinnedInspectorVersion() {
 	const packageJson = JSON.parse(
 		await readFile(
@@ -1384,6 +1539,7 @@ async function main() {
 		}
 		await assertInspectorHeaderMirroring( proxy, configPath );
 		await assertRawHttpMatrix( authorization );
+		await assertConsentGate( authorization );
 		await assertMixedRevisionStdio();
 	} finally {
 		await proxy.close();

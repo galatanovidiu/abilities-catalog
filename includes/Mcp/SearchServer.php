@@ -11,6 +11,7 @@ namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
+use WP\MCP\Domain\Tools\McpToolCallContext;
 use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
 use WP\MCP\Transport\HttpTransport;
 use WP_Error;
@@ -215,28 +216,39 @@ final class SearchServer {
 			),
 			array(
 				'name'        => 'execute-ability',
-				'description' => 'Run one ability by its exact "name". Call "describe-ability" first to see that ability\'s input_schema, then pass its arguments as an object under "input". Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.',
+				'description' => 'Run one ability by its exact "name". Call "describe-ability" first to see that ability\'s input_schema, then pass its arguments as an object under "input". Refused if the ability is unknown, disabled in the exposure gate, or your account lacks the capability.
+
+SAFETY PROTOCOL: any ability that changes the site (anything "describe-ability" reports as requires_confirmation, i.e. not annotated readonly) needs the user\'s agreement first. You MUST: (1) tell the user exactly what you are about to do, including the ability and its arguments; (2) wait for their answer; (3) only if they agree, call this tool with "user_confirmed": true. Never set that flag on your own initiative. If your client supports MCP 2026-07-28 form elicitation, the flag is not used at all — this tool returns a confirmation form instead, and you retry the same call with the answer and the "requestState" it gave you.',
 				'inputSchema' => array(
 					'type'       => 'object',
 					'properties' => array(
-						'name'  => array(
+						'name'           => array(
 							'type'        => 'string',
 							'description' => 'The exact ability name.',
 						),
-						'input' => array(
+						'input'          => array(
 							'type'        => 'object',
 							'description' => 'The ability\'s arguments, as an object. Use "describe-ability" on the ability name to see its exact input_schema — the keys here must match those field names. Leave empty only if the ability takes no input.',
+						),
+						'user_confirmed' => array(
+							'type'        => 'boolean',
+							'description' => 'Set to true ONLY after you described this exact operation to the user and they agreed to it. Required for any ability that changes the site. Ignored for read-only abilities, and ignored when your client can answer a confirmation form.',
 						),
 					),
 					'required'   => array( 'name' ),
 				),
-				'handler'     => static function ( array $args ) use ( $index ) {
+				'handler'     => static function ( array $args, ?McpToolCallContext $context = null ) use ( $index ) {
 					$input = self::resolveExecuteInput( $args );
 					if ( is_wp_error( $input ) ) {
 						return $input;
 					}
 
-					return $index->execute( (string) ( $args['name'] ?? '' ), $input );
+					return $index->execute(
+						(string) ( $args['name'] ?? '' ),
+						$input,
+						true === ( $args['user_confirmed'] ?? null ),
+						$context
+					);
 				},
 			),
 		);
@@ -279,7 +291,8 @@ final class SearchServer {
 	 * field, not at the real mistake. This detects a misnamed wrapper and returns an error
 	 * that names it, so the agent fixes the wrapper in one step instead of chasing a phantom
 	 * missing field. A call carrying only "name" is a valid no-input invocation and passes
-	 * through as empty input.
+	 * through as empty input, as does one that also carries the "user_confirmed" consent
+	 * flag — that flag is the tool's own, not part of the ability's arguments.
 	 *
 	 * @param array<string,mixed> $args The raw execute-ability tool arguments.
 	 * @return array<string,mixed>|\WP_Error The ability input, or an error naming the misnamed wrapper key(s).
@@ -293,8 +306,9 @@ final class SearchServer {
 			array_diff_key(
 				$args,
 				array(
-					'name'  => true,
-					'input' => true,
+					'name'           => true,
+					'input'          => true,
+					'user_confirmed' => true,
 				)
 			)
 		);

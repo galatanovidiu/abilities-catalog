@@ -228,4 +228,35 @@ final class SearchServerTest extends TestCase {
 		$this->assertStringContainsString( '"params"', $result->get_error_message() );
 		$this->assertStringContainsString( '"input"', $result->get_error_message() );
 	}
+
+	/**
+	 * "user_confirmed" is the tool's own consent flag, not a misnamed argument wrapper.
+	 *
+	 * Without this the flag would be reported as a wrapper mistake, and every confirmed
+	 * write would be refused with an error pointing at the wrong thing.
+	 *
+	 * @return void
+	 */
+	public function test_resolve_execute_input_passes_the_consent_flag_through(): void {
+		$this->assertSame(
+			array( 'id' => 24 ),
+			SearchServer::resolveExecuteInput(
+				array(
+					'name'           => 'og-wc-orders/update-order-status',
+					'input'          => array( 'id' => 24 ),
+					'user_confirmed' => true,
+				)
+			)
+		);
+
+		$this->assertSame(
+			array(),
+			SearchServer::resolveExecuteInput(
+				array(
+					'name'           => 'og-dashboard/get-at-a-glance',
+					'user_confirmed' => true,
+				)
+			)
+		);
+	}
 }

@@ -33,6 +33,11 @@ final class AbilityIndexTest extends TestCase {
 	private const DISABLED = 'og-content/create-post';
 
 	/**
+	 * A throwaway write nobody may run, registered by the gate-ordering test.
+	 */
+	private const FORBIDDEN = 'indextest/forbidden';
+
+	/**
 	 * Enables exactly one ability and loads the adapter bundle (or skips).
 	 *
 	 * @return void
@@ -59,6 +64,11 @@ final class AbilityIndexTest extends TestCase {
 	 */
 	public function tear_down(): void {
 		delete_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION );
+
+		if ( wp_has_ability( self::FORBIDDEN ) ) {
+			wp_unregister_ability( self::FORBIDDEN );
+		}
+
 		parent::tear_down();
 	}
 
@@ -290,5 +300,92 @@ final class AbilityIndexTest extends TestCase {
 		$result = $this->index()->execute( self::ENABLED, array() );
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'posts', $result, 'The enabled dashboard read should return its summary.' );
+	}
+
+	/**
+	 * An enabled write does not run until the call carries confirmation.
+	 *
+	 * @return void
+	 */
+	public function test_execute_requires_confirmation_for_a_write(): void {
+		$this->actingAs( 'administrator' );
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( self::ENABLED, self::DISABLED ) );
+
+		$before = (int) wp_count_posts( 'post' )->draft;
+
+		$input   = array(
+			'title'  => 'Consent gate fixture',
+			'status' => 'draft',
+		);
+		$refused = $this->index()->execute( self::DISABLED, $input );
+		$this->assertWPError( $refused );
+		$this->assertSame( 'confirmation_required', $refused->get_error_code() );
+		$this->assertSame( $before, (int) wp_count_posts( 'post' )->draft, 'A refused write must not have run.' );
+
+		$confirmed = $this->index()->execute( self::DISABLED, $input, true );
+		$this->assertIsArray( $confirmed );
+		$this->assertSame( $before + 1, (int) wp_count_posts( 'post' )->draft, 'A confirmed write must run.' );
+	}
+
+	/**
+	 * Consent is the last gate, so a call refused earlier never raises a question.
+	 *
+	 * Asking a person to approve an operation that the exposure gate or their own
+	 * capabilities would have refused anyway is a prompt with no possible good answer.
+	 *
+	 * @return void
+	 */
+	public function test_consent_runs_after_the_exposure_and_capability_gates(): void {
+		$this->actingAs( 'administrator' );
+
+		$input = array(
+			'title'  => 'x',
+			'status' => 'draft',
+		);
+
+		$disabled = $this->index()->execute( self::DISABLED, $input );
+		$this->assertWPError( $disabled );
+		$this->assertSame( 'ability_disabled', $disabled->get_error_code(), 'The exposure gate must answer before consent does.' );
+
+		// A write nobody may run, enabled in the gate: capability must still answer first.
+		$registry = \WP_Abilities_Registry::get_instance();
+		$this->assertNotNull( $registry );
+		$registry->register(
+			self::FORBIDDEN,
+			array(
+				'label'               => 'Forbidden fixture',
+				'description'         => 'A write whose permission callback always refuses.',
+				'category'            => 'og-core-tools',
+				'input_schema'        => array(
+					'type'       => 'object',
+					'properties' => array( 'note' => array( 'type' => 'string' ) ),
+				),
+				'execute_callback'    => static fn ( $in ) => $in,
+				'permission_callback' => static fn (): bool => false,
+				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => true ) ),
+			)
+		);
+		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( self::FORBIDDEN ) );
+
+		$forbidden = $this->index()->execute( self::FORBIDDEN, array( 'note' => 'x' ) );
+		$this->assertWPError( $forbidden );
+		$this->assertSame( 'forbidden', $forbidden->get_error_code(), 'Capability must answer before consent does.' );
+	}
+
+	/**
+	 * describe() tells an agent a write needs confirmation before it tries to run it.
+	 *
+	 * @return void
+	 */
+	public function test_describe_reports_whether_confirmation_is_required(): void {
+		$read = $this->index()->describe( self::ENABLED );
+		$this->assertIsArray( $read );
+		$this->assertFalse( $read['requires_confirmation'] );
+		$this->assertNull( $read['confirmation_note'] );
+
+		$write = $this->index()->describe( self::DISABLED );
+		$this->assertIsArray( $write );
+		$this->assertTrue( $write['requires_confirmation'] );
+		$this->assertStringContainsString( 'user_confirmed', (string) $write['confirmation_note'] );
 	}
 }

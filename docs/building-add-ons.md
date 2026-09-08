@@ -247,6 +247,14 @@ opt-in (Step 7). The `permission_callback` is always the hard authorization
 guard: enforce the real capability server-side with `current_user_can()`,
 independent of any consumer gating.
 
+Annotate honestly, because the catalog's search server reads these. Any ability
+it runs that is not annotated `'readonly' => true` needs the user's confirmation
+first — the agent passes `user_confirmed: true`, or answers a confirmation form
+when its client supports MCP `2026-07-28` elicitation. An ability with no
+annotations at all is treated as a write and gated the same way, so a read you
+forgot to annotate costs your users an extra round trip, and a write you mark
+`readonly` runs unconfirmed.
+
 **Multisite scope (`meta.abilities_catalog.scope`).** On multisite, the catalog's
 policy decorator injects an optional `blog_id` into every **site-scoped** ability
 and runs it inside `switch_to_blog()`, so an agent can target a specific site.

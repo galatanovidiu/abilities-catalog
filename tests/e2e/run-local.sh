@@ -48,7 +48,8 @@ exposed='[
 	"og-updates/list-available-updates",
 	"og-dashboard/get-at-a-glance",
 	"og-terms/list-taxonomies",
-	"og-settings/get-general"
+	"og-settings/get-general",
+	"e2e-consent/echo-note"
 ]'
 
 wp_cli option update abilities_catalog_mcp_enabled 1 --quiet >/dev/null
