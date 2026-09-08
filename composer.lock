@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "54e6a09f1121e4837d466b5d3b2a1ece",
+    "content-hash": "a4ffbabd864fe36afbcb70901aaec91f",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
@@ -135,27 +135,27 @@
         },
         {
             "name": "wordpress/mcp-adapter",
-            "version": "dev-feature/dual-revision-schema-runtime",
+            "version": "dev-feature/mrtr-elicitation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/WordPress/mcp-adapter.git",
-                "reference": "67ec41c0f39d517794a32c5e8c9db42a19a2f88f"
+                "reference": "c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/67ec41c0f39d517794a32c5e8c9db42a19a2f88f",
-                "reference": "67ec41c0f39d517794a32c5e8c9db42a19a2f88f",
+                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c",
+                "reference": "c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c",
                 "shasum": ""
             },
             "require": {
                 "automattic/jetpack-autoloader": "^5.0",
                 "ext-json": "*",
                 "php": "^7.4 || ^8.0",
-                "wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#3a8f4aef1fefc9e0d1fb422e59411c78ce32edd3"
+                "wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#5e08fc16189d22ce9dac651ab11347af4ffc5f22"
             },
             "require-dev": {
                 "automattic/vipwpcs": "^3.1",
-                "php-stubs/wordpress-stubs": "^6.9",
+                "php-stubs/wordpress-stubs": "7.0.1 as 6.999.999",
                 "php-stubs/wp-cli-stubs": "^2.12",
                 "phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
                 "phpstan/extension-installer": "^1.3",
@@ -223,7 +223,7 @@
                 "issues": "https://github.com/wordpress/mcp-adapter/issues",
                 "source": "https://github.com/wordpress/mcp-adapter"
             },
-            "time": "2026-08-29T11:48:53+00:00"
+            "time": "2026-09-08T17:37:08+00:00"
         },
         {
             "name": "wordpress/php-mcp-schema",
@@ -231,12 +231,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/WordPress/php-mcp-schema.git",
-                "reference": "3a8f4aef1fefc9e0d1fb422e59411c78ce32edd3"
+                "reference": "5e08fc16189d22ce9dac651ab11347af4ffc5f22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/php-mcp-schema/zipball/3a8f4aef1fefc9e0d1fb422e59411c78ce32edd3",
-                "reference": "3a8f4aef1fefc9e0d1fb422e59411c78ce32edd3",
+                "url": "https://api.github.com/repos/WordPress/php-mcp-schema/zipball/5e08fc16189d22ce9dac651ab11347af4ffc5f22",
+                "reference": "5e08fc16189d22ce9dac651ab11347af4ffc5f22",
                 "shasum": ""
             },
             "require": {
@@ -249,10 +249,6 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "WP\\McpSchema\\Contract\\": "src/Generated/Contract/",
-                    "WP\\McpSchema\\Generated\\": "src/Generated/",
-                    "WP\\McpSchema\\Record\\": "src/Generated/Record/",
-                    "WP\\McpSchema\\Value\\": "src/Generated/Value/",
                     "WP\\McpSchema\\": "src/"
                 }
             },
@@ -262,6 +258,9 @@
                 ],
                 "artifact:verify": [
                     "tests/artifact/verify.sh"
+                ],
+                "autoload:verify": [
+                    "@composer dump-autoload --optimize --strict-psr --strict-ambiguous"
                 ],
                 "phpstan": [
                     "@analyse"
@@ -291,7 +290,7 @@
                 "source": "https://github.com/WordPress/php-mcp-schema/tree/feature/dual-revision-schema-runtime",
                 "issues": "https://github.com/WordPress/php-mcp-schema/issues"
             },
-            "time": "2026-08-29T11:39:43+00:00"
+            "time": "2026-09-02T10:12:00+00:00"
         }
     ],
     "packages-dev": [

@@ -157,7 +157,7 @@ final class ServerTest extends TestCase {
 		// The server exposes one curated tool per domain, not flat ability tools, plus
 		// the one cross-cutting knowledge tool.
 		foreach ( array( Schemas::V2025_11_25, Schemas::V2026_07_28 ) as $revision ) {
-			$schema = $server->get_schema_provider()->for_revision( $revision );
+			$schema = $server->get_schemas()->forVersion( $revision );
 			$tools  = $server->get_tools( $schema );
 			foreach ( self::CURATED_DOMAINS as $slug ) {
 				$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered under %s.', $slug, $revision ) );
@@ -175,7 +175,7 @@ final class ServerTest extends TestCase {
 			);
 		}
 
-		$legacy_schema = $server->get_schema_provider()->for_revision( Schemas::V2025_11_25 );
+		$legacy_schema = $server->get_schemas()->forVersion( Schemas::V2025_11_25 );
 
 		// Each curated domain carries its own hand-written blurb, never the generic
 		// "third-party domain" fallback — a forgotten case would ship that fallback as

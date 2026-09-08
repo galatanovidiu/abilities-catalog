@@ -112,7 +112,7 @@ final class SearchServerTest extends TestCase {
 		);
 
 		foreach ( array( Schemas::V2025_11_25, Schemas::V2026_07_28 ) as $revision ) {
-			$schema = $server->get_schema_provider()->for_revision( $revision );
+			$schema = $server->get_schemas()->forVersion( $revision );
 			$tools  = $server->get_tools( $schema );
 			foreach ( self::SEARCH_TOOLS as $name ) {
 				$this->assertArrayHasKey( $name, $tools, sprintf( 'The "%s" tool should be registered under %s.', $name, $revision ) );

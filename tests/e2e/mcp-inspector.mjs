@@ -1032,7 +1032,8 @@ async function assertRawHttpMatrix( authorization ) {
 		response.payload.error.data,
 		{
 			requested: unsupported,
-			supported: [ PROTOCOLS.legacy, PROTOCOLS.modern ],
+			// The adapter advertises its supported revisions newest-first.
+			supported: [ PROTOCOLS.modern, PROTOCOLS.legacy ],
 		},
 		'unsupported revision data'
 	);

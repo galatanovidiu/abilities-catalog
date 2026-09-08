@@ -41,8 +41,8 @@
 		"php": "^8.1",
 		"automattic/jetpack-autoloader": "^5.0",
 		"galatanovidiu/abilities-rest-adapter": "^0.1.2",
-		"wordpress/mcp-adapter": "dev-feature/dual-revision-schema-runtime#67ec41c0f39d517794a32c5e8c9db42a19a2f88f",
-		"wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#3a8f4aef1fefc9e0d1fb422e59411c78ce32edd3"
+		"wordpress/mcp-adapter": "dev-feature/mrtr-elicitation#c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c",
+		"wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#5e08fc16189d22ce9dac651ab11347af4ffc5f22"
 	},
 	"require-dev": {
 		"automattic/vipwpcs": "^3.0",
