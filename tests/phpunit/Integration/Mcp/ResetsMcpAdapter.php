@@ -36,6 +36,15 @@ trait ResetsMcpAdapter {
 	 * @return void
 	 */
 	protected function resetMcpAdapter(): void {
+		// The adapter logs a deprecation the first time it boots as a bundled library
+		// instead of as the canonical MCP Adapter plugin. Bundling is this plugin's
+		// distribution model, so the notice is expected. It fires once per process,
+		// guarded by the WP_MCP_VERSION constant the adapter then defines, so only the
+		// test that boots first sees it.
+		if ( ! defined( 'WP_MCP_VERSION' ) ) {
+			$this->setExpectedDeprecated( McpAdapter::class );
+		}
+
 		$adapter = McpAdapter::instance();
 
 		// Empty the servers map a prior booting test left behind, so create_server()

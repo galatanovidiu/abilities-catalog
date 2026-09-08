@@ -141,7 +141,10 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Install npm dependencies
-        run: npm ci
+        # Inspector 2.4.0 is an explicit review dependency newer than the
+        # repository-wide package-age window. The exact lock integrity remains
+        # authoritative for this CI install.
+        run: npm ci --min-release-age=0
 
       - name: Start the wp-env test environment
         run: npm run wp-env:test start
@@ -156,3 +159,11 @@ jobs:
 
       - name: Run PHPUnit (multisite)
         run: npm run wp-env:test -- run cli --env-cwd=wp-content/plugins/abilities-catalog/ env WP_MULTISITE=1 vendor/bin/phpunit -c phpunit.xml.dist --no-coverage --group multisite
+
+      - name: Run dual-revision MCP Inspector E2E
+        if: ${{ matrix.php == '8.3' }}
+        run: bash tests/e2e/run-local.sh
+
+      - name: Stop the wp-env test environment
+        if: ${{ always() }}
+        run: npm run wp-env:test stop

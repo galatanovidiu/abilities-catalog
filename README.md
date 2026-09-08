@@ -151,6 +151,13 @@ It exposes five tools:
 - **`knowledge`** - serves file-based OKF concept bundles: task recipes,
   authoring guidance, and live site facts for agents.
 
+The search and curated servers also expose two native read-only resources and
+one prompt under both supported exact MCP revisions:
+
+- `abilities-catalog://capabilities` - the live bounded capability map;
+- `abilities-catalog://knowledge` - live site facts plus the knowledge index;
+- `find-wordpress-ability` - a discovery-first workflow for a supplied task.
+
 The `knowledge` tool is experimental. It is this plugin's file-based bridge
 until WordPress has an official `wp-knowledge` standard in core. It lets an
 agent read task recipes and authoring guidance instead of guessing.
@@ -179,7 +186,8 @@ Endpoint:
 ```
 
 This is the recommended server for agents. It is the scalable surface for large
-catalogs and add-ons.
+catalogs and add-ons. It also exposes the shared capability/knowledge resources
+and the `find-wordpress-ability` prompt.
 
 ### Curated domain server
 
@@ -190,7 +198,8 @@ Endpoint:
 ```
 
 This older server exposes one tool per curated domain. Each domain tool supports
-`list`, `describe`, and `execute`.
+`list`, `describe`, and `execute`, alongside the same two shared resources and
+workflow prompt.
 
 It is useful and readable for the core catalog, but it depends on a maintained
 domain taxonomy and becomes less attractive as arbitrary add-ons add hundreds or
@@ -348,6 +357,10 @@ npm run wp-env:test start
 npm run test:php:setup
 npm run test:php
 ```
+
+The exact dual-revision Inspector and raw-wire suite is documented in
+[`tests/e2e/README.md`](tests/e2e/README.md). It pins MCP Inspector 2.4.0 and
+uses only read-only ability executions.
 
 ## Contributing
 

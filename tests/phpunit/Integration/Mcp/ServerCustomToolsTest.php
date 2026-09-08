@@ -154,7 +154,7 @@ final class ServerCustomToolsTest extends TestCase {
 	 */
 	private function names( array $tools ): array {
 		return array_map(
-			static fn ( McpTool $tool ): string => $tool->get_protocol_dto()->getName(),
+			static fn ( McpTool $tool ): string => $tool->get_name(),
 			$tools
 		);
 	}
