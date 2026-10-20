@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp\Admin;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\AdapterPlugin;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP_REST_Request;
@@ -17,8 +18,9 @@ use WP_REST_Server;
 
 /**
  * The settings REST route reads and writes exposure under `manage_options`: it reports
- * the deny-by-default state, persists toggles, drops forged ability names, flips the
- * server enable flag, and refuses a non-admin entirely.
+ * the deny-by-default state and the MCP Adapter plugin requirement, persists toggles,
+ * drops forged ability names, flips the server enable flag, and refuses a non-admin
+ * entirely.
  */
 final class ExposureControllerTest extends TestCase {
 
@@ -75,6 +77,43 @@ final class ExposureControllerTest extends TestCase {
 		$this->assertArrayHasKey( 'domains', $data );
 		$this->assertNotEmpty( $data['domains'] );
 		$this->assertFalse( $this->abilityEnabled( $data, 'og-content/get-post' ), 'Abilities are disabled by default.' );
+	}
+
+	/**
+	 * The state reports the MCP Adapter plugin requirement so the page can say what is
+	 * missing instead of showing a server that never boots.
+	 *
+	 * The bootstrap loads the fetched adapter plugin when it is present, so the status
+	 * is `ready` with the adapter's version here and `missing` on a host without it.
+	 *
+	 * @return void
+	 */
+	public function test_get_reports_adapter_requirement(): void {
+		$this->actingAs( 'administrator' );
+
+		$data = $this->dispatch( 'GET' )->get_data();
+
+		$this->assertArrayHasKey( 'adapter', $data );
+		$adapter = $data['adapter'];
+		foreach ( array( 'status', 'version', 'required', 'install_url', 'action_label', 'message' ) as $key ) {
+			$this->assertArrayHasKey( $key, $adapter );
+		}
+
+		$this->assertSame( AdapterPlugin::MIN_VERSION, $adapter['required'] );
+		$this->assertStringContainsString( 'plugin-install.php', $adapter['install_url'] );
+		$this->assertStringContainsString( 's=' . AdapterPlugin::SLUG, $adapter['install_url'] );
+		$this->assertNotSame( '', $adapter['action_label'] );
+
+		if ( defined( 'WP_MCP_VERSION' ) ) {
+			$this->assertSame( AdapterPlugin::STATUS_READY, $adapter['status'] );
+			$this->assertSame( WP_MCP_VERSION, $adapter['version'] );
+			$this->assertSame( '', $adapter['message'], 'A ready adapter needs no requirement message.' );
+			return;
+		}
+
+		$this->assertSame( AdapterPlugin::STATUS_MISSING, $adapter['status'] );
+		$this->assertNull( $adapter['version'] );
+		$this->assertNotSame( '', $adapter['message'], 'A missing adapter must tell the owner what to install.' );
 	}
 
 	/**

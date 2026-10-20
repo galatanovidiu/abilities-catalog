@@ -33,7 +33,9 @@ trap cleanup EXIT INT TERM
 cleanup
 trap cleanup EXIT INT TERM
 
-wp_cli plugin activate abilities-catalog --quiet >/dev/null
+# The PHPUnit suite that usually runs first resets the site's active plugins, so
+# (re)activate both the catalog and the MCP Adapter plugin it boots on.
+wp_cli plugin activate abilities-catalog mcp-adapter --quiet >/dev/null
 
 exposed='[
 	"og-content/list-post-types",

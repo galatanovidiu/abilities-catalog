@@ -32,8 +32,8 @@ use WP_Ability;
  * each annotation shape under test (readonly, destructive, none at all) is exact and does
  * not move when the catalog does.
  *
- * Adapter-dependent: the call context is a vendor type, so this skips when the bundle is
- * absent.
+ * Adapter-dependent: the call context is an adapter type, so this skips when the MCP
+ * Adapter plugin is not loaded.
  */
 final class ExecutionConsentTest extends TestCase {
 
@@ -67,16 +67,7 @@ final class ExecutionConsentTest extends TestCase {
 	public function set_up(): void {
 		parent::set_up();
 
-		if ( ! class_exists( McpToolCallContext::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( McpToolCallContext::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
+		$this->requireAdapterPlugin();
 
 		$this->register( self::READ, array( 'readonly' => true, 'idempotent' => true ) );
 		$this->register( self::WRITE, array( 'readonly' => false, 'destructive' => true ) );

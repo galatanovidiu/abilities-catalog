@@ -23,9 +23,9 @@ use WP\McpSchema\Schemas;
  * Proves the search server boots, registers its route, and exposes its four bounded
  * discovery tools plus the standalone knowledge tool.
  *
- * Adapter-dependent: it needs the `vendor/` bundle, so it skips when that bundle is
- * absent. The adapter is a process-wide singleton with no reset, so the whole wiring is
- * asserted in one method that boots exactly once.
+ * Adapter-dependent: it needs the MCP Adapter plugin, so it skips when the plugin is
+ * not loaded. The adapter is a process-wide singleton with no reset, so the whole wiring
+ * is asserted in one method that boots exactly once.
  */
 final class SearchServerTest extends TestCase {
 
@@ -39,23 +39,14 @@ final class SearchServerTest extends TestCase {
 	private const SEARCH_TOOLS = array( 'overview', 'search-abilities', 'describe-ability', 'execute-ability', 'knowledge' );
 
 	/**
-	 * Loads the adapter bundle, or skips the suite when it is not installed.
+	 * Skips the suite unless the MCP Adapter plugin is loaded.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
 
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
+		$this->requireAdapterPlugin();
 
 		// The adapter is a one-boot-per-process singleton; reset it so this test boots it
 		// fresh even when another booting test (e.g. ServerTest) ran first. See the trait.

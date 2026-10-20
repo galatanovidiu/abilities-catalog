@@ -1,6 +1,6 @@
 <?php
 /**
- * Regression test for the exposure gate on the vendor default-server execute path.
+ * Regression test for the exposure gate on the adapter default-server execute path.
  *
  * @package AbilitiesCatalog\Tests
  */
@@ -13,43 +13,55 @@ use GalatanOvidiu\AbilitiesCatalog\Abilities\Core\Content\GetPost;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\Server;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP\MCP\Abilities\ExecuteAbilityAbility;
-use WP\MCP\Core\McpAdapter;
 
 /**
- * Pins the already-working exposure gate on the vendor default-server execute path.
+ * Pins the already-working exposure gate on the adapter default-server execute path.
  *
- * The bundled mcp-adapter ships a second MCP endpoint (the "default server") whose
+ * The MCP Adapter plugin ships a second MCP endpoint (the "default server") whose
  * `mcp-adapter/execute-ability` ability runs any registered ability by name. Its
  * permission callback gates on `meta.mcp.public`, the flag {@see Server} stamps only
  * for an ability that is both domain-mapped AND enabled in the exposure gate. This
  * test locks that refusal so a future change to {@see Server},
- * {@see \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy}, or the vendor adapter
+ * {@see \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy}, or the adapter itself
  * cannot silently let a disabled ability execute through the default server.
  *
- * The check chain under test (vendor source, cited so the asserts are not re-derived):
+ * The check chain under test (adapter 0.7.1 source under `tests/plugins/mcp-adapter/`,
+ * cited so the asserts are not re-derived):
  * - `ExecuteAbilityAbility::check_permission()` resolves the ability name, then calls
  *   `check_ability_mcp_exposure( $name )` before the per-ability capability check
- *   (`vendor/wordpress/mcp-adapter/includes/Abilities/ExecuteAbilityAbility.php:177`).
- * - `check_ability_mcp_exposure()` reads the live registered ability's
- *   `meta['mcp']['public']` and returns `WP_Error( 'ability_not_public_mcp', ... )` when
- *   it is not `true`, else `true`
- *   (`vendor/wordpress/mcp-adapter/includes/Abilities/McpAbilityHelperTrait.php:38-46`).
+ *   (`includes/Abilities/ExecuteAbilityAbility.php:177`).
+ * - `check_ability_mcp_exposure()` resolves exposure from the live registered ability
+ *   through `McpAbilityExposure::is_public()` (an explicit `meta.mcp.public` wins, else
+ *   `meta.public`) and returns `WP_Error( 'ability_not_found', ... )` when it is not
+ *   exposed, else `true` (`includes/Abilities/McpAbilityHelperTrait.php:31-52`). Since
+ *   0.7.1 an unexposed ability gets the same answer as an unknown name on purpose, so
+ *   an agent is not sent looking for a switch the site owner does not have.
  * - The flag is set live, per registration pass, by the `wp_register_ability_args`
  *   filter `Server::publishToDefaultServer()` adds from a FRESH `ExposurePolicy`
- *   ({@see Server} `includes/Mcp/Server.php:141-159`) — so disabling an ability at
- *   runtime immediately closes the vendor path, with no new mechanism.
+ *   ({@see Server} `includes/Mcp/Server.php:146-164`) — so disabling an ability at
+ *   runtime immediately closes the adapter path, with no new mechanism.
  *
- * Adapter-dependent: the vendor path lives in the `vendor/` bundle, so this skips when
- * that bundle is absent (CI and a local `composer install` have it). The exposure
- * option is deny-by-default, set in {@see set_up()} and cleared in {@see tear_down()}.
+ * Adapter-dependent: the default server lives in the MCP Adapter plugin, so this skips
+ * when the plugin is not loaded (CI and `npm run mcp-adapter:fetch` provide it). The
+ * exposure option is deny-by-default, set in {@see set_up()} and cleared in
+ * {@see tear_down()}.
  *
- * NOTE (scope, see PLAN.md §7): this pins only the vendor EXECUTE refusal. It does NOT
- * assert "list/describe still show a disabled ability" on the vendor default server —
- * that is FALSE there (the vendor's own `DiscoverAbilitiesAbility` /
+ * NOTE (scope, see PLAN.md §7): this pins only the adapter EXECUTE refusal. It does NOT
+ * assert "list/describe still show a disabled ability" on the adapter default server —
+ * that is FALSE there (the adapter's own `DiscoverAbilitiesAbility` /
  * `GetAbilityInfoAbility` also gate on exposure). The "still visible" behavior is the
  * catalog's curated path, covered by `AbilityIndexTest` / `DomainRouterTest`.
  */
-final class VendorExposureGateTest extends TestCase {
+final class AdapterExposureGateTest extends TestCase {
+
+	/**
+	 * The error code the adapter's exposure check emits for an unexposed ability.
+	 *
+	 * Adapter 0.7.1 deliberately answers an unexposed ability exactly like an unknown
+	 * name (`McpAbilityHelperTrait::check_ability_mcp_exposure()`), so this is the code
+	 * the refusal must carry — and the one a generic capability failure never does.
+	 */
+	private const EXPOSURE_REFUSAL_CODE = 'ability_not_found';
 
 	/**
 	 * A curated ability the owner has ENABLED (matches ServerTest's choice).
@@ -77,12 +89,14 @@ final class VendorExposureGateTest extends TestCase {
 	private array $hook_snapshot = array();
 
 	/**
-	 * Enables only one ability, snapshots the hook tables, and loads the adapter bundle.
+	 * Skips unless the adapter is loaded, enables one ability, and snapshots the hooks.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
+
+		$this->requireAdapterPlugin();
 
 		// Deny-by-default: enable exactly one curated ability so the gate lets that one
 		// through to the capability check and refuses the other.
@@ -91,17 +105,6 @@ final class VendorExposureGateTest extends TestCase {
 		// Snapshot the two hook tables every test in this class mutates, so tear_down can
 		// drop every filter any test added and restore the pre-class state verbatim.
 		$this->snapshotHooks();
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
 	}
 
 	/**
@@ -159,16 +162,17 @@ final class VendorExposureGateTest extends TestCase {
 	}
 
 	/**
-	 * A disabled ability is REFUSED on the vendor execute path (the deliverable).
+	 * A disabled ability is REFUSED on the adapter execute path (the deliverable).
 	 *
 	 * With only `og-content/get-post` enabled, the publish filter gives the disabled
 	 * `og-content/create-post` NO `meta.mcp.public` (the same assertion `ServerTest`
 	 * makes), and `ExecuteAbilityAbility::check_permission()` refuses it with the exact
-	 * code `ability_not_public_mcp` — not a generic capability collapse.
+	 * code the exposure check emits (`ability_not_found` since adapter 0.7.1) — not a
+	 * generic capability collapse.
 	 *
 	 * @return void
 	 */
-	public function test_disabled_ability_is_refused_on_vendor_execute_path(): void {
+	public function test_disabled_ability_is_refused_on_adapter_execute_path(): void {
 		( new Server() )->register();
 
 		// The gate's source: the registration-time filter never marks the disabled
@@ -184,6 +188,14 @@ final class VendorExposureGateTest extends TestCase {
 		// logged-in user (an administrator passes the coarse "read" floor cleanly).
 		$this->actingAs( 'administrator' );
 
+		// Adapter 0.7.x answers an unexposed ability exactly like an unknown name, so
+		// prove the ability exists first; otherwise a renamed ability would keep this
+		// refusal green while the gate was never exercised.
+		$this->assertTrue(
+			wp_has_ability( self::DISABLED_ABILITY ),
+			'The disabled ability must be registered so the refusal comes from the exposure gate, not from an unknown name.'
+		);
+
 		$result = ExecuteAbilityAbility::check_permission(
 			array(
 				'ability_name' => self::DISABLED_ABILITY,
@@ -191,9 +203,9 @@ final class VendorExposureGateTest extends TestCase {
 			)
 		);
 
-		$this->assertWPError( $result, 'The vendor execute path must refuse a disabled ability.' );
+		$this->assertWPError( $result, 'The adapter execute path must refuse a disabled ability.' );
 		$this->assertSame(
-			'ability_not_public_mcp',
+			self::EXPOSURE_REFUSAL_CODE,
 			$result->get_error_code(),
 			'The refusal must come from the exposure gate, not a generic permission failure.'
 		);
@@ -205,7 +217,7 @@ final class VendorExposureGateTest extends TestCase {
 	}
 
 	/**
-	 * An enabled ability PASSES the exposure layer on the vendor path (control).
+	 * An enabled ability PASSES the exposure layer on the adapter path (control).
 	 *
 	 * With `og-content/get-post` enabled, the publish filter stamps `meta.mcp.public ===
 	 * true`, and the real `check_ability_mcp_exposure` — read off the live registered
@@ -215,7 +227,7 @@ final class VendorExposureGateTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function test_enabled_ability_passes_the_exposure_layer_on_vendor_path(): void {
+	public function test_enabled_ability_passes_the_exposure_layer_on_adapter_path(): void {
 		( new Server() )->register();
 
 		$args = apply_filters( 'wp_register_ability_args', array( 'meta' => array() ), self::ENABLED_ABILITY );
@@ -240,7 +252,7 @@ final class VendorExposureGateTest extends TestCase {
 	 * The gate recomputes per registration pass (per request) from a fresh ExposurePolicy.
 	 *
 	 * `Server::publishToDefaultServer()` builds ONE `ExposurePolicy` per `register()`
-	 * call and captures it in the publish closure (`includes/Mcp/Server.php:142-143`);
+	 * call and captures it in the publish closure (`includes/Mcp/Server.php:147-148`);
 	 * that policy caches its enabled set on the first `allows()` call. So flipping the
 	 * option and re-running the SAME already-added filter does NOT recompute — the
 	 * captured policy is stale. The real "live recompute" is per registration pass: the
@@ -270,7 +282,7 @@ final class VendorExposureGateTest extends TestCase {
 
 		// Simulate the next request. Drop the first pass's publish filter (its captured
 		// policy is cached on the old, enabled option, so re-running it would NOT
-		// recompute — see Server.php:142-143), then run a fresh register() whose new
+		// recompute — see Server.php:147-148), then run a fresh register() whose new
 		// ExposurePolicy reads the now-empty option.
 		$this->restoreHooks();
 		( new Server() )->register();
@@ -285,7 +297,7 @@ final class VendorExposureGateTest extends TestCase {
 	}
 
 	/**
-	 * Calls the vendor exposure check against the live registered ability.
+	 * Calls the adapter exposure check against the live registered ability.
 	 *
 	 * `check_ability_mcp_exposure()` is `protected` on the trait; `check_permission()`
 	 * is its only public caller and runs `validate_user_access()` first, so this drives
@@ -309,7 +321,7 @@ final class VendorExposureGateTest extends TestCase {
 		// check_permission returns the exposure WP_Error verbatim; on success it falls
 		// through to the per-ability capability check, whose boolean true here means the
 		// exposure step was passed.
-		if ( is_wp_error( $result ) && 'ability_not_public_mcp' === $result->get_error_code() ) {
+		if ( is_wp_error( $result ) && self::EXPOSURE_REFUSAL_CODE === $result->get_error_code() ) {
 			return $result;
 		}
 

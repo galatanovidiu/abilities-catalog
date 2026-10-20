@@ -11,7 +11,6 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 
 use GalatanOvidiu\AbilitiesCatalog\Mcp\Server;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
-use WP\MCP\Core\McpAdapter;
 use WP\MCP\Domain\Tools\McpTool;
 
 /**
@@ -19,29 +18,19 @@ use WP\MCP\Domain\Tools\McpTool;
  * collision with a curated tool replaces it (custom wins, with a notice), a non-tool
  * value is skipped, and a non-array filter result falls back to the curated set.
  *
- * Adapter-dependent (it builds real McpTool instances), so it skips when the vendor
- * bundle is absent — like {@see ServerTest}.
+ * Adapter-dependent (it builds real McpTool instances), so it skips when the MCP
+ * Adapter plugin is not loaded — like {@see ServerTest}.
  */
 final class ServerCustomToolsTest extends TestCase {
 
 	/**
-	 * Loads the adapter bundle, or skips the suite when it is not installed.
+	 * Skips the suite unless the MCP Adapter plugin is loaded.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
+		$this->requireAdapterPlugin();
 	}
 
 	/**

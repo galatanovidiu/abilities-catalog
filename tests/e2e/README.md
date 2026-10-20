@@ -1,17 +1,21 @@
 # Dual-revision MCP end-to-end verification
 
-This suite validates the catalog against the exact review branches of
-`wordpress/mcp-adapter` and `wordpress/php-mcp-schema`. It uses
-`@modelcontextprotocol/inspector` exactly `2.4.0` for valid client behavior and
-a raw HTTP/STDIO companion only for envelopes Inspector cannot generate.
+This suite validates the catalog against the MCP Adapter plugin release that
+`bin/fetch-mcp-adapter.sh` pins (the catalog's soft runtime dependency, which
+wp-env mounts and activates from `tests/plugins/mcp-adapter/`) and the
+`wordpress/php-mcp-schema` it ships. It uses `@modelcontextprotocol/inspector`
+exactly `2.4.0` for valid client behavior and a raw HTTP/STDIO companion only
+for envelopes Inspector cannot generate.
 
 ## Run locally
 
-Install the locked dependencies, start the isolated test environment, and run:
+Install the locked dependencies, fetch the pinned MCP Adapter plugin, start the
+isolated test environment, and run:
 
 ```bash
 composer install --no-interaction --no-progress
 npm ci --min-release-age=0
+npm run mcp-adapter:fetch
 npm run wp-env:test start
 bash tests/e2e/run-local.sh
 npm run wp-env:test stop
@@ -39,7 +43,7 @@ script (`MCP_BASE_URL`, `MCP_SEARCH_ENDPOINT`, `MCP_CURATED_ENDPOINT`, and
   representative read-only abilities, exact modern result fields, and valid
   `x-mcp-header` mirroring.
 - The raw companion here covers malformed headers/envelopes, revision-specific
-  method rejection, typed errors, Origin/method policy, one persistent STDIO
+  method rejection, typed errors, method policy (Origin validation is not asserted until an adapter release ships WordPress/mcp-adapter#377), one persistent STDIO
   process alternating exact revisions, and the `execute-ability` consent gate on
   both mechanisms — the asserted flag, the elicitation round trip, its
   argument/state binding, a decline, and read passthrough. The elicitation path

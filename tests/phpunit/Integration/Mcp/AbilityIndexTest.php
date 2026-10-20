@@ -12,13 +12,12 @@ namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\AbilityIndex;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
-use WP\MCP\Domain\Utils\AbilityArgumentNormalizer;
 
 /**
  * Proves the four bounded discovery answers against the really-registered catalog.
  *
- * `execute()` reuses the adapter's argument normalizer, so the suite loads the vendor
- * bundle and skips when it is absent (the catalog itself stays dependency-free).
+ * `execute()` reuses the adapter's argument normalizer, so the suite skips when the MCP
+ * Adapter plugin is not loaded (the catalog itself stays dependency-free).
  */
 final class AbilityIndexTest extends TestCase {
 
@@ -38,25 +37,16 @@ final class AbilityIndexTest extends TestCase {
 	private const FORBIDDEN = 'indextest/forbidden';
 
 	/**
-	 * Enables exactly one ability and loads the adapter bundle (or skips).
+	 * Skips unless the MCP Adapter plugin is loaded, then enables exactly one ability.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
 
+		$this->requireAdapterPlugin();
+
 		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( self::ENABLED ) );
-
-		if ( ! class_exists( AbilityArgumentNormalizer::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( AbilityArgumentNormalizer::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
 	}
 
 	/**
