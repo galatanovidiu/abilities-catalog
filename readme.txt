@@ -4,7 +4,7 @@ Tags: abilities-api, ai, mcp, agents, wp-admin
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.4.1
+Stable tag: 0.5.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -58,6 +58,8 @@ It exposes five tools:
 The search and curated servers also expose two native read-only resources — `abilities-catalog://capabilities` and `abilities-catalog://knowledge` — plus the `find-wordpress-ability` discovery workflow prompt.
 
 The usual agent loop is `overview` -> `search-abilities` -> `describe-ability` -> `execute-ability`. Discovery shows disabled abilities so an agent can learn what exists; execution is refused until a site administrator enables the ability on **Settings → MCP Server**.
+
+Before running an ability that is not annotated `readonly`, `execute-ability` also asks for the user's agreement for that one call: a client on MCP `2026-07-28` that declared the `elicitation` capability answers a form naming the ability, its risk flags, and the exact arguments; any other client re-sends the call with `user_confirmed: true`. `describe-ability` reports `requires_confirmation` so an agent can ask before its first attempt. Reads are never asked.
 
 = Other MCP surfaces =
 
@@ -174,6 +176,8 @@ WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later. T
 
 = 0.5.0 =
 * Changed: the optional MCP server now runs on the separately installed MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/, version 0.7.0 or newer) instead of a copy bundled in `vendor/`. It is a soft dependency: the catalog activates and works without it, and if the server is enabled while the adapter is missing or too old, **Settings → MCP Server** and an admin notice say to install it. The exposure REST route reports the adapter status under a new `adapter` key. After upgrading, install and activate MCP Adapter to keep the server running.
+* New: per-call confirmation on the search server. `execute-ability` asks for the user's agreement before running any ability not annotated `readonly`: a client on MCP `2026-07-28` that declared the `elicitation` capability is shown a form naming the ability, its risk flags, and the exact arguments, and every other client re-sends the call with `user_confirmed: true`. `describe-ability` reports `requires_confirmation`, and each satisfied gate fires the `abilities_catalog_ability_confirmed` action. Reads are never asked.
+* New: both MCP servers serve the MCP `2026-07-28` revision alongside `2025-11-25`, and expose two read-only resources, `abilities-catalog://capabilities` and `abilities-catalog://knowledge`, plus the `find-wordpress-ability` discovery prompt.
 
 = 0.4.0 =
 * Breaking: every core ability name is now prefixed with `og-` (e.g. `plugins/list-plugins` is now `og-plugins/list-plugins`), and the Core categories are namespaced `og-core-*`. This frees the unprefixed names for official WordPress and third-party abilities. Pre-1.0, so there is no alias shim — consumers that stored ability names, including the MCP exposure allow-list, must re-select the abilities under their new names.
