@@ -43,7 +43,7 @@ The search MCP server keeps the MCP surface small and fixed. Discovery becomes: 
 
 = The search MCP server =
 
-The search server is built on the official `wordpress/mcp-adapter` and registers this endpoint when enabled:
+The search server runs on the separately installed MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/, version 0.7.0 or newer) and registers this endpoint when enabled:
 
     /wp-json/abilities-catalog/v1/mcp-search
 
@@ -65,7 +65,7 @@ When the MCP server is enabled, this plugin has more than one MCP surface:
 
 * **Search server** (`/wp-json/abilities-catalog/v1/mcp-search`) — the recommended, scalable surface for large catalogs and add-ons, with the shared resources and workflow prompt.
 * **Curated domain server** (`/wp-json/abilities-catalog/v1/mcp`) — an older server that exposes one tool per curated domain, each with `list`, `describe`, and `execute`, plus the shared resources and prompt. Readable for the core catalog, but it depends on a maintained domain taxonomy and is less attractive as add-ons add thousands of abilities. Prefer the search server for new clients.
-* **Adapter default server** — the bundled adapter's own default surface; only curated, owner-enabled abilities are marked public there, keeping the exposure gate intact.
+* **Adapter default server** — the MCP Adapter plugin's own default surface; only curated, owner-enabled abilities are marked public there, keeping the exposure gate intact.
 
 = Add-ons =
 
@@ -102,7 +102,7 @@ Dangerous abilities use additional support code under `includes/Support/`: files
 
 = Dependencies =
 
-The catalog has no build step and no runtime Composer or npm dependencies — its PSR-4 autoloader is in the plugin. The optional MCP server is the only part that needs Composer dependencies (the adapter and the Jetpack Autoloader); the official release zip bundles them, so the server works out of the box. If the server is enabled but those dependencies are missing, the plugin does not fatal: it shows an admin notice and the catalog keeps working.
+The catalog has no build step; its PSR-4 autoloader is in the plugin, and the official release zip bundles the small Composer runtime it uses (the REST adapter and the Jetpack Autoloader). The optional MCP server runs on the separately installed MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/), version 0.7.0 or newer. That is a soft dependency, not a `Requires Plugins` header: the catalog activates and works without it. If the server is enabled while the MCP Adapter plugin is missing or too old, the plugin does not fatal — the settings page and an admin notice say to install it, and the catalog keeps working.
 
 = Where this is going =
 
@@ -110,7 +110,7 @@ This plugin is a working bridge while WordPress core and plugins grow their own 
 
 = Requirements =
 
-WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later.
+WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later. The optional MCP server also needs the MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/), version 0.7.0 or newer.
 
 = Contributing =
 
@@ -118,9 +118,9 @@ Abilities Catalog is an open source project. Bug reports, suggestions, and quest
 
 == Installation ==
 
-1. Install and activate Abilities Catalog. Use a release ZIP from the Releases page (https://github.com/galatanovidiu/abilities-catalog/releases) and install it like any other WordPress plugin, or extract it into `wp-content/plugins/abilities-catalog`. If you are running from a git checkout, run `composer install` in the plugin directory before enabling the MCP server; release ZIPs already include the required `vendor/` files.
+1. Install and activate Abilities Catalog. Use a release ZIP from the Releases page (https://github.com/galatanovidiu/abilities-catalog/releases) and install it like any other WordPress plugin, or extract it into `wp-content/plugins/abilities-catalog`. If you are running from a git checkout, run `composer install` in the plugin directory first; release ZIPs already include the required `vendor/` files.
 2. The abilities register automatically on `wp_abilities_api_init`. A consumer of the Abilities API is required to actually use them — either an external consumer, or the built-in MCP server.
-3. Enable the MCP server (optional). Add `define( 'ABILITIES_CATALOG_MCP_ENABLED', true );` to `wp-config.php`, or use the toggle at **Settings → MCP Server**.
+3. To use the optional MCP server, install and activate the MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/), version 0.7.0 or newer, then enable the server at **Settings → MCP Server** or add `define( 'ABILITIES_CATALOG_MCP_ENABLED', true );` to `wp-config.php`. Without the MCP Adapter plugin the catalog keeps working and the settings page says what to install.
 4. Create an Application Password at **Users → Profile → Application Passwords** (WordPress requires HTTPS to create one).
 5. Point your MCP client at `https://your-site/wp-json/abilities-catalog/v1/mcp-search` and authenticate with your WordPress username and the Application Password.
 
@@ -168,9 +168,12 @@ The plugin classifies risk but does not decide what is exposed. Every ability en
 
 = What are the requirements? =
 
-WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later.
+WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later. The optional MCP server also needs the MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/), version 0.7.0 or newer, installed and active.
 
 == Changelog ==
+
+= 0.5.0 =
+* Changed: the optional MCP server now runs on the separately installed MCP Adapter plugin (https://wordpress.org/plugins/mcp-adapter/, version 0.7.0 or newer) instead of a copy bundled in `vendor/`. It is a soft dependency: the catalog activates and works without it, and if the server is enabled while the adapter is missing or too old, **Settings → MCP Server** and an admin notice say to install it. The exposure REST route reports the adapter status under a new `adapter` key. After upgrading, install and activate MCP Adapter to keep the server running.
 
 = 0.4.0 =
 * Breaking: every core ability name is now prefixed with `og-` (e.g. `plugins/list-plugins` is now `og-plugins/list-plugins`), and the Core categories are namespaced `og-core-*`. This frees the unprefixed names for official WordPress and third-party abilities. Pre-1.0, so there is no alias shim — consumers that stored ability names, including the MCP exposure allow-list, must re-select the abilities under their new names.
@@ -209,6 +212,9 @@ WordPress 6.9 or later (the Abilities API ships in core) and PHP 8.1 or later.
 
 == Upgrade Notice ==
 
+= 0.5.0 =
+The optional MCP server now needs the MCP Adapter plugin (wordpress.org/plugins/mcp-adapter, version 0.7.0 or newer) installed and active; it is no longer bundled. The catalog works without it, but the MCP server does not appear until you install it.
+
 = 0.4.0 =
 Breaking: core ability names are now `og-`-prefixed (e.g. `og-plugins/list-plugins`) and Core categories are `og-core-*`, freeing the plain names for official abilities. Pre-1.0, so there is no alias — re-select your abilities in the MCP exposure list after upgrading, as the stored names changed. Adds multisite support (an optional `blog_id` on site abilities, the new `og-users/list-my-sites` ability). The MCP `knowledge` tool now reads markdown OKF bundles and its add-on filter is renamed to `abilities_catalog_mcp_knowledge`.
 
@@ -216,7 +222,7 @@ Breaking: core ability names are now `og-`-prefixed (e.g. `og-plugins/list-plugi
 Exposes 28 already-registered abilities (Network, Cron, Widgets) through the curated MCP domain tools: a new multisite-only Network domain tool, plus Cron folded into Tools and Widgets into Appearance. No change to the catalog, and no change when the MCP server is off.
 
 = 0.3.0 =
-Expands the catalog to 230 abilities across 21 domains (new Cron, Network, and Widgets domains), adds a scalable search-based MCP server, and switches the license to MIT. The bundled MCP adapter's default server now publishes the curated subset; the catalog behaves the same when the server is off.
+Expands the catalog to 230 abilities across 21 domains (new Cron, Network, and Widgets domains), adds a scalable search-based MCP server, and switches the license to MIT. The MCP adapter's default server now publishes the curated subset; the catalog behaves the same when the server is off.
 
 = 0.2.0 =
 Adds an optional, off-by-default built-in MCP server with a per-ability exposure gate and a Settings → MCP Server page, expands the catalog to 160 abilities across 18 domains, and ships correctness fixes. The catalog behaves the same when the server is off.

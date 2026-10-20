@@ -16,12 +16,16 @@ work here:
 
 ## Commands
 
-Static checks run on the host. Tests run in Docker via `wp-env`.
+Static checks run on the host. Tests run in Docker via `wp-env`. Both need the
+pinned MCP Adapter plugin release fetched once into `tests/plugins/` (phpstan
+scans it for symbols; wp-env mounts it; PHPUnit boots it) — do this before the
+first `wp-env start`, or Docker creates an empty mount directory in its place.
 
 ```bash
-composer lint        # phpcs (.phpcs.xml.dist)
-composer format      # phpcbf — auto-fix what phpcs can
-composer phpstan     # phpstan (phpstan.neon.dist)
+npm run mcp-adapter:fetch    # once: fetch the MCP Adapter plugin (bin/fetch-mcp-adapter.sh pins the version)
+composer lint                # phpcs (.phpcs.xml.dist)
+composer format              # phpcbf — auto-fix what phpcs can
+composer phpstan             # phpstan (phpstan.neon.dist)
 ```
 
 Tests need Docker running:
@@ -114,10 +118,19 @@ The cause of most "registers but won't run" bugs:
 
 Off by default; the catalog is unaffected when off. Enabled by the
 `ABILITIES_CATALOG_MCP_ENABLED` constant or the `abilities_catalog_mcp_enabled` option
-(toggle at **Settings → MCP Server**). Built on `wordpress/mcp-adapter`, loaded via the
-Jetpack Autoloader from `vendor/` (git-ignored; a release build ships it). If enabled
-without `vendor/`, the plugin shows an admin notice and keeps working — it does not
-fatal.
+(toggle at **Settings → MCP Server**). Runs on the separately installed **MCP Adapter**
+plugin (wordpress.org slug `mcp-adapter`, 0.7.0+), a soft dependency: no
+`Requires Plugins` header, so the catalog activates and works without it.
+`Mcp\AdapterPlugin` detects it by `class_exists( 'WP\MCP\Core\McpAdapter' )` plus the
+`WP_MCP_VERSION` constant (only the canonical plugin defines it before `plugins_loaded`
+runs, which is how a stray bundled copy is told apart) and reports `ready` /
+`missing` / `outdated`. When it is missing or too old the servers do not boot, the
+settings page and an admin notice say to install it, the exposure REST route reports
+it under `adapter`, and nothing fatals. `vendor/` (git-ignored; a release build ships
+it) now holds only the REST adapter the abilities use plus the Jetpack Autoloader —
+not the MCP adapter. For development, `npm run mcp-adapter:fetch` pulls the pinned
+adapter release into `tests/plugins/mcp-adapter/` (git-ignored); wp-env mounts and
+activates it, the PHPUnit bootstrap loads it, and phpstan scans it for symbols.
 
 - Two servers boot on the adapter, each a separate consumer of the one ability
   registry, neither exposing flat per-ability tools:
@@ -158,7 +171,7 @@ includes/
   Contracts/                       # Ability + CategoryProvider contracts
   Abilities/<Group>/<Domain>/      # one class per ability
   Support/                         # safety pipeline for the dangerous tier
-  Mcp/                             # optional, off-by-default MCP server (loads vendor/ only when on)
+  Mcp/                             # optional, off-by-default MCP server (boots on the MCP Adapter plugin when present)
     Admin/                         # settings page + exposure REST API (always in wp-admin)
 assets/js/                         # no-build React settings app
 tests/phpunit/{Unit,Integration}/  # Unit = no DB; Integration = real WordPress
@@ -166,4 +179,5 @@ docs/                              # user-facing documentation
 ```
 
 `GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`. The catalog has no build step;
-only the optional MCP server pulls `vendor/` (via the Jetpack Autoloader) when enabled.
+`vendor/` (via the Jetpack Autoloader) carries only the REST adapter the abilities wrap.
+The MCP adapter is not vendored — it comes from the MCP Adapter plugin when installed.

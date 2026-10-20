@@ -34,8 +34,12 @@ Connect an MCP client to your site in four steps:
    and install it like any other WordPress plugin.
 
    If you are running from a git checkout, run `composer install` in the plugin
-   directory before enabling the MCP server. Release ZIPs already include the
-   required `vendor/` files.
+   directory first. Release ZIPs already include the required `vendor/` files.
+
+   To use the optional MCP server, install and activate the
+   [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) plugin, version
+   0.7.0 or newer. It is a soft dependency: without it the catalog keeps
+   working, and **Settings -> MCP Server** tells you to install it.
 
 2. Enable the MCP server. Add this to `wp-config.php`:
 
@@ -63,6 +67,9 @@ agent needs at **Settings -> MCP Server**.
 
 - WordPress 6.9 or later, with the Abilities API in core.
 - PHP 8.1 or later.
+- For the optional MCP server only: the
+  [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) plugin, version
+  0.7.0 or newer, installed and active.
 
 ## What the catalog registers
 
@@ -128,9 +135,9 @@ into a tool dump.
 
 ## The search MCP server
 
-The search server is built on
-[`wordpress/mcp-adapter`](https://github.com/WordPress/mcp-adapter) and registers
-this endpoint when enabled:
+The search server runs on the separately installed
+[MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) plugin (version 0.7.0
+or newer) and registers this endpoint when enabled:
 
 ```text
 /wp-json/abilities-catalog/v1/mcp-search
@@ -208,7 +215,7 @@ thousands of abilities. Prefer the search server for new clients.
 
 ### Adapter default server
 
-The bundled adapter also has its own default server. In this plugin, only
+The MCP Adapter plugin also has its own default server. In this plugin, only
 curated and owner-enabled abilities are marked public for that default surface.
 That keeps the exposure gate intact, but it is still not the preferred large
 catalog workflow.
@@ -398,9 +405,10 @@ abilities-catalog/
 
 ## Development
 
-Static checks run on the host:
+Static checks run on the host. Fetch the pinned MCP Adapter plugin release once first: phpstan scans it for symbols, and the wp-env test environment mounts it.
 
 ```bash
+npm run mcp-adapter:fetch
 composer lint
 composer phpstan
 ```
