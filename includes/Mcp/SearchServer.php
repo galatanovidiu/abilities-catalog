@@ -67,17 +67,17 @@ final class SearchServer {
 	}
 
 	/**
-	 * Brings up the server when the adapter is available.
+	 * Brings up the server when the MCP Adapter plugin is available.
 	 *
-	 * Called from the bootstrap after {@see Server::boot()}, which has already loaded the
-	 * adapter vendor bundle (or reported it missing). When the adapter is absent this
-	 * returns silently — {@see Server::boot()} owns the single "dependencies missing"
-	 * notice, so this never double-reports.
+	 * Called from the bootstrap after {@see Server::boot()}. When the adapter plugin is
+	 * absent or too old ({@see AdapterPlugin::isAvailable()}) this returns silently —
+	 * {@see Server::boot()} owns the single "adapter missing" notice, so this never
+	 * double-reports.
 	 *
 	 * @return void
 	 */
 	public static function boot(): void {
-		if ( ! class_exists( McpAdapter::class ) ) {
+		if ( ! AdapterPlugin::isAvailable() ) {
 			return;
 		}
 

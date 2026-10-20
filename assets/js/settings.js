@@ -580,6 +580,56 @@
 	}
 
 	/**
+	 * Renders the MCP Adapter requirement notice, or null when the adapter is ready.
+	 *
+	 * The servers run on the separately installed MCP Adapter plugin. The toggle stays
+	 * enabled either way — an owner may turn the server on first and install the adapter
+	 * after — so this notice is how the page says why an enabled server is not running.
+	 * A missing adapter is a warning; an outdated one is an error, since the owner
+	 * already has the plugin and only needs to update it. The action link appears
+	 * whenever the server sent a URL, which it does only for users who can install
+	 * plugins, with the label it chose for the status (install or update).
+	 *
+	 * @param {Object} adapter The `adapter` state (status, message, install_url, action_label).
+	 * @return {Object|null} The notice element, or null.
+	 */
+	function adapterNotice( adapter ) {
+		if ( ! adapter || adapter.status === 'ready' ) {
+			return null;
+		}
+
+		var missing = adapter.status === 'missing';
+
+		return el(
+			'div',
+			{ style: { marginBottom: '12px' } },
+			el(
+				Notice,
+				{
+					status: missing ? 'warning' : 'error',
+					isDismissible: false,
+				},
+				el( 'p', null, adapter.message ),
+				adapter.install_url
+					? el(
+							'p',
+							null,
+							el(
+								Button,
+								{
+									variant: 'secondary',
+									href: adapter.install_url,
+								},
+								adapter.action_label ||
+									__( 'Install MCP Adapter', 'abilities-catalog' )
+							)
+					  )
+					: null
+			)
+		);
+	}
+
+	/**
 	 * Renders the server enable + endpoint card.
 	 *
 	 * @param {Object}   state        The state.
@@ -605,6 +655,7 @@
 			el(
 				CardBody,
 				null,
+				adapterNotice( state.adapter ),
 				el( ToggleControl, {
 					__nextHasNoMarginBottom: true,
 					label: __( 'Enable MCP server', 'abilities-catalog' ),

@@ -3,8 +3,8 @@
  * Boot gate for the optional, off-by-default MCP server.
  *
  * Loaded unconditionally by the plugin bootstrap so any consumer — including the
- * later settings page — can ask whether the server is on without pulling in the
- * adapter vendor bundle. The ability catalog itself never depends on this file:
+ * later settings page — can ask whether the server is on without touching the
+ * MCP Adapter plugin's classes. The ability catalog itself never depends on this file:
  * it registers its abilities whether the server is on or off.
  *
  * This is a procedural helper in the global namespace (not a class), so the

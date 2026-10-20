@@ -19,14 +19,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Brings up the plugin's own MCP server on top of the bundled mcp-adapter.
+ * Brings up the plugin's own MCP server on top of the MCP Adapter plugin.
  *
  * The catalog registers its abilities regardless of this class; the server is an
  * optional consumer that exposes them over the Model Context Protocol. {@see boot()}
  * is the single entry point the bootstrap calls when the gate
- * ({@see abilities_catalog_mcp_is_enabled()}) is on. The class owns the one failure
- * mode the gate cannot — "enabled but the adapter vendor bundle is absent" — and
- * turns it into a loud-but-safe admin notice instead of a fatal.
+ * ({@see abilities_catalog_mcp_is_enabled()}) is on. The adapter is a soft dependency
+ * — the separately installed MCP Adapter plugin ({@see AdapterPlugin}) — and the
+ * class owns the one failure mode the gate cannot: "enabled but the adapter plugin is
+ * absent or too old". It turns that into a loud-but-safe admin notice instead of a
+ * fatal.
  *
  * The server registers one curated tool per domain — the full set the
  * {@see DomainMap} lists, plus any domain a third party opens through the
@@ -34,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * `describe` / `execute` actions through a {@see DomainRouter}; the REST endpoint
  * appears only when the gate is on.
  *
- * It also exposes the same curated, owner-enabled abilities on the bundled adapter's
+ * It also exposes the same curated, owner-enabled abilities on the adapter plugin's
  * default server ({@see publishToDefaultServer()}), so both MCP endpoints surface one
  * consistent, exposure-gated subset of the catalog.
  *
@@ -70,29 +72,19 @@ final class Server {
 	}
 
 	/**
-	 * Brings up the server, or reports missing dependencies.
+	 * Brings up the server, or reports the missing adapter plugin.
 	 *
-	 * Called only when the gate is on. When the adapter vendor bundle is present it
-	 * loads it and registers the server wiring; when it is absent it registers an
-	 * admin notice plus a WP_DEBUG log line and returns without booting — the catalog
-	 * keeps working, the server simply does not appear.
+	 * Called only when the gate is on. When the MCP Adapter plugin is active and new
+	 * enough ({@see AdapterPlugin::isAvailable()}) it registers the server wiring; when
+	 * it is absent or outdated it registers an admin notice plus a WP_DEBUG log line and
+	 * returns without booting — the catalog keeps working, the server simply does not
+	 * appear.
 	 *
 	 * @return void
 	 */
 	public static function boot(): void {
-		$autoload = ABILITIES_CATALOG_DIR . 'vendor/autoload_packages.php';
-
-		if ( ! is_readable( $autoload ) ) {
-			self::reportMissingDependencies();
-
-			return;
-		}
-
-		// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path built from a plugin constant and an internal literal, not user input.
-		require_once $autoload;
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			self::reportMissingDependencies();
+		if ( ! AdapterPlugin::isAvailable() ) {
+			self::reportMissingAdapter();
 
 			return;
 		}
@@ -127,7 +119,7 @@ final class Server {
 	/**
 	 * Marks the curated, owner-enabled abilities `mcp.public` for the adapter's default server.
 	 *
-	 * Un-suppressing the bundled adapter's default server gives a second MCP endpoint
+	 * Un-suppressing the adapter plugin's default server gives a second MCP endpoint
 	 * (`/wp-json/mcp/mcp-adapter-default-server`) whose `discover` / `execute` meta-tools
 	 * only see abilities with `meta.mcp.public = true`. This filter sets that flag — but
 	 * only for an ability the {@see DomainMap} already curates AND the {@see ExposurePolicy}
@@ -475,15 +467,17 @@ final class Server {
 	}
 
 	/**
-	 * Registers the "enabled but dependencies missing" admin notice and log line.
+	 * Registers the "enabled but the adapter plugin is missing" admin notice and log line.
 	 *
-	 * Fail loud-but-safe: a capable admin sees why the server did not appear and a
-	 * WP_DEBUG log records it, but nothing fatals and no half-server boots.
+	 * Fail loud-but-safe: a user who can install plugins sees why the server did not
+	 * appear, with a link to the adapter's install card, and a WP_DEBUG log records it;
+	 * nothing fatals and no half-server boots. The message is resolved inside the
+	 * callback rather than here so the notice text is translated in the admin locale.
 	 *
 	 * @return void
 	 */
-	private static function reportMissingDependencies(): void {
-		self::log( 'MCP server is enabled but its dependencies are not installed. Run "composer install" in the plugin directory, or use the release build that bundles them.' );
+	private static function reportMissingAdapter(): void {
+		self::log( 'MCP server is enabled but the MCP Adapter plugin (' . AdapterPlugin::MIN_VERSION . ' or newer) is not active. Install and activate it from the plugin directory.' );
 
 		add_action(
 			'admin_notices',
@@ -492,11 +486,31 @@ final class Server {
 					return;
 				}
 
+				$message = sprintf(
+					'<p>%1$s %2$s',
+					esc_html__( 'The Abilities Catalog MCP server is enabled, but it cannot start.', 'abilities-catalog' ),
+					esc_html( AdapterPlugin::requirementMessage() )
+				);
+
+				// The link is only offered to users who can act on it; installUrl()
+				// is empty for everyone else.
+				$install_url = AdapterPlugin::installUrl();
+				if ( '' !== $install_url ) {
+					$message .= sprintf(
+						' <a href="%1$s">%2$s</a>',
+						esc_url( $install_url ),
+						esc_html( AdapterPlugin::actionLabel() )
+					);
+				}
+
+				$message .= '</p>';
+
 				wp_admin_notice(
-					esc_html__( 'The Abilities Catalog MCP server is enabled, but its dependencies are not installed. Run "composer install" in the plugin directory, or use the release build that bundles them.', 'abilities-catalog' ),
+					wp_kses_post( $message ),
 					array(
-						'type'        => 'error',
-						'dismissible' => false,
+						'type'           => 'error',
+						'dismissible'    => false,
+						'paragraph_wrap' => false,
 					)
 				);
 			}
