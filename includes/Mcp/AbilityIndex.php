@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp;
 
+use WP\MCP\Domain\Tools\McpToolCallContext;
 use WP\MCP\Domain\Utils\AbilityArgumentNormalizer;
 use WP_Error;
 
@@ -36,8 +37,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   capped to a small result set. This replaces the dump: the agent describes the task,
  *   not the domain.
  * - {@see describe()} — the full schema for one named ability, on demand.
- * - {@see execute()} — runs one ability behind the same two guards the curated server
- *   uses: the {@see ExposurePolicy} gate and the ability's own capability check.
+ * - {@see execute()} — runs one ability behind the two guards the curated server uses,
+ *   the {@see ExposurePolicy} gate and the ability's own capability check, plus a third
+ *   this server adds: the per-call {@see ExecutionConsent} gate in front of every write.
  *
  * Like the curated server, discovery **hides nothing**: {@see overview()}, {@see search()}
  * and {@see describe()} include abilities the exposure gate has disabled, each flagged
@@ -56,6 +58,13 @@ final class AbilityIndex {
 	 * @var \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy
 	 */
 	private ExposurePolicy $policy;
+
+	/**
+	 * The per-call consent gate, consulted after capability and before a write runs.
+	 *
+	 * @var \GalatanOvidiu\AbilitiesCatalog\Mcp\ExecutionConsent
+	 */
+	private ExecutionConsent $consent;
 
 	/**
 	 * The stemmed search corpus, built once per instance from the live registry.
@@ -131,10 +140,12 @@ final class AbilityIndex {
 	);
 
 	/**
-	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy $policy The exposure gate.
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy    $policy  The exposure gate.
+	 * @param \GalatanOvidiu\AbilitiesCatalog\Mcp\ExecutionConsent|null $consent The per-call consent gate; defaults to a live one.
 	 */
-	public function __construct( ExposurePolicy $policy ) {
-		$this->policy = $policy;
+	public function __construct( ExposurePolicy $policy, ?ExecutionConsent $consent = null ) {
+		$this->policy  = $policy;
+		$this->consent = $consent ?? new ExecutionConsent();
 	}
 
 	/**
@@ -308,34 +319,47 @@ final class AbilityIndex {
 			return $this->unknown( $name );
 		}
 
-		$meta    = $ability->get_meta();
-		$enabled = $this->policy->allows( $name );
+		$meta     = $ability->get_meta();
+		$enabled  = $this->policy->allows( $name );
+		$confirms = $this->consent->requires( $ability );
 
 		return array(
-			'name'          => $name,
-			'label'         => $ability->get_label(),
-			'description'   => $ability->get_description(),
-			'category'      => (string) $ability->get_category(),
-			'input_schema'  => $ability->get_input_schema(),
-			'output_schema' => $ability->get_output_schema(),
-			'annotations'   => $meta['annotations'] ?? (object) array(),
-			'enabled'       => $enabled,
-			'enabled_note'  => $enabled ? null : 'Disabled in the MCP exposure gate; the site owner must enable it (Settings → MCP Server) before it can run.',
+			'name'                  => $name,
+			'label'                 => $ability->get_label(),
+			'description'           => $ability->get_description(),
+			'category'              => (string) $ability->get_category(),
+			'input_schema'          => $ability->get_input_schema(),
+			'output_schema'         => $ability->get_output_schema(),
+			'annotations'           => $meta['annotations'] ?? (object) array(),
+			'enabled'               => $enabled,
+			'enabled_note'          => $enabled ? null : 'Disabled in the MCP exposure gate; the site owner must enable it (Settings → MCP Server) before it can run.',
+			'requires_confirmation' => $confirms,
+			'confirmation_note'     => $confirms
+				? 'This ability changes the site. Tell the user what it will do and get their agreement first; then pass "user_confirmed": true to execute-ability, or answer the confirmation form if your client supports elicitation.'
+				: null,
 		);
 	}
 
 	/**
-	 * Runs one ability behind the exposure gate and its own capability check.
+	 * Runs one ability behind the exposure gate, its own capability check, and consent.
 	 *
 	 * Deny-by-default: an unknown name and a gate-disabled ability both return recoverable
 	 * WP_Errors rather than running anything. A known, enabled ability then passes through
-	 * its registered `permission_callback` (the hard capability guard) before executing.
+	 * its registered `permission_callback` (the hard capability guard).
 	 *
-	 * @param string              $name   The full ability name.
-	 * @param array<string,mixed> $params The ability input.
-	 * @return mixed|\WP_Error The ability result, or a WP_Error on an unknown/disabled/forbidden/failed call.
+	 * Consent is checked last, so a call that would have been refused anyway never puts a
+	 * question in front of a person. A non-readonly ability needs it; see
+	 * {@see ExecutionConsent} for what satisfies it. When it is not satisfied this returns
+	 * the gate's own result — a question, an error, or the person's refusal — which the
+	 * caller passes to the client unchanged.
+	 *
+	 * @param string                                       $name      The full ability name.
+	 * @param array<string,mixed>                          $params    The ability input.
+	 * @param bool                                         $confirmed Whether the call asserted `user_confirmed`.
+	 * @param \WP\MCP\Domain\Tools\McpToolCallContext|null $context   The MCP call context, when the adapter supplied one.
+	 * @return mixed|\WP_Error The ability result, or a WP_Error / consent result on an unknown, disabled, forbidden, unconfirmed or failed call.
 	 */
-	public function execute( string $name, array $params ) {
+	public function execute( string $name, array $params, bool $confirmed = false, ?McpToolCallContext $context = null ) {
 		$ability = $this->lookup( $name );
 		if ( null === $ability ) {
 			return $this->unknown( $name );
@@ -364,6 +388,11 @@ final class AbilityIndex {
 				sprintf( 'You do not have permission to run "%s".', $name ),
 				array( 'status' => 403 )
 			);
+		}
+
+		$consent = $this->consent->gate( $ability, $args, $confirmed, $context );
+		if ( null !== $consent ) {
+			return $consent;
 		}
 
 		return $ability->execute( $args );

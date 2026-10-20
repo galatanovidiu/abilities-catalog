@@ -15,9 +15,9 @@ declare(strict_types=1);
 
 define('TESTS_REPO_ROOT_DIR', dirname(__DIR__, 2));
 
-// Load Composer dev dependencies (PHPUnit polyfills) when present. Production
-// packages (REST adapter, MCP adapter) load through the Jetpack autoloader inside
-// abilities-catalog.php on plugins_loaded, once WordPress functions are available.
+// Load Composer dev dependencies (PHPUnit polyfills) when present. The REST
+// adapter loads through the Jetpack autoloader inside abilities-catalog.php on
+// plugins_loaded, once WordPress functions are available.
 if (file_exists(TESTS_REPO_ROOT_DIR . '/vendor/autoload.php')) {
 	require_once TESTS_REPO_ROOT_DIR . '/vendor/autoload.php';
 }
@@ -38,12 +38,28 @@ if (false !== getenv('WP_TESTS_DIR')) {
 // Give access to the tests_add_filter() function.
 require_once $_test_root . '/includes/functions.php';
 
-// Activate the plugin during the test environment boot.
+// Activate the plugin during the test environment boot, then the MCP Adapter
+// plugin it optionally depends on, in the same order WordPress includes them.
+// The adapter is fetched by `npm run mcp-adapter:fetch`; wp-env mounts it under
+// WP_PLUGIN_DIR and a host run finds it in the repository. Without it the
+// MCP tests skip and the catalog tests still run.
 tests_add_filter(
 	'muplugins_loaded',
 	static function (): void {
 		// Use require (not require_once) so the plugin file always loads here.
 		require TESTS_REPO_ROOT_DIR . '/abilities-catalog.php';
+
+		foreach (
+			array(
+				WP_PLUGIN_DIR . '/mcp-adapter/mcp-adapter.php',
+				TESTS_REPO_ROOT_DIR . '/tests/plugins/mcp-adapter/mcp-adapter.php',
+			) as $adapter
+		) {
+			if (file_exists($adapter)) {
+				require_once $adapter;
+				break;
+			}
+		}
 	}
 );
 

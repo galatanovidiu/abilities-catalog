@@ -9,20 +9,21 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\DiscoveryContentFactory;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\Server;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Core\McpServer;
 use WP\MCP\Domain\Tools\McpTool;
+use WP\McpSchema\Schemas;
 
 /**
  * Proves the Phase 1 boot wiring against a really-booted adapter.
  *
- * Adapter-dependent: it needs the `vendor/` bundle, so it skips when that bundle is
- * absent (the catalog stays dependency-free; this test runs in CI and locally once
- * `composer install` has run). The adapter is a process-wide singleton with no
- * reset, so all booted-server assertions live in one test method that boots exactly
- * once.
+ * Adapter-dependent: it needs the MCP Adapter plugin, so it skips when the plugin is
+ * not loaded (the catalog stays dependency-free; CI and `npm run mcp-adapter:fetch`
+ * provide it). The adapter is a process-wide singleton with no reset, so all
+ * booted-server assertions live in one test method that boots exactly once.
  */
 final class ServerTest extends TestCase {
 
@@ -36,27 +37,18 @@ final class ServerTest extends TestCase {
 	private const CURATED_DOMAINS = array( 'content', 'media', 'appearance', 'design', 'plugins', 'users', 'settings', 'tools', 'site-health', 'updates', 'dashboard', 'network' );
 
 	/**
-	 * Loads the adapter bundle, or skips the suite when it is not installed.
+	 * Skips the suite unless the MCP Adapter plugin is loaded, then primes the gate.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
 
+		$this->requireAdapterPlugin();
+
 		// The exposure gate is deny-by-default; enable the one ability the end-to-end
 		// execute round-trip runs so the gate lets it through to the capability check.
 		update_option( ABILITIES_CATALOG_MCP_EXPOSED_OPTION, array( 'og-content/get-post' ) );
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
 
 		// The adapter is a one-boot-per-process singleton; reset it so this test boots it
 		// fresh even when another booting test (e.g. SearchServerTest) ran first. See the trait.
@@ -104,8 +96,8 @@ final class ServerTest extends TestCase {
 			apply_filters( 'mcp_adapter_tool_call_result', array( 1, 2, 3 ), array(), 'demo', null, null )
 		);
 
-		// Booting also publishes the curated, owner-enabled abilities to the bundled
-		// adapter's default server by marking them mcp.public through the
+		// Booting also publishes the curated, owner-enabled abilities to the MCP Adapter
+		// plugin's default server by marking them mcp.public through the
 		// wp_register_ability_args filter. Assert that filter directly (it does not
 		// depend on registration timing): only an ability that is BOTH curated (mapped
 		// to a domain) AND enabled in the exposure gate is published, so the second
@@ -154,22 +146,32 @@ final class ServerTest extends TestCase {
 
 		// The server exposes one curated tool per domain, not flat ability tools, plus
 		// the one cross-cutting knowledge tool.
-		$tools = $server->get_tools();
-		foreach ( self::CURATED_DOMAINS as $slug ) {
-			$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered.', $slug ) );
+		foreach ( array( Schemas::V2025_11_25, Schemas::V2026_07_28 ) as $revision ) {
+			$schema = $server->get_schemas()->forVersion( $revision );
+			$tools  = $server->get_tools( $schema );
+			foreach ( self::CURATED_DOMAINS as $slug ) {
+				$this->assertArrayHasKey( $slug, $tools, sprintf( 'The "%s" domain tool should be registered under %s.', $slug, $revision ) );
+			}
+
+			$this->assertArrayHasKey( 'knowledge', $tools );
+			$this->assertCount( count( self::CURATED_DOMAINS ) + 1, $tools );
+			$this->assertSame(
+				array( DiscoveryContentFactory::CAPABILITIES_URI, DiscoveryContentFactory::KNOWLEDGE_URI ),
+				array_keys( $server->get_resources( $schema ) )
+			);
+			$this->assertSame(
+				array( DiscoveryContentFactory::WORKFLOW_PROMPT ),
+				array_keys( $server->get_prompts( $schema ) )
+			);
 		}
-		$this->assertArrayHasKey( 'knowledge', $tools, 'The cross-cutting knowledge tool should be registered.' );
-		$this->assertCount(
-			count( self::CURATED_DOMAINS ) + 1,
-			$tools,
-			'The server should expose exactly the curated domain tools plus the knowledge tool.'
-		);
+
+		$legacy_schema = $server->get_schemas()->forVersion( Schemas::V2025_11_25 );
 
 		// Each curated domain carries its own hand-written blurb, never the generic
 		// "third-party domain" fallback — a forgotten case would ship that fallback as
 		// a real tool's routing description.
 		foreach ( self::CURATED_DOMAINS as $slug ) {
-			$description = $server->get_mcp_tool( $slug )->get_protocol_dto()->getDescription();
+			$description = $server->get_mcp_tool( $slug )->get_protocol_record( $legacy_schema )->getDescription();
 			$this->assertStringNotContainsString(
 				'another plugin contributed',
 				(string) $description,

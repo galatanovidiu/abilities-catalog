@@ -23,10 +23,14 @@ use WP\MCP\Core\McpAdapter;
  * already populated and whose `rest_api_init` binding the WordPress test harness has
  * since restored away — so its server is never (re)created and its route never appears.
  *
- * Calling {@see resetMcpAdapter()} from `set_up()` (after the vendor-bundle guard)
+ * Calling {@see resetMcpAdapter()} from `set_up()` (after the adapter-plugin guard)
  * makes each booting test start from the same clean state the lone booting test gets
  * on its own: empty servers map, init guard down, and `init()` bound to the next
  * `rest_api_init` pass the test triggers by rebuilding `$wp_rest_server`.
+ *
+ * The private statics and the priority-15 binding mirror MCP Adapter 0.7.1
+ * (`tests/plugins/mcp-adapter/includes/Core/McpAdapter.php`); re-check them when the
+ * pinned adapter release moves.
  */
 trait ResetsMcpAdapter {
 

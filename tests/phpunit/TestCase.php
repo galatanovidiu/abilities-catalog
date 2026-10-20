@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\AdapterPlugin;
 use WP_UnitTestCase;
 
 /**
@@ -17,7 +18,8 @@ use WP_UnitTestCase;
  * The plugin self-registers its abilities during the test bootstrap (the plugin
  * file is loaded on `muplugins_loaded`, which wires the Abilities API hooks).
  * This base class only provides user/role helpers that ability tests need to
- * exercise capability-gated execution.
+ * exercise capability-gated execution, plus the skip guard the adapter-dependent
+ * MCP tests share.
  */
 abstract class TestCase extends WP_UnitTestCase {
 
@@ -46,6 +48,23 @@ abstract class TestCase extends WP_UnitTestCase {
 		grant_super_admin($user_id);
 
 		return $user_id;
+	}
+
+	/**
+	 * Skips the test unless the MCP Adapter plugin is loaded at a usable version.
+	 *
+	 * The adapter is a soft runtime dependency: the bootstrap loads the fetched plugin
+	 * when `tests/plugins/mcp-adapter/` exists, and the catalog suites run without it.
+	 * Call this first in `set_up()` of any test that touches an adapter type.
+	 *
+	 * @return void
+	 */
+	protected function requireAdapterPlugin(): void {
+		if ( AdapterPlugin::isAvailable() ) {
+			return;
+		}
+
+		$this->markTestSkipped( 'The MCP Adapter plugin is not loaded; run npm run mcp-adapter:fetch.' );
 	}
 
 	/**

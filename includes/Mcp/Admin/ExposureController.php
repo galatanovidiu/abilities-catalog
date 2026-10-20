@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Mcp\Admin;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\AdapterPlugin;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\ExposurePolicy;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\SearchServer;
 use WP_REST_Request;
@@ -24,8 +25,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The settings page is a React app; this controller is its only data path. `GET`
  * returns the whole screen state — the server enable flag, whether a constant locks
- * it, the endpoint URL, and every ability grouped by category with its risk flags and
- * exposure state. `POST` applies a partial change (a single toggle the page saves on
+ * it, the endpoint URL, the MCP Adapter plugin's status (the servers' soft dependency,
+ * so the page can say why an enabled server is not running), and every ability grouped
+ * by category with its risk flags and exposure state. `POST` applies a partial change
+ * (a single toggle the page saves on
  * the spot, or a per-category bulk) and returns the fresh state. Both require
  * `manage_options`, since exposing an admin-power ability over MCP is itself an
  * admin-power act.
@@ -152,12 +155,18 @@ final class ExposureController {
 	 * Groups every registered ability by its declared category, then orders and labels the
 	 * groups from the registered category list (which carries the human label and blurb).
 	 * The `domains` key name is retained for the React app's sake; each entry is a category.
+	 * The `adapter` key reports the MCP Adapter plugin's status so the page can explain,
+	 * next to the enable toggle, why an enabled server is not running and where to install
+	 * the adapter.
 	 *
-	 * @return array{server_enabled:bool,server_enabled_locked:bool,endpoint:string,enabled_count:int,total_count:int,domains:list<array{slug:string,label:string,description:string,abilities:list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool,enabled:bool}>}>}
+	 * @return array{server_enabled:bool,server_enabled_locked:bool,endpoint:string,adapter:array{status:string,version:?string,required:string,install_url:string,action_label:string,message:string},enabled_count:int,total_count:int,domains:list<array{slug:string,label:string,description:string,abilities:list<array{name:string,label:string,description:string,readonly:bool,destructive:bool,dangerous:bool,enabled:bool}>}>}
 	 *         The settings-screen state.
 	 */
 	private static function state(): array {
 		$policy = new ExposurePolicy();
+
+		$adapter_version = AdapterPlugin::installedVersion();
+		$adapter_status  = AdapterPlugin::statusFor( $adapter_version );
 
 		// Bucket every registered ability by its own declared category.
 		$by_category   = array();
@@ -212,6 +221,14 @@ final class ExposureController {
 			'server_enabled'        => abilities_catalog_mcp_is_enabled(),
 			'server_enabled_locked' => abilities_catalog_mcp_is_enable_locked(),
 			'endpoint'              => add_query_arg( 'rest_route', SearchServer::restRoute(), home_url( '/' ) ),
+			'adapter'               => array(
+				'status'       => $adapter_status,
+				'version'      => $adapter_version,
+				'required'     => AdapterPlugin::MIN_VERSION,
+				'install_url'  => AdapterPlugin::installUrl(),
+				'action_label' => AdapterPlugin::actionLabel( $adapter_status ),
+				'message'      => AdapterPlugin::requirementMessage( $adapter_status ),
+			),
 			'enabled_count'         => $enabled_count,
 			'total_count'           => $total_count,
 			'domains'               => $groups,

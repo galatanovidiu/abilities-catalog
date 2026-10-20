@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Abilities Catalog
  * Plugin URI:        https://github.com/galatanovidiu/abilities-catalog
- * Description:       Registers WordPress wp-admin features as Abilities API abilities, plus an optional, off-by-default built-in MCP server that exposes them as curated domain tools. Consumer-agnostic: the catalog works standalone, and any Abilities API consumer can expose the abilities.
+ * Description:       Registers WordPress wp-admin features as Abilities API abilities, plus an optional, off-by-default MCP server that runs on the MCP Adapter plugin when it is installed. Consumer-agnostic: the catalog works standalone, and any Abilities API consumer can expose the abilities.
  * Version:           0.4.1
  * Requires at least: 6.9
  * Requires PHP:      8.1
@@ -61,6 +61,10 @@ require_once __DIR__ . '/includes/Mcp/Enable.php';
 add_action(
 	'plugins_loaded',
 	static function (): void {
+		// vendor/ carries only the REST adapter (galatanovidiu/abilities-rest-adapter)
+		// the ability classes wrap internal REST routes with. The MCP Adapter is NOT in
+		// here: it is the separately installed MCP Adapter plugin, a soft dependency
+		// the MCP boot block below checks for at runtime.
 		$abilities_catalog_autoload_packages = ABILITIES_CATALOG_DIR . 'vendor/autoload_packages.php';
 		if ( is_readable( $abilities_catalog_autoload_packages ) ) {
 			// phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Path built from a plugin constant and an internal literal, not user input.
@@ -83,6 +87,11 @@ add_action(
 		// wp_abilities_api_init fires.
 		( new Support\PolicyDecorator() )->register();
 
+		// Snapshot whether the MCP Adapter plugin is here, once, before anything reads
+		// it: the servers below, the admin notice, and the settings page's REST payload
+		// must all answer the same way (see AdapterPlugin::detect()).
+		Mcp\AdapterPlugin::detect();
+
 		// The MCP server's settings page and its exposure REST API are always
 		// available — independent of whether the server is on — so a site can turn the
 		// server on and gate its abilities from one screen in wp-admin.
@@ -90,7 +99,10 @@ add_action(
 		Mcp\Admin\ExposureController::register();
 
 		// The catalog is the catalog; the MCP server is an optional, off-by-default
-		// consumer of it. Boot it only when the gate is on.
+		// consumer of it. Boot it only when the gate is on. Both servers run on the
+		// MCP Adapter plugin (Mcp\AdapterPlugin): when it is absent or too old,
+		// Server::boot() posts one admin notice pointing at its install card and
+		// neither server appears — the catalog itself is unaffected.
 		if ( ! abilities_catalog_mcp_is_enabled() ) {
 			return;
 		}
@@ -98,7 +110,8 @@ add_action(
 		Mcp\Server::boot();
 
 		// The scalable, search-based server is a second consumer of the same registry,
-		// on its own route. It boots after Server::boot() has loaded the adapter bundle.
+		// on its own route. It runs the same adapter check and returns silently when
+		// Server::boot() has already reported the adapter missing.
 		Mcp\SearchServer::boot();
 	}
 );

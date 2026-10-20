@@ -16,12 +16,16 @@ work here:
 
 ## Commands
 
-Static checks run on the host. Tests run in Docker via `wp-env`.
+Static checks run on the host. Tests run in Docker via `wp-env`. Both need the
+pinned MCP Adapter plugin release fetched once into `tests/plugins/` (phpstan
+scans it for symbols; wp-env mounts it; PHPUnit boots it) — do this before the
+first `wp-env start`, or Docker creates an empty mount directory in its place.
 
 ```bash
-composer lint        # phpcs (.phpcs.xml.dist)
-composer format      # phpcbf — auto-fix what phpcs can
-composer phpstan     # phpstan (phpstan.neon.dist)
+npm run mcp-adapter:fetch    # once: fetch the MCP Adapter plugin (bin/fetch-mcp-adapter.sh pins the version)
+composer lint                # phpcs (.phpcs.xml.dist)
+composer format              # phpcbf — auto-fix what phpcs can
+composer phpstan             # phpstan (phpstan.neon.dist)
 ```
 
 Tests need Docker running:
@@ -91,6 +95,14 @@ The cause of most "registers but won't run" bugs:
 - **Classification, not enforcement.** Abilities tag `readonly` / `destructive` /
   `idempotent` / `dangerous` in `meta.annotations`. How those are surfaced is the
   consumer's concern. Never document this plugin as requiring a specific consumer.
+- **Per-call consent** (`Mcp\ExecutionConsent`, search server only). Any ability not
+  annotated `readonly` needs the user's agreement for the call in front of it. A
+  `2026-07-28` client that declared `elicitation` is asked with a form and answers under
+  a signed state bound to the acting user, the site, and a digest of the exact input; every
+  other client asserts `user_confirmed: true`. Consent is checked after the exposure gate
+  and the capability check, so a call that would be refused anyway never raises a question.
+  Neither mechanism proves a human agreed — do not describe it as proof. Every satisfied
+  gate fires `abilities_catalog_ability_confirmed` naming the mechanism.
 - **Dangerous tier** (plugin/theme install·update·delete, option writes, update runs,
   privacy export) runs behind the guards in `includes/Support/`: filesystem guard,
   source validation (wp.org slugs only), option allow-list (deny-by-default), upgrader
@@ -106,10 +118,19 @@ The cause of most "registers but won't run" bugs:
 
 Off by default; the catalog is unaffected when off. Enabled by the
 `ABILITIES_CATALOG_MCP_ENABLED` constant or the `abilities_catalog_mcp_enabled` option
-(toggle at **Settings → MCP Server**). Built on `wordpress/mcp-adapter`, loaded via the
-Jetpack Autoloader from `vendor/` (git-ignored; a release build ships it). If enabled
-without `vendor/`, the plugin shows an admin notice and keeps working — it does not
-fatal.
+(toggle at **Settings → MCP Server**). Runs on the separately installed **MCP Adapter**
+plugin (wordpress.org slug `mcp-adapter`, 0.7.0+), a soft dependency: no
+`Requires Plugins` header, so the catalog activates and works without it.
+`Mcp\AdapterPlugin` detects it by `class_exists( 'WP\MCP\Core\McpAdapter' )` plus the
+`WP_MCP_VERSION` constant (only the canonical plugin defines it before `plugins_loaded`
+runs, which is how a stray bundled copy is told apart) and reports `ready` /
+`missing` / `outdated`. When it is missing or too old the servers do not boot, the
+settings page and an admin notice say to install it, the exposure REST route reports
+it under `adapter`, and nothing fatals. `vendor/` (git-ignored; a release build ships
+it) now holds only the REST adapter the abilities use plus the Jetpack Autoloader —
+not the MCP adapter. For development, `npm run mcp-adapter:fetch` pulls the pinned
+adapter release into `tests/plugins/mcp-adapter/` (git-ignored); wp-env mounts and
+activates it, the PHPUnit bootstrap loads it, and phpstan scans it for symbols.
 
 - Two servers boot on the adapter, each a separate consumer of the one ability
   registry, neither exposing flat per-ability tools:
@@ -117,7 +138,9 @@ fatal.
     built for scale and the piece headed upstream. Five bounded tools backed by
     `Mcp\AbilityIndex`: `overview` (capability map), `search-abilities` (ranked keyword
     retrieval), `describe-ability`, `execute-ability` — plus the shared `knowledge`
-    tool. Discovery cost tracks the result set, not the catalog size.
+    tool. Discovery cost tracks the result set, not the catalog size. `execute-ability`
+    is the only surface behind the per-call consent gate; `describe-ability` reports
+    `requires_confirmation` so an agent learns the requirement before it calls.
   - **Curated domain server** (`Mcp\Server`, route `mcp`) — legacy alternative. One
     tool per hand-curated domain (`list` / `describe` / `execute`, mapped by
     `Mcp\DomainMap`) plus `knowledge`. Boots first; `SearchServer` boots after it.
@@ -148,7 +171,7 @@ includes/
   Contracts/                       # Ability + CategoryProvider contracts
   Abilities/<Group>/<Domain>/      # one class per ability
   Support/                         # safety pipeline for the dangerous tier
-  Mcp/                             # optional, off-by-default MCP server (loads vendor/ only when on)
+  Mcp/                             # optional, off-by-default MCP server (boots on the MCP Adapter plugin when present)
     Admin/                         # settings page + exposure REST API (always in wp-admin)
 assets/js/                         # no-build React settings app
 tests/phpunit/{Unit,Integration}/  # Unit = no DB; Integration = real WordPress
@@ -156,4 +179,5 @@ docs/                              # user-facing documentation
 ```
 
 `GalatanOvidiu\AbilitiesCatalog\` maps to `includes/`. The catalog has no build step;
-only the optional MCP server pulls `vendor/` (via the Jetpack Autoloader) when enabled.
+`vendor/` (via the Jetpack Autoloader) carries only the REST adapter the abilities wrap.
+The MCP adapter is not vendored — it comes from the MCP Adapter plugin when installed.

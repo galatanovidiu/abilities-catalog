@@ -9,19 +9,23 @@ declare(strict_types=1);
 
 namespace GalatanOvidiu\AbilitiesCatalog\Tests\Integration\Mcp;
 
+use GalatanOvidiu\AbilitiesCatalog\Mcp\DiscoveryContentFactory;
 use GalatanOvidiu\AbilitiesCatalog\Mcp\SearchServer;
 use GalatanOvidiu\AbilitiesCatalog\Tests\TestCase;
 use WP\MCP\Core\McpAdapter;
 use WP\MCP\Core\McpServer;
+use WP\MCP\Domain\Prompts\McpPrompt;
+use WP\MCP\Domain\Resources\McpResource;
 use WP\MCP\Domain\Tools\McpTool;
+use WP\McpSchema\Schemas;
 
 /**
  * Proves the search server boots, registers its route, and exposes its four bounded
  * discovery tools plus the standalone knowledge tool.
  *
- * Adapter-dependent: it needs the `vendor/` bundle, so it skips when that bundle is
- * absent. The adapter is a process-wide singleton with no reset, so the whole wiring is
- * asserted in one method that boots exactly once.
+ * Adapter-dependent: it needs the MCP Adapter plugin, so it skips when the plugin is
+ * not loaded. The adapter is a process-wide singleton with no reset, so the whole wiring
+ * is asserted in one method that boots exactly once.
  */
 final class SearchServerTest extends TestCase {
 
@@ -35,23 +39,14 @@ final class SearchServerTest extends TestCase {
 	private const SEARCH_TOOLS = array( 'overview', 'search-abilities', 'describe-ability', 'execute-ability', 'knowledge' );
 
 	/**
-	 * Loads the adapter bundle, or skips the suite when it is not installed.
+	 * Skips the suite unless the MCP Adapter plugin is loaded.
 	 *
 	 * @return void
 	 */
 	public function set_up(): void {
 		parent::set_up();
 
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$autoload = TESTS_REPO_ROOT_DIR . '/vendor/autoload_packages.php';
-			if ( is_readable( $autoload ) ) {
-				require_once $autoload;
-			}
-		}
-
-		if ( ! class_exists( McpAdapter::class ) ) {
-			$this->markTestSkipped( 'The mcp-adapter vendor bundle is not installed; run composer install.' );
-		}
+		$this->requireAdapterPlugin();
 
 		// The adapter is a one-boot-per-process singleton; reset it so this test boots it
 		// fresh even when another booting test (e.g. ServerTest) ran first. See the trait.
@@ -107,19 +102,29 @@ final class SearchServerTest extends TestCase {
 			'create_server() should have stored the search server (i.e. returned no WP_Error).'
 		);
 
-		$tools = $server->get_tools();
-		foreach ( self::SEARCH_TOOLS as $name ) {
-			$this->assertArrayHasKey( $name, $tools, sprintf( 'The "%s" tool should be registered on the search server.', $name ) );
+		foreach ( array( Schemas::V2025_11_25, Schemas::V2026_07_28 ) as $revision ) {
+			$schema = $server->get_schemas()->forVersion( $revision );
+			$tools  = $server->get_tools( $schema );
+			foreach ( self::SEARCH_TOOLS as $name ) {
+				$this->assertArrayHasKey( $name, $tools, sprintf( 'The "%s" tool should be registered under %s.', $name, $revision ) );
+			}
+
+			$this->assertCount( count( self::SEARCH_TOOLS ), $tools );
+			$this->assertSame(
+				array( DiscoveryContentFactory::CAPABILITIES_URI, DiscoveryContentFactory::KNOWLEDGE_URI ),
+				array_keys( $server->get_resources( $schema ) )
+			);
+			$this->assertSame(
+				array( DiscoveryContentFactory::WORKFLOW_PROMPT ),
+				array_keys( $server->get_prompts( $schema ) )
+			);
 		}
-		$this->assertCount(
-			count( self::SEARCH_TOOLS ),
-			$tools,
-			'The search server should expose exactly its four discovery tools plus the knowledge tool.'
-		);
 
 		// The shared permission floor refuses a logged-out caller.
 		wp_set_current_user( 0 );
 		$this->assertFalse( $server->get_mcp_tool( 'overview' )->check_permission( array() ) );
+		$this->assertFalse( $server->get_mcp_resource( DiscoveryContentFactory::CAPABILITIES_URI )->check_permission( array() ) );
+		$this->assertFalse( $server->get_mcp_prompt( DiscoveryContentFactory::WORKFLOW_PROMPT )->check_permission( array() ) );
 
 		// End-to-end knowledge round-trip: no uri returns the index, a uri returns one
 		// concept's body. Both need no ability capability, only the shared floor.
@@ -137,6 +142,27 @@ final class SearchServerTest extends TestCase {
 		$this->assertArrayHasKey( 'concept', $concept );
 		$this->assertSame( 'core/create-content', $concept['concept']['uri'] );
 		$this->assertNotEmpty( $concept['concept']['body'] );
+
+		$capabilities = $server->get_mcp_resource( DiscoveryContentFactory::CAPABILITIES_URI );
+		$this->assertInstanceOf( McpResource::class, $capabilities );
+		$capability_contents = $capabilities->execute( array() );
+		$this->assertIsArray( $capability_contents );
+		$this->assertSame( DiscoveryContentFactory::CAPABILITIES_URI, $capability_contents[0]['uri'] );
+		$this->assertSame( 'application/json', $capability_contents[0]['mimeType'] );
+		$capability_map = json_decode( $capability_contents[0]['text'], true );
+		$this->assertIsArray( $capability_map );
+		$this->assertArrayHasKey( 'categories', $capability_map );
+
+		$knowledge_resource = $server->get_mcp_resource( DiscoveryContentFactory::KNOWLEDGE_URI );
+		$this->assertInstanceOf( McpResource::class, $knowledge_resource );
+		$knowledge_contents = $knowledge_resource->execute( array() );
+		$this->assertStringContainsString( 'core/create-content', $knowledge_contents[0]['text'] );
+
+		$workflow = $server->get_mcp_prompt( DiscoveryContentFactory::WORKFLOW_PROMPT );
+		$this->assertInstanceOf( McpPrompt::class, $workflow );
+		$prompt = $workflow->execute( array( 'task' => 'Inspect installed plugins.' ) );
+		$this->assertSame( 'user', $prompt['messages'][0]['role'] );
+		$this->assertStringContainsString( 'Inspect installed plugins.', $prompt['messages'][0]['content']['text'] );
 	}
 
 	/**
@@ -192,5 +218,36 @@ final class SearchServerTest extends TestCase {
 		$this->assertSame( 'input_wrapper_misnamed', $result->get_error_code() );
 		$this->assertStringContainsString( '"params"', $result->get_error_message() );
 		$this->assertStringContainsString( '"input"', $result->get_error_message() );
+	}
+
+	/**
+	 * "user_confirmed" is the tool's own consent flag, not a misnamed argument wrapper.
+	 *
+	 * Without this the flag would be reported as a wrapper mistake, and every confirmed
+	 * write would be refused with an error pointing at the wrong thing.
+	 *
+	 * @return void
+	 */
+	public function test_resolve_execute_input_passes_the_consent_flag_through(): void {
+		$this->assertSame(
+			array( 'id' => 24 ),
+			SearchServer::resolveExecuteInput(
+				array(
+					'name'           => 'og-wc-orders/update-order-status',
+					'input'          => array( 'id' => 24 ),
+					'user_confirmed' => true,
+				)
+			)
+		);
+
+		$this->assertSame(
+			array(),
+			SearchServer::resolveExecuteInput(
+				array(
+					'name'           => 'og-dashboard/get-at-a-glance',
+					'user_confirmed' => true,
+				)
+			)
+		);
 	}
 }
