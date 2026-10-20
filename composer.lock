@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a4ffbabd864fe36afbcb70901aaec91f",
+    "content-hash": "c6151133df10aff52566250940772a43",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
@@ -132,165 +132,6 @@
                 "source": "https://github.com/galatanovidiu/abilities-rest-adapter"
             },
             "time": "2026-07-10T09:24:29+00:00"
-        },
-        {
-            "name": "wordpress/mcp-adapter",
-            "version": "dev-feature/mrtr-elicitation",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/WordPress/mcp-adapter.git",
-                "reference": "c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c",
-                "reference": "c09c52b728cd0d2853e0dfa6ec6d95c515da5a0c",
-                "shasum": ""
-            },
-            "require": {
-                "automattic/jetpack-autoloader": "^5.0",
-                "ext-json": "*",
-                "php": "^7.4 || ^8.0",
-                "wordpress/php-mcp-schema": "dev-feature/dual-revision-schema-runtime#5e08fc16189d22ce9dac651ab11347af4ffc5f22"
-            },
-            "require-dev": {
-                "automattic/vipwpcs": "^3.1",
-                "php-stubs/wordpress-stubs": "7.0.1 as 6.999.999",
-                "php-stubs/wp-cli-stubs": "^2.12",
-                "phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
-                "phpstan/extension-installer": "^1.3",
-                "phpstan/php-8-stubs": "^0.4.36",
-                "phpstan/phpstan": "^2.2.8",
-                "phpstan/phpstan-deprecation-rules": "^2.0.5",
-                "phpunit/phpunit": "^9.6",
-                "slevomat/coding-standard": "^8.0",
-                "szepeviktor/phpstan-wordpress": "^2.0",
-                "wp-phpunit/wp-phpunit": "^7.0",
-                "yoast/phpunit-polyfills": "^4.0"
-            },
-            "type": "wordpress-plugin",
-            "autoload": {
-                "psr-4": {
-                    "WP\\MCP\\": "includes/"
-                },
-                "exclude-from-classmap": [
-                    "tests/phpunit/"
-                ]
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "WP\\MCP\\Tests\\": [
-                        "tests/phpunit/"
-                    ]
-                }
-            },
-            "scripts": {
-                "format": [
-                    "phpcbf"
-                ],
-                "lint": [
-                    "phpcs"
-                ],
-                "phpstan": [
-                    "phpstan analyse --memory-limit=1G"
-                ],
-                "test": [
-                    "phpunit --strict-coverage"
-                ]
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "WordPress AI Team",
-                    "homepage": "https://make.wordpress.org/ai/"
-                }
-            ],
-            "description": "Adapter for Abilities API, letting WordPress abilities to be used as MCP tools, resources or prompts",
-            "homepage": "https://github.com/wordpress/mcp-adapter",
-            "keywords": [
-                "abilities-api",
-                "adapter",
-                "ai",
-                "api",
-                "integration",
-                "mcp",
-                "model-context-protocol",
-                "wordpress"
-            ],
-            "support": {
-                "issues": "https://github.com/wordpress/mcp-adapter/issues",
-                "source": "https://github.com/wordpress/mcp-adapter"
-            },
-            "time": "2026-09-08T17:37:08+00:00"
-        },
-        {
-            "name": "wordpress/php-mcp-schema",
-            "version": "dev-feature/dual-revision-schema-runtime",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/WordPress/php-mcp-schema.git",
-                "reference": "5e08fc16189d22ce9dac651ab11347af4ffc5f22"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/php-mcp-schema/zipball/5e08fc16189d22ce9dac651ab11347af4ffc5f22",
-                "reference": "5e08fc16189d22ce9dac651ab11347af4ffc5f22",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.6"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "WP\\McpSchema\\": "src/"
-                }
-            },
-            "scripts": {
-                "analyse": [
-                    "phpstan analyse"
-                ],
-                "artifact:verify": [
-                    "tests/artifact/verify.sh"
-                ],
-                "autoload:verify": [
-                    "@composer dump-autoload --optimize --strict-psr --strict-ambiguous"
-                ],
-                "phpstan": [
-                    "@analyse"
-                ],
-                "test": [
-                    "phpunit"
-                ]
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "WordPress",
-                    "homepage": "https://wordpress.org"
-                }
-            ],
-            "description": "Exact-revision PHP schema runtime for the Model Context Protocol (MCP)",
-            "homepage": "https://github.com/WordPress/php-mcp-schema",
-            "keywords": [
-                "mcp",
-                "model-context-protocol",
-                "php",
-                "schema"
-            ],
-            "support": {
-                "source": "https://github.com/WordPress/php-mcp-schema/tree/feature/dual-revision-schema-runtime",
-                "issues": "https://github.com/WordPress/php-mcp-schema/issues"
-            },
-            "time": "2026-09-02T10:12:00+00:00"
         }
     ],
     "packages-dev": [
@@ -3300,10 +3141,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "wordpress/mcp-adapter": 20,
-        "wordpress/php-mcp-schema": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

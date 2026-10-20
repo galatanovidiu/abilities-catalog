@@ -3,7 +3,10 @@
 	"testsEnvironment": false,
 	"port": 8890,
 	"core": null,
-	"plugins": [ "./." ],
+	"plugins": [
+		"./.",
+		"./tests/plugins/mcp-adapter"
+	],
 	"config": {
 		"FS_METHOD": "direct",
 		"WP_DEBUG": true,

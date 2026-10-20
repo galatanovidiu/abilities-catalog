@@ -59,10 +59,11 @@ jobs:
           coverage: none
           tools: composer
 
-      # Production-only install: pulls the MCP adapter and the Jetpack Autoloader
-      # and generates vendor/autoload_packages.php, which the MCP server requires.
-      # vendor/ ships in the zip (it is in the `files` field of package.json that
-      # `wp-scripts plugin-zip` reads), so the MCP server works out of the box.
+      # Production-only install: pulls the REST adapter the abilities wrap and the
+      # Jetpack Autoloader, and generates vendor/autoload_packages.php. vendor/
+      # ships in the zip (it is in the `files` field of package.json that
+      # `wp-scripts plugin-zip` reads). The MCP adapter is NOT in vendor/: the MCP
+      # server runs on the separately installed MCP Adapter plugin (0.7.0+).
       - name: Install Composer dependencies (production)
         run: composer install --no-dev --no-interaction --no-progress
 

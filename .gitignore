@@ -23,8 +23,12 @@ Thumbs.db
 !/tests/e2e/
 !/tests/e2e/**
 
-# composer.lock IS committed: the plugin now has runtime deps (mcp-adapter,
-# jetpack-autoloader), and the CI release build runs `composer install --no-dev`.
+# MCP Adapter plugin release fetched by `npm run mcp-adapter:fetch` for wp-env,
+# PHPUnit and phpstan. A soft runtime dependency; the release zip never ships it.
+/tests/plugins/
+
+# composer.lock IS committed: the plugin has runtime deps (the REST adapter and
+# the Jetpack Autoloader), and the CI release build runs `composer install --no-dev`.
 
 # Phpactor (editor LSP) local index/config — machine-specific.
 /.phpactor.json

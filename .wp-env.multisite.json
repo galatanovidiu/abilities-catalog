@@ -6,6 +6,7 @@
 	"core": null,
 	"plugins": [
 		"./.",
+		"./tests/plugins/mcp-adapter",
 		"https://downloads.wordpress.org/plugin/contact-form-7.6.1.6.zip",
 		"galatanovidiu/abilities-catalog-cf7",
 		"https://downloads.wordpress.org/plugin/woocommerce.zip",

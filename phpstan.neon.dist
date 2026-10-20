@@ -24,9 +24,12 @@ parameters:
 	paths:
 		- abilities-catalog.php
 		- includes/
-	# Index the Composer-shipped REST adapter for symbols only (not analysed).
+	# Index the Composer-shipped REST adapter and the fetched MCP Adapter plugin
+	# (`npm run mcp-adapter:fetch`) for symbols only (not analysed).
 	scanDirectories:
 		- vendor/galatanovidiu/abilities-rest-adapter/includes
+		- tests/plugins/mcp-adapter/includes
+		- tests/plugins/mcp-adapter/vendor/wordpress/php-mcp-schema/src
 	excludePaths:
 		analyse:
 			- vendor/
